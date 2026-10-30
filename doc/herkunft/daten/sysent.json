@@ -1,0 +1,158 @@
+{
+ "mutos": {
+  "slots": 64
+ },
+ "refs": {
+  "v7": {
+   "slots": 64,
+   "same_func": 58,
+   "same_func_and_argc": 58,
+   "differ": [
+    [
+     31,
+     "nosys",
+     "stty"
+    ],
+    [
+     32,
+     "nosys",
+     "gtty"
+    ],
+    [
+     51,
+     "nosys",
+     "sysacct"
+    ],
+    [
+     52,
+     "nosys",
+     "sysphys"
+    ],
+    [
+     53,
+     "nosys",
+     "syslock"
+    ],
+    [
+     56,
+     "nosys",
+     "mpxchan"
+    ]
+   ]
+  },
+  "s3pdp": {
+   "slots": 64,
+   "same_func": 54,
+   "same_func_and_argc": 52,
+   "differ": [
+    [
+     0,
+     "nullsys",
+     "nosys"
+    ],
+    [
+     31,
+     "nosys",
+     "stty"
+    ],
+    [
+     32,
+     "nosys",
+     "gtty"
+    ],
+    [
+     35,
+     "ftime",
+     "nullsys"
+    ],
+    [
+     38,
+     "nullsys",
+     "nosys"
+    ],
+    [
+     39,
+     "nullsys",
+     "setpgrp"
+    ],
+    [
+     51,
+     "nosys",
+     "sysacct"
+    ],
+    [
+     57,
+     "nosys",
+     "utssys"
+    ],
+    [
+     62,
+     "nosys",
+     "fcntl"
+    ],
+    [
+     63,
+     "nosys",
+     "ulimit"
+    ]
+   ]
+  },
+  "s3vax": {
+   "slots": 64,
+   "same_func": 54,
+   "same_func_and_argc": 49,
+   "differ": [
+    [
+     0,
+     "nullsys",
+     "nosys"
+    ],
+    [
+     31,
+     "nosys",
+     "stty"
+    ],
+    [
+     32,
+     "nosys",
+     "gtty"
+    ],
+    [
+     35,
+     "ftime",
+     "nosys"
+    ],
+    [
+     38,
+     "nullsys",
+     "nosys"
+    ],
+    [
+     39,
+     "nullsys",
+     "setpgrp"
+    ],
+    [
+     51,
+     "nosys",
+     "sysacct"
+    ],
+    [
+     57,
+     "nosys",
+     "utssys"
+    ],
+    [
+     62,
+     "nosys",
+     "fcntl"
+    ],
+    [
+     63,
+     "nosys",
+     "ulimit"
+    ]
+   ]
+  }
+ }
+}

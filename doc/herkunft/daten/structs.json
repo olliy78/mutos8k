@@ -1,0 +1,1039 @@
+{
+ "bdevsw": {
+  "file": "conf.h",
+  "members": [
+   "d_open",
+   "d_close",
+   "d_strategy",
+   "d_tab"
+  ],
+  "refs": {
+   "v7": {
+    "file": "conf.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   },
+   "s3pdp": {
+    "file": "conf.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   },
+   "s3vax": {
+    "file": "conf.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   }
+  }
+ },
+ "buf": {
+  "file": "buf.h",
+  "members": [
+   "b_flags",
+   "b_forw",
+   "b_back",
+   "av_forw",
+   "av_back",
+   "b_dev",
+   "b_bcount",
+   "b_addr",
+   "b_blkno",
+   "b_xmem",
+   "b_error",
+   "b_resid"
+  ],
+  "refs": {
+   "v7": {
+    "file": "buf.h",
+    "ratio": 0.917,
+    "only_mutos": [
+     "b_addr"
+    ],
+    "only_ref": [
+     "b_un"
+    ],
+    "n": 12
+   },
+   "s3pdp": {
+    "file": "buf.h",
+    "ratio": 0.8,
+    "only_mutos": [
+     "b_addr",
+     "b_xmem"
+    ],
+    "only_ref": [
+     "b_paddr",
+     "b_proc",
+     "b_un"
+    ],
+    "n": 13
+   },
+   "s3vax": {
+    "file": "buf.h",
+    "ratio": 0.8,
+    "only_mutos": [
+     "b_addr",
+     "b_xmem"
+    ],
+    "only_ref": [
+     "b_paddr",
+     "b_proc",
+     "b_un"
+    ],
+    "n": 13
+   }
+  }
+ },
+ "callo": {
+  "file": "callo.h",
+  "members": [
+   "c_time",
+   "c_arg",
+   "c_func"
+  ],
+  "refs": {
+   "v7": {
+    "file": "callo.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   },
+   "s3pdp": {
+    "file": "callo.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   },
+   "s3vax": {
+    "file": "callo.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   }
+  }
+ },
+ "cdevsw": {
+  "file": "conf.h",
+  "members": [
+   "d_open",
+   "d_close",
+   "d_read",
+   "d_write",
+   "d_ioctl",
+   "d_stop",
+   "d_ttys"
+  ],
+  "refs": {
+   "v7": {
+    "file": "conf.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 7
+   },
+   "s3pdp": {
+    "file": "conf.h",
+    "ratio": 0.833,
+    "only_mutos": [
+     "d_stop",
+     "d_ttys"
+    ],
+    "only_ref": [],
+    "n": 5
+   },
+   "s3vax": {
+    "file": "conf.h",
+    "ratio": 0.833,
+    "only_mutos": [
+     "d_stop",
+     "d_ttys"
+    ],
+    "only_ref": [],
+    "n": 5
+   }
+  }
+ },
+ "clist": {
+  "file": "tty.h",
+  "members": [
+   "c_cc",
+   "c_cf",
+   "c_cl"
+  ],
+  "refs": {
+   "v7": {
+    "file": "mpx.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   },
+   "s3pdp": {
+    "file": "tty.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   },
+   "s3vax": {
+    "file": "tty.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   }
+  }
+ },
+ "devtab": {
+  "file": "conf.h",
+  "members": [
+   "d_active",
+   "d_errcnt",
+   "b_forw",
+   "b_back",
+   "d_actf",
+   "d_actl"
+  ],
+  "refs": {
+   "v7": null,
+   "s3pdp": null,
+   "s3vax": null
+  }
+ },
+ "dinode": {
+  "file": "ino.h",
+  "members": [
+   "di_mode",
+   "di_nlink",
+   "di_uid",
+   "di_gid",
+   "di_size",
+   "di_addr",
+   "di_atime",
+   "di_mtime",
+   "di_ctime"
+  ],
+  "refs": {
+   "v7": {
+    "file": "ino.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 9
+   },
+   "s3pdp": {
+    "file": "ino.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 9
+   },
+   "s3vax": {
+    "file": "ino.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 9
+   }
+  }
+ },
+ "direct": {
+  "file": "dir.h",
+  "members": [
+   "d_ino",
+   "d_name"
+  ],
+  "refs": {
+   "v7": {
+    "file": "dir.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   },
+   "s3pdp": {
+    "file": "dir.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   },
+   "s3vax": {
+    "file": "dir.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   }
+  }
+ },
+ "file": {
+  "file": "file.h",
+  "members": [
+   "f_flag",
+   "f_count",
+   "f_inode",
+   "f_un"
+  ],
+  "refs": {
+   "v7": {
+    "file": "file.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   },
+   "s3pdp": {
+    "file": "file.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   },
+   "s3vax": {
+    "file": "file.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 4
+   }
+  }
+ },
+ "filsys": {
+  "file": "filsys.h",
+  "members": [
+   "s_isize",
+   "s_fsize",
+   "s_nfree",
+   "s_free",
+   "s_ninode",
+   "s_inode",
+   "s_flock",
+   "s_ilock",
+   "s_fmod",
+   "s_ronly",
+   "s_time",
+   "s_tfree",
+   "s_tinode",
+   "s_m",
+   "s_n",
+   "s_fname",
+   "s_fpack"
+  ],
+  "refs": {
+   "v7": {
+    "file": "filsys.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 17
+   },
+   "s3pdp": {
+    "file": "filsys.h",
+    "ratio": 0.909,
+    "only_mutos": [
+     "s_m",
+     "s_n"
+    ],
+    "only_ref": [
+     "s_dinfo"
+    ],
+    "n": 16
+   },
+   "s3vax": {
+    "file": "filsys.h",
+    "ratio": 0.909,
+    "only_mutos": [
+     "s_m",
+     "s_n"
+    ],
+    "only_ref": [
+     "s_dinfo"
+    ],
+    "n": 16
+   }
+  }
+ },
+ "inode": {
+  "file": "inode.h",
+  "members": [
+   "i_flag",
+   "i_count",
+   "i_dev",
+   "i_number",
+   "i_mode",
+   "i_nlink",
+   "i_uid",
+   "i_gid",
+   "i_size",
+   "i_addr",
+   "i_lastr"
+  ],
+  "refs": {
+   "v7": {
+    "file": "inode.h",
+    "ratio": 0.857,
+    "only_mutos": [
+     "i_addr",
+     "i_lastr"
+    ],
+    "only_ref": [
+     "i_un"
+    ],
+    "n": 10
+   },
+   "s3pdp": {
+    "file": "inode.h",
+    "ratio": 0.857,
+    "only_mutos": [
+     "i_addr",
+     "i_lastr"
+    ],
+    "only_ref": [
+     "i_blks"
+    ],
+    "n": 10
+   },
+   "s3vax": {
+    "file": "inode.h",
+    "ratio": 0.857,
+    "only_mutos": [
+     "i_addr",
+     "i_lastr"
+    ],
+    "only_ref": [
+     "i_blks"
+    ],
+    "n": 10
+   }
+  }
+ },
+ "linesw": {
+  "file": "conf.h",
+  "members": [
+   "l_open",
+   "l_close",
+   "l_read",
+   "l_write",
+   "l_ioctl",
+   "l_input",
+   "l_output",
+   "l_x"
+  ],
+  "refs": {
+   "v7": {
+    "file": "conf.h",
+    "ratio": 0.556,
+    "only_mutos": [
+     "l_input",
+     "l_output",
+     "l_x"
+    ],
+    "only_ref": [
+     "l_meta",
+     "l_modem",
+     "l_rend",
+     "l_rint",
+     "l_start"
+    ],
+    "n": 10
+   },
+   "s3pdp": {
+    "file": "conf.h",
+    "ratio": 0.875,
+    "only_mutos": [
+     "l_x"
+    ],
+    "only_ref": [
+     "l_mdmint"
+    ],
+    "n": 8
+   },
+   "s3vax": {
+    "file": "conf.h",
+    "ratio": 0.875,
+    "only_mutos": [
+     "l_x"
+    ],
+    "only_ref": [
+     "l_mdmint"
+    ],
+    "n": 8
+   }
+  }
+ },
+ "map": {
+  "file": "map.h",
+  "members": [
+   "m_size",
+   "m_addr"
+  ],
+  "refs": {
+   "v7": {
+    "file": "map.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   },
+   "s3pdp": {
+    "file": "map.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   },
+   "s3vax": {
+    "file": "map.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 2
+   }
+  }
+ },
+ "mount": {
+  "file": "mount.h",
+  "members": [
+   "m_dev",
+   "m_bufp",
+   "m_inodp"
+  ],
+  "refs": {
+   "v7": {
+    "file": "mount.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 3
+   },
+   "s3pdp": {
+    "file": "mount.h",
+    "ratio": 0.571,
+    "only_mutos": [],
+    "only_ref": [
+     "m_flags"
+    ],
+    "n": 4
+   },
+   "s3vax": {
+    "file": "mount.h",
+    "ratio": 0.571,
+    "only_mutos": [],
+    "only_ref": [
+     "m_flags"
+    ],
+    "n": 4
+   }
+  }
+ },
+ "proc": {
+  "file": "proc.h",
+  "members": [
+   "p_stat",
+   "p_flag",
+   "p_pri",
+   "p_time",
+   "p_cpu",
+   "p_nice",
+   "p_sig",
+   "p_uid",
+   "p_pgrp",
+   "p_pid",
+   "p_ppid",
+   "p_addr",
+   "p_size",
+   "p_wchan",
+   "p_textp",
+   "p_link",
+   "p_clktim"
+  ],
+  "refs": {
+   "v7": {
+    "file": "proc.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 17
+   },
+   "s3pdp": {
+    "file": "proc.h",
+    "ratio": 0.895,
+    "only_mutos": [],
+    "only_ref": [
+     "p_swaddr",
+     "p_swsize",
+     "p_tsize"
+    ],
+    "n": 21
+   },
+   "s3vax": {
+    "file": "proc.h",
+    "ratio": 0.895,
+    "only_mutos": [],
+    "only_ref": [
+     "p_swaddr",
+     "p_swsize",
+     "p_tsize"
+    ],
+    "n": 21
+   }
+  }
+ },
+ "rkmbx": {
+  "file": "mbx.h",
+  "members": [
+   "mb_cmd",
+   "mb_unit",
+   "mb_dir",
+   "mb_stat",
+   "mb_seg",
+   "mb_addr",
+   "mb_cnt",
+   "mb_blk"
+  ],
+  "refs": {
+   "v7": null,
+   "s3pdp": null,
+   "s3vax": null
+  }
+ },
+ "sysent": {
+  "file": "systm.h",
+  "members": [
+   "sy_narg",
+   "sy_call"
+  ],
+  "refs": {
+   "v7": {
+    "file": "systm.h",
+    "ratio": 0.8,
+    "only_mutos": [],
+    "only_ref": [
+     "sy_nrarg"
+    ],
+    "n": 3
+   },
+   "s3pdp": {
+    "file": "systm.h",
+    "ratio": 0.8,
+    "only_mutos": [],
+    "only_ref": [
+     "sy_nrarg"
+    ],
+    "n": 3
+   },
+   "s3vax": {
+    "file": "systm.h",
+    "ratio": 0.8,
+    "only_mutos": [],
+    "only_ref": [
+     "sy_nrarg"
+    ],
+    "n": 3
+   }
+  }
+ },
+ "text": {
+  "file": "text.h",
+  "members": [
+   "x_daddr",
+   "x_caddr",
+   "x_size",
+   "x_iptr",
+   "x_count",
+   "x_ccount",
+   "x_flag"
+  ],
+  "refs": {
+   "v7": {
+    "file": "text.h",
+    "ratio": 1.0,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 7
+   },
+   "s3pdp": {
+    "file": "text.h",
+    "ratio": 0.8,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 8
+   },
+   "s3vax": {
+    "file": "text.h",
+    "ratio": 0.8,
+    "only_mutos": [],
+    "only_ref": [],
+    "n": 8
+   }
+  }
+ },
+ "tty": {
+  "file": "tty.h",
+  "members": [
+   "t_inq",
+   "t_outq",
+   "t_oproc",
+   "t_x0e",
+   "t_pgrp",
+   "t_obuf",
+   "t_dev",
+   "t_x16",
+   "t_erase",
+   "t_kill",
+   "t_flags",
+   "t_dnl",
+   "t_dcr",
+   "t_dtab",
+   "t_dvt",
+   "t_width",
+   "t_page",
+   "t_intrc",
+   "t_quitc",
+   "t_startc",
+   "t_stopc",
+   "t_eofc",
+   "t_brkc",
+   "t_state",
+   "t_lstate",
+   "t_cnt2c",
+   "t_col",
+   "t_delct",
+   "t_x2f",
+   "t_x30",
+   "t_line",
+   "t_x35",
+   "t_ocnt",
+   "t_hwp",
+   "t_hwf",
+   "t_x3b"
+  ],
+  "refs": {
+   "v7": {
+    "file": "tty.h",
+    "ratio": 0.175,
+    "only_mutos": [
+     "t_brkc",
+     "t_cnt2c",
+     "t_dcr",
+     "t_dnl",
+     "t_dtab",
+     "t_dvt",
+     "t_eofc",
+     "t_hwf",
+     "t_hwp",
+     "t_inq",
+     "t_intrc",
+     "t_lstate",
+     "t_obuf",
+     "t_ocnt",
+     "t_page",
+     "t_quitc",
+     "t_startc",
+     "t_stopc",
+     "t_width",
+     "t_x0e",
+     "t_x16",
+     "t_x2f",
+     "t_x30",
+     "t_x35",
+     "t_x3b"
+    ],
+    "only_ref": [
+     "t_addr",
+     "t_canq",
+     "t_chan",
+     "t_char",
+     "t_iproc",
+     "t_ispeed",
+     "t_linep",
+     "t_ospeed",
+     "t_rawq",
+     "t_un"
+    ],
+    "n": 21
+   },
+   "s3pdp": {
+    "file": "tty.h",
+    "ratio": 0.115,
+    "only_mutos": [
+     "t_brkc",
+     "t_cnt2c",
+     "t_dcr",
+     "t_dev",
+     "t_dnl",
+     "t_dtab",
+     "t_dvt",
+     "t_eofc",
+     "t_erase",
+     "t_flags",
+     "t_hwf",
+     "t_hwp",
+     "t_inq",
+     "t_intrc",
+     "t_kill",
+     "t_lstate",
+     "t_obuf",
+     "t_ocnt",
+     "t_oproc",
+     "t_page",
+     "t_quitc",
+     "t_startc",
+     "t_stopc",
+     "t_width",
+     "t_x0e",
+     "t_x16",
+     "t_x2f",
+     "t_x30",
+     "t_x35",
+     "t_x3b"
+    ],
+    "only_ref": [
+     "t_buf",
+     "t_canq",
+     "t_cc",
+     "t_cflag",
+     "t_iflag",
+     "t_lflag",
+     "t_oflag",
+     "t_proc",
+     "t_rawq",
+     "t_row"
+    ],
+    "n": 16
+   },
+   "s3vax": {
+    "file": "tty.h",
+    "ratio": 0.115,
+    "only_mutos": [
+     "t_brkc",
+     "t_cnt2c",
+     "t_dcr",
+     "t_dev",
+     "t_dnl",
+     "t_dtab",
+     "t_dvt",
+     "t_eofc",
+     "t_erase",
+     "t_flags",
+     "t_hwf",
+     "t_hwp",
+     "t_inq",
+     "t_intrc",
+     "t_kill",
+     "t_lstate",
+     "t_obuf",
+     "t_ocnt",
+     "t_oproc",
+     "t_page",
+     "t_quitc",
+     "t_startc",
+     "t_stopc",
+     "t_width",
+     "t_x0e",
+     "t_x16",
+     "t_x2f",
+     "t_x30",
+     "t_x35",
+     "t_x3b"
+    ],
+    "only_ref": [
+     "t_buf",
+     "t_canq",
+     "t_cc",
+     "t_cflag",
+     "t_iflag",
+     "t_lflag",
+     "t_oflag",
+     "t_proc",
+     "t_rawq",
+     "t_row"
+    ],
+    "n": 16
+   }
+  }
+ },
+ "user": {
+  "file": "user.h",
+  "members": [
+   "u_rsav",
+   "u_segflg",
+   "u_error",
+   "u_deverr",
+   "u_x15",
+   "u_uid",
+   "u_gid",
+   "u_ruid",
+   "u_rgid",
+   "u_procp",
+   "u_ap",
+   "u_r",
+   "u_base",
+   "u_count",
+   "u_offset",
+   "u_cdir",
+   "u_rdir",
+   "u_dbuf",
+   "u_dirp",
+   "u_dent",
+   "u_pdir",
+   "u_x54",
+   "u_ofile",
+   "u_pofile",
+   "u_arg",
+   "u_tsize",
+   "u_dsize",
+   "u_ssize",
+   "u_qsav",
+   "u_ssav",
+   "u_signal",
+   "u_utime",
+   "u_stime",
+   "u_cutime",
+   "u_cstime",
+   "u_ar0",
+   "u_x106",
+   "u_prof",
+   "u_x112",
+   "u_sep",
+   "u_x114",
+   "u_ex",
+   "u_exname",
+   "u_start",
+   "u_x152",
+   "u_cmask",
+   "u_x158",
+   "u_fpsaved",
+   "u_fparea"
+  ],
+  "refs": {
+   "v7": {
+    "file": "user.h",
+    "ratio": 0.747,
+    "only_mutos": [
+     "u_deverr",
+     "u_ex",
+     "u_exname",
+     "u_fparea",
+     "u_x106",
+     "u_x112",
+     "u_x114",
+     "u_x15",
+     "u_x152",
+     "u_x158",
+     "u_x54"
+    ],
+    "only_ref": [
+     "u_acflag",
+     "u_comm",
+     "u_exdata",
+     "u_fper",
+     "u_fpflag",
+     "u_fps",
+     "u_intflg",
+     "u_stack",
+     "u_ttyd",
+     "u_ttyp",
+     "u_uisa",
+     "u_uisd"
+    ],
+    "n": 50
+   },
+   "s3pdp": {
+    "file": "user.h",
+    "ratio": 0.63,
+    "only_mutos": [
+     "u_dbuf",
+     "u_deverr",
+     "u_ex",
+     "u_exname",
+     "u_fparea",
+     "u_x106",
+     "u_x112",
+     "u_x114",
+     "u_x15",
+     "u_x152",
+     "u_x158",
+     "u_x54"
+    ],
+    "only_ref": [
+     "u_acflag",
+     "u_comm",
+     "u_errcnt",
+     "u_exdata",
+     "u_fmode",
+     "u_fps",
+     "u_intflg",
+     "u_ioch",
+     "u_ior",
+     "u_iosw",
+     "u_iow",
+     "u_limit",
+     "u_mem",
+     "u_pcb",
+     "u_ptable",
+     "u_stack",
+     "u_t",
+     "u_ticks",
+     "u_ttyd",
+     "u_ttyp",
+     "u_uisa",
+     "u_uisd"
+    ],
+    "n": 59
+   },
+   "s3vax": {
+    "file": "user.h",
+    "ratio": 0.63,
+    "only_mutos": [
+     "u_dbuf",
+     "u_deverr",
+     "u_ex",
+     "u_exname",
+     "u_fparea",
+     "u_x106",
+     "u_x112",
+     "u_x114",
+     "u_x15",
+     "u_x152",
+     "u_x158",
+     "u_x54"
+    ],
+    "only_ref": [
+     "u_acflag",
+     "u_comm",
+     "u_errcnt",
+     "u_exdata",
+     "u_fmode",
+     "u_fps",
+     "u_intflg",
+     "u_ioch",
+     "u_ior",
+     "u_iosw",
+     "u_iow",
+     "u_limit",
+     "u_mem",
+     "u_pcb",
+     "u_ptable",
+     "u_stack",
+     "u_t",
+     "u_ticks",
+     "u_ttyd",
+     "u_ttyp",
+     "u_uisa",
+     "u_uisd"
+    ],
+    "n": 59
+   }
+  }
+ }
+}

@@ -1,0 +1,874 @@
+{
+ "strings": {
+  "count": {
+   "both": 26,
+   "v7only": 5,
+   "sys3only": 1,
+   "none": 11
+  },
+  "examples": [
+   [
+    "none",
+    "\"%s running - segment = %x offset = %x\\n\""
+   ],
+   [
+    "none",
+    "\"%s waiting - segment = %x offset = %x + ??\\n\""
+   ],
+   [
+    "v7only",
+    "\"({)}!|^~'`\""
+   ],
+   [
+    "none",
+    "\"Random interrupt (ident = %x) ignored\\n\""
+   ],
+   [
+    "v7only",
+    "\"Running a dead proc\""
+   ],
+   [
+    "none",
+    "\"aps = %x\\n\""
+   ],
+   [
+    "v7only",
+    "\"err\""
+   ],
+   [
+    "none",
+    "\"ident = %x\\n\""
+   ],
+   [
+    "none",
+    "\"map overflow\\n\""
+   ],
+   [
+    "v7only",
+    "\"mem = %D\\n\""
+   ],
+   [
+    "none",
+    "\"parity during \""
+   ],
+   [
+    "none",
+    "\"pc = %x %x   ps = %x\\n\""
+   ],
+   [
+    "none",
+    "\"seg = %x\\n\""
+   ],
+   [
+    "none",
+    "\"tm%d: bn = %d %d old er = %x err stat = %x\\n\""
+   ],
+   [
+    "none",
+    "\"tmintr\\n\""
+   ],
+   [
+    "sys3only",
+    "\"trap type %x\\n\""
+   ],
+   [
+    "v7only",
+    "\"zero wchan\""
+   ]
+  ]
+ },
+ "order": {
+  "alloc.c": {
+   "v7": {
+    "common": 7,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 7,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 7,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "bio.c": {
+   "v7": {
+    "common": 17,
+    "mutos_only": [
+     "mapalloc",
+     "mapstart"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 15,
+    "mutos_only": [
+     "geteblk",
+     "clrbuf",
+     "mapalloc",
+     "mapstart"
+    ],
+    "ref_only": [
+     "getablk",
+     "physck",
+     "binval"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 17,
+    "mutos_only": [
+     "mapalloc",
+     "mapstart"
+    ],
+    "ref_only": [
+     "physck",
+     "binval"
+    ],
+    "inversions": 0
+   }
+  },
+  "clock.c": {
+   "v7": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "timeout"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "timeout",
+     "delay"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "timeout",
+     "delay"
+    ],
+    "inversions": 0
+   }
+  },
+  "dev0.c": {},
+  "fio.c": {
+   "v7": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "iget.c": {
+   "v7": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 7,
+    "mutos_only": [
+     "iexpand"
+    ],
+    "ref_only": [
+     "iread"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 7,
+    "mutos_only": [
+     "iexpand"
+    ],
+    "ref_only": [
+     "iread"
+    ],
+    "inversions": 0
+   }
+  },
+  "lp.c": {
+   "s3pdp": {
+    "common": 5,
+    "mutos_only": [
+     "lpcanon",
+     "lpxfer"
+    ],
+    "ref_only": [
+     "lpioctl"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 5,
+    "mutos_only": [
+     "lpcanon",
+     "lpxfer"
+    ],
+    "ref_only": [
+     "lpioctl"
+    ],
+    "inversions": 0
+   }
+  },
+  "machdep.c": {
+   "v7": {
+    "common": 2,
+    "mutos_only": [
+     "kstub",
+     "sigret"
+    ],
+    "ref_only": [
+     "sysphys",
+     "clkstart",
+     "mapalloc",
+     "mapfree"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 2,
+    "mutos_only": [
+     "kstub",
+     "sigret"
+    ],
+    "ref_only": [
+     "clkstart",
+     "clkset",
+     "clkreld",
+     "bcopy",
+     "procdup"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 2,
+    "mutos_only": [
+     "kstub",
+     "sigret"
+    ],
+    "ref_only": [
+     "clkstart",
+     "clkset",
+     "clkreld",
+     "mtpr",
+     "mfpr",
+     "bcopy",
+     "procdup",
+     "chgprot",
+     "chksize",
+     "ptexpand",
+     "ptaccess",
+     "macheck"
+    ],
+    "inversions": 0
+   }
+  },
+  "main.c": {
+   "v7": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [
+     "cinit"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [
+     "cinit"
+    ],
+    "inversions": 0
+   }
+  },
+  "malloc.c": {
+   "v7": {
+    "common": 2,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 2,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 2,
+    "mutos_only": [],
+    "ref_only": [
+     "memall",
+     "memfree",
+     "meminit"
+    ],
+    "inversions": 0
+   }
+  },
+  "nami.c": {
+   "v7": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "schar",
+     "uchar"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "schar",
+     "uchar"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 1,
+    "mutos_only": [],
+    "ref_only": [
+     "schar",
+     "uchar"
+    ],
+    "inversions": 0
+   }
+  },
+  "pipe.c": {
+   "v7": {
+    "common": 5,
+    "mutos_only": [
+     "uchar",
+     "getc",
+     "putc"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 3,
+    "mutos_only": [
+     "uchar",
+     "readp",
+     "writep",
+     "getc",
+     "putc"
+    ],
+    "ref_only": [
+     "openp",
+     "closep"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 3,
+    "mutos_only": [
+     "uchar",
+     "readp",
+     "writep",
+     "getc",
+     "putc"
+    ],
+    "ref_only": [
+     "openp",
+     "closep"
+    ],
+    "inversions": 0
+   }
+  },
+  "prf.c": {
+   "v7": {
+    "common": 5,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 4,
+    "mutos_only": [
+     "deverror"
+    ],
+    "ref_only": [
+     "deverr"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 4,
+    "mutos_only": [
+     "deverror"
+    ],
+    "ref_only": [
+     "deverr"
+    ],
+    "inversions": 0
+   }
+  },
+  "rdwri.c": {
+   "v7": {
+    "common": 4,
+    "mutos_only": [],
+    "ref_only": [
+     "max"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 2,
+    "mutos_only": [
+     "min",
+     "iomove"
+    ],
+    "ref_only": [
+     "pimove"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 3,
+    "mutos_only": [
+     "min"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "rk.c": {
+   "v7": {
+    "common": 5,
+    "mutos_only": [
+     "mmread",
+     "mmwrite",
+     "rkopen",
+     "rkclose",
+     "syopen",
+     "syread",
+     "sywrite",
+     "syioctl"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 7,
+    "mutos_only": [
+     "mmread",
+     "mmwrite",
+     "syopen",
+     "syread",
+     "sywrite",
+     "syioctl"
+    ],
+    "ref_only": [
+     "rkaddr",
+     "rkclr"
+    ],
+    "inversions": 0
+   }
+  },
+  "sig.c": {
+   "v7": {
+    "common": 10,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 10,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 10,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "slp.c": {
+   "v7": {
+    "common": 11,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 10,
+    "mutos_only": [
+     "setpri"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 10,
+    "mutos_only": [
+     "setpri"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "subr.c": {
+   "v7": {
+    "common": 6,
+    "mutos_only": [
+     "timeout"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 5,
+    "mutos_only": [
+     "bcopy",
+     "timeout"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 5,
+    "mutos_only": [
+     "bcopy",
+     "timeout"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "sys1.c": {
+   "v7": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [
+     "exec"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [
+     "exec",
+     "gethead",
+     "freeproc"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 8,
+    "mutos_only": [],
+    "ref_only": [
+     "exec",
+     "gethead",
+     "freeproc"
+    ],
+    "inversions": 0
+   }
+  },
+  "sys2.c": {
+   "v7": {
+    "common": 10,
+    "mutos_only": [
+     "copen"
+    ],
+    "ref_only": [
+     "open1"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 11,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 11,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   }
+  },
+  "sys3.c": {
+   "v7": {
+    "common": 7,
+    "mutos_only": [
+     "exec"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 7,
+    "mutos_only": [
+     "exec"
+    ],
+    "ref_only": [
+     "fcntl",
+     "ioctl",
+     "stty",
+     "gtty"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 7,
+    "mutos_only": [
+     "exec"
+    ],
+    "ref_only": [
+     "fcntl",
+     "ioctl",
+     "stty",
+     "gtty"
+    ],
+    "inversions": 0
+   }
+  },
+  "sys4.c": {
+   "v7": {
+    "common": 24,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 23,
+    "mutos_only": [
+     "ftime"
+    ],
+    "ref_only": [
+     "setpgrp",
+     "ulimit"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 23,
+    "mutos_only": [
+     "ftime"
+    ],
+    "ref_only": [
+     "setpgrp",
+     "ulimit"
+    ],
+    "inversions": 0
+   }
+  },
+  "text.c": {
+   "v7": {
+    "common": 8,
+    "mutos_only": [
+     "xstub1",
+     "xstub2"
+    ],
+    "ref_only": [
+     "xexpand",
+     "xuntext"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 8,
+    "mutos_only": [
+     "xstub1",
+     "xstub2"
+    ],
+    "ref_only": [
+     "xexpand",
+     "xuntext"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 8,
+    "mutos_only": [
+     "xstub1",
+     "xstub2"
+    ],
+    "ref_only": [
+     "xexpand",
+     "xuntext"
+    ],
+    "inversions": 0
+   }
+  },
+  "trap.c": {
+   "v7": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [
+     "stray"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 3,
+    "mutos_only": [],
+    "ref_only": [
+     "stray"
+    ],
+    "inversions": 0
+   }
+  },
+  "tty.c": {
+   "v7": {
+    "common": 1,
+    "mutos_only": [
+     "tcopen",
+     "tcclose",
+     "tcread",
+     "tcwrite",
+     "tcxint",
+     "tcrint",
+     "tcioctl",
+     "ttxfer",
+     "putchar",
+     "ttyinit"
+    ],
+    "ref_only": [
+     "ttyopen",
+     "ttychars",
+     "ttyclose",
+     "stty",
+     "gtty",
+     "ioctl",
+     "ttioccomm",
+     "wflushtty",
+     "flushtty",
+     "canon",
+     "ttyrend",
+     "ttyinput",
+     "ttyblock",
+     "ttyoutput",
+     "ttrstrt",
+     "ttread",
+     "ttwrite"
+    ],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 0,
+    "mutos_only": [
+     "tcopen",
+     "tcclose",
+     "tcread",
+     "tcwrite",
+     "tcxint",
+     "tcrint",
+     "tcioctl",
+     "ttstart",
+     "ttxfer",
+     "putchar",
+     "ttyinit"
+    ],
+    "ref_only": [
+     "ttopen",
+     "ttclose",
+     "ttiocom",
+     "ttinit",
+     "ttywait",
+     "ttyflush",
+     "canon",
+     "ttrstrt",
+     "ttread",
+     "ttwrite"
+    ],
+    "inversions": 0
+   },
+   "s3vax": {
+    "common": 0,
+    "mutos_only": [
+     "tcopen",
+     "tcclose",
+     "tcread",
+     "tcwrite",
+     "tcxint",
+     "tcrint",
+     "tcioctl",
+     "ttstart",
+     "ttxfer",
+     "putchar",
+     "ttyinit"
+    ],
+    "ref_only": [
+     "ttopen",
+     "ttclose",
+     "ttiocom",
+     "ttinit",
+     "ttywait",
+     "ttyflush",
+     "canon",
+     "ttrstrt",
+     "ttread",
+     "ttwrite"
+    ],
+    "inversions": 0
+   }
+  },
+  "tty2.c": {},
+  "ureg.c": {
+   "v7": {
+    "common": 2,
+    "mutos_only": [
+     "cinit"
+    ],
+    "ref_only": [],
+    "inversions": 0
+   },
+   "s3pdp": {
+    "common": 2,
+    "mutos_only": [
+     "cinit"
+    ],
+    "ref_only": [
+     "checkur"
+    ],
+    "inversions": 0
+   }
+  }
+ },
+ "funcsets": {}
+}
