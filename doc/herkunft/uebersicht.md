@@ -18,6 +18,37 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 * **Offen:** `tty2.c` (Zeilendisziplin, 20 Funktionen, 4700 Token) hat nur 17-34 % Aehnlichkeit zu jeder Referenz (bestes: V7 `tty.c`);
   entweder stark umgeschrieben oder aus anderer Quelle (WEGA/ZEUS?) -- Plan H6.
 
+## 1a. Feature-Bewertung: Neuerungen von System III gegenueber V7
+
+Frage: Steckt eines der Merkmale, die System III zu V7 hinzugefuegt hat, im MUTOS-Kernel?  Jede Zeile wurde in drei Baeumen
+gesucht (`rg -F` ueber `original/sys3/uts`+`head`, `original/unix-v7/usr/sys`, `kernel/`); Ergebnis **gemessen**, Deutung
+*angenommen*, wo so gekennzeichnet.  Sicherheit: sicher = Negativbefund in allen drei Baeumen bzw. eindeutiges Gegenmerkmal.
+
+| Merkmal | System III (Beleg) | V7 | MUTOS | Bewertung |
+|---------|--------------------|----|-------|-----------|
+| **Named Pipes / FIFOs** (`IFIFO`, `S_IFIFO`, `mknod ... p`) | ja: `head/sys/stat.h:25`, `os/pipe.c:43` (Pipe ist `IFIFO`-Inode), `os/rdwri.c`, `fio.c`, `iget.c` (12 Dateien) | nein (Pipe = Inode mit `FPIPE`) | **nein**: kein `IFIFO`; `kernel/c/pipe.c` ist V7 (`FPIPE`, `PIPSIZ 4096`, Schlafkanaele `ip+1`/`ip+2`) | nicht vorhanden (sicher) |
+| **IPC** (`msgbuf`, `msqid_ds`, Semaphoren, Shared Memory) | **auch nicht in System III**: 0 Treffer fuer `msqid_ds`, `msgbuf`, `semid`, `shmid`; IPC (`msgget`/`semget`/`shmget`) kam erst mit **System V** (1983) | nein | nein | nicht vorhanden; Praezisierung: gehoert zu System V, nicht zu III (sicher) |
+| **Verbesserter Scheduler** | ja, `os/clock.c`: `p_cpu` bei 80 gedeckelt, Zerfall `p_cpu >>= 1`, `p_pri = (p_cpu>>1)+PUSER+...`, `runrun` aus dem Takt, `sysinfo`-Zaehler | nein: `SCHMAG 8/10`, `p_cpu = p_cpu*8/10 + p_nice - NZERO`, `setpri` mit `p_cpu/16` | **V7**: `kernel/c/clock.c` (`(p_cpu&0377)*8/10 + p_nice - NZERO`, `p_cpu` bis Ueberlauf), `kernel/c/slp.c` `setpri` mit `/16` | V7-Scheduler (sicher); System-III-Neuerung nicht enthalten |
+| **File-Locking** | nein: `fcntl.h` kennt nur `O_NDELAY`; kein `F_SETLK`, `lockf`; `locking()` ist **Xenix**, `lockf`/`F_SETLK` kommt mit System V | nein | nein (Treffer "locking" nur im `iget`-Kommentar, V7-Text) | nicht vorhanden; auch System III hat es nicht (sicher) |
+| **`sgttyb` -> `termio`** (`struct termio`, `TCGETA`/`TCSETA`, Basis `'T'<<8`) | ja: `head/sys/tty.h:220`, `ioctl.h:3-5`; `sgttyb` bleibt als Kompatibilitaet | nur `sgttyb`, ioctl `'t'<<8` | **nur V7-`sgttyb`**: `ttioctl` (`tty2.c:138`) hat 14 Kommandos `0x74xx` (dazu `0x6408`/`0x6409`) (`'t'<<8`: `TIOCGETP 0x7408`, `TIOCSETP 0x7409`, ...), keinen `'T'<<8`-Fall; `t_flags` mit V7-Werten (`ECHO 8`, `CRMOD 10H`, `RAW 20H`) | V7-Terminalschnittstelle (sicher); kein `termio` |
+| `fcntl` (`O_NDELAY`, `F_DUPFD`) | ja, `sysent`-Eintrag, `head/fcntl.h` | nein | nein (nicht in `sysent.c`) | nicht vorhanden (sicher) |
+| `ulimit`, `utssys` (`uname`, `ustat`), `sysinfo`, Fehlerprotokoll `errlog`, Abrechnung `acct` | ja (`sysent`, `os/utssys.c`, `os/errlog.c`, `os/acct.c`, `head/sys/sysinfo.h`) | `acct`: ja, `sysacct` (hier `nosys`) | nein: `sysacct` ist `nosys`, andere fehlen | nicht vorhanden (sicher) |
+| Neue Prozess-/Terminal-Felder (`NSIG 20`, `p_swaddr`, `m_flags`) | ja | `NSIG 17` | `NSIG 17` | V7-Stand (sicher) |
+
+**Folgerung (gemessen, daher sicher):** Keine der System-III-Neuerungen steckt im MUTOS-Kernel.  Das stuetzt Abschnitt 1:
+MUTOS beruht auf V7, nicht auf System III.  Der Befund ist auch dann tragfaehig, wenn der GitHub-Spiegel von System III nicht
+exakt dem Original entspraeche: er stuetzt sich auf das *Fehlen* von Merkmalen, die laut Literatur (FIFO, `termio`, `fcntl`,
+`ulimit`, `utssys`) zu III gehoeren und im Spiegel vorhanden sind.
+
+**Zwei Praezisierungen zur Ausgangsfrage:** (1) IPC mit `msgbuf`/`msqid_ds` gibt es erst in System V, nicht in III.  (2) Ein
+Dateisperr-Mechanismus kam weder in III noch in V7; er ist Xenix- bzw. System-V-Gut.  Beides ist hier nur Negativbefund fuer MUTOS.
+
+**Nebenbefund (gemessen, Deutung angenommen):** `kernel/c/tty2.c` (Zeilendisziplin) benutzt Funktionen, die weder V7 noch System III
+haben (`ttyrub`, `ttyecho`, `ttycol`, `unputc`, `bitset`, `ttyspec`, `ttkick`).  Gegen das Berkeley-Neutreiber `ttynew.c` aus
+2.8BSD (`https://www.tuhs.org/Archive/Distributions/UCB/2BSD/2.8bsd.tar.gz`, nur zu diesem Test geladen, nicht abgelegt) liegt
+`tty2.c` bei nur 20 %; dort heissen die Funktionen `ntyrub`/`ntyecho`.  Ursprung offen; moegliche Quellen: 2.9BSD/4.1BSD-`tty.c`,
+WEGA/ZEUS.  Das wird in H6 geklaert.  Bis dahin: `tty2.c` -> `Origin: none` (Ursprung unbekannt).
+
 ## 2. Messverfahren
 
 ```
