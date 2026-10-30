@@ -46,10 +46,13 @@
 #define SIGINT	2
 #define SIGQUIT	3
 #define SIGILL	4
+#define SIGINS	4	/* V7 name of SIGILL (V7 param.h) */
 #define SIGTRAP	5
+#define SIGTRC	5	/* V7 name of SIGTRAP (V7 param.h) */
 #define SIGIOT	6
 #define SIGEMT	7
 #define SIGFPE	8
+#define SIGFPT	8	/* V7 name of SIGFPE (V7 param.h) */
 #define SIGKILL	9
 #define SIGBUS	10
 #define SIGSEG	11

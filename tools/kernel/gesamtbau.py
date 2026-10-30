@@ -600,7 +600,7 @@ def uebersetzen(arbeit):
         if s != ["dev0"]:
             env["NUR_O"] = "1"
         ps.append((i, subprocess.Popen(["bash", os.path.join(HIER, "gast_lauf.sh"), os.path.join(arbeit, "g%d" % i)] +
-                                       [x + ".c" for x in s], env=env, stdout=open(os.path.join(arbeit, "g%d.log" % i), "w"),
+                                       [cpfad(x) for x in s], env=env, stdout=open(os.path.join(arbeit, "g%d.log" % i), "w"),
                                        stderr=subprocess.STDOUT)))
         import time
         time.sleep(15)          # dev.sh baut zuerst: nicht gleichzeitig anstossen

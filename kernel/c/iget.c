@@ -1,8 +1,19 @@
-/* iget.c -- Inode-Tabelle (Kernel mutos_1216, 1122..1723): iget, iexpand, iput, iupdat, itrunc, tloop, maknode, wdir.
- * Daten: inode[] = 907A..9EEE (50 Eintraege zu 74 Byte), mount[] = A07E (5 zu 6 Byte), rootdir 8DC6, time 8DCC,
- * Texte 8A1C "no imt", 8A23 "Inode table overflow", 8A39 "iaddress > 2^24"; Sprungtabelle von itrunc bei 8A16.
- * Keine Hash-Kette: iget sucht linear und merkt sich den am laengsten freien Eintrag (i_lastr = Freigabezeit).
- * Abweichung gegenueber V7: Blockadressen werden von Hand (3 Byte, vorne 0) umgesetzt, nicht ueber l3tol. */
+/* iget.c -- inode table (kernel mutos_1216, 1122..1723): iget, iexpand, iput, iupdat, itrunc, tloop, maknode, wdir.
+ *
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/iget.c (all 8 functions).  System III pdp11 uts/os/iget.c is less similar.
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 89% against V7 (8 of 8
+ *           functions >= 50%), 65% against System III PDP-11.  After it: file 94% V7 / 65% System III.  Same strings
+ *           ("no imt", "Inode table overflow", "iaddress > 2^24").
+ * Roundtrip: cc -O in the guest, per function against mutos_1216: 6 of 8 byte-identical (iget, iexpand, iput, iupdat,
+ *           maknode, wdir); itrunc and tloop differ only by the known older-c2 pattern (B).  Details: doc/herkunft/iget.md
+ * Deviations: free-inode choice by age (i_lastr = release time, iget/iput) instead of "first free"/i_number = 0;
+ *           block addresses expanded by hand (3 bytes, leading 0 byte first) in iexpand/iupdat; flat inode.h (no i_un
+ *           union: i_addr and i_lastr are separate members) and flat buf.h; see doc/herkunft/iget.md.
+ *
+ * Data: inode[] = 907A..9EEE (50 entries of 74 bytes), mount[] = A07E (5 of 6 bytes), rootdir 8DC6, time 8DCC,
+ * texts 8A1C "no imt", 8A23 "Inode table overflow", 8A39 "iaddress > 2^24"; jump table of itrunc at 8A16.
+ * No hash chain: iget searches linearly and remembers the entry that has been free longest (i_lastr = release time). */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -14,6 +25,23 @@
 #include "filsys.h"
 #include "buf.h"
 
+/*
+ * Look up an inode by device,inumber.
+ * If it is in core (in the inode structure),
+ * honor the locking protocol.
+ * If it is not in core, read it in from the
+ * specified device.
+ * If the inode is mounted on, perform
+ * the indicated indirection.
+ * In all cases, a pointer to a locked
+ * inode structure is returned.
+ *
+ * printf warning: no inodes -- if the inode
+ *	structure is full
+ * panic: no imt -- if the mounted file
+ *	system is not in the mount table.
+ *	"cannot happen"
+ */
 /* KERNEL 1122 */
 struct inode *
 iget(dev, ino)
@@ -28,32 +56,34 @@ ino_t ino;
 
 loop:
 	oip = NULL;
-	for (ip = &inode[0]; ip < &inode[NINODE]; ip++) {
-		if (ino == ip->i_number && dev == ip->i_dev) {
-			if ((ip->i_flag & ILOCK) != 0) {
+	for(ip = &inode[0]; ip < &inode[NINODE]; ip++) {
+		if(ino == ip->i_number && dev == ip->i_dev) {
+			if((ip->i_flag&ILOCK) != 0) {
 				ip->i_flag |= IWANT;
 				sleep((caddr_t)ip, PINOD);
 				goto loop;
 			}
-			if ((ip->i_flag & IMOUNT) != 0) {
-				for (mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
-					if (mp->m_inodp == ip) {
-						dev = mp->m_dev;
-						ino = ROOTINO;
-						goto loop;
-					}
+			if((ip->i_flag&IMOUNT) != 0) {
+				for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
+				if(mp->m_inodp == ip) {
+					dev = mp->m_dev;
+					ino = ROOTINO;
+					goto loop;
+				}
 				panic("no imt");
 			}
-			if (ip->i_count++ == 0)
+			/* MUTOS: i_lastr holds the release time; V7 has just "ip->i_count++;" */
+			if(ip->i_count++ == 0)
 				ip->i_lastr = 0;
 			ip->i_flag |= ILOCK;
 			return(ip);
 		}
-		if (ip->i_count == 0 && (oip == NULL || oip->i_lastr > ip->i_lastr))
+		/* MUTOS: pick the free entry released longest ago; V7: "if(oip==NULL && ip->i_count==0)" */
+		if(ip->i_count==0 && (oip==NULL || oip->i_lastr > ip->i_lastr))
 			oip = ip;
 	}
 	ip = oip;
-	if (ip == NULL) {
+	if(ip == NULL) {
 		printf("Inode table overflow\n");
 		u.u_error = ENFILE;
 		return(NULL);
@@ -62,14 +92,17 @@ loop:
 	ip->i_number = ino;
 	ip->i_flag = ILOCK;
 	ip->i_count++;
-	ip->i_lastr = 0;
+	ip->i_lastr = 0;	/* MUTOS: flat inode.h, V7 i_un.i_lastr */
 	bp = bread(dev, itod(ino));
-	if ((bp->b_flags & B_ERROR) != 0) {
+	/*
+	 * Check I/O errors
+	 */
+	if((bp->b_flags&B_ERROR) != 0) {
 		brelse(bp);
 		iput(ip);
 		return(NULL);
 	}
-	dp = (struct dinode *)bp->b_addr;
+	dp = (struct dinode *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_dino */
 	dp += itoo(ino);
 	iexpand(ip, dp);
 	brelse(bp);
@@ -90,9 +123,11 @@ register struct dinode *dp;
 	ip->i_uid = dp->di_uid;
 	ip->i_gid = dp->di_gid;
 	ip->i_size = dp->di_size;
+	/* MUTOS: flat inode.h (V7: i_un.i_addr); the leading zero byte of each long comes FIRST (big endian Z8001),
+	 * V7/PDP-11 has it in the second position */
 	p1 = (char *)ip->i_addr;
-	p2 = dp->di_addr;
-	for (i = 0; i < NADDR; i++) {
+	p2 = (char *)dp->di_addr;
+	for(i=0; i<NADDR; i++) {
 		*p1++ = 0;
 		*p1++ = *p2++;
 		*p1++ = *p2++;
@@ -100,13 +135,21 @@ register struct dinode *dp;
 	}
 }
 
+/*
+ * Decrement reference count of
+ * an inode structure.
+ * On the last reference,
+ * write the inode out and if necessary,
+ * truncate and deallocate the file.
+ */
 /* KERNEL 12FE */
 iput(ip)
 register struct inode *ip;
 {
-	if (ip->i_count == 1) {
+
+	if(ip->i_count == 1) {
 		ip->i_flag |= ILOCK;
-		if (ip->i_nlink <= 0) {
+		if(ip->i_nlink <= 0) {
 			itrunc(ip);
 			ip->i_mode = 0;
 			ip->i_flag |= IUPD|ICHG;
@@ -115,58 +158,75 @@ register struct inode *ip;
 		iupdat(ip, &time, &time);
 		prele(ip);
 		ip->i_flag = 0;
-		ip->i_lastr = time;
+		ip->i_lastr = time;	/* MUTOS: release time for iget; V7 has "ip->i_number = 0;" */
 	}
 	ip->i_count--;
 	prele(ip);
 }
 
+/*
+ * Check accessed and update flags on
+ * an inode structure.
+ * If any are on, update the inode
+ * with the current time.
+ */
 /* KERNEL 1372 */
 iupdat(ip, ta, tm)
 register struct inode *ip;
 time_t *ta, *tm;
 {
 	register struct buf *bp;
-	register char *p1;
 	struct dinode *dp;
+	register char *p1;
 	char *p2;
 	int i;
 
-	if ((ip->i_flag & (IUPD|IACC|ICHG)) == 0)
-		return;
-	if (getfs(ip->i_dev)->s_ronly != 0)
-		return;
-	bp = bread(ip->i_dev, itod(ip->i_number));
-	if (bp->b_flags & B_ERROR) {
-		brelse(bp);
-		return;
+	if((ip->i_flag&(IUPD|IACC|ICHG)) != 0) {
+		if(getfs(ip->i_dev)->s_ronly)
+			return;
+		bp = bread(ip->i_dev, itod(ip->i_number));
+		if (bp->b_flags & B_ERROR) {
+			brelse(bp);
+			return;
+		}
+		dp = (struct dinode *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_dino */
+		dp += itoo(ip->i_number);
+		dp->di_mode = ip->i_mode;
+		dp->di_nlink = ip->i_nlink;
+		dp->di_uid = ip->i_uid;
+		dp->di_gid = ip->i_gid;
+		dp->di_size = ip->i_size;
+		p1 = (char *)dp->di_addr;
+		p2 = (char *)ip->i_addr;	/* MUTOS: flat inode.h, V7 i_un.i_addr */
+		for(i=0; i<NADDR; i++) {
+			/* MUTOS: the leading zero byte is checked FIRST (V7 checks the second byte) */
+			if(*p2++ != 0 && (ip->i_mode&IFMT)!=IFMPC
+			   && (ip->i_mode&IFMT)!=IFMPB)
+				printf("iaddress > 2^24\n");
+			*p1++ = *p2++;
+			*p1++ = *p2++;
+			*p1++ = *p2++;
+		}
+		if(ip->i_flag&IACC)
+			dp->di_atime = *ta;
+		if(ip->i_flag&IUPD)
+			dp->di_mtime = *tm;
+		if(ip->i_flag&ICHG)
+			dp->di_ctime = time;
+		ip->i_flag &= ~(IUPD|IACC|ICHG);
+		bdwrite(bp);
 	}
-	dp = (struct dinode *)bp->b_addr;
-	dp += itoo(ip->i_number);
-	dp->di_mode = ip->i_mode;
-	dp->di_nlink = ip->i_nlink;
-	dp->di_uid = ip->i_uid;
-	dp->di_gid = ip->i_gid;
-	dp->di_size = ip->i_size;
-	p1 = dp->di_addr;
-	p2 = (char *)ip->i_addr;
-	for (i = 0; i < NADDR; i++) {
-		if (*p2++ != 0 && (ip->i_mode & IFMT) != 0030000 && (ip->i_mode & IFMT) != 0070000)
-			printf("iaddress > 2^24\n");
-		*p1++ = *p2++;
-		*p1++ = *p2++;
-		*p1++ = *p2++;
-	}
-	if (ip->i_flag & IACC)
-		dp->di_atime = *ta;
-	if (ip->i_flag & IUPD)
-		dp->di_mtime = *tm;
-	if (ip->i_flag & ICHG)
-		dp->di_ctime = time;
-	ip->i_flag &= ~(IUPD|IACC|ICHG);
-	bdwrite(bp);
 }
 
+/*
+ * Free all the disk blocks associated
+ * with the specified inode structure.
+ * The blocks of the file are removed
+ * in reverse order. This FILO
+ * algorithm will tend to maintain
+ * a contiguous free list much longer
+ * than FIFO.
+ */
 /* KERNEL 14F6 */
 itrunc(ip)
 register struct inode *ip;
@@ -176,15 +236,15 @@ register struct inode *ip;
 	daddr_t bn;
 
 	i = ip->i_mode & IFMT;
-	if (i != IFREG && i != IFDIR)
+	if (i!=IFREG && i!=IFDIR)
 		return;
 	dev = ip->i_dev;
-	for (i = NADDR-1; i >= 0; i--) {
-		bn = ip->i_addr[i];
-		if (bn == (daddr_t)0)
+	for(i=NADDR-1; i>=0; i--) {
+		bn = ip->i_addr[i];	/* MUTOS: flat inode.h, V7 i_un.i_addr */
+		if(bn == (daddr_t)0)
 			continue;
 		ip->i_addr[i] = (daddr_t)0;
-		switch (i) {
+		switch(i) {
 
 		default:
 			free(dev, bn);
@@ -217,30 +277,33 @@ daddr_t bn;
 	daddr_t nb;
 
 	bp = NULL;
-	for (i = NINDIR-1; i >= 0; i--) {
-		if (bp == NULL) {
+	for(i=NINDIR-1; i>=0; i--) {
+		if(bp == NULL) {
 			bp = bread(dev, bn);
 			if (bp->b_flags & B_ERROR) {
 				brelse(bp);
 				return;
 			}
-			bap = (daddr_t *)bp->b_addr;
+			bap = (daddr_t *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_daddr */
 		}
 		nb = bap[i];
-		if (nb == (daddr_t)0)
+		if(nb == (daddr_t)0)
 			continue;
-		if (f1) {
+		if(f1) {
 			brelse(bp);
 			bp = NULL;
 			tloop(dev, nb, f2, 0);
 		} else
 			free(dev, nb);
 	}
-	if (bp != NULL)
+	if(bp != NULL)
 		brelse(bp);
 	free(dev, bn);
 }
 
+/*
+ * Make a new file.
+ */
 /* KERNEL 1652 */
 struct inode *
 maknode(mode)
@@ -248,14 +311,14 @@ maknode(mode)
 	register struct inode *ip;
 
 	ip = ialloc(u.u_pdir->i_dev);
-	if (ip == NULL) {
+	if(ip == NULL) {
 		iput(u.u_pdir);
 		return(NULL);
 	}
 	ip->i_flag |= IACC|IUPD|ICHG;
-	if ((mode & IFMT) == 0)
+	if((mode&IFMT) == 0)
 		mode |= IFREG;
-	ip->i_mode = mode & ~U_CMASK;
+	ip->i_mode = mode & ~u.u_cmask;
 	ip->i_nlink = 1;
 	ip->i_uid = u.u_uid;
 	ip->i_gid = u.u_gid;
@@ -263,19 +326,26 @@ maknode(mode)
 	return(ip);
 }
 
+/*
+ * Write a directory entry with
+ * parameters left as side effects
+ * to a call to namei.
+ */
 /* KERNEL 16C2 */
 wdir(ip)
 struct inode *ip;
 {
+
 	if (u.u_pdir->i_nlink <= 0) {
 		u.u_error = ENOTDIR;
-	} else {
-		u.u_dent.d_ino = ip->i_number;
-		bcopy((caddr_t)u.u_dbuf, (caddr_t)u.u_dent.d_name, DIRSIZ);
-		u.u_count = sizeof(struct direct);
-		u.u_segflg = 1;
-		u.u_base = (caddr_t)&u.u_dent;
-		writei(u.u_pdir);
+		goto out;
 	}
+	u.u_dent.d_ino = ip->i_number;
+	bcopy((caddr_t)u.u_dbuf, (caddr_t)u.u_dent.d_name, DIRSIZ);
+	u.u_count = sizeof(struct direct);
+	u.u_segflg = 1;
+	u.u_base = (caddr_t)&u.u_dent;
+	writei(u.u_pdir);
+out:
 	iput(u.u_pdir);
 }

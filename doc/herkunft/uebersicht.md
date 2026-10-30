@@ -12,6 +12,10 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
   `sysinfo`, `var.h`, `utsname`, `NSIG 20`, `p_swaddr`, `m_flags`, ...) steht in `kernel/c`, `kernel/h` oder `kernel/conf`.  Mehrere
   Merkmale, die nur V7 hat, stehen darin (Abschnitt 4).  PDP-11 und VAX von SysIII sind gegenueber V7 gleich schlecht (47 % / 46 %
   gegen 66 % V7); eine Entscheidung zwischen beiden SysIII-Fassungen eruebrigt sich.
+* **Einschraenkung (gemessen, AP H3):** `alloc.c` fuehrt die Zaehler `s_tfree`/`s_tinode` mit (`alloc`, `free`, `ialloc`, `ifree`).  Der V7-Kernel
+  tut das nicht (`rg s_tfree original/unix-v7/usr/sys/sys` ohne Treffer; nur `mkfs`/`icheck` fassen die Felder an), `original/sys3/uts/pdp11/os/alloc.c` hat
+  genau diese 6 Stellen.  Der Kern ist also V7 mit mindestens einem System-III-Zug; Herkunft offen (Plan H6).  Die Aussage "System III nicht belegt" gilt
+  damit fuer die Feature-Ebene (Abschnitt 1a), nicht mehr absolut.
 * **MUTOS-eigen (kein V7/SysIII-Bezug):** Diskettentreiber `dev0.c` (`fd*`), Drucker `lp.c`, Mailbox-Terminal `tty.c` (`tc*`),
   Plattentreiber-Teil von `rk.c`, `mapalloc`/`mapstart` in `bio.c`, Header `mbx.h`, `user_ext.h`, `devtab` in `conf.h`, die
   Z8001-Teile von `machdep.c`, `trap.c`, `ureg.c`.
@@ -262,3 +266,8 @@ WEGA/ZEUS (Z8001, SysIII-Abkoemmling) bleibt als moegliche Vorlage fuer Z8001-Te
 * Werkzeug `tools/herkunft/herkunft.py`, Tests `tests/test_herkunft.py`
 * Rohdaten in `doc/herkunft/daten/`: `vergleich_abs.json` (alle Funktions- und Dateivergleiche), `vergleich_abs.md` (maschineller Bericht),
   `sysent.json`, `structs.json`, `strings_reihenfolge.json`
+
+## 8. Stand AP H3 (Pilot, 2026-10-31)
+
+Wiederhergestellt (V7-Text, Rundlauf geprueft): `alloc`, `iget`, `slp`, `sig` -- siehe `alloc.md`, `iget.md`, `slp.md`, `sig.md`; Rundlaufweg in `rundlauf.md`.
+Ergebnis: 31 von 36 Funktionen bytegleich (vorher 26 von 36); `alloc` enthaelt System-III-Zaehler (`s_tfree`/`s_tinode`), sonst V7.

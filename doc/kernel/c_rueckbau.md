@@ -259,3 +259,9 @@ Start 027E, Trap-Eintritt 030E, spl*, fubyte/fuword/subyte/suword, copyin/copyou
 **Fuer einen Gesamtbau fehlen noch** (kein C): `clock` 2842 (522 B) und `badblock` 316A (liegt in alloc.c ohne eigene Marke), `procxmt` 0F12 (524 B), `ttioctl`/`ttyinput`+4 Teilfunktionen/`ttyoutput`, `fdstart`/`fdioctl`;
 dazu die **Datenstuecke** (sysent 8B58, Zeichenketten 88C6..8B51, Zeichenkettenreste der Module, BSS-Zuteilung 8DC0..D586) und der **Assembleranteil** `low` (aus K5/K4 als `.s`).
 Die **offenen** Funktionen (20) und **nahen** (12) sind funktional gleich, nicht bytegleich: fuer ein bytegleiches Abbild bleibt Plan B (Nachbesserung der `.s` an den benannten Stellen oder ein `c2` im Gast, der Blockreihenfolge und Endstueckzusammenfuehrung des Kernel-Compilers nachbildet).
+
+# Nachtrag AP H3 (2026-10-31): V7-Quelltext loest "nahe" Funktionen
+
+Mit dem V7-Originaltext (`doc/herkunft/*.md`) sind `iupdat` 1372 (Muster (A)), `swtch` 1DA4, `newproc` 1EA2, `core` 0D56 und `procxmt` 0F12 **bytegleich** geworden
+(`tools/herkunft/rundlauf.sh`, Weg in `doc/herkunft/rundlauf.md`).  Muster (A) war damit keine `c2`-Eigenheit, sondern Quellform (Frueh-Rueckkehr statt V7-Block).
+Offen (nahe) in diesen vier Modulen: `alloc`, `ialloc`, `update`, `itrunc`, `tloop` -- Muster (B)/(C) bestehen auch mit dem reinen V7-Text weiter.

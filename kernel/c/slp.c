@@ -1,7 +1,21 @@
-/* slp.c -- Schlafen/Aufwecken/Scheduler (Kernel mutos_1216, 18D4..2100).  System-III-nahe Fassung wie WEGA slp.c, mit
- * Z8000-Eigenheiten (resume/savu, copyseg).  Daten: slpque = CEC6 (64 Zeiger, BSS); Texte 8A8E "zero wchan", 8A99
- * "proc on q\n", 8AA4 "Running a dead proc", 8AB8 "no procs"; runq 8DC8, runrun 8DC4, runin 8DD6, runout 8DD8,
- * curpri 8DDA, mpid 8DD4, proctop 8A8C, coremap A09C. */
+/* slp.c -- sleep/wakeup/scheduler (kernel mutos_1216, 18D4..2100): sleep, wakeup, setrq, setrun, setpri, sched,
+ * swapin, qswtch, swtch, newproc, expand.
+ *
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/slp.c (all 11 functions; expand() is an empty stub here).  System III pdp11
+ *           uts/os/slp.c is less similar.
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 88% against V7 (11 of
+ *           11 functions >= 50%), 58% against System III PDP-11 (sleep 96%, setrq/qswtch 100% against V7).  After it:
+ *           file 88% V7 / 61% System III.  Same strings ("zero wchan", "proc on q\n", "Running a dead proc", "no procs").
+ * Roundtrip: cc -O in the guest, per function against mutos_1216: 11 of 11 byte-identical.
+ *           Details: doc/herkunft/slp.md
+ * Deviations: Z8001 memory model (u area copy by segment units in newproc, swapin/xswap with fixed u size 0x104), proctop
+ *           instead of &proc[NPROC], periodic update() request in sched (sflag1), setpri without return value, savu
+ *           instead of save, no second "Sleeping on wchan 0" check, expand() is an empty stub; see doc/herkunft/slp.md.
+ *
+ * Data: slpque = CEC6 (64 pointers, BSS); texts 8A8E "zero wchan", 8A99 "proc on q\n", 8AA4 "Running a dead proc",
+ * 8AB8 "no procs"; runq 8DC8, runrun 8DC4, runin 8DD6, runout 8DD8, curpri 8DDA, mpid 8DD4, proctop 8A8C,
+ * coremap A09C. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -13,14 +27,25 @@
 #include "file.h"
 #include "buf.h"
 
-#define SQSIZE	0100
-struct proc *slpque[SQSIZE];
+#define SQSIZE 0100	/* Must be power of 2 */
 #define HASH(x)	(( (int) x >> 5) & (SQSIZE-1))
+struct proc *slpque[SQSIZE];
 
 int mpid;
-int sflag1;		/* 8DE2: Anforderung des Update im Scheduler (Name geraten) */
-int sflag0;		/* 8DE0 */
+int sflag1;		/* 8DE2: request for update() in the scheduler (name guessed; MUTOS only) */
+int sflag0;		/* 8DE0 (MUTOS only) */
 
+/*
+ * Give up the processor till a wakeup occurs
+ * on chan, at which time the process
+ * enters the scheduling queue at priority pri.
+ * The most important effect of pri is that when
+ * pri<=PZERO a signal cannot disturb the sleep;
+ * if pri>PZERO signals will be processed.
+ * Callers of this routine must be prepared for
+ * premature return, and check that the reason for
+ * sleeping has gone away.
+ */
 /* KERNEL 18D4 */
 sleep(chan, pri)
 caddr_t chan;
@@ -30,16 +55,17 @@ caddr_t chan;
 
 	rp = u.u_procp;
 	s = spl6();
-	if (chan == 0)
+	if (chan==0)
 		panic("zero wchan");
 	rp->p_stat = SSLEEP;
 	rp->p_wchan = chan;
+	/* MUTOS: no second check "if (chan==0) panic("Sleeping on wchan 0");" (V7) */
 	rp->p_pri = pri;
 	h = HASH(chan);
 	rp->p_link = slpque[h];
 	slpque[h] = rp;
-	if (pri > PZERO) {
-		if (issig()) {
+	if(pri > PZERO) {
+		if(issig()) {
 			rp->p_wchan = 0;
 			rp->p_stat = SRUN;
 			slpque[h] = rp->p_link;
@@ -47,12 +73,12 @@ caddr_t chan;
 			goto psig;
 		}
 		spl0();
-		if (runin != 0) {
+		if(runin != 0) {
 			runin = 0;
 			wakeup((caddr_t)&runin);
 		}
 		swtch();
-		if (issig())
+		if(issig())
 			goto psig;
 	} else {
 		spl0();
@@ -61,25 +87,36 @@ caddr_t chan;
 	splx(s);
 	return;
 
+	/*
+	 * If priority was low (>PZERO) and
+	 * there has been a signal,
+	 * execute non-local goto to
+	 * the qsav location.
+	 * (see trap1/trap.c)
+	 */
 psig:
 	resume(u.u_procp->p_addr, u.u_qsav);
 }
 
+/*
+ * Wake up all processes sleeping on chan.
+ */
 /* KERNEL 19A8 */
 wakeup(chan)
 register caddr_t chan;
 {
 	register struct proc *p, *q;
 	register i;
-	register s;
-	struct proc *sp;
+	register s;	/* MUTOS: register (V7: int s) */
 
 	s = spl6();
 	i = HASH(chan);
 	p = slpque[i];
 	q = NULL;
-	while (p != NULL) {
-		if (p->p_wchan == chan && p->p_stat != SZOMB) {
+	while(p != NULL) {
+		if(p->p_wchan==chan && p->p_stat!=SZOMB) {
+			struct proc *sp;
+
 			if (q == NULL)
 				sp = slpque[i] = p->p_link;
 			else
@@ -95,6 +132,12 @@ register caddr_t chan;
 	splx(s);
 }
 
+/*
+ * when you are sure that it
+ * is impossible to get the
+ * 'proc on q' diagnostic, the
+ * diagnostic loop can be removed.
+ */
 /* KERNEL 1A30 */
 setrq(p)
 struct proc *p;
@@ -103,8 +146,8 @@ struct proc *p;
 	register s;
 
 	s = spl6();
-	for (q = runq; q != NULL; q = q->p_link)
-		if (q == p) {
+	for(q=runq; q!=NULL; q=q->p_link)
+		if(q == p) {
 			printf("proc on q\n");
 			goto out;
 		}
@@ -114,51 +157,88 @@ out:
 	splx(s);
 }
 
+/*
+ * Set the process running;
+ * arrange for it to be swapped in if necessary.
+ */
 /* KERNEL 1A7C */
 setrun(p)
 register struct proc *p;
 {
 	register caddr_t w;
 
-	if (p->p_stat == 0 || p->p_stat == SZOMB)
+	if (p->p_stat==0 || p->p_stat==SZOMB)
 		panic("Running a dead proc");
+	/*
+	 * The assignment to w is necessary because of
+	 * race conditions. (Interrupt between test and use)
+	 */
 	if (w = p->p_wchan) {
-		wakeup((caddr_t)w);
+		wakeup(w);
 		return;
 	}
 	p->p_stat = SRUN;
 	setrq(p);
-	if (p->p_pri < curpri)
+	if(p->p_pri < curpri)
 		runrun++;
-	if (runout != 0 && (p->p_flag & SLOAD) == 0) {
+	if(runout != 0 && (p->p_flag&SLOAD) == 0) {
 		runout = 0;
 		wakeup((caddr_t)&runout);
 	}
 }
 
+/*
+ * Set user priority.
+ * The rescheduling flag (runrun)
+ * is set if the priority is better
+ * than the currently running process.
+ */
 /* KERNEL 1AE8 */
 setpri(pp)
 register struct proc *pp;
 {
 	register p;
 
-	p = (pp->p_cpu & 0377) / 16;
+	p = (pp->p_cpu & 0377)/16;
 	p += PUSER + pp->p_nice - NZERO;
-	if (p > 127)
+	if(p > 127)
 		p = 127;
-	if (curpri > p)
+	if(p < curpri)
 		runrun++;
 	pp->p_pri = p;
+	/* MUTOS: no "return(p);" (V7) */
 }
 
+/*
+ * The main loop of the scheduling (swapping)
+ * process.
+ * The basic idea is:
+ *  see if anyone wants to be swapped in;
+ *  swap out processes until there is room;
+ *  swap him in;
+ *  repeat.
+ * The runout flag is set whenever someone is swapped out.
+ * Sched sleeps on it awaiting work.
+ *
+ * Sched sleeps on runin whenever it cannot find enough
+ * core (by swapping out or otherwise) to fit the
+ * selected swapped process.  It is awakened when the
+ * core situation changes and in any case once per second.
+ */
 /* KERNEL 1B34 */
 sched()
 {
 	register struct proc *rp, *p;
 	register outage, inage;
-	register maxsize;
+	register maxsize;	/* MUTOS: register (V7: int maxsize) */
+
+	/*
+	 * find user to swap in;
+	 * of users ready, select one out longest
+	 */
 
 loop:
+	/* MUTOS only (not in V7): update() is requested from the scheduler process */
 	if (sflag1) {
 		sflag1 = 0;
 		spl0();
@@ -168,44 +248,67 @@ loop:
 	}
 	spl6();
 	outage = -20000;
-	for (rp = &proc[0]; rp <= proctop; rp++)
-		if (rp->p_stat == SRUN && (rp->p_flag & SLOAD) == 0 &&
-		    rp->p_time - (rp->p_nice - NZERO) * 8 > outage) {
-			p = rp;
-			outage = rp->p_time - (rp->p_nice - NZERO) * 8;
-		}
+	for (rp = &proc[0]; rp <= proctop; rp++)	/* MUTOS: proctop (V7: rp < &proc[NPROC]) */
+	if (rp->p_stat==SRUN && (rp->p_flag&SLOAD)==0 &&
+	    rp->p_time - (rp->p_nice-NZERO)*8 > outage) {
+		p = rp;
+		outage = rp->p_time - (rp->p_nice-NZERO)*8;
+	}
+	/*
+	 * If there is no one there, wait.
+	 */
 	if (outage == -20000) {
 		runout++;
 		sleep((caddr_t)&runout, PSWP);
 		goto loop;
 	}
 	spl0();
+
+	/*
+	 * See if there is core for that process;
+	 * if so, swap it in.
+	 */
+
 	if (swapin(p))
 		goto loop;
+
+	/*
+	 * none found.
+	 * look around for core.
+	 * Select the largest of those sleeping
+	 * at bad priority; if none, select the oldest.
+	 */
+
 	spl6();
 	p = NULL;
 	maxsize = -1;
 	inage = -1;
-	for (rp = &proc[0]; rp <= proctop; rp++) {
-		if (rp->p_stat == SZOMB ||
-		    (rp->p_flag & (SSYS | SLOCK | SULOCK | SLOAD)) != SLOAD)
+	for (rp = &proc[0]; rp <= proctop; rp++) {	/* MUTOS: proctop */
+		if (rp->p_stat==SZOMB
+		 || (rp->p_flag&(SSYS|SLOCK|SULOCK|SLOAD))!=SLOAD)
 			continue;
-		if (rp->p_textp && rp->p_textp->x_flag & XLOCK)
+		if (rp->p_textp && rp->p_textp->x_flag&XLOCK)
 			continue;
-		if (rp->p_stat == SSLEEP && rp->p_pri >= PZERO || rp->p_stat == SSTOP) {
+		if (rp->p_stat==SSLEEP&&rp->p_pri>=PZERO || rp->p_stat==SSTOP) {
 			if (maxsize < rp->p_size) {
 				p = rp;
 				maxsize = rp->p_size;
 			}
-		} else if (maxsize < 0 && (rp->p_stat == SRUN || rp->p_stat == SSLEEP)) {
-			if (rp->p_time + rp->p_nice - NZERO > inage) {
+		} else if (maxsize<0 && (rp->p_stat==SRUN||rp->p_stat==SSLEEP)) {
+			if (rp->p_time+rp->p_nice-NZERO > inage) {
 				p = rp;
-				inage = rp->p_time + rp->p_nice - NZERO;
+				inage = rp->p_time+rp->p_nice-NZERO;
 			}
 		}
 	}
 	spl0();
-	if (maxsize >= 0 || (outage >= 3 && inage >= 2)) {
+	/*
+	 * Swap found user out if sleeping at bad pri,
+	 * or if he has spent at least 2 seconds in core and
+	 * the swapped-out process has spent at least 3 seconds out.
+	 * Otherwise wait a bit and try again.
+	 */
+	if (maxsize>=0 || (outage>=3 && inage>=2)) {
 		p->p_flag &= ~SLOAD;
 		xswap(p, 1, 0);
 		goto loop;
@@ -216,32 +319,40 @@ loop:
 	goto loop;
 }
 
+/*
+ * Swap a process in.
+ * Allocate data and possible text separately.
+ * It would be better to do largest first.
+ */
 /* KERNEL 1CCA */
 swapin(p)
 register struct proc *p;
 {
 	register struct text *xp;
-	register a;
-	register t;
-	register x;
+	register int a;
+	register t;	/* MUTOS only */
+	register x;	/* MUTOS: register (V7: int x) */
 
 	if ((a = malloc(coremap, p->p_size)) == NULL)
 		return(0);
 	if (xp = p->p_textp) {
 		xlock(xp);
-		if (xp->x_ccount == 0) {
+		if (xp->x_ccount==0) {
 			if ((x = malloc(coremap, xp->x_size)) == NULL) {
 				xunlock(xp);
 				mfree(coremap, p->p_size, a);
 				return(0);
 			}
 			xp->x_caddr = x;
-			if ((xp->x_flag & XLOAD) == 0)
-				swap(xp->x_daddr, x, xp->x_size, B_READ);
+			if ((xp->x_flag&XLOAD)==0)
+				swap(xp->x_daddr,x,xp->x_size,B_READ);
 		}
 		xp->x_ccount++;
 		xunlock(xp);
 	}
+	/* MUTOS (Z8001): the process image is read into the segment with the u area at EC00 + 4*a; the image size is
+	 * the fixed u size 0x104.  V7: "swap(p->p_addr, a, p->p_size, B_READ);
+	 * mfree(swapmap, ctod(p->p_size), p->p_addr);" */
 	t = a;
 	t <<= 2;
 	t += 0xEC00;
@@ -252,35 +363,62 @@ register struct proc *p;
 	return(1);
 }
 
+/*
+ * put the current process on
+ * the Q of running processes and
+ * call the scheduler.
+ */
 /* KERNEL 1D8E */
 qswtch()
 {
+
 	setrq(u.u_procp);
 	swtch();
 }
 
-/* Absolute Zellen im u-Rest (FD5A/FD5C: Gleitpunkt-/Sicherungszustand, Namen geraten) */
-#define U_FPSAVED	(*(int *)0xFD5A)
-#define U_FPAREA	((char *)0xFD5C)
-
+/*
+ * This routine is called to reschedule the CPU.
+ * if the calling process is not in RUN state,
+ * arrangements for it to restart must have
+ * been made elsewhere, usually by calling via sleep.
+ * There is a race here. A process may become
+ * ready after it has been examined.
+ * In this case, idle() will be called and
+ * will return in at most 1HZ time.
+ * i.e. its not worth putting an spl() in.
+ */
 /* KERNEL 1DA4 */
 swtch()
 {
 	register n;
 	register struct proc *p, *q, *pp, *pq;
 
+	/*
+	 * If not the idle process, resume the idle process.
+	 */
 	if (u.u_procp != &proc[0]) {
-		if (savu(u.u_rsav)) {
+		if (savu(u.u_rsav)) {	/* MUTOS: savu (V7: save) */
 			sureg();
 			return;
 		}
-		if (U_FPSAVED == 0) {
-			savfp(U_FPAREA);
-			U_FPSAVED = 1;
+		if (u.u_fpsaved==0) {
+			savfp(u.u_fparea);	/* MUTOS: V7 savfp(&u.u_fps) */
+			u.u_fpsaved = 1;
 		}
 		resume(proc[0].p_addr, u.u_qsav);
 	}
-	if (savu(u.u_qsav) == 0 && savu(u.u_rsav))
+	/*
+	 * The first save returns nonzero when proc 0 is resumed
+	 * by another process (above); then the second is not done
+	 * and the process-search loop is entered.
+	 *
+	 * The first save returns 0 when swtch is called in proc 0
+	 * from sched().  The second save returns 0 immediately, so
+	 * in this case too the process-search loop is entered.
+	 * Thus when proc 0 is awakened by being made runnable, it will
+	 * find itself and resume itself at rsav, and return to sched().
+	 */
+	if (savu(u.u_qsav)==0 && savu(u.u_rsav))
 		return;
 loop:
 	spl6();
@@ -288,9 +426,12 @@ loop:
 	pp = NULL;
 	q = NULL;
 	n = 128;
-	for (p = runq; p != NULL; p = p->p_link) {
-		if (p->p_stat == SRUN && (p->p_flag & SLOAD)) {
-			if (p->p_pri < n) {
+	/*
+	 * Search for highest-priority runnable process
+	 */
+	for(p=runq; p!=NULL; p=p->p_link) {
+		if((p->p_stat==SRUN) && (p->p_flag&SLOAD)) {
+			if(p->p_pri < n) {
 				pp = p;
 				pq = q;
 				n = p->p_pri;
@@ -298,47 +439,69 @@ loop:
 		}
 		q = p;
 	}
+	/*
+	 * If no process is runnable, idle.
+	 */
 	p = pp;
-	if (p == NULL) {
+	if(p == NULL) {
 		idle();
 		goto loop;
 	}
 	q = pq;
-	if (q == NULL)
+	if(q == NULL)
 		runq = p->p_link;
 	else
 		q->p_link = p->p_link;
 	curpri = n;
 	spl0();
-	n = p->p_flag & SSWAP;
+	/*
+	 * The rsav (ssav) contents are interpreted in the new address space
+	 */
+	n = p->p_flag&SSWAP;
 	p->p_flag &= ~SSWAP;
-	resume(p->p_addr, n ? u.u_ssav : u.u_rsav);
+	resume(p->p_addr, n? u.u_ssav: u.u_rsav);
 }
 
+/*
+ * Create a new process-- the internal version of
+ * sys fork.
+ * It returns 1 in the new process, 0 in the old.
+ */
 /* KERNEL 1EA2 */
 newproc()
 {
 	struct proc *p, *up;
-	int a1;
+	int a1;			/* MUTOS: no a2 (V7: int a1, a2) */
 	register struct proc *rpp, *rip;
-	register n, a;
+	register n, a;		/* MUTOS: register a replaces V7 a2 */
 
 	p = NULL;
+	/*
+	 * First, just locate a slot for a process
+	 * and copy the useful info from this process into it.
+	 * The panic "cannot happen" because fork has already
+	 * checked for the existence of a slot.
+	 */
 retry:
 	mpid++;
-	if (mpid >= 30000) {
+	if(mpid >= 30000) {
 		mpid = 0;
 		goto retry;
 	}
-	for (rpp = &proc[0]; rpp <= proctop; rpp++) {
-		if (rpp->p_stat == 0 && p == NULL)
+	for(rpp = &proc[0]; rpp <= proctop; rpp++) {	/* MUTOS: proctop (V7: rpp < &proc[NPROC]) */
+		if(rpp->p_stat == 0 && p==NULL)
 			p = rpp;
-		if (rpp->p_pid == mpid || rpp->p_pgrp == mpid)
+		if (rpp->p_pid==mpid || rpp->p_pgrp==mpid)
 			goto retry;
 	}
 	rpp = p;
 	if (rpp == NULL)
 		panic("no procs");
+
+	/*
+	 * make proc entry for new proc
+	 */
+
 	rip = u.u_procp;
 	up = rip;
 	rpp->p_stat = SRUN;
@@ -352,53 +515,78 @@ retry:
 	rpp->p_ppid = rip->p_pid;
 	rpp->p_time = 0;
 	rpp->p_cpu = 0;
-	for (n = 0; n < NOFILE; n++)
-		if (u.u_ofile[n] != NULL)
+
+	/*
+	 * make duplicate entries
+	 * where needed
+	 */
+
+	for(n=0; n<NOFILE; n++)
+		if(u.u_ofile[n] != NULL)
 			u.u_ofile[n]->f_count++;
-	if (up->p_textp) {
+	if(up->p_textp != NULL) {
 		up->p_textp->x_count++;
 		up->p_textp->x_ccount++;
 	}
 	u.u_cdir->i_count++;
 	if (u.u_rdir)
 		u.u_rdir->i_count++;
+	/*
+	 * Partially simulate the environment
+	 * of the new process so that when it is actually
+	 * created (by copying) it will look right.
+	 */
 	rpp = p;
 	u.u_procp = rpp;
 	rip = up;
-	n = 256;
+	n = 256;		/* MUTOS: fixed image size in 256-byte units (V7: rip->p_size) */
 	a1 = rip->p_addr;
 	rpp->p_size = n;
-	if (savu(u.u_ssav)) {
+	/*
+	 * When the resume is executed for the new process,
+	 * here's where it will resume.
+	 */
+	if (savu(u.u_ssav)) {	/* MUTOS: savu (V7: save) */
 		sureg();
 		return(1);
 	}
-	if (U_FPSAVED == 0) {
-		savfp(U_FPAREA);
-		U_FPSAVED = 1;
+	if (u.u_fpsaved==0) {	/* MUTOS only: save the floating point state */
+		savfp(u.u_fparea);
+		u.u_fpsaved = 1;
 	}
 	a = malloc(coremap, n);
-	if (a == NULL) {
+	/*
+	 * If there is not enough core for the
+	 * new process, swap out the current process to generate the
+	 * copy.
+	 */
+	if(a == NULL) {
 		rip->p_stat = SIDL;
 		rpp->p_addr = a1;
+		/* MUTOS (Z8001): the u area (4 segment units from the page above &u) is copied into the swap image first */
 		n = 4;
-		a1 = (unsigned)0xFCFF >> 8;
-		a = rpp->p_addr >> 8 << 10;
+		a1 = ((unsigned)&u + 0xFF) >> 8;
+		a = (rpp->p_addr >> 8) * 0x400;
 		a += 0xECFF;
 		a = (unsigned)a >> 8;
-		while (n--)
+		while(n--)
 			copyseg(a1++, a++);
 		xswap(rpp, 0, 0);
 		rip->p_stat = SRUN;
 	} else {
+		/*
+		 * There is core, so just copy.
+		 */
 		rpp->p_addr = a;
-		while (n--)
+		while(n--)
 			copyseg(a1++, a++);
+		/* MUTOS (Z8001): then the u area, as above */
 		n = 4;
-		a1 = (unsigned)0xFCFF >> 8;
-		a = rpp->p_addr >> 8 << 10;
+		a1 = ((unsigned)&u + 0xFF) >> 8;
+		a = (rpp->p_addr >> 8) * 0x400;
 		a += 0xECFF;
 		a = (unsigned)a >> 8;
-		while (n--)
+		while(n--)
 			copyseg(a1++, a++);
 	}
 	u.u_procp = rip;
@@ -407,6 +595,12 @@ retry:
 	return(0);
 }
 
+/*
+ * Change the size of the data+stack regions of the process.
+ * (V7 body omitted in MUTOS: the Z8001 kernel has fixed-size
+ * images, see newproc/swapin; the original function is an empty
+ * stub of 8 bytes.)
+ */
 /* KERNEL 20F6 */
 expand()
 {

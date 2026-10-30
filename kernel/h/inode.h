@@ -29,6 +29,8 @@ extern struct inode	inode[];
 #define IFMT	0170000
 #define IFDIR	0040000
 #define IFCHR	0020000
+#define IFMPC	0030000	/* multiplexed char special (V7 inode.h) */
+#define IFMPB	0070000	/* multiplexed block special (V7 inode.h) */
 #define IFBLK	0060000
 #define IFREG	0100000
 #define ISUID	04000

@@ -1,0 +1,39 @@
+# Soll-Ergebnisse des Rundlaufs (tools/herkunft/rundlauf.sh): "Modul Funktion GLEICH|NAHE".
+# GLEICH = muss bytegleich zu mutos_1216 sein (sonst Exit 1).  NAHE = bekannt abweichend (c2-Muster, siehe doc/herkunft/<modul>.md), nicht geprueft.
+# Stand 2026-10-31 (AP H3, Pilot).
+alloc alloc NAHE
+alloc free GLEICH
+alloc badblock GLEICH
+alloc ialloc NAHE
+alloc ifree GLEICH
+alloc getfs GLEICH
+alloc update NAHE
+iget iget GLEICH
+iget iexpand GLEICH
+iget iput GLEICH
+iget iupdat GLEICH
+iget itrunc NAHE
+iget tloop NAHE
+iget maknode GLEICH
+iget wdir GLEICH
+slp sleep GLEICH
+slp wakeup GLEICH
+slp setrq GLEICH
+slp setrun GLEICH
+slp setpri GLEICH
+slp sched GLEICH
+slp swapin GLEICH
+slp qswtch GLEICH
+slp swtch GLEICH
+slp newproc GLEICH
+slp expand GLEICH
+sig signal GLEICH
+sig psignal GLEICH
+sig issig GLEICH
+sig stop GLEICH
+sig psig GLEICH
+sig fsig GLEICH
+sig core GLEICH
+sig grow GLEICH
+sig ptrace GLEICH
+sig procxmt GLEICH
