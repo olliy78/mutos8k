@@ -1,9 +1,11 @@
-# Original-Quellen UNIX V7 (Platzhalter)
+# Original-Quellen UNIX V7 (Referenz, nur lesen)
 
-Hierher kommen später die Original-Quellen von UNIX Version 7 (Bell Labs, 1979; freigegeben unter der
-Caldera-Lizenz, BSD-artig) -- **unverändert**, nur als Vergleichsgrundlage.  Ziel: die Unterschiede zwischen
-V7 und MUTOS 8000 herausarbeiten und den dekompilierten Kernel (`kernel/c`), wo möglich, auf den V7-Text
-zurückführen (`doc/kernel/` hält die Gegenüberstellung fest).
+Unveraendert entpackt aus dem Spencer-Tarball (Bell Labs, 1979; Caldera-Lizenz 2002, BSD-artig):
 
-Vorgesehene Gliederung: `usr/sys/{sys,dev,conf,h}` wie im V7-Baum, dazu `usr/src/cmd`, `usr/src/libc` für den Userspace.
-Herkunft und Prüfsummen in `doc/quellen.md` eintragen.
+* Herkunft: https://www.tuhs.org/Archive/Distributions/Research/Henry_Spencer_v7/v7.tar.gz (abgerufen 2026-10-30)
+* SHA-256 des Tarballs: `e0fd7bdd046e17de177f5d997acf8123fa43c57b46b032c7337f7666ab69a07e`
+* Begleittext von Henry Spencer: `HERKUNFT_spencer_README.txt`; Pruefsummen der Kernelquellen: `SHA256_usr_sys.txt`
+* Kernel: `usr/sys/{sys,dev,h,conf}`; Userspace: `usr/src/cmd`, `usr/src/libc`.
+* Nicht enthalten: `v7.patches.tar.gz` und das Addenda-Band (`v7addenda.tar.gz`) -- bei Bedarf nachladen.
+
+Dateien hier **nie** aendern; Vergleichsergebnisse gehoeren nach `doc/herkunft/`.

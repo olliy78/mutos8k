@@ -34,5 +34,6 @@ Die **fertigen** Disketten (`disks/gebaut/`) werden nicht eingecheckt; Referenzs
 * **WEGA / P8000**: https://github.com/OlliL/P8000 (`WEGA/src/uts` -- rueckuebersetzter Kernel, Z8001).
   Naechster Verwandter mit Quellen; nur Orientierung, nicht kopiert (`original/wega/README.md`).
 * **UNIX V7** (Bell Labs 1979, Caldera-Lizenz): TUHS-Archiv, https://www.tuhs.org (Unix Heritage Society).
-  Soll spaeter unveraendert unter `original/unix-v7/` liegen; dann hier Herkunft und Pruefsummen eintragen.
+  Liegt seit 2026-10-30 unveraendert unter `original/unix-v7/` (Herkunft, Pruefsumme: `original/unix-v7/README.md`).
+* **UNIX System III** (USG 1980): GitHub-Spiegel `Krush206/unix-system-III`, unter `original/sys3/` (eingecheckt auf Entscheidung des Projektinhabers; `original/sys3/README.md`).
 * Schaltplaene/Geraeteunterlagen: tiffe.de (siehe `k1520emu: doc/design/16_k8915.md`, `17_a5120_16.md`).
