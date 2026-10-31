@@ -277,3 +277,25 @@ Ergebnis: 31 von 36 Funktionen bytegleich (vorher 26 von 36); `alloc` enthaelt S
 Header und `conf.c`/`sysent.c` in V7-Form bei unveraendertem Layout, Details in `header.md`.  Rundlauf aller 27 Module: 181 von 227 Funktionen bytegleich (vorher 181);
 Gesamtbau mit Boot BYTEGLEICH (36 352 Byte).  `alloc`, `iget`, `slp`, `sig` und die uebrigen Module nutzen `b_un`/`i_un`/`f_un`.  Die Strukturverhaeltnisse in 4.2 fuer `buf`/`inode` (0,92/0,86)
 sind damit ueberholt (1,00 nach Angleichung, kein neuer Beleg).  `user_ext.h` entfaellt.
+
+## 10. Stand AP H3, Gruppe `sys2 sys3 sys4 fio prf subr malloc pipe` (2026-10-31)
+
+V7-Text (mit V7-Kommentaren, englisch) in allen 8 Modulen, Dateikoepfe nach Plan 42 Abschnitt 5, Einzelheiten in `sys2.md`, `sys3.md`, `sys4.md`, `fio.md`, `prf.md`, `subr.md`, `malloc.md`, `pipe.md`.
+Neue Header `stat.h`, `timeb.h` (V7-Text, vorher lokale Deklarationen in `sys3.c`/`sys4.c`).  Alle Zahlen **gemessen** (Rundlauf je Funktion, `rundlauf.md`; Sollwerte in `daten/rundlauf_soll.txt`).
+
+* Rundlauf: **69 von 73 Funktionen bytegleich, vorher 66 von 73** (sys2 11/11 vorher 10, sys3 8/8, sys4 23/24 vorher 22, fio 8/8, prf 5/5, subr 6/7 vorher 5, malloc 0/2, pipe 8/8).
+  Zugewinn durch die V7-Form: `rdwr`, `chdirec`, `bcopy`.  Keine Funktion schlechter.  Zwischenstufen, die kurz schlechter waren und gezielt zurueckgenommen wurden: `smount` (`SUPERB` braucht `(daddr_t)`), `ftime` (`(int)ms`).
+* Gesamtbau `gesamtbau.py --uebersetzen --stufe 1 --boot` auf dem endgueltigen Stand: **184 von 227** Funktionen aus C (vorher 181), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte,
+  Boot bis zur Shell und Arbeitstests (`summe = 5050` zweimal, `cc -O -c prf.c` 1600 B).  Gesamtes `pytest`: 213 bestanden, 2 uebersprungen.
+* Noch "nahe" (Muster des aelteren Kernel-`c2`, `c_rueckbau.md` K7b/K7c): `bmap` 263/308, `ssig` 39/52, `malloc` 24/52, `mfree` 1/119 abweichende Woerter -- unveraendert gegenueber vorher.
+  Befund entgegen K7a: `bcopy` war keine `c2`-Abweichung (kein "anderer c2-Stand"), sondern die Quellform (`register count` als Parameter); `doc/kernel/c_rueckbau.md` ist an dieser Stelle ueberholt.
+* **Aussage "Kern V7, nur einzelne System-III-Zuege" bestaetigt**, Zahl der SysIII-Zuege waechst um einen: `smount` springt nach fehlgeschlagenem `d_open` nach `out1` (SysIII textgleich; V7 `out`).
+  (Vorher: `s_tfree`/`s_tinode` in `alloc.c`.)  `seek` hat eine `off < 0`-Pruefung wie SysIII, aber in anderer Form (siehe unten).  Kein SysIII-Alleinmerkmal sonst; `pipe` ist V7 (kein `IFIFO`).
+* **Fremdzuege (weder V7 noch System III) fuer H6:**
+  1. `malloc.c`: Kartengroesse 15 Eintraege, `panic("map overflow\n")` (Text 8AE4).  `rg 'map overflow' original/` ohne Treffer.
+  2. `sys2.c` `seek`: `if(uap->off < 0) { u.u_error = EINVAL; uap->off = 0; }` (SysIII: `return` ohne `off = 0`, V7: keine Pruefung).
+  3. `sys3.c` `sumount`: Busy-Test ueber `i_count` und Freigabe `ip->i_number = 0` fuer unbenutzte Eintraege (V7/SysIII: `i_number != 0` -> `EBUSY`).
+  4. `sys4.c` `stime`: loescht `i_lastr` aller Inodes (haengt an der MUTOS-eigenen Freigabezeit in `iget.c`).
+  5. `sys4.c` `ftime`: Zeitzone 0 / kein DST (Konfigurationswert, keine Herkunftsaussage).
+  6. `sys3.c` `exec`-Stumpf (`u_ap[2] = 0; exece()`): V7 hat `exec` in `sys1.c`; zusammen mit der leeren `expand` Teil der Z8001-Anpassung.
+  7. Z8001-bedingt (kein Fremdzug): `proctop` in `kill`, kein `suibyte`/`fuibyte`, Zeiger auf `u` bei 0xFC00.

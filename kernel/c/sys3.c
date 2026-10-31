@@ -1,6 +1,16 @@
-/* sys3.c -- fstat, stat, stat1, dup, smount, sumount, getmdev, exec (Kernel mutos_1216, 3D6A..41AC).
- * exec (4198) ist nur der Stumpf, der das dritte Argument loescht und exece (sys1.c) ruft.
- * Daten: mount[] = A07E..A09C (5 Eintraege zu 6 Byte), inode[] = 907A, nblkdev = 8DD0, bdevsw = 8766 (d_open +0, d_close +2). */
+/* sys3.c -- fstat, stat, stat1, dup, smount, sumount, getmdev, exec (kernel mutos_1216, 3D6A..41AC).
+ *
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/sys3.c (7 functions); exec() is a MUTOS stub (see Deviations).  System III PDP-11
+ *           uts/os/sys3.c is an extended variant (mount flags, binval, suser, ve_mount).
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 87% V7 / 61% System III PDP-11 (before the
+ *           restoration), 7 of 8 functions above 50% against V7 (exec is the stub).  Same struct a layouts and strings.
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys3.md.
+ * Deviations: smount continues at out1 after a failed d_open (as System III; V7: out); sumount refuses when an inode of
+ *           the device is still referenced and clears i_number otherwise (neither V7 nor System III); exec (4198) only
+ *           clears the third argument and calls exece (sys1.c); struct stat and dinode come from stat.h/ino.h.
+ *
+ * Data: mount[] = A07E..A09C (5 entries of 6 bytes), inode[] = 907A, nblkdev = 8DD0, bdevsw = 8766 (d_open +0, d_close +2). */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -8,77 +18,70 @@
 #include "proc.h"
 #include "inode.h"
 #include "file.h"
+#include "ino.h"
 #include "buf.h"
 #include "conf.h"
 #include "filsys.h"
 #include "mount.h"
+#include "stat.h"
 
-struct stat {
-	dev_t		st_dev;
-	ino_t		st_ino;
-	unsigned	st_mode;
-	int		st_nlink;
-	int		st_uid;
-	int		st_gid;
-	dev_t		st_rdev;
-	off_t		st_size;
-	time_t		st_atime;
-	time_t		st_mtime;
-	time_t		st_ctime;
-};
-
-/* Platteninode (64 Byte): die drei Zeiten liegen bei 34h, 38h, 3Ch */
-struct dinode {
-	char		di_x[0x34];
-	time_t		di_atime;
-	time_t		di_mtime;
-	time_t		di_ctime;
-};
-
+/*
+ * the fstat system call.
+ */
 /* KERNEL 3D6A */
 fstat()
 {
 	register struct file *fp;
 	register struct a {
-		int		fdes;
-		struct stat	*sb;
+		int	fdes;
+		struct stat *sb;
 	} *uap;
 
 	uap = (struct a *)u.u_ap;
 	fp = getf(uap->fdes);
-	if (fp == NULL)
+	if(fp == NULL)
 		return;
-	stat1(fp->f_inode, uap->sb, fp->f_flag & FPIPE ? fp->f_un.f_offset : (off_t)0);
+	stat1(fp->f_inode, uap->sb, fp->f_flag&FPIPE? fp->f_un.f_offset: (off_t)0);
 }
 
+/*
+ * the stat system call.
+ */
 /* KERNEL 3DA2 */
 stat()
 {
 	register struct inode *ip;
 	register struct a {
-		char		*fname;
-		struct stat	*sb;
+		char	*fname;
+		struct stat *sb;
 	} *uap;
 
 	uap = (struct a *)u.u_ap;
 	ip = namei(uchar, 0);
-	if (ip == NULL)
+	if(ip == NULL)
 		return;
 	stat1(ip, uap->sb, (off_t)0);
 	iput(ip);
 }
 
+/*
+ * The basic routine for fstat and stat:
+ * get the inode and pass appropriate parts back.
+ */
 /* KERNEL 3DDC */
-stat1(ip, ub, pipeadr)
+stat1(ip, ub, pipeadj)
 register struct inode *ip;
 struct stat *ub;
-off_t pipeadr;
+off_t pipeadj;
 {
 	register struct dinode *dp;
 	register struct buf *bp;
 	struct stat ds;
 
 	iupdat(ip, &time, &time);
+	/*
+	 * first copy from inode table
+	 */
 	ds.st_dev = ip->i_dev;
 	ds.st_ino = ip->i_number;
 	ds.st_mode = ip->i_mode;
@@ -86,7 +89,10 @@ off_t pipeadr;
 	ds.st_uid = ip->i_uid;
 	ds.st_gid = ip->i_gid;
 	ds.st_rdev = (dev_t)ip->i_un.i_rdev;
-	ds.st_size = ip->i_size - pipeadr;
+	ds.st_size = ip->i_size - pipeadj;
+	/*
+	 * next the dates in the disk
+	 */
 	bp = bread(ip->i_dev, itod(ip->i_number));
 	dp = bp->b_un.b_dino;
 	dp += itoo(ip->i_number);
@@ -98,82 +104,91 @@ off_t pipeadr;
 		u.u_error = EFAULT;
 }
 
+/*
+ * the dup system call.
+ */
 /* KERNEL 3EB2 */
 dup()
 {
 	register struct file *fp;
 	register struct a {
-		int	i;
-		int	i2;
+		int	fdes;
+		int	fdes2;
 	} *uap;
 	register i, m;
 
 	uap = (struct a *)u.u_ap;
-	m = uap->i & ~077;
-	uap->i &= 077;
-	fp = getf(uap->i);
-	if (fp == NULL)
+	m = uap->fdes & ~077;
+	uap->fdes &= 077;
+	fp = getf(uap->fdes);
+	if(fp == NULL)
 		return;
-	if ((m & 0100) == 0) {
+	if ((m&0100) == 0) {
 		if ((i = ufalloc()) < 0)
 			return;
 	} else {
-		i = uap->i2;
-		if (i < 0 || i >= NOFILE) {
+		i = uap->fdes2;
+		if (i<0 || i>=NOFILE) {
 			u.u_error = EBADF;
 			return;
 		}
 		u.u_r.r_val1 = i;
 	}
-	if (i == uap->i)
-		return;
-	if (u.u_ofile[i] != NULL)
-		closef(u.u_ofile[i]);
-	u.u_ofile[i] = fp;
-	fp->f_count++;
+	if (i!=uap->fdes) {
+		if (u.u_ofile[i]!=NULL)
+			closef(u.u_ofile[i]);
+		u.u_ofile[i] = fp;
+		fp->f_count++;
+	}
 }
 
+/*
+ * the mount system call.
+ */
 /* KERNEL 3F3C */
 smount()
 {
 	dev_t dev;
 	register struct inode *ip;
 	register struct mount *mp;
+	struct mount *smp;
 	register struct filsys *fp;
+	struct buf *bp;
 	register struct a {
 		char	*fspec;
 		char	*freg;
 		int	ronly;
 	} *uap;
-	struct mount *smp;
-	struct buf *bp;
 
 	uap = (struct a *)u.u_ap;
 	dev = getmdev();
-	if (u.u_error)
+	if(u.u_error)
 		return;
 	u.u_dirp = (caddr_t)uap->freg;
 	ip = namei(uchar, 0);
-	if (ip == NULL)
+	if(ip == NULL)
 		return;
-	if (ip->i_count != 1 || (ip->i_mode & (IFBLK & IFCHR)) != 0)
+	if(ip->i_count!=1 || (ip->i_mode&(IFBLK&IFCHR))!=0)
 		goto out;
 	smp = NULL;
-	for (mp = &mount[0]; mp < &mount[NMOUNT]; mp++) {
-		if (mp->m_bufp != NULL) {
-			if (dev == mp->m_dev)
+	for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++) {
+		if(mp->m_bufp != NULL) {
+			if(dev == mp->m_dev)
 				goto out;
-		} else if (smp == NULL)
+		} else
+		if(smp == NULL)
 			smp = mp;
 	}
 	mp = smp;
-	if (mp == NULL)
+	if(mp == NULL)
 		goto out;
 	(*bdevsw[major(dev)].d_open)(dev, !uap->ronly);
-	if (u.u_error)
+	/* MUTOS: out1 (System III); V7 jumps to out here */
+	if(u.u_error)
 		goto out1;
-	bp = bread(dev, (daddr_t)1);
-	if (u.u_error) {
+	/* MUTOS: SUPERB is an int in this kernel, bread takes a long block number (V7: bread(dev, SUPERB)) */
+	bp = bread(dev, (daddr_t)SUPERB);
+	if(u.u_error) {
 		brelse(bp);
 		goto out1;
 	}
@@ -189,12 +204,16 @@ smount()
 	ip->i_flag |= IMOUNT;
 	prele(ip);
 	return;
+
 out:
 	u.u_error = EBUSY;
 out1:
 	iput(ip);
 }
 
+/*
+ * the umount system call.
+ */
 /* KERNEL 4080 */
 sumount()
 {
@@ -202,21 +221,26 @@ sumount()
 	register struct inode *ip;
 	register struct mount *mp;
 	struct buf *bp;
+	register struct a {
+		char	*fspec;
+	};
 
 	dev = getmdev();
-	if (u.u_error)
+	if(u.u_error)
 		return;
-	xumount(dev);
+	xumount(dev);	/* remove unused sticky files from text table */
 	update();
-	for (mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
-		if (mp->m_bufp != NULL && dev == mp->m_dev)
+	for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
+		if(mp->m_bufp != NULL && dev == mp->m_dev)
 			goto found;
 	u.u_error = EINVAL;
 	return;
+
 found:
-	for (ip = &inode[0]; ip < &inode[NINODE]; ip++)
-		if (dev == ip->i_dev) {
-			if (ip->i_count) {
+	for(ip = &inode[0]; ip < &inode[NINODE]; ip++)
+		/* MUTOS: busy test on i_count and release of the entry (V7: if(ip->i_number != 0 && dev == ip->i_dev) { EBUSY; return; }) */
+		if(dev == ip->i_dev) {
+			if(ip->i_count) {
 				u.u_error = EBUSY;
 				return;
 			}
@@ -232,24 +256,31 @@ found:
 	brelse(bp);
 }
 
+/*
+ * Common code for mount and umount.
+ * Check that the user's argument is a reasonable
+ * thing on which to mount, and return the device number if so.
+ */
 /* KERNEL 413C */
+dev_t
 getmdev()
 {
-	dev_t d;
+	dev_t dev;
 	register struct inode *ip;
 
 	ip = namei(uchar, 0);
-	if (ip == NULL)
+	if(ip == NULL)
 		return(NODEV);
-	if ((ip->i_mode & IFMT) != IFBLK)
+	if((ip->i_mode&IFMT) != IFBLK)
 		u.u_error = ENOTBLK;
-	d = (dev_t)ip->i_un.i_rdev;
-	if (major(d) >= nblkdev)
+	dev = (dev_t)ip->i_un.i_rdev;
+	if(major(dev) >= nblkdev)
 		u.u_error = ENXIO;
 	iput(ip);
-	return(d);
+	return(dev);
 }
 
+/* MUTOS: stub (no V7 text): clears the third argument and calls exece (sys1.c) */
 /* KERNEL 4198 */
 exec()
 {

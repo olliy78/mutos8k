@@ -1,6 +1,17 @@
-/* fio.c -- Dateizugriff (Kernel mutos_1216, 2AD4..2DEF): getf, closef, openi, access, owner, suser, ufalloc, falloc.
- * Daten: file[] = 9EEE..A07E (50 Eintraege zu 8 Byte), u_ofile = FC62, Text 8ADA "no file\n", nchrdev 8DD2, nblkdev 8DD0,
- * cdevsw 8796 (14 Byte je Eintrag: d_open +0, d_close +2), bdevsw 8766 (8 Byte: d_open +0, d_close +2). */
+/* fio.c -- file descriptor and file access helpers (kernel mutos_1216, 2AD4..2DEF): getf, closef, openi, access, owner,
+ * suser, ufalloc, falloc.
+ *
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/fio.c (all 8 functions).  System III PDP-11 uts/os/fio.c differs (IFIFO, closep, FIFOs);
+ *           only access, owner and (partly) ufalloc/falloc agree.
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 90% V7 / 65% System III PDP-11 (before the
+ *           restoration).  closef uses the V7 multiplexor logic (IFMPC/IFMPB, FMP, struct chan * in f_un), which System III
+ *           no longer has; "no file\n" is V7.
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/fio.md.
+ * Deviations: suser without the accounting flag (no acct), see doc/herkunft/fio.md.
+ *
+ * Data: file[] = 9EEE..A07E (50 entries of 8 bytes), u_ofile = FC62, text 8ADA "no file\n", nchrdev 8DD2, nblkdev 8DD0,
+ * cdevsw 8796 (14 bytes per entry: d_open +0, d_close +2), bdevsw 8766 (8 bytes: d_open +0, d_close +2). */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -10,19 +21,40 @@
 #include "conf.h"
 #include "filsys.h"
 
+/*
+ * Convert a user supplied
+ * file descriptor into a pointer
+ * to a file structure.
+ * Only task is to check range
+ * of the descriptor.
+ */
 /* KERNEL 2AD4 */
 struct file *
 getf(f)
-register f;
+register int f;
 {
-	register *fp;
+	register struct file *fp;
 
-	if (f >= 0 && f < 20 && (fp = u.u_ofile[f]) != 0)
-		return(fp);
+	if(0 <= f && f < NOFILE) {
+		fp = u.u_ofile[f];
+		if(fp != NULL)
+			return(fp);
+	}
 	u.u_error = EBADF;
-	return(0);
+	return(NULL);
 }
 
+/*
+ * Internal form of close.
+ * Decrement reference count on
+ * file structure.
+ * Also make sure the pipe protocol
+ * does not constipate.
+ *
+ * Decrement reference count on the inode following
+ * removal to the referencing file structure.
+ * Call device handler on last close.
+ */
 /* KERNEL 2B06 */
 closef(fp)
 register struct file *fp;
@@ -30,10 +62,10 @@ register struct file *fp;
 	register struct inode *ip;
 	int flag, mode;
 	dev_t dev;
-	struct chan *cp;
 	register int (*cfunc)();
+	struct chan *cp;
 
-	if (fp == NULL)
+	if(fp == NULL)
 		return;
 	if (fp->f_count > 1) {
 		fp->f_count--;
@@ -44,61 +76,86 @@ register struct file *fp;
 	cp = fp->f_un.f_chan;
 	dev = (dev_t)ip->i_un.i_rdev;
 	mode = ip->i_mode;
+
 	plock(ip);
 	fp->f_count = 0;
-	if (flag & FPIPE) {
+	if(flag & FPIPE) {
 		ip->i_mode &= ~(IREAD|IWRITE);
-		wakeup((caddr_t)ip + 1);
-		wakeup((caddr_t)ip + 2);
+		wakeup((caddr_t)ip+1);
+		wakeup((caddr_t)ip+2);
 	}
 	iput(ip);
-	switch (mode & IFMT) {
+
+	switch(mode&IFMT) {
+
 	case IFCHR:
-	case 0030000:
+	case IFMPC:
 		cfunc = cdevsw[major(dev)].d_close;
 		break;
+
 	case IFBLK:
-	case 0070000:
+	case IFMPB:
 		cfunc = bdevsw[major(dev)].d_close;
 		break;
 	default:
 		return;
 	}
-	if ((flag & 030) == 0) {
-		for (fp = file; fp < &file[NFILE]; fp++)
-			if (fp->f_count && fp->f_inode == ip)
+
+	if ((flag & FMP) == 0)
+		for(fp=file; fp < &file[NFILE]; fp++)
+			if (fp->f_count && fp->f_inode==ip)
 				return;
-	}
 	(*cfunc)(dev, flag, cp);
 }
 
+/*
+ * openi called to allow handler
+ * of special files to initialize and
+ * validate before actual IO.
+ */
 /* KERNEL 2C0C */
 openi(ip, rw)
 register struct inode *ip;
 {
 	dev_t dev;
-	register unsigned maj;
+	register unsigned int maj;
 
 	dev = (dev_t)ip->i_un.i_rdev;
 	maj = major(dev);
-	switch (ip->i_mode & IFMT) {
+	switch(ip->i_mode&IFMT) {
+
 	case IFCHR:
-	case 0030000:
-		if (maj >= nchrdev)
+	case IFMPC:
+		if(maj >= nchrdev)
 			goto bad;
 		(*cdevsw[maj].d_open)(dev, rw);
 		break;
+
 	case IFBLK:
-	case 0070000:
-		if (maj >= nblkdev)
+	case IFMPB:
+		if(maj >= nblkdev)
 			goto bad;
 		(*bdevsw[maj].d_open)(dev, rw);
 	}
 	return;
+
 bad:
 	u.u_error = ENXIO;
 }
 
+/*
+ * Check mode permission on inode pointer.
+ * Mode is READ, WRITE or EXEC.
+ * In the case of WRITE, the
+ * read-only status of the file
+ * system is checked.
+ * Also in WRITE, prototype text
+ * segments cannot be written.
+ * The mode is shifted to select
+ * the owner/group/other fields.
+ * The super user is granted all
+ * permissions.
+ */
 /* KERNEL 2C8C */
 access(ip, mode)
 register struct inode *ip;
@@ -106,31 +163,40 @@ register struct inode *ip;
 	register m;
 
 	m = mode;
-	if (m == IWRITE) {
-		if (getfs(ip->i_dev)->s_ronly != 0) {
+	if(m == IWRITE) {
+		if(getfs(ip->i_dev)->s_ronly != 0) {
 			u.u_error = EROFS;
 			return(1);
 		}
-		if (ip->i_flag & ITEXT)
+		if (ip->i_flag&ITEXT)		/* try to free text */
 			xrele(ip);
-		if (ip->i_flag & ITEXT) {
+		if(ip->i_flag & ITEXT) {
 			u.u_error = ETXTBSY;
 			return(1);
 		}
 	}
-	if (u.u_uid == 0)
+	if(u.u_uid == 0)
 		return(0);
-	if (u.u_uid != ip->i_uid) {
+	if(u.u_uid != ip->i_uid) {
 		m >>= 3;
-		if (u.u_gid != ip->i_gid)
+		if(u.u_gid != ip->i_gid)
 			m >>= 3;
 	}
-	if ((ip->i_mode & m) != 0)
+	if((ip->i_mode&m) != 0)
 		return(0);
+
 	u.u_error = EACCES;
 	return(1);
 }
 
+/*
+ * Look up a pathname and test if
+ * the resultant inode is owned by the
+ * current user.
+ * If not, try for super-user.
+ * If permission is granted,
+ * return inode pointer.
+ */
 /* KERNEL 2D0A */
 struct inode *
 owner()
@@ -138,32 +204,42 @@ owner()
 	register struct inode *ip;
 
 	ip = namei(uchar, 0);
-	if (ip == NULL)
+	if(ip == NULL)
 		return(NULL);
-	if (u.u_uid == ip->i_uid)
+	if(u.u_uid == ip->i_uid)
 		return(ip);
-	if (suser())
+	if(suser())
 		return(ip);
 	iput(ip);
 	return(NULL);
 }
 
+/*
+ * Test if the current user is the
+ * super user.
+ */
 /* KERNEL 2D48 */
 suser()
 {
-	if (u.u_uid == 0)
+
+	if(u.u_uid == 0) {
+		/* MUTOS: no accounting, so no u.u_acflag |= ASU (V7) */
 		return(1);
+	}
 	u.u_error = EPERM;
 	return(0);
 }
 
+/*
+ * Allocate a user file descriptor.
+ */
 /* KERNEL 2D62 */
 ufalloc()
 {
 	register i;
 
-	for (i = 0; i < NOFILE; i++)
-		if (u.u_ofile[i] == NULL) {
+	for(i=0; i<NOFILE; i++)
+		if(u.u_ofile[i] == NULL) {
 			u.u_r.r_val1 = i;
 			u.u_pofile[i] = 0;
 			return(i);
@@ -172,6 +248,15 @@ ufalloc()
 	return(-1);
 }
 
+/*
+ * Allocate a user file descriptor
+ * and a file structure.
+ * Initialize the descriptor
+ * to point at the file structure.
+ *
+ * no file -- if there are no available
+ * 	file structures.
+ */
 /* KERNEL 2D9A */
 struct file *
 falloc()
@@ -179,10 +264,11 @@ falloc()
 	register struct file *fp;
 	register i;
 
-	if ((i = ufalloc()) < 0)
+	i = ufalloc();
+	if(i < 0)
 		return(NULL);
-	for (fp = &file[0]; fp < &file[NFILE]; fp++)
-		if (fp->f_count == 0) {
+	for(fp = &file[0]; fp < &file[NFILE]; fp++)
+		if(fp->f_count == 0) {
 			u.u_ofile[i] = fp;
 			fp->f_count++;
 			fp->f_un.f_offset = 0;
