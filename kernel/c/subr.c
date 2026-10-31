@@ -33,17 +33,17 @@ daddr_t bn;
 	rablock = 0;
 	if (bn < 10) {
 		i = bn;
-		nb = ip->i_addr[i];
+		nb = ip->i_un.i_addr[i];
 		if (nb == 0) {
 			if (rwflg == B_READ || (bp = alloc(dev)) == NULL)
 				return((daddr_t)-1);
 			nb = bp->b_blkno;
 			bdwrite(bp);
-			ip->i_addr[i] = nb;
+			ip->i_un.i_addr[i] = nb;
 			ip->i_flag |= IUPD|ICHG;
 		}
 		if (i < 9)
-			rablock = ip->i_addr[i+1];
+			rablock = ip->i_un.i_addr[i+1];
 		return(nb);
 	}
 	sh = 0;
@@ -60,13 +60,13 @@ daddr_t bn;
 		u.u_error = EFBIG;
 		return(0);
 	}
-	nb = ip->i_addr[13-j];
+	nb = ip->i_un.i_addr[13-j];
 	if (nb == 0) {
 		if (rwflg == B_READ || (bp = alloc(dev)) == NULL)
 			return((daddr_t)-1);
 		nb = bp->b_blkno;
 		bdwrite(bp);
-		ip->i_addr[13-j] = nb;
+		ip->i_un.i_addr[13-j] = nb;
 		ip->i_flag |= IUPD|ICHG;
 	}
 	for (; j <= 3; j++) {
@@ -75,7 +75,7 @@ daddr_t bn;
 			brelse(bp);
 			return(0);
 		}
-		bap = (daddr_t *)bp->b_addr;
+		bap = bp->b_un.b_daddr;
 		sh -= 7;
 		i = (bn >> sh) & 0177;
 		nb = bap[i];

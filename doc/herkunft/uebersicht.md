@@ -271,3 +271,9 @@ WEGA/ZEUS (Z8001, SysIII-Abkoemmling) bleibt als moegliche Vorlage fuer Z8001-Te
 
 Wiederhergestellt (V7-Text, Rundlauf geprueft): `alloc`, `iget`, `slp`, `sig` -- siehe `alloc.md`, `iget.md`, `slp.md`, `sig.md`; Rundlaufweg in `rundlauf.md`.
 Ergebnis: 31 von 36 Funktionen bytegleich (vorher 26 von 36); `alloc` enthaelt System-III-Zaehler (`s_tfree`/`s_tinode`), sonst V7.
+
+## 9. Stand AP H4 (Header und Konfiguration, 2026-10-31)
+
+Header und `conf.c`/`sysent.c` in V7-Form bei unveraendertem Layout, Details in `header.md`.  Rundlauf aller 27 Module: 181 von 227 Funktionen bytegleich (vorher 181);
+Gesamtbau mit Boot BYTEGLEICH (36 352 Byte).  `alloc`, `iget`, `slp`, `sig` und die uebrigen Module nutzen `b_un`/`i_un`/`f_un`.  Die Strukturverhaeltnisse in 4.2 fuer `buf`/`inode` (0,92/0,86)
+sind damit ueberholt (1,00 nach Angleichung, kein neuer Beleg).  `user_ext.h` entfaellt.

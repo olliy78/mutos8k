@@ -8,8 +8,8 @@
  * Roundtrip: cc -O in the guest, per function against mutos_1216: 6 of 8 byte-identical (iget, iexpand, iput, iupdat,
  *           maknode, wdir); itrunc and tloop differ only by the known older-c2 pattern (B).  Details: doc/herkunft/iget.md
  * Deviations: free-inode choice by age (i_lastr = release time, iget/iput) instead of "first free"/i_number = 0;
- *           block addresses expanded by hand (3 bytes, leading 0 byte first) in iexpand/iupdat; flat inode.h (no i_un
- *           union: i_addr and i_lastr are separate members) and flat buf.h; see doc/herkunft/iget.md.
+ *           block addresses expanded by hand (3 bytes, leading 0 byte first) in iexpand/iupdat;
+ *           i_un.i_lastr is reused for that (V7 union member, read-ahead); see doc/herkunft/iget.md.
  *
  * Data: inode[] = 907A..9EEE (50 entries of 74 bytes), mount[] = A07E (5 of 6 bytes), rootdir 8DC6, time 8DCC,
  * texts 8A1C "no imt", 8A23 "Inode table overflow", 8A39 "iaddress > 2^24"; jump table of itrunc at 8A16.
@@ -18,7 +18,6 @@
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "user_ext.h"
 #include "inode.h"
 #include "mount.h"
 #include "ino.h"
@@ -74,12 +73,12 @@ loop:
 			}
 			/* MUTOS: i_lastr holds the release time; V7 has just "ip->i_count++;" */
 			if(ip->i_count++ == 0)
-				ip->i_lastr = 0;
+				ip->i_un.i_lastr = 0;
 			ip->i_flag |= ILOCK;
 			return(ip);
 		}
 		/* MUTOS: pick the free entry released longest ago; V7: "if(oip==NULL && ip->i_count==0)" */
-		if(ip->i_count==0 && (oip==NULL || oip->i_lastr > ip->i_lastr))
+		if(ip->i_count==0 && (oip==NULL || oip->i_un.i_lastr > ip->i_un.i_lastr))
 			oip = ip;
 	}
 	ip = oip;
@@ -92,7 +91,7 @@ loop:
 	ip->i_number = ino;
 	ip->i_flag = ILOCK;
 	ip->i_count++;
-	ip->i_lastr = 0;	/* MUTOS: flat inode.h, V7 i_un.i_lastr */
+	ip->i_un.i_lastr = 0;
 	bp = bread(dev, itod(ino));
 	/*
 	 * Check I/O errors
@@ -102,7 +101,7 @@ loop:
 		iput(ip);
 		return(NULL);
 	}
-	dp = (struct dinode *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_dino */
+	dp = bp->b_un.b_dino;
 	dp += itoo(ino);
 	iexpand(ip, dp);
 	brelse(bp);
@@ -123,9 +122,9 @@ register struct dinode *dp;
 	ip->i_uid = dp->di_uid;
 	ip->i_gid = dp->di_gid;
 	ip->i_size = dp->di_size;
-	/* MUTOS: flat inode.h (V7: i_un.i_addr); the leading zero byte of each long comes FIRST (big endian Z8001),
+	/* MUTOS: the leading zero byte of each long comes FIRST (big endian Z8001),
 	 * V7/PDP-11 has it in the second position */
-	p1 = (char *)ip->i_addr;
+	p1 = (char *)ip->i_un.i_addr;
 	p2 = (char *)dp->di_addr;
 	for(i=0; i<NADDR; i++) {
 		*p1++ = 0;
@@ -158,7 +157,7 @@ register struct inode *ip;
 		iupdat(ip, &time, &time);
 		prele(ip);
 		ip->i_flag = 0;
-		ip->i_lastr = time;	/* MUTOS: release time for iget; V7 has "ip->i_number = 0;" */
+		ip->i_un.i_lastr = time;	/* MUTOS: release time for iget; V7 has "ip->i_number = 0;" */
 	}
 	ip->i_count--;
 	prele(ip);
@@ -189,7 +188,7 @@ time_t *ta, *tm;
 			brelse(bp);
 			return;
 		}
-		dp = (struct dinode *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_dino */
+		dp = bp->b_un.b_dino;
 		dp += itoo(ip->i_number);
 		dp->di_mode = ip->i_mode;
 		dp->di_nlink = ip->i_nlink;
@@ -197,7 +196,7 @@ time_t *ta, *tm;
 		dp->di_gid = ip->i_gid;
 		dp->di_size = ip->i_size;
 		p1 = (char *)dp->di_addr;
-		p2 = (char *)ip->i_addr;	/* MUTOS: flat inode.h, V7 i_un.i_addr */
+		p2 = (char *)ip->i_un.i_addr;
 		for(i=0; i<NADDR; i++) {
 			/* MUTOS: the leading zero byte is checked FIRST (V7 checks the second byte) */
 			if(*p2++ != 0 && (ip->i_mode&IFMT)!=IFMPC
@@ -240,10 +239,10 @@ register struct inode *ip;
 		return;
 	dev = ip->i_dev;
 	for(i=NADDR-1; i>=0; i--) {
-		bn = ip->i_addr[i];	/* MUTOS: flat inode.h, V7 i_un.i_addr */
+		bn = ip->i_un.i_addr[i];
 		if(bn == (daddr_t)0)
 			continue;
-		ip->i_addr[i] = (daddr_t)0;
+		ip->i_un.i_addr[i] = (daddr_t)0;
 		switch(i) {
 
 		default:
@@ -284,7 +283,7 @@ daddr_t bn;
 				brelse(bp);
 				return;
 			}
-			bap = (daddr_t *)bp->b_addr;	/* MUTOS: flat buf.h, V7 bp->b_un.b_daddr */
+			bap = bp->b_un.b_daddr;
 		}
 		nb = bap[i];
 		if(nb == (daddr_t)0)

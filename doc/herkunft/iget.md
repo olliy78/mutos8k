@@ -39,4 +39,4 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/iget.c`.  Rundlauf wie in `rundl
 ## Offene Punkte
 
 * Herkunft der LRU-Aenderung (eigene Idee, BSD, Xenix?) -- Plan H6.
-* `i_lastr` als eigenes Feld ist eine Struktur-Abweichung (kein `i_un`), die `inode.h` nicht V7-gleich macht -- H4.
+* `i_lastr` als eigenes Feld ist eine Struktur-Abweichung (kein `i_un`), die `inode.h` nicht V7-gleich macht -- erledigt in H4.

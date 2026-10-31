@@ -8,7 +8,6 @@
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "user_ext.h"
 #include "inode.h"
 #include "proc.h"
 #include "buf.h"
@@ -288,7 +287,7 @@ struct buf *bp;
 	register *p;
 	register c;
 
-	p = (int *)bp->b_addr;
+	p = bp->b_un.b_words;
 	c = 256;
 	do
 		*p++ = 0;
@@ -380,7 +379,7 @@ register struct user *up;
 			c = 16;
 		bp->b_bcount = c << 8;
 		bp->b_blkno = (daddr_t)blkno + swplo;
-		bp->b_addr = (caddr_t)(coreaddr << 8);
+		bp->b_un.b_addr = (caddr_t)(coreaddr << 8);
 		bp->b_xmem = (coreaddr >> 8) & 0177;
 		(*bdevsw[major(swapdev)].d_strategy)(bp);
 		spl6();
@@ -430,12 +429,12 @@ register struct buf *bp;
 	if ((base & 01) || (u.u_count & 0777) || u.u_count == 0 || base >= base + u.u_count)
 		goto bad;
 	ts = u.u_tsize;
-	if (U_SEP)
+	if (u.u_sep)
 		ts = 0;
 	nb = (base >> 8) & 0377;
 	if (nb < ts)
 		goto bad;
-	if ((((base + u.u_count) >> 8) & 0377) >= ts + u.u_dsize && *(unsigned *)(U_P104 + 16) > (unsigned)u.u_base)
+	if ((((base + u.u_count) >> 8) & 0377) >= ts + u.u_dsize && *(unsigned *)((char *)u.u_ar0 + 16) > (unsigned)u.u_base)
 		goto bad;
 	if (((u.u_count + 0377) >> 8) > 16)
 		goto bad;
@@ -446,7 +445,7 @@ register struct buf *bp;
 	}
 	bp->b_flags = B_BUSY | B_PHYS | rw;
 	bp->b_dev = dev;
-	bp->b_addr = (caddr_t)base;
+	bp->b_un.b_addr = (caddr_t)base;
 	bp->b_xmem = (usrseg >> 8) & 0377;
 	bp->b_blkno = u.u_offset >> BSHIFT;
 	bp->b_bcount = u.u_count;

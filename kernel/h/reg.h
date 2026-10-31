@@ -1,5 +1,12 @@
-/* reg.h -- Registerrahmen beim Trap.  UNGEMESSEN: der Rahmen von trapent (030E) wurde in K7a noch nicht aufgeloest;
- * hier nur die Z8000-Registernamen als Platzhalter fuer spaetere Module (trap.c, sig.c). */
+/* reg.h -- register names for the trap frame.
+ *
+ * Origin:   none
+ * Source:   none.  V7 reg.h gives the PDP-11 locations of the saved user registers relative to R0 (u.u_ar0[R0] ...);
+ *           the Z8000 register numbers below are placeholders for later modules (trap.c, sig.c).
+ * Evidence: H2 found no common fingerprint with V7 (different CPU).  UNMEASURED: the layout of the trap frame
+ *           (trapent 030E) is not resolved; sig.c uses u_ar0[10] (PS) and u_ar0[12] (PC) as raw indexes.
+ * Deviations: whole file.
+ */
 #ifndef REG_H
 #define REG_H
 #define R0	0

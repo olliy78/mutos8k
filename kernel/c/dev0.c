@@ -174,7 +174,7 @@ fdstart()
 				x = 0;
 			fdtab.b_bcount = 2;
 			mp->mb_cnt = bp->b_bcount;
-			mp->mb_addr = bp->b_addr;
+			mp->mb_addr = bp->b_un.b_addr;
 			mp->mb_seg = bp->b_xmem & 3;
 			bp->b_resid = x;
 			goto issue;

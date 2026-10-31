@@ -48,7 +48,7 @@ fstat()
 	fp = getf(uap->fdes);
 	if (fp == NULL)
 		return;
-	stat1(fp->f_inode, uap->sb, fp->f_flag & FPIPE ? fp->f_offset : (off_t)0);
+	stat1(fp->f_inode, uap->sb, fp->f_flag & FPIPE ? fp->f_un.f_offset : (off_t)0);
 }
 
 /* KERNEL 3DA2 */
@@ -85,10 +85,10 @@ off_t pipeadr;
 	ds.st_nlink = ip->i_nlink;
 	ds.st_uid = ip->i_uid;
 	ds.st_gid = ip->i_gid;
-	ds.st_rdev = (dev_t)ip->i_addr[0];
+	ds.st_rdev = (dev_t)ip->i_un.i_rdev;
 	ds.st_size = ip->i_size - pipeadr;
 	bp = bread(ip->i_dev, itod(ip->i_number));
-	dp = (struct dinode *)bp->b_addr;
+	dp = bp->b_un.b_dino;
 	dp += itoo(ip->i_number);
 	ds.st_atime = dp->di_atime;
 	ds.st_mtime = dp->di_mtime;
@@ -180,8 +180,8 @@ smount()
 	mp->m_inodp = ip;
 	mp->m_dev = dev;
 	mp->m_bufp = geteblk();
-	bcopy((caddr_t)bp->b_addr, (caddr_t)mp->m_bufp->b_addr, BSIZE);
-	fp = (struct filsys *)mp->m_bufp->b_addr;
+	bcopy((caddr_t)bp->b_un.b_addr, mp->m_bufp->b_un.b_addr, BSIZE);
+	fp = mp->m_bufp->b_un.b_filsys;
 	fp->s_ilock = 0;
 	fp->s_flock = 0;
 	fp->s_ronly = uap->ronly & 1;
@@ -243,7 +243,7 @@ getmdev()
 		return(NODEV);
 	if ((ip->i_mode & IFMT) != IFBLK)
 		u.u_error = ENOTBLK;
-	d = (dev_t)ip->i_addr[0];
+	d = (dev_t)ip->i_un.i_rdev;
 	if (major(d) >= nblkdev)
 		u.u_error = ENXIO;
 	iput(ip);

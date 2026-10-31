@@ -60,7 +60,7 @@ stime()
 	uap = (struct a *)u.u_ap;
 	if (suser()) {
 		for (ip = &inode[0]; ip < &inode[NINODE]; ip++)
-			ip->i_lastr = 0;
+			ip->i_un.i_lastr = 0;
 		time = uap->time;
 	}
 }

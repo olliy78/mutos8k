@@ -41,5 +41,5 @@ Beleg der Klasse: Textvergleich mit `original/unix-v7/usr/sys/sys/alloc.c` (geme
 
 ## Offene Punkte
 
-* `kernel/h/buf.h`/`inode.h` sind flach (kein `b_un`, kein `i_un`); die V7-Schreibweise (`bp->b_un.b_addr`) braucht eine Unionsform in den Headern -- H4.
+* `kernel/h/buf.h`/`inode.h` sind flach (kein `b_un`, kein `i_un`); die V7-Schreibweise (`bp->b_un.b_addr`) braucht eine Unionsform in den Headern -- erledigt in H4.
 * `fblk.h` ist neu (V7-Text, unveraendert); Layout `df_free` bei +2 stimmt mit dem alten `(int *)b_addr + 1` (gleicher Objektcode).

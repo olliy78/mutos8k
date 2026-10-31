@@ -48,3 +48,11 @@ Neue Felder: erst im Kernel messen, dann hier das Fuellfeld ersetzen und diese T
 * `user_ext.h`: `U_TTYP` (u+114) und `U_TTYD` (u+116) fuer syopen/ttyopen (Kontrollterminal).  **Falle des Gast-`cpp`:** Namen sind nur auf 8 Zeichen signifikant -- ein Include-Waechter `USER_EXT_K7D`
   kollidierte mit `USER_EXT_H` und schaltete den ganzen Zusatz still ab ("U_TTYP undefined").  Waechter daher kurz und eindeutig (`UXK7D_H`).
 * `conf.h` unveraendert (bdevsw 8 Byte, cdevsw 14 Byte durch conf.c bestaetigt: Datenbytes 8766..88C5 gleich).
+
+## AP H4 (2026-10-31): V7-Form der Header
+Die Header in `kernel/h` tragen jetzt die V7-Form (Unions `b_un`, `i_un`, `f_un`; Kommentare und Namen aus `original/unix-v7/usr/sys/h`, Englisch) bei **unveraendertem Layout**.
+Geaendert gegenueber dem Stand oben: `buf.h` (+`b_un` mit `b_addr/b_words/b_filsys/b_dino/b_daddr`), `inode.h` (+`i_un` mit `i_addr/i_lastr` bzw. `i_rdev`),
+`file.h` (`f_un.f_offset` statt `#define f_offset`), `systm.h` (`sy_nrarg`, am Kernel gemessen 0), `user.h` (`u_ttyp`/`u_ttyd` statt Makros aus `user_ext.h`; `user_ext.h` entfaellt),
+`proc.h` (`struct xproc`), `param.h` (V7-Reihenfolge und -Kommentare, V7-Namen `SIGKIL`/`SIGCLK`).
+Die Offsets prueft `tests/test_header_layout.py` (kleiner Struct-Layouter, Sollwerte = die hier und in den Dateikoepfen gemessenen).
+Einzelheiten je Header: `../herkunft/header.md`.

@@ -7,7 +7,6 @@
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "user_ext.h"
 #include "inode.h"
 #include "proc.h"
 #include "file.h"
@@ -63,8 +62,8 @@ register struct tty *tp;
 	pp = u.u_procp;
 	tp->t_dev = dev;
 	if (pp->p_pgrp == 0) {
-		U_TTYP = (int)tp;
-		U_TTYD = dev;
+		u.u_ttyp = tp;
+		u.u_ttyd = dev;
 		if (tp->t_pgrp == 0)
 			tp->t_pgrp = pp->p_pid;
 		pp->p_pgrp = tp->t_pgrp;
@@ -130,7 +129,7 @@ ioctl()
 		u.u_error = ENOTTY;
 		return;
 	}
-	dev = ip->i_addr[0];
+	dev = (dev_t)ip->i_un.i_rdev;
 	(*cdevsw[major(dev)].d_ioctl)(dev, uap->cmd, uap->cmarg, fp->f_flag);
 }
 

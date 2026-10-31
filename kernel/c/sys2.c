@@ -56,7 +56,7 @@ register mode;
 		if (fp->f_flag & 030)
 			u.u_offset = 0;
 		else
-			u.u_offset = fp->f_offset;
+			u.u_offset = fp->f_un.f_offset;
 		if ((ip->i_mode & IFCHR) == 0)
 			plock(ip);
 		if (mode == FREAD)
@@ -66,7 +66,7 @@ register mode;
 		if ((ip->i_mode & IFCHR) == 0)
 			prele(ip);
 		if ((fp->f_flag & 030) == 0)
-			fp->f_offset += uap->count - u.u_count;
+			fp->f_un.f_offset += uap->count - u.u_count;
 	}
 	u.u_r.r_val1 = uap->count - u.u_count;
 }
@@ -180,14 +180,14 @@ seek()
 		return;
 	}
 	if (uap->sbase == 1)
-		uap->off += fp->f_offset;
+		uap->off += fp->f_un.f_offset;
 	else if (uap->sbase == 2)
 		uap->off += fp->f_inode->i_size;
 	if (uap->off < 0) {
 		u.u_error = EINVAL;
 		uap->off = 0;
 	}
-	fp->f_offset = uap->off;
+	fp->f_un.f_offset = uap->off;
 	u.u_r.r_off = uap->off;
 }
 
@@ -253,7 +253,7 @@ mknod()
 	ip = maknode(uap->fmode);
 	if (ip == NULL)
 		return;
-	ip->i_addr[0] = uap->dev;
+	ip->i_un.i_rdev = (dev_t)uap->dev;
 out:
 	iput(ip);
 }

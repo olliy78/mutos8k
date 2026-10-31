@@ -42,7 +42,7 @@ register struct file *fp;
 	ip = fp->f_inode;
 	flag = fp->f_flag;
 	cp = fp->f_un.f_chan;
-	dev = (dev_t)ip->i_addr[0];
+	dev = (dev_t)ip->i_un.i_rdev;
 	mode = ip->i_mode;
 	plock(ip);
 	fp->f_count = 0;
@@ -79,7 +79,7 @@ register struct inode *ip;
 	dev_t dev;
 	register unsigned maj;
 
-	dev = (dev_t)ip->i_addr[0];
+	dev = (dev_t)ip->i_un.i_rdev;
 	maj = major(dev);
 	switch (ip->i_mode & IFMT) {
 	case IFCHR:
@@ -185,7 +185,7 @@ falloc()
 		if (fp->f_count == 0) {
 			u.u_ofile[i] = fp;
 			fp->f_count++;
-			fp->f_offset = 0;
+			fp->f_un.f_offset = 0;
 			return(fp);
 		}
 	printf("no file\n");

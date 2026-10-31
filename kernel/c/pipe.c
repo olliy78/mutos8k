@@ -80,11 +80,11 @@ register struct file *fp;
 		ip->i_mode |= IREAD;
 		sleep((caddr_t)ip + 2, PPIPE);
 	}
-	u.u_offset = fp->f_offset;
+	u.u_offset = fp->f_un.f_offset;
 	readi(ip);
-	fp->f_offset = u.u_offset;
-	if (fp->f_offset == ip->i_size) {
-		fp->f_offset = 0;
+	fp->f_un.f_offset = u.u_offset;
+	if (fp->f_un.f_offset == ip->i_size) {
+		fp->f_un.f_offset = 0;
 		ip->i_size = 0;
 		if (ip->i_mode & IWRITE) {
 			ip->i_mode &= ~IWRITE;

@@ -23,12 +23,7 @@
 
 extern char regloc[8];
 
-struct xproc {
-	char		xp_a[0x10];
-	int		xp_xstat;
-	time_t		xp_utime;
-	time_t		xp_stime;
-};
+/* struct xproc: V7 text, now in proc.h (same layout as the former local copy: xp_xstat +10h, xp_utime +12h, xp_stime +16h) */
 
 /* KERNEL 41AC */
 exece()
@@ -94,7 +89,7 @@ exece()
 				if (bp)
 					bdwrite(bp);
 				bp = getblk(swapdev, (daddr_t)bno + (nc>>BSHIFT) + swplo);
-				cp = bp->b_addr;
+				cp = bp->b_un.b_addr;
 			}
 			nc++;
 			*cp++ = c;
@@ -128,7 +123,7 @@ exece()
 				bp = bread(swapdev, (daddr_t)bno + (nc>>BSHIFT) + swplo);
 				bp->b_flags |= B_AGE;
 				bp->b_flags &= ~B_DELWRI;
-				cp = bp->b_addr;
+				cp = bp->b_un.b_addr;
 			}
 			subyte((caddr_t)ucp++, (c = *cp++));
 			nc++;

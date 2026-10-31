@@ -65,11 +65,11 @@ iinit()
 	cp = geteblk();
 	if (u.u_error)
 		panic("iinit");
-	bcopy((caddr_t)bp->b_addr, (caddr_t)cp->b_addr, 0x1B8);
+	bcopy(bp->b_un.b_addr, cp->b_un.b_addr, 0x1B8);
 	brelse(bp);
 	mount[0].m_bufp = cp;
 	mount[0].m_dev = rootdev;
-	fp = (struct filsys *)cp->b_addr;
+	fp = cp->b_un.b_filsys;
 	fp->s_flock = 0;
 	fp->s_ilock = 0;
 	fp->s_ronly = 0;
@@ -88,7 +88,7 @@ binit()
 	for (i = 0; i < NBUF; i++) {
 		bp = &buf[i];
 		bp->b_dev = NODEV;
-		bp->b_addr = buffers[i];
+		bp->b_un.b_addr = buffers[i];
 		bp->b_error = 0;
 		bp->b_back = &bfreelist;
 		bp->b_forw = bfreelist.b_forw;

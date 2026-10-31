@@ -1,42 +1,79 @@
-/* inode.h -- Kerninode, 74 Byte, 50 Stueck ab 907A.  Belegt: i_flag, i_count, i_dev, i_number, i_uid (+0A), i_lastr (+46);
- * i_mode/i_nlink/i_gid/i_size/i_addr nach V7 und iexpand (Blockadresse 3 Byte -> long). */
+/* inode.h -- in-core inode.
+ *
+ * Origin:   partial
+ * Source:   UNIX V7 usr/sys/h/inode.h (struct inode with the i_un union, flag and mode values).
+ * Evidence: measured; H2 file similarity 61% (flat form, before AP H4); member order and names identical to V7;
+ *           layout checked against the kernel (74 bytes, 50 entries from 907A; i_flag, i_count, i_dev, i_number, i_uid (+0A),
+ *           i_addr[13] of 4 bytes each (+12), i_lastr (+46)).
+ * Deviations: no multiplexor (mpx) in MUTOS: struct group, NINDEX, mpxip and the second i_un alternative
+ *           "struct group i_group" are omitted (the V7 alternative is i_rdev followed by i_group; i_rdev stays at +12 = i_addr[0]);
+ *           i_rdev is declared daddr_t as in V7.  i_mode/i_nlink/i_gid/i_size follow V7 order (not individually measured);
+ *           PIPSIZ (4096, measured in writep) is not in V7 inode.h.  MUTOS uses i_un.i_lastr in iget/iput as the
+ *           release time of a free entry (see doc/herkunft/iget.md).
+ */
 #ifndef INODE_H
 #define INODE_H
 #include "types.h"
-struct inode {
-	char		i_flag;		/* +00 */
-	cnt_t		i_count;	/* +01 */
-	dev_t		i_dev;		/* +02 */
-	ino_t		i_number;	/* +04 */
-	unsigned	i_mode;		/* +06 */
-	int		i_nlink;	/* +08 */
-	int		i_uid;		/* +0A */
-	int		i_gid;		/* +0C */
-	off_t		i_size;		/* +0E */
-	daddr_t		i_addr[13];	/* +12 .. +45 */
-	daddr_t		i_lastr;	/* +46 */
+/*
+ * The I node is the focus of all
+ * file activity in unix. There is a unique
+ * inode allocated for each active file,
+ * each current directory, each mounted-on
+ * file, text file, and the root. An inode is 'named'
+ * by its dev/inumber pair. (iget/iget.c)
+ * Data, from mode on, is read in
+ * from permanent inode on volume.
+ */
+
+#define	NADDR	13
+#define	PIPSIZ	4096	/* MUTOS (measured in writep); V7 has it in pipe.c */
+
+struct	inode
+{
+	char	i_flag;			/* +00 */
+	char	i_count;	/* reference count */	/* +01 */
+	dev_t	i_dev;		/* device where inode resides */	/* +02 */
+	ino_t	i_number;	/* i number, 1-to-1 with device address */	/* +04 */
+	unsigned short	i_mode;		/* +06 */
+	short	i_nlink;	/* directory entries */	/* +08 */
+	short	i_uid;		/* owner */	/* +0A */
+	short	i_gid;		/* group of owner */	/* +0C */
+	off_t	i_size;		/* size of file */	/* +0E */
+	union {								/* +12 */
+		struct {
+			daddr_t i_addr[NADDR];	/* if normal file/directory; +12 .. +45 */
+			daddr_t	i_lastr;	/* last logical block read (for read-ahead); +46 */
+		};
+		struct	{
+			daddr_t	i_rdev;			/* i_addr[0] */
+		};
+	} i_un;
 };
-extern struct inode	inode[];
-#define NADDR	13
-#define PIPSIZ	4096
-#define ILOCK	01
-#define IUPD	02
-#define IACC	04
-#define IMOUNT	010
-#define IWANT	020
-#define ITEXT	040
-#define ICHG	0100
-#define IFMT	0170000
-#define IFDIR	0040000
-#define IFCHR	0020000
-#define IFMPC	0030000	/* multiplexed char special (V7 inode.h) */
-#define IFMPB	0070000	/* multiplexed block special (V7 inode.h) */
-#define IFBLK	0060000
-#define IFREG	0100000
-#define ISUID	04000
-#define ISGID	02000
-#define ISVTX	01000
-#define IREAD	0400
-#define IWRITE	0200
-#define IEXEC	0100
+
+
+extern struct inode inode[];	/* The inode table itself */
+
+/* flags */
+#define	ILOCK	01		/* inode is locked */
+#define	IUPD	02		/* file has been modified */
+#define	IACC	04		/* inode access time to be updated */
+#define	IMOUNT	010		/* inode is mounted on */
+#define	IWANT	020		/* some process waiting on lock */
+#define	ITEXT	040		/* inode is pure text prototype */
+#define	ICHG	0100		/* inode has been changed */
+
+/* modes */
+#define	IFMT	0170000		/* type of file */
+#define		IFDIR	0040000	/* directory */
+#define		IFCHR	0020000	/* character special */
+#define		IFBLK	0060000	/* block special */
+#define		IFREG	0100000	/* regular */
+#define		IFMPC	0030000	/* multiplexed char special */
+#define		IFMPB	0070000	/* multiplexed block special */
+#define	ISUID	04000		/* set user id on execution */
+#define	ISGID	02000		/* set group id on execution */
+#define ISVTX	01000		/* save swapped text even after use */
+#define	IREAD	0400		/* read, write, execute permissions */
+#define	IWRITE	0200
+#define	IEXEC	0100
 #endif

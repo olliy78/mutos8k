@@ -7,7 +7,6 @@
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "user_ext.h"
 #include "inode.h"
 #include "proc.h"
 #include "file.h"

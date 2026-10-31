@@ -9,7 +9,6 @@
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "user_ext.h"
 #include "inode.h"
 #include "proc.h"
 #include "buf.h"
@@ -144,7 +143,7 @@ rkstart()
 	mp->mb_unit = minor(bp->b_dev);
 	mp->mb_stat = 0;
 	mp->mb_seg = bp->b_xmem;
-	mp->mb_addr = bp->b_addr;
+	mp->mb_addr = bp->b_un.b_addr;
 	mp->mb_cnt = bp->b_bcount;
 	mp->mb_blk = bp->b_blkno;
 	if (bp->b_flags & B_READ)
@@ -207,30 +206,30 @@ dev_t dev;
 syopen(dev, flag)
 dev_t dev;
 {
-	if (U_TTYP == 0) {
+	if (u.u_ttyp == 0) {
 		u.u_error = ENXIO;
 		return;
 	}
-	(*cdevsw[major(U_TTYD)].d_open)(U_TTYD, flag);
+	(*cdevsw[major(u.u_ttyd)].d_open)(u.u_ttyd, flag);
 }
 
 /* KERNEL 6CC6 */
 syread(dev)
 dev_t dev;
 {
-	(*cdevsw[major(U_TTYD)].d_read)(U_TTYD);
+	(*cdevsw[major(u.u_ttyd)].d_read)(u.u_ttyd);
 }
 
 /* KERNEL 6CEC */
 sywrite(dev)
 dev_t dev;
 {
-	(*cdevsw[major(U_TTYD)].d_write)(U_TTYD);
+	(*cdevsw[major(u.u_ttyd)].d_write)(u.u_ttyd);
 }
 
 /* KERNEL 6D12 */
 syioctl(dev, cmd, arg, flag)
 dev_t dev;
 {
-	(*cdevsw[major(U_TTYD)].d_ioctl)(U_TTYD, cmd, arg, flag);
+	(*cdevsw[major(u.u_ttyd)].d_ioctl)(u.u_ttyd, cmd, arg, flag);
 }

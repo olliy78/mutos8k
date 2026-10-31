@@ -27,7 +27,7 @@ register struct inode *ip;
 		return;
 	}
 	ip->i_flag |= IACC;
-	dev = (dev_t)ip->i_addr[0];
+	dev = (dev_t)ip->i_un.i_rdev;
 	type = ip->i_mode & IFMT;
 	if (type == IFCHR || type == 0030000) {
 		(*cdevsw[major(dev)].d_read)(dev);
@@ -52,14 +52,14 @@ register struct inode *ip;
 		if (bn < 0) {
 			bp = geteblk();
 			clrbuf(bp);
-		} else if (ip->i_lastr + 1 == lbn)
+		} else if (ip->i_un.i_lastr + 1 == lbn)
 			bp = breada(dev, bn, rablock);
 		else
 			bp = bread(dev, bn);
-		ip->i_lastr = lbn;
+		ip->i_un.i_lastr = lbn;
 		n = min((unsigned)n, BSIZE - bp->b_resid);
 		if (n != 0)
-			iomove(bp->b_addr + on, n, B_READ);
+			iomove(bp->b_un.b_addr + on, n, B_READ);
 		brelse(bp);
 	} while (u.u_error == 0 && u.u_count != 0 && n > 0);
 }
@@ -78,7 +78,7 @@ register struct inode *ip;
 		u.u_error = EINVAL;
 		return;
 	}
-	dev = (dev_t)ip->i_addr[0];
+	dev = (dev_t)ip->i_un.i_rdev;
 	type = ip->i_mode & IFMT;
 	if (type == IFCHR || type == 0030000) {
 		ip->i_flag |= IUPD|ICHG;
@@ -101,7 +101,7 @@ register struct inode *ip;
 			bp = getblk(dev, bn);
 		else
 			bp = bread(dev, bn);
-		iomove(bp->b_addr + on, n, B_WRITE);
+		iomove(bp->b_un.b_addr + on, n, B_WRITE);
 		if (u.u_error != 0)
 			brelse(bp);
 		else

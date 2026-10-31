@@ -10,8 +10,9 @@
  * Roundtrip: cc -O in the guest, per function against mutos_1216: free, badblock, ifree, getfs byte-identical;
  *           alloc, ialloc, update differ only by the known older-c2 pattern (B)/(C), object code identical to the
  *           previous (decompiled) form.  Details: doc/herkunft/alloc.md
- * Deviations: s_tfree/s_tinode counters (System III style, not in V7); flat buf.h/inode.h (no b_un/i_un unions) -> casts
- *           of b_addr, i_addr[]; (daddr_t)SUPERB in update(); see doc/herkunft/alloc.md.
+ * Deviations: s_tfree/s_tinode counters (System III style, not in V7); badblock is global here (static in the kernel);
+ *           (daddr_t)SUPERB cast in update() (SUPERB is int in MUTOS);
+ *           since AP H4 the text uses the V7 b_un/i_un accesses; see doc/herkunft/alloc.md.
  *
  * Data: updlock 8DDE, mount[] A07E (6 bytes per entry: m_dev, m_bufp, m_inodp), inode[] 907A..9EEE, time 8DCC.
  * Texts: 8AF2 "Bad free count", 8B01 "no space", 8B0A "bad block", 8B14 "Out of inodes", 8B22 "bad count", 8B2C "no fs".
@@ -71,9 +72,8 @@ dev_t dev;
 		fp->s_flock++;
 		bp = bread(dev, bno);
 		if ((bp->b_flags&B_ERROR) == 0) {
-			/* MUTOS: flat buf.h, b_addr instead of b_un.b_addr */
-			fp->s_nfree = ((FBLKP)(bp->b_addr))->df_nfree;
-			bcopy((caddr_t)((FBLKP)(bp->b_addr))->df_free,
+			fp->s_nfree = ((FBLKP)(bp->b_un.b_addr))->df_nfree;
+			bcopy((caddr_t)((FBLKP)(bp->b_un.b_addr))->df_free,
 			    (caddr_t)fp->s_free, sizeof(fp->s_free));
 		}
 		brelse(bp);
@@ -124,10 +124,9 @@ daddr_t bno;
 	if(fp->s_nfree >= NICFREE) {
 		fp->s_flock++;
 		bp = getblk(dev, bno);
-		/* MUTOS: flat buf.h, b_addr instead of b_un.b_addr */
-		((FBLKP)(bp->b_addr))->df_nfree = fp->s_nfree;
+		((FBLKP)(bp->b_un.b_addr))->df_nfree = fp->s_nfree;
 		bcopy((caddr_t)fp->s_free,
-			(caddr_t)((FBLKP)(bp->b_addr))->df_free,
+			(caddr_t)((FBLKP)(bp->b_un.b_addr))->df_free,
 			sizeof(fp->s_free));
 		fp->s_nfree = 0;
 		bwrite(bp);
@@ -199,7 +198,7 @@ loop:
 			return(NULL);
 		if(ip->i_mode == 0) {
 			for (i=0; i<NADDR; i++)
-				ip->i_addr[i] = 0;	/* MUTOS: flat i_addr instead of i_un.i_addr */
+				ip->i_un.i_addr[i] = 0;
 			if(fp->s_tinode)	/* MUTOS (System III style, not in V7) */
 				fp->s_tinode--;
 			fp->s_fmod = 1;
@@ -221,7 +220,7 @@ loop:
 			ino += INOPB;
 			continue;
 		}
-		dp = (struct dinode *)bp->b_addr;	/* MUTOS: b_dino -> cast of b_addr */
+		dp = bp->b_un.b_dino;
 		for(i=0; i<INOPB; i++) {
 			if(dp->di_mode != 0)
 				goto cont;
@@ -301,7 +300,7 @@ dev_t dev;
 
 	for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
 	if(mp->m_bufp != NULL && mp->m_dev == dev) {
-		fp = (struct filsys *)mp->m_bufp->b_addr;	/* MUTOS: b_filsys -> cast of b_addr */
+		fp = mp->m_bufp->b_un.b_filsys;
 		if(fp->s_nfree > NICFREE || fp->s_ninode > NICINOD) {
 			prdev("bad count", dev);
 			fp->s_nfree = 0;
@@ -335,16 +334,16 @@ update()
 	updlock++;
 	for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
 		if(mp->m_bufp != NULL) {
-			fp = (struct filsys *)mp->m_bufp->b_addr;	/* MUTOS: b_filsys -> cast of b_addr */
+			fp = mp->m_bufp->b_un.b_filsys;
 			if(fp->s_fmod==0 || fp->s_ilock!=0 ||
 			   fp->s_flock!=0 || fp->s_ronly!=0)
 				continue;
-			bp = getblk(mp->m_dev, (daddr_t)SUPERB);	/* MUTOS: cast, daddr_t is long on the Z8001 and there are no prototypes */
+			bp = getblk(mp->m_dev, (daddr_t)SUPERB);	/* MUTOS: SUPERB is an int here, daddr_t is long on the Z8001 and there are no prototypes */
 			if (bp->b_flags & B_ERROR)
 				continue;
 			fp->s_fmod = 0;
 			fp->s_time = time;
-			bcopy((caddr_t)fp, bp->b_addr, BSIZE);
+			bcopy((caddr_t)fp, bp->b_un.b_addr, BSIZE);
 			bwrite(bp);
 		}
 	for(ip = &inode[0]; ip < &inode[NINODE]; ip++)
