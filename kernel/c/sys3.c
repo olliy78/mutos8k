@@ -3,11 +3,14 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/sys3.c (7 functions); exec() is a MUTOS stub (see Deviations).  System III PDP-11
  *           uts/os/sys3.c is an extended variant (mount flags, binval, suser, ve_mount).
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches smount continuing at out1 and the sumount busy test with i_number = 0 (fremd.md 4.1 no. 3 and
+ *           11).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 87% V7 / 61% System III PDP-11 (before the
  *           restoration), 7 of 8 functions above 50% against V7 (exec is the stub).  Same struct a layouts and strings.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys3.md.
- * Deviations: smount continues at out1 after a failed d_open (as System III; V7: out); sumount refuses when an inode of
- *           the device is still referenced and clears i_number otherwise (neither V7 nor System III); exec (4198) only
+ * Deviations: smount continues at out1 after a failed d_open (as in the Hippe collection and System III; V7: out); sumount refuses when an inode of
+ *           the device is still referenced and clears i_number otherwise (the LRUI form of the Hippe collection; neither V7 nor System III); exec (4198) only
  *           clears the third argument and calls exece (sys1.c); struct stat and dinode come from stat.h/ino.h.
  *
  * Data: mount[] = A07E..A09C (5 entries of 6 bytes), inode[] = 907A, nblkdev = 8DD0, bdevsw = 8766 (d_open +0, d_close +2). */
@@ -183,7 +186,7 @@ smount()
 	if(mp == NULL)
 		goto out;
 	(*bdevsw[major(dev)].d_open)(dev, !uap->ronly);
-	/* MUTOS: out1 (System III); V7 jumps to out here */
+	/* MUTOS: out1 (as in the Hippe collection and System III); V7 jumps to out here */
 	if(u.u_error)
 		goto out1;
 	/* MUTOS: SUPERB is an int in this kernel, bread takes a long block number (V7: bread(dev, SUPERB)) */

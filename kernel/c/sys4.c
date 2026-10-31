@@ -5,10 +5,13 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/sys4.c (all 24 functions).  System III PDP-11 uts/os/sys4.c differs (setpgrp, ulimit,
  *           utssys-style changes); not used.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches stime clearing i_lastr (i_lrt) of all inodes and the proctop loop in kill (fremd.md 4.1 no. 4 and
+ *           9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 83% V7 / 58% System III PDP-11 (before the
  *           restoration), 21 of 24 functions above 50% against V7.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys4.md.
- * Deviations: stime also clears i_lastr of all inodes; kill scans up to proctop instead of &proc[NPROC]; ftime returns
+ * Deviations: stime also clears i_lastr of all inodes (Hippe LRUI); kill scans up to proctop instead of &proc[NPROC]; ftime returns
  *           timezone 0 and no daylight saving; see doc/herkunft/sys4.md.
  *
  * Data: time = 8DCC (long), lbolt = 8DCA (tick counter). */

@@ -4,7 +4,7 @@ Stand 2026-10-31.  Vergleich gegen UNIX V7 `usr/sys/dev/*.c`, System III PDP-11 
 
 ## Ergebnis
 
-* **Origin: none** (MUTOS-eigener Diskettentreiber `fd*` ueber die Mailbox).  Dateiaehnlichkeit: V7 16 % (`dsort.c`), System III 16 % (`ht.c`), WEGA 18 % (`mt.c`), 10 % (`fd.c`).
+* **Origin: partial** (Nachtrag 2026-11-01, `mailbox_treiber.md` Abschnitt 4.4: Gerippe eines Magnetbandtreibers `tm.c` (V7/Hippe) mit BSD-`tmioctl` (2.9BSD-nah), Einstufung *wahrscheinlich*; die Mailbox-Ankopplung an den U880-Floppycontroller ist MUTOS-eigen).  Frueher hier "none" (nur Tokenmass, 4-13 %).  Dateiaehnlichkeit: V7 16 % (`dsort.c`), System III 16 % (`ht.c`), WEGA 18 % (`mt.c`), 10 % (`fd.c`).
   Der Kopf von `dev0.c` nannte bisher "WEGA-fd-Muster": **nicht belegt** (WEGA `fd.c` 10 %).
 * Keine Funktion erreicht 50 % gegen eine gleichnamige Quelle.  `fdsub` (62 % gegen `tm.c:tcommand`, 55 % gegen SysIII `ht.c:hcommand`) und `fdioctl` (51 % gegen `mpxchan`) sind Treffer auf kurzen Allerweltsmustern.
   Strukturell erinnert `fdstrategy`/`fdstart`/`fdintr` an das V7-Tripel `xxstrategy/xxstart/xxintr` (Warteschlange `av_forw`, `iodone`), aber der Text ist verschieden.

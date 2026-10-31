@@ -4,6 +4,8 @@
  * Source:   UNIX V7 usr/sys/sys/clock.c (clock): callout list, user/system time, lbolt/time, the per-process once-a-second loop
  *           with p_cpu = p_cpu*SCHMAG + p_nice - NZERO (SCHMAG 8/10), p_clktim alarm, setpri, runin wakeup.  System III
  *           PDP-11 uts/os/clock.c has a different once-a-second loop (p_cpu >>= 1, no SCHMAG); not used.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches proctop (PROC_MAX) in the once-a-second loop (fremd.md 4.1 no. 9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): clock 64% V7 / 41% System III PDP-11 (before the
  *           restoration; the earlier file header said "System III form (WEGA)": wrong, the decay is V7).  The signal name
  *           SIGALRM is the System III spelling of V7 SIGCLK (both 14).

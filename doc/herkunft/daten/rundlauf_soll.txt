@@ -159,7 +159,7 @@ text xumount GLEICH
 text xrele GLEICH
 text xstub2 GLEICH
 # AP H5 (2026-10-31): trap machdep ureg rk lp tty; dev0 wird ohne -O uebersetzt und steht nicht hier.
-trap trap NAHE
+trap trap GLEICH
 trap nosys GLEICH
 trap nullsys GLEICH
 machdep startup NAHE

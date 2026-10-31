@@ -2,13 +2,16 @@
  *
  * Origin:   partial
  * Source:   UNIX V7 usr/sys/sys/sysent.c (numbering, row format "narg, nrarg, handler", comments).
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches the sysent table, 64 of 64 rows with stty, gtty, sysacct, sysphys, syslock, mpxchan = nosys (V7:
+ *           58 of 64; fremd.md 4.1 no. 12).
  * Evidence: measured: kernel mutos_1216 data 8B58..8C57, 64 entries of 4 bytes (argument count byte, nrarg byte, handler);
  *           the nrarg byte is 0 in all 64 entries (V7/PDP-11 uses it for arguments passed in registers).  The argument counts
  *           and handlers of 58 rows equal V7 except nrarg.  H2 file similarity 2% only because the V7 file is 80% comment/declaration.
  *           Entry 0 is nullsys (trap.c calls sigret itself when callp == sysent).
  * Deviations: rows 31 (stty), 32 (gtty), 51 (sysacct), 52 (sysphys), 53 (syslock), 56 (mpxchan) are nosys with narg 0 in MUTOS;
  *           nrarg is 0 everywhere; the V7 declarations of the six missing handlers are omitted.  The numbering is the V7
- *           numbering (not measurably System III: no System III only call such as setpgrp (39) or utssys is present).
+ *           numbering (the table equals the Hippe collection in 64 of 64 rows, Spencer V7 in 58; not measurably System III: no System III only call such as setpgrp (39) or utssys is present).
  */
 #include "param.h"
 #include "systm.h"

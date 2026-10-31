@@ -1,18 +1,17 @@
 /* lp.c -- line printer (cdevsw[7]; kernel mutos_1216, 6444..6970): lpopen, lpclose, lpwrite, lpcanon, lpoutput, lpintr, lpxfer.
  *
- * Origin:   none
- * Source:   none proven.  The shape follows the classic UNIX line printer driver (open / close / write with a canonicalising lpcanon,
- *           flag bits OPEN / CAP / NOCR / ASLP, the columns ind / col / ccc / mcc / mlc / line, form feed handling): UNIX System III
- *           PDP-11 uts/pdp11/io/lp.c has lpopen, lpclose, lpwrite, lpoutput, lpintr with the same flag logic (similar, 25..32% only).
+ * Origin:   partial
+ * Source:   Closest template for the line preparation (lpopen / lpwrite / lpcanon, flag bits OPEN / CAP / NOCR / ASLP, columns
+ *           ind / col / ccc / mcc / mlc / line, form feed handling): lp.c of the TUHS collection Research/Torsten_Hippe_v7 (assembled
+ *           1995 from unknown sources; not the author) and of the Nijmegen variant (lpopen with LPMAX, lp_cnt, col = 80, line = 66);
+ *           UNIX System III PDP-11 uts/pdp11/io/lp.c is the same family but lacks these constants (doc/herkunft/mailbox_treiber.md).
  *           UNIX V7 (Spencer tape) contains NO lp.c in usr/sys/dev (measured: `ls original/unix-v7/usr/sys/dev`).  The output path
- *           (mailbox command 2 to the U880 side, lpxfer) and the transmit buffer are MUTOS own.  Possible relatives for AP H6:
- *           the V7 lp.c from the original tape (not in the Spencer tarball), 2.9BSD / 3BSD usr/sys/dev/lp.c; WEGA dev/lp.c is
- *           measurably unrelated (10%).
+ *           (mailbox command 2 to the U880 side, lpxfer) and the transmit buffer are MUTOS own.  WEGA dev/lp.c is measurably unrelated (10%).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): lpopen 25%, lpwrite 29%, lpcanon 32% (against System III lpoutput)
  *           and the rest under 15% against System III; against V7 all functions under 15%; file similarity System III 23%, V7 11%.
  * Roundtrip: cc -O in the guest, per function against mutos_1216 (module is in rundlauf_soll.txt as it stands today);
  *           see doc/herkunft/lp.md.
- * Deviations: not applicable (no proven origin); the text is MUTOS as decompiled.
+ * Deviations: text renamed and restructured against the templates (token similarity 25..32% only); output path mailbox based.
  *
  * Two printers (lpt, D3E2, 26 bytes per entry), count nlp = 8C98, buffer lpbuf D416 (128 bytes per printer), mailbox entries lpmbx D516 (14 bytes).
  * The structure follows the classic lp.c (see above), but the output goes through the mailbox (command 2) to the U880 side.

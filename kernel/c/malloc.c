@@ -3,13 +3,16 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/malloc.c (both functions; System III PDP-11 uts/os/malloc.c has the same text as V7,
  *           so V7 = System III here).
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches the map limit with panic("map overflow") (MAPSIZ = NPROC/2 = 15 entries; doc/herkunft/fremd.md
+ *           4.1 no. 1).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 83% V7 and 83% System III, malloc 71%, mfree 91%
  *           before the restoration.  Same call graph (wakeup on runin when freeing core).  The only parts that are in
  *           neither source are the two map-size checks (see Deviations).
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/malloc.md.
  * Deviations: MUTOS limits a map to 15 entries plus the end mark: malloc stops the search at bp - mp >= 15, mfree
- *           panics "map overflow\n" when it would insert a 16th entry (not in V7, not in System III PDP-11/VAX; origin
- *           open, plan H6).  The V7 comments are kept.  See doc/herkunft/malloc.md.
+ *           panics "map overflow\n" when it would insert a 16th entry (not in V7, not in System III PDP-11/VAX; this is the
+ *           map limit of the Hippe collection, see above).  The V7 comments are kept.  See doc/herkunft/malloc.md.
  *
  * Data: coremap = A09C, swapmap = A0DC (16 entries each), runin = 8DD6, text 8AE4 "map overflow\n".
  * An entry is {m_size, m_addr}, 4 bytes. */

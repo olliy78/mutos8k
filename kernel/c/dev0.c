@@ -1,17 +1,17 @@
 /* dev0.c -- driver for major 0 / cdevsw[10] (kernel mutos_1216, 7E16..8760, never reached in the run): floppy disk through the mailbox.
  *
- * Origin:   none
- * Source:   none.  MUTOS own driver (floppy controller of the U880 side behind the mailbox).  No UNIX V7 or System III counterpart:
- *           V7 has no floppy driver; the nearest V7 / System III files are the tape and disk drivers tm.c / ht.c / rk.c (shape of the
- *           strategy / start / interrupt triple and of physio) and WEGA dev/fd.c (the controller's command codes and the idea of a
- *           mailbox command table are possibly related; *assumed*, not measured).  Possible relatives for AP H6: WEGA dev/fd.c (P8000),
- *           UDOS / U880 side of the A5120 (mutos_io).
- * Evidence: measured with tools/herkunft/herkunft.py (level abs): no function reaches 50% against V7 except fdsub (62% against tcommand
- *           of tm.c) and fdioctl (51% against mpxchan): both are matches on short generic patterns, not a common origin.  File
- *           similarity: V7 16% (dsort.c), System III 16% (ht.c), WEGA 18% (mt.c) / 10% (fd.c).
+ * Origin:   partial
+ * Source:   Skeleton of a magnetic tape driver (V7 / Hippe collection tm.c: tmopen / tmclose / tmstrategy / tmstart / tmintr / tmphys /
+ *           tcommand shape, tape position = block fu_blk, 25H/27H as record spacing, fu_x6 as end of file) with a BSD-style tmioctl
+ *           (MTIOCTOP / MTIOCGET, close to 2.9BSD / 4.1BSD; the Hippe tm.c has no ioctl).  Register accesses are replaced by mailbox
+ *           commands; the mailbox coupling to the U880 floppy controller (command codes, fdadj) is MUTOS own.  Grading: probable, not
+ *           certain - it rests on structural evidence (doc/herkunft/mailbox_treiber.md section 4.4), not on text similarity.
+ *           WEGA dev/fd.c is not the source (10%).
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): text similarity is low (4..13% per function; fdsub 62% against
+ *           tcommand, fdioctl 35% against tsioctl); file similarity V7 16% (dsort.c), System III 16% (ht.c), WEGA 18% (mt.c) / 10% (fd.c).
  * Roundtrip: not in rundlauf_soll.txt (the module is compiled WITHOUT the optimiser in the original); checked by the full build only;
  *           see doc/herkunft/dev0.md.
- * Deviations: not applicable (no origin).
+ * Deviations: strategy / start / interrupt bodies rewritten for the mailbox; fdadj has no counterpart (block number after a seek error).
  *
  * fdopen 7E16, fdclose 7E94, fdsub 7F00, fdstrategy 7F94, fdstart 7FDC, fdintr 821A, fdadj 8468, fdread 84E4, fdwrite 851C, fdphys 8554, fdioctl 85B0.
  * fdintr and fdadj have no caller in the kernel via the call map (fdintr comes from the interrupt) and were therefore not in

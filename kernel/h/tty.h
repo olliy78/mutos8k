@@ -2,7 +2,8 @@
  *
  * Origin:   partial
  * Source:   struct clist and the mode/state bit names: UNIX V7 usr/sys/h/tty.h;
- *           struct tty: System III/ZEUS layout (one input queue), not the V7 layout (rawq/canq/outq).
+ *           struct tty: one input queue, not the V7 layout (rawq/canq/outq); the layout up to +34 equals struct tty of the TUHS
+ *           collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the author), doc/herkunft/fremd.md section 5.
  * Evidence: H2 file similarity 29% V7 / 7% System III.  Measured (K7d/K7e): 60 (3CH) bytes, four lines from A530 (ttyt), output buffer
  *           80 bytes per line from D2A2, mailbox entry per line from D26A (h/mbx.h); offsets from the accesses of
  *           sioopen/ttread/ttwrite/ttystart/ttyflush/ttyoutput/ttioctl:
@@ -14,7 +15,7 @@
  *   +2A t_lstate (bit 0 input in progress, bit 1 output waits for a 0x80 character)  +2C t_cnt2c (lines since the last page stop),
  *   +2D t_col, +2E t_delct, +34 t_line  +36 t_ocnt  +38 t_hwp  +3A t_hwf
  *   Guessed / unresolved: +0E, +16, +30..+33 (fillers; accessed only in ttyinput/ttioctl, not yet reconstructed).
- * Deviations: whole struct tty (layout), flag values XTABS 02000 (V7: 006000; System III has no XTABS in head/sys/tty.h: the value is unattributed), the filler members, ENOTTY/EBUSY_ at the end.
+ * Deviations: whole struct tty (layout), flag values XTABS 02000 (V7: 006000; System III has no XTABS; the value is that of the Hippe collection sgtty.h), the filler members, ENOTTY/EBUSY_ at the end.
  *           struct clist (V7 text; System III uses cblock pointers): pipe.c has its own identical copy; do not include both.
  */
 #ifndef TTY_H

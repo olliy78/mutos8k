@@ -4,6 +4,8 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/slp.c (all 11 functions; expand() is an empty stub here).  System III pdp11
  *           uts/os/slp.c is less similar.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches proctop (PROC_MAX) in sched / newproc (fremd.md 4.1 no. 9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 88% against V7 (11 of
  *           11 functions >= 50%), 58% against System III PDP-11 (sleep 96%, setrq/qswtch 100% against V7).  After it:
  *           file 88% V7 / 61% System III.  Same strings ("zero wchan", "proc on q\n", "Running a dead proc", "no procs").

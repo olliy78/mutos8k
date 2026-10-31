@@ -10,12 +10,12 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/trap.c`.  Alle Zahlen **gemessen
 * Z8001/MUTOS-eigen: Trap-Nummern 0..12 (V7 PDP-11 0..15 mit `bpt/iot/emt/fpe`), Registerrahmen mit 16 Bit-Segmentzeigern, Argumentuebernahme aus dem Rahmen (`blk4`, vier Worte;
   V7 holt Argumente mit `fuiword` aus dem Befehlsstrom), Systemaufruf 0 = `sigret` (V7: indirekter Systemaufruf), Fall 9 (Segmentfehler) mit `backup()`/`grow(sp)`,
   Paritaetsfaelle 10/11 mit anderen Meldungen, `nested`-Sperre im `default`-Fall.  Kein System-III-Zug.
-* Rundlauf: **2 von 3 bytegleich, wie vorher** (`nosys`, `nullsys` gleich; `trap` 37 von 343 Woertern abweichend, bekannt: `c_rueckbau.md` K7c, Layout der Faelle 10/11/15).
-  Aenderung in diesem AP: nur Kommentare (V7-Kommentare an den Faellen, englischer Kopf).  Der V7-Text wurde **nicht** eingesetzt: Fallverteilung, Rahmen und Argumentweg sind anders.
+* Rundlauf: **3 von 3 bytegleich** (Nachtrag 2026-11-01: Fall 15 mit `return` statt `goto out`, Fall 10 mit `break` statt Marke `sigbus:`, kein abschliessendes `return;`; vorher 2/3 mit 37 von 343 abweichenden Woertern).
+  Der V7-Text wurde sonst **nicht** eingesetzt: Fallverteilung, Rahmen und Argumentweg sind anders.
 
 | Funktion | Kernel | V7 abs | Klasse | Rundlauf |
 |---|---|---|---|---|
-| trap | 087A | 48 % | veraendert (V7-Gerippe, Z8001-Faelle eigen) | nahe (37/343) |
+| trap | 087A | 48 % | veraendert (V7-Gerippe, Z8001-Faelle eigen) | gleich (Nachtrag 2026-11-01) |
 | nosys | 0B2A | 100 % | identisch (`register i` bleibt fuer den Prolog) | gleich |
 | nullsys | 0B38 | 100 % | identisch | gleich |
 

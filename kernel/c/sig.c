@@ -4,6 +4,8 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/sig.c (all 10 functions; grow() is an empty stub here, core() and procxmt() are
  *           adapted to the Z8001 memory model).  System III pdp11 uts/os/sig.c is less similar.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches proctop (PROC_MAX) in signal / stop / ptrace (fremd.md 4.1 no. 9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 82% against V7 (10 of 10
  *           functions >= 50%), 73% against System III PDP-11 (issig, fsig, psignal 100% against V7).  After it:
  *           file 82% V7 / 70% System III.  Same string ("core").

@@ -7,7 +7,10 @@
  *           notavail, iodone, clrbuf, bflush, geterror (V7 text); swap and physio are V7 functions rewritten for the Z8001.
  *           mapalloc, mapstart have no counterpart (V7 mapalloc is the UNIBUS map): MUTOS own.
  *           System III PDP-11 uts/io/bio.c: iodone has the same text (without B_MAP); breada tests "bfreelist.b_bcount>1",
- *           MUTOS tests "bfreelist.av_forw != &bfreelist" (same idea, other form).
+ *           MUTOS tests "bfreelist.av_forw != &bfreelist" (the form of the Hippe collection, below).
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches the breada read-ahead test on a free buffer and iodone without B_MAP / DISKMON (earlier read as
+ *           System III features; fremd.md 4.1 no. 6 and 15).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 77% V7 / 59% System III PDP-11 (before the
  *           restoration), 17 of 19 functions above 50% against V7, the two without counterpart are mapalloc and mapstart.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/bio.md.
@@ -412,7 +415,7 @@ iodone(bp)
 register struct buf *bp;
 {
 
-	/* MUTOS: no UNIBUS map, so no "if(bp->b_flags&B_MAP) mapfree(bp);" (System III has the same text without it) */
+	/* MUTOS: no UNIBUS map, so no "if(bp->b_flags&B_MAP) mapfree(bp);" (the Hippe collection and System III have the same text without it) */
 	bp->b_flags |= B_DONE;
 	if (bp->b_flags&B_ASYNC)
 		brelse(bp);

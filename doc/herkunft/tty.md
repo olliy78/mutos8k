@@ -4,7 +4,7 @@ Stand 2026-10-31.  Vergleich gegen V7 `dev/kl.c`, `dc.c`, `tty.c`, System III `k
 
 ## Ergebnis
 
-* **Origin: none** (Mailbox-Terminal).  Dateiaehnlichkeit: V7 25 % (`kl.c`), System III 15 %, WEGA 13 % (`ttydev.c`).
+* **Origin: partial** (Nachtrag 2026-11-01: `tc*`-Huellen nach V7/Hippe-`kl.c`, `ttstart`/`ttxfer`/`putchar` eigen; Mailbox-Terminal).  Dateiaehnlichkeit: V7 25 % (`kl.c`), System III 15 %, WEGA 13 % (`ttydev.c`).
 * Die Huellen `tcopen`..`tcioctl` rufen die allgemeinen Routinen (`ttyopen`, `ttread`, `ttyinput`, `ttioctl` ... in `tty2.c`) und haben die Gestalt der V7-Zeilentreiber (`klopen`, `klclose`, `klrint`, `klxint`, `klioctl`; 33..67 %),
   das ist das gemeinsame Muster "allgemeine Routine mit der richtigen `tty`-Struktur aufrufen", **kein** Herkunftsbeleg.  Namen frei vergeben (`tc...`).
 * `ttstart` (22 %), `ttxfer`, `putchar` (Konsolenring, Mailbox-Zeichenausgabe), `ttyinit`: eigen.  System III `kl.c:putchar` (31 %) ist eine andere Form.

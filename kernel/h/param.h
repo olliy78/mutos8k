@@ -3,6 +3,9 @@
  * Origin:   partial
  * Source:   UNIX V7 usr/sys/h/param.h (names, order and comments); signal names SIGKILL/SIGALRM/SIGUSR1/SIGUSR2 and the
  *           Z8001 values are MUTOS (System III spells signals this way).
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches NPROC 30, NINODE 50, NFILE 50, NMOUNT 5, MAXUPRC 15, HZ 50, TIMEZONE 0, DSTFLAG 0 and MAPSIZ = NPROC/2
+ *           (Spencer V7: 150 / 200 / 175 / 8 / 25 / 60 / 5*60 / 1); NBUF 20 and NCALL 9 differ from it (Hippe 12 / 10).
  * Evidence: H2 file similarity 52% V7 / 44% System III.  Measured in the kernel: NOFILE 20, BSIZE 512, NINODE 50, NFILE 50,
  *           NBUF 20, NMOUNT 5, NPROC 30 (proc A11C..A464, 0x348/0x1C), MAXUPRC 15 (fork compares with 15), NCALL 9 (callout
  *           CE58..CE8E), sleep queue 64 chains (slpque, hash (chan>>5)&63), clock 50 Hz, PZERO 25, NZERO 20, DIRSIZ 14,
@@ -27,8 +30,8 @@
 #define	MAXUPRC	15		/* max processes per user */
 #define	SSIZE	5		/* initial stack size (guessed) */
 #define	NOFILE	20		/* max open files per process */
-#define	CMAPSIZ	50		/* size of core allocation area (guessed) */
-#define	SMAPSIZ	50		/* size of swap allocation area (guessed) */
+#define	CMAPSIZ	50		/* size of core allocation area (unused; the real maps have MAPSIZ+1 = 16 entries, MAPSIZ = NPROC/2 = 15 as in the Hippe collection) */
+#define	SMAPSIZ	50		/* size of swap allocation area (unused; see CMAPSIZ) */
 #define	NCALL	9		/* max simultaneous time callouts (callout CE58..CE8E, 6 bytes per entry) */
 #define	NPROC	30		/* max number of processes (proc[] A11C..A464) */
 #define	HZ	50		/* Ticks/second of the clock */

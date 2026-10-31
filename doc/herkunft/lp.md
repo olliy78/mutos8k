@@ -4,7 +4,7 @@ Stand 2026-10-31.  Vergleich gegen V7, System III PDP-11 `uts/pdp11/io/lp.c` und
 
 ## Ergebnis
 
-* **Origin: none** (kein belegter Bezug).  Dateiaehnlichkeit: V7 11 %, System III `lp.c` 23 %, WEGA `lp.c` 10 %.
+* **Origin: partial** (Nachtrag 2026-11-01, `mailbox_treiber.md` 4.3: naechste Vorlage fuer Zeilenaufbereitung und Flags ist `lp.c` der Hippe-Sammlung bzw. Nijmegen (`lpopen` mit `LPMAX`, `lp_cnt`, `col = 80`, `line = 66`); der Ausgabepfad ueber die Mailbox ist eigen).  Frueher hier "none".  Dateiaehnlichkeit: V7 11 %, System III `lp.c` 23 %, WEGA `lp.c` 10 %.
 * **Befund entgegen der Erwartung:** der Spencer-V7-Baum hat **keine `lp.c`** (`ls original/unix-v7/usr/sys/dev`); der bisherige Satz "Aufbau folgt V7 lp.c" (Kopf, `c_rueckbau.md` K7c) ist an dem Baum nicht pruefbar.
   Die Funktionsnamen `lpopen`, `lpclose`, `lpwrite`, `lpintr`, die Merkerbits (`OPEN` 010, `CAP` 020, `NOCR` 040, `ASLP` 0100 oktal = MUTOS 8, 0x10, 0x20, 0x40: gleiche Werte) und die Spaltenzaehler (`ind`, `col`, `ccc`, `mcc`, `mlc`, `line`)
   stehen in System III `lp.c`; MUTOS hat aber `lpcanon` (V7-/2BSD-Name; in SysIII heisst der Zeilenaufbereiter `lpoutput`) und `lpoutput` mit anderer Aufgabe (Zeilenpuffer fuellen).

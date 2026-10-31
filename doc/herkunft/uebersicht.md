@@ -437,7 +437,7 @@ Ausfuehrlich in `z8001_kontext.md` (Werkzeug `tools/herkunft/kontext.py`, Gastve
 * Eigenanteil: Anpassung mit kleinen eigenen Konstruktionen; Z8001-C 1,0 % (297 Token), alle Abweichungen 3,4 % des C-Kerns.  Eigen: Paritaetsdiagnose, `7C04..06` als `bpt/iot/emt`,
   NVIE-Einzelschritt, `regloc[16]`, 4-Wort-Signalrahmen.
 * Korrektur: Fall 15 von `trap` kehrt mit `return` zurueck (V7), nicht `goto out`; das erklaert zusammen mit der Marke `sigbus:` die 37 abweichenden Woerter (nicht `backup`).
-  Mit `versuche/kontext/trap_bytegleich.diff` ist `trap` im Gast bytegleich (Gesamtbau damit noch nicht gelaufen).
+  Mit `versuche/kontext/trap_bytegleich.diff` ist `trap` im Gast bytegleich (Nachtrag 2026-11-01: `trap.c` entsprechend geaendert, Rundlauf 3/3; Gesamtbau `--uebersetzen --stufe 1 --boot`: BYTEGLEICH 36 352 Byte, Arbeitstests ok, **186 von 227** Funktionen aus C, vorher 185).
 * Signalzustellung erstmals im Gast gemessen (`sigtest`: zweimal SIGTERM gefangen, `sendsig`/`sigret` laufen).  Offen: NVI-Einzelschritt, Paritaets-Bits, Port 0x80.
 
 ## 17. H8b: Mailbox-Treiber (2026-11-01)

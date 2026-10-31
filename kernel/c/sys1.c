@@ -3,6 +3,9 @@
  * Origin:   partial
  * Source:   UNIX V7 usr/sys/sys/sys1.c: structure and comments of all eight functions.  exec (4198) is in sys3.c.
  *           System III PDP-11 uts/os/sys1.c: no function text is taken over (exit/wait differ); see Deviations.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches the exit loop with zombie count (EXIT), the exece argument block handling with B_AGE and
+ *           getxfile(ip, nc, ns), and proctop (PROC_MAX) in wait / fork (fremd.md 4.1 no. 7-9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 64% V7 / 49% System III PDP-11 (before the
  *           restoration); exece 63%, getxfile 55%, setregs 61%, rexit 46%, exit 80%, wait 83%, fork 78%, sbreak 23% against V7.
  *           V7 text cannot be put in unchanged: the executable header, the argument frame, the process image layout and

@@ -2,6 +2,8 @@
  *
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/iget.c (all 8 functions).  System III pdp11 uts/os/iget.c is less similar.
+ *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
+ *           author) - matches the free-inode choice by age in iget / iput (LRUI, i_lastr = release time; fremd.md 4.1 no. 5).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 89% against V7 (8 of 8
  *           functions >= 50%), 65% against System III PDP-11.  After it: file 94% V7 / 65% System III.  Same strings
  *           ("no imt", "Inode table overflow", "iaddress > 2^24").

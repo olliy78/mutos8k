@@ -158,13 +158,16 @@ register unsigned ident;
 
 	/*
 	 * V7: the half-hearted attempt to do something with the
-	 * 11/70 parity registers.  MUTOS: message and signal / panic.
+	 * 11/70 parity registers.  MUTOS: message and signal (break to the
+	 * common psignal) or panic.
 	 */
 	case 10:
 	case 10+USER:
 		printf("%s running - segment = %x offset = %x\n", "parity during ", pcseg, pc);
-		if (dev & USER)
-			goto sigbus;
+		if (dev & USER) {
+			i = SIGBUS;
+			break;
+		}
 		panic("parity");
 
 	case 11:
@@ -178,12 +181,13 @@ register unsigned ident;
 	 * Locations 0-2 specify this style trap, since
 	 * DEC hardware often generates spurious
 	 * traps through location 0.  (V7 comment; MUTOS: unexpected
-	 * interrupt, message with ident.)
+	 * interrupt, message with ident; returns directly like V7 - this
+	 * makes trap() byte-identical to the original.)
 	 */
 	case 15:
 	case 15+USER:
 		printf("Random interrupt (ident = %x) ignored\n", ident);
-		goto out;
+		return;
 
 	/*
 	 * Allow process switch
@@ -202,11 +206,6 @@ out:
 		addupc(pc, &u.u_prof, (int)(u.u_stime - syst));
 	if (u.u_fpsaved)
 		restfp(u.u_fparea);
-	return;
-sigbus:
-	i = SIGBUS;
-	psignal(u.u_procp, i);
-	goto out;
 }
 
 /*
