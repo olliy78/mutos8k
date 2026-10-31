@@ -22,4 +22,4 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/trap.c`.  Alle Zahlen **gemessen
 ## Fremdzuege fuer H6
 
 * `trap`, Fall 11: Ausgabe "parity during ... waiting - segment = %x offset = %x + ??" und Auswertung von `ident` (Bits 14/15 und Maske `0xF600`): kein V7-/SysIII-Gegenstueck (V7 gibt 11/70-Paritaetsregister aus) -- Z8001-Hardware (*angenommen*).
-* Text "Random interrupt (ident = %x) ignored" mit `ident` (V7: ohne), und `goto out` statt V7 `return` (V7 geht beim Zufallsinterrupt ohne Signalpruefung zurueck).
+* Text "Random interrupt (ident = %x) ignored" mit `ident` (V7: ohne), Rueckkehr wie V7 mit `return` (gemessen im Gast, Probe `trapD`, `z8001_kontext.md`; die fruehere Angabe "`goto out`" war falsch).

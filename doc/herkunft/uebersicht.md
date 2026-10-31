@@ -360,7 +360,7 @@ Befunde entgegen der Erwartung:
 
 ### Fremdzuege (weder V7 noch System III) fuer H6
 
-1. `trap.c`: Zufallsinterrupt (Fall 15) mit `ident` in der Meldung und `goto out` (V7: `return`); Paritaetsfall 11 mit Auswertung von `ident` (Z8001-Hardware, *angenommen*).
+1. `trap.c`: Zufallsinterrupt (Fall 15) mit `ident` in der Meldung (Rueckkehr wie V7 `return`; die fruehere Angabe `goto out` war falsch, `z8001_kontext.md`); Paritaetsfall 11 mit Auswertung von `ident` (Z8001-Hardware, *angenommen*).
 2. `trap.c`: Systemaufruf 0 ist `sigret` (V7: indirekter Systemaufruf); Argumente aus dem Registerrahmen (vier Worte, `blk4`), nicht aus dem Befehlsstrom.
 3. `machdep.c`: `kstub` (leere Funktion zwischen `startup` und `sendsig`), `sigret` (kein V7-Gegenstueck); `startup` mit Speicherpruefung ueber `usegm` und `mfree(swapmap, nswap, 1)`.
 4. `ureg.c`: `estabur` ohne Segmentregister (nur Groessenpruefung, 256 Segmente).
@@ -424,3 +424,40 @@ Ausfuehrlich in `speicher.md` (Inventar je Funktion mit Adresse, Funktionsweise,
 * **Eigenanteil (Wertung):** (ii) einfache Hilfsrechnung ueber ein vorgegebenes Hardwaremodell (Segmentweiche Modus 2), mit einem (iii)-Kern aus ~0,43 KB Assembler und der Swap-/Slot-Logik; "nur weggelassen" trifft nicht zu, "grosse Eigenentwicklung" auch nicht.
   Die Spanne haengt daran, ob Z8001-Kopf-/Rahmenaenderungen, die Mailbox-DMA-Adressierung und das Hardwaremodell mitgezaehlt werden (`speicher.md` Abschnitt 8).
 * **Offen:** Messung des Kernelschutzes im Gast, Stapelueberlauf, reale Z8001-Eigenschaft (nichtsegmentierte Zugriffe tragen das PC-Segment), `adressen.txt` und die 37 abweichenden Woerter von `trap`, `u_x54`-Luecke (14 Byte), weitere Vorlagen (`speicher.md` Abschnitt 10).
+
+## 16. H8a: Z8001-Prozessorkontext (2026-11-01)
+
+Ausfuehrlich in `z8001_kontext.md` (Werkzeug `tools/herkunft/kontext.py`, Gastversuch `versuche/kontext/`).
+
+* `trapent` (030E) ist die Z8001-Umschrift von V7 `mch.s` `trap`/`call` (`nofault`, Benutzer-SP, `runrun` -> Trap 12, `iret`); `trap()`, `sig.c`, `sys1.c` sind V7-Gerippe.  Von 21 Funktionen
+  6 unveraendert, 11 angepasst, 2 ersetzt, 2 neu (79 % V7-gleich; 986 von 4701 Token neu).  Assembler `low` (1652 B): 31 % angepasst, 24 % ersetzt, 45 % neu (davon 574 B Tabellen); nur Code 48/37/15 %.
+* **Vorlage fuer die Benutzerseite des Systemaufrufs: WEGA-`libc`** (`src/lib/libc/sys/*.s`, SCCS 1983) stimmt befehlsweise mit MUTOS-`libc.a` ueberein (`SC #n`, Ergebnis `r4`, Carry-Fehler,
+  `SC #0` = Signalrueckkehr, gleiche Konstanten `EBIT`, `RETRLO/HI`, `SCINS`).  Der Kernel ist kein WEGA-Text, setzt aber dieselbe ABI um.  Ob MUTOS von WEGA oder beide von einer
+  gemeinsamen Z8000-Vorlage stammen, ist nicht entscheidbar (Zilog-ZEUS nicht gefunden).
+* Eigenanteil: Anpassung mit kleinen eigenen Konstruktionen; Z8001-C 1,0 % (297 Token), alle Abweichungen 3,4 % des C-Kerns.  Eigen: Paritaetsdiagnose, `7C04..06` als `bpt/iot/emt`,
+  NVIE-Einzelschritt, `regloc[16]`, 4-Wort-Signalrahmen.
+* Korrektur: Fall 15 von `trap` kehrt mit `return` zurueck (V7), nicht `goto out`; das erklaert zusammen mit der Marke `sigbus:` die 37 abweichenden Woerter (nicht `backup`).
+  Mit `versuche/kontext/trap_bytegleich.diff` ist `trap` im Gast bytegleich (Gesamtbau damit noch nicht gelaufen).
+* Signalzustellung erstmals im Gast gemessen (`sigtest`: zweimal SIGTERM gefangen, `sendsig`/`sigret` laufen).  Offen: NVI-Einzelschritt, Paritaets-Bits, Port 0x80.
+
+## 17. H8b: Mailbox-Treiber (2026-11-01)
+
+Ausfuehrlich in `mailbox_treiber.md`.
+
+* 38 C-Funktionen, 4189 Token = 14,5 % des Kernel-C: angepasst 73,5 %, ersetzt 17,1 % (`rkstart`, `ttstart`, `putchar`, `lpoutput`, `lpintr`), neu 8,7 %, unveraendert 0,7 %.
+* Vorlage ja fuer `rk` (V7/Hippe-Sammlung), `lp` (Hippe/Nijmegen/System-III-Familie, Ausgabepfad eigen) und die `tc*`-Huellen.  **`fd*` (`dev0.c`) ist ein umgebauter Magnetbandtreiber
+  `tm.c` mit BSD-`tmioctl`** (`B_TAPE`, Zustaende 1/2/3, `MTIOCTOP 0x6D01`, Befehlsfolge wie `tmops[]`; *wahrscheinlich*) -- Korrektur zu "Origin: none" in `dev0.md`.
+* Keine Vorlage fuer das Mailbox-Protokoll (14-Byte-Eintraege D532/D26A/D516/D558, Zeiger in Wort 6, Klingel Port 80H Bit 4, Fertigmeldung per Vektor), `mapalloc`/`mapstart`/`mapaddr`
+  und die U880-Seite (`mutosio.mac`, 2032 Zeilen); WEGA koppelt anders (PIO-Bytestrom).  Status `0xC8` = UDOS-Fehlercode "DISK INITIALIZATION ERROR".
+* Eigenanteil im Kernel-C 3,7 % bis 12,9 %; Protokoll und U880-Seite eigenstaendige Konstruktion, Kernel-Treiber Anpassung der V7-Struktur.
+* Offen: Wiederholungs-/Fehlerpfade und Vektorzuordnung ungemessen, Floppy-Kette nie ausgefuehrt.
+
+## 18. Scheduler und Zeit: kleine MUTOS-eigene Zuege (2026-11-01)
+
+Kein eigenes Subsystem; Einzelzeilen ohne Gegenstueck in allen geladenen Baeumen (`fremd.md` 8.7): `clock` erhoeht alle 30 s `sflag1` und weckt `runout`, `sched` ruft dann `update()`
+(abgeschaltet: `cf_x88a = 0` in `conf.c`); zwei Stellen eigener Tickzaehlung in `clock`; `setpri` ohne Rueckgabewert; `binit` mit `b_error`; `core` mit `namei(uchar)`.
+
+## 19. Gesamtbild Eigenanteil (2026-11-01, Wertung auf Basis der Abschnitte 15-18)
+
+Maschinenunabhaengiger Kern: weitgehend Text der V7-Linie (Hippe-Sammlung).  Eigenleistung liegt in der Anpassung an die A5120.16-Hardware: Speicher ohne MMU (2-3 %, weit 5 % des C-Kerns,
+`speicher.md`), Z8001-Kontext (1-3,4 %), Treiber (3,7-12,9 %), dazu Assembler und die U880-Seite `mutos_io` als eigenstaendige Konstruktion.  Vorlagen aus dem Z8000-Umfeld: WEGA-`libc`-ABI.

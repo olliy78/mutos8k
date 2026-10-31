@@ -1,0 +1,36 @@
+--- kernel/c/trap.c
++++ kernel/c/trap.c (Vorschlag, bytegleich im Rundlauf)
+@@ -163,8 +163,10 @@
+ 	case 10:
+ 	case 10+USER:
+ 		printf("%s running - segment = %x offset = %x\n", "parity during ", pcseg, pc);
+-		if (dev & USER)
+-			goto sigbus;
++		if (dev & USER) {
++			i = SIGBUS;
++			break;
++		}
+ 		panic("parity");
+ 
+ 	case 11:
+@@ -183,7 +185,7 @@
+ 	case 15:
+ 	case 15+USER:
+ 		printf("Random interrupt (ident = %x) ignored\n", ident);
+-		goto out;
++		return;
+ 
+ 	/*
+ 	 * Allow process switch
+@@ -202,11 +204,6 @@
+ 		addupc(pc, &u.u_prof, (int)(u.u_stime - syst));
+ 	if (u.u_fpsaved)
+ 		restfp(u.u_fparea);
+-	return;
+-sigbus:
+-	i = SIGBUS;
+-	psignal(u.u_procp, i);
+-	goto out;
+ }
+ 
+ /*
