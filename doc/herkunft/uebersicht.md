@@ -405,3 +405,22 @@ Venix, Ultrix-3.0-Baender, CB_Unix.
   `exece`-Ausgang und Dateistempel), andere Variante *unwahrscheinlich* (kein geladener Baum kommt MUTOS naeher).  Entscheiden wuerden weitere Staende der Linie (Vrije/Calgary, Hippe vor 1986), ein Kerneldatum von MUTOS und Hinweise der Beteiligten.
 * **Werkzeuge** (`tools/herkunft/`): `devdiff.py`, `traits.py`, `v7dump.py`, `v7fs_read.py`, `ifdef_resolve.py`, `mapnames.py`, `tables.py`, `tap2files.py`, `ftable.py`; Test `tests/test_herkunft_gegenprobe.py`.
 * **Korrektur:** MUTOS hat kein DISKMON (der `io_info`-Text in `bio.c` ist tot); in Abschnitt 13 gilt "in keinem anderen Baum" nur fuer die damaligen 15 Baeume (siehe `fremd.md` 8.5).
+
+## 15. H7: Speicherverwaltung -- V7 mit MMU, MUTOS ohne (2026-10-31)
+
+Ausfuehrlich in `speicher.md` (Inventar je Funktion mit Adresse, Funktionsweise, Schutz, Vorlagenvergleich mit URL/SHA-256, Befehle).  Werkzeug: `tools/herkunft/speicher.py`, `tools/herkunft/v6fs_read.py`.
+
+* **Inventar (36 V7-Funktionen mit Speicherbezug):** 5 unveraendert (`swtch`, `sched`, `xfree`, `malloc`, `mfree`), **16 weggelassen/Stumpf** (`sureg`, `expand`, 8 in `text.c`, `grow`, `sbreak` gekuerzt, `estabur` nur Groessenpruefung, `kstub`, `sysphys`, `mapfree`),
+  **15 in V7-Form angepasst** (`newproc`, `swapin`, `xswap`, `swap`, `physio`, `getxfile`, `exece`, `fork`, `core`, `procxmt`, `startup`, `sendsig`, `trap`, `mmread`, `mmwrite`), dazu 3 neue C-Funktionen (`mapalloc`, `mapstart`, `sigret`) und etwa 8 Assemblerroutinen.
+  Weggelassen: 1 825 von 21 485 abs-Tokens des V7-`usr/sys/sys` (8,5 %).  **Neu und speicherbezogen:** 0,55 bis 0,86 k C-Tokens (2 bis 3 % des MUTOS-C-Kerns; weit gezaehlt 1,46 k = 5 %) und ~0,43 KB Assembler (1,2 % des Abbilds).
+* **Funktionsweise (gemessen am Code und Disassemblat):** ein Prozess = ein ganzes 64-KB-Segment 1..3 der EM256 (Segment 0 Kernel); `p_addr` (Klicknummer, Klick 256 Byte) ist bitgleich das Segmentwort `usegm`.  Adressraumwechsel: `resume` kopiert den u-Bereich
+  (1 KB) zwischen `FC00` und dem Slot `EC00 + (usegm << 2)`, die Trap-Rueckkehr schreibt `usegm` in das PC-Segment des Rahmens.  Kernelzugriff auf Benutzerspeicher: kurze FCW-Umschaltung (`C000`), `nofault`; keine Adresspruefung.
+  Swap: Dreiteil-Abbild (u-Bereich, Text+Daten, Stapel ab SP), Freigabe des Swapplatzes in `swap` (klaert `slp.md` Punkt 5); Uebertragung ueber die Mailbox mit `mb_seg = b_xmem`.  Hoechstens 3 Prozesse gleichzeitig im Speicher.
+* **Schutz:** Prozess gegen Prozess **gemessen** (`doc/system/befund.md`); Prozess gegen Kernel **unbekannt** (nicht versucht); Text-Schreibschutz und Stapelgrenze **nicht vorhanden** (Code).  `backup` (trap, Fall 9) ist `ld r2,#-1; ret` bei 040E,
+  `grow` wird nie erreicht; `kernel/karte/adressen.txt` fuehrt `_backup` irrtuemlich bei 3630 (= `sigret`).
+* **Vorlage:** keine gefunden.  In 27 durchsuchten Baeumen (47 Dateien mit `estabur`) hat nur MUTOS ein `estabur` ohne Segmentregister.  Neu geladen: LSX, Mini-UNIX (V6 ohne MMU; ein Prozess im Speicher, Wechsel durch Auslagern; Funktionsaehnlichkeit 0,07 bis 0,38),
+  V6-auf-286; WEGA (Z8001 mit Z8010) ist bei allen Speicherfunktionen weiter von MUTOS entfernt als V7/Hippe, `estabur` hat dort 4 statt 5 Argumente (MUTOS 5 wie V7), keine WEGA-Bezeichner im Kernel.  V7 und Hippe-Sammlung sind bei diesen Funktionen nicht zu trennen.
+  Nicht geladen/nicht gefunden: Zilog-ZEUS, Onyx, Plexus, Coherent fuer Z8000, MUTOS1600.
+* **Eigenanteil (Wertung):** (ii) einfache Hilfsrechnung ueber ein vorgegebenes Hardwaremodell (Segmentweiche Modus 2), mit einem (iii)-Kern aus ~0,43 KB Assembler und der Swap-/Slot-Logik; "nur weggelassen" trifft nicht zu, "grosse Eigenentwicklung" auch nicht.
+  Die Spanne haengt daran, ob Z8001-Kopf-/Rahmenaenderungen, die Mailbox-DMA-Adressierung und das Hardwaremodell mitgezaehlt werden (`speicher.md` Abschnitt 8).
+* **Offen:** Messung des Kernelschutzes im Gast, Stapelueberlauf, reale Z8001-Eigenschaft (nichtsegmentierte Zugriffe tragen das PC-Segment), `adressen.txt` und die 37 abweichenden Woerter von `trap`, `u_x54`-Luecke (14 Byte), weitere Vorlagen (`speicher.md` Abschnitt 10).

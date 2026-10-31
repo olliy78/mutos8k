@@ -540,5 +540,7 @@ Stand 2026-10-31.  Keine Quelltexte von MUTOS1600 bekannt; alles Folgende ist Li
 
 * Hippe-V7 ist fuer die PDP-11/40-Klasse konfiguriert (`conf/m.h`: nur `_1140`; `SEPID`, `PARITY`, `UNIBMAP`, `FPP` aus; Assist `m40.s`; RL01/RL02-Platten) und nutzt die KT11-MMU
   (`KISA`/`UISA`/`SSR0` in `m40.s`, `sureg`/`estabur` in `sys/ureg.c`).  Gemessen.
-* MUTOS8000: `sureg` ist nur `RET` (Karte 3D40), `estabur` nur eine Groessenpruefung; Abbild nichtsegmentiert, Ladeadresse 0.  Gemessen.  Wie Prozesse getrennt werden, ist offen (Swapping auf feste Stelle,
-  Z8001-Schutz oder keiner): *ungeklaert*, siehe `kernel_struktur.md`.
+* MUTOS8000: `sureg` ist nur `RET` (Karte 3D40), `estabur` nur eine Groessenpruefung; Abbild nichtsegmentiert, Ladeadresse 0.  Gemessen.
+  **Stand AP H7 (`speicher.md`, Kurzfassung `uebersicht.md` Abschnitt 15):** ein Prozess = ein ganzes 64-KB-Segment (`p_addr` = Segmentwort `usegm`), Benutzer im nichtsegmentierten Normalbetrieb,
+  Adressraumwechsel durch Kopie des u-Bereichs (`resume`) und Segmentwort im Trap-Rahmen; Schutz Prozess gegen Prozess gemessen, gegen den Kernel nicht gemessen.  Eine andere historische Vorlage fuer diese Teile
+  wurde in 27 durchsuchten Kernelbaeumen (u. a. LSX, Mini-UNIX, WEGA, Interdata) **nicht gefunden**; die Speicherschnittstellen sind V7, nur die Rufziele sind geleert (16 Funktionen) oder angepasst (15).
