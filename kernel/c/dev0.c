@@ -1,12 +1,26 @@
-/* dev0.c -- Treiber Major 0 / cdevsw[10] (Kernel mutos_1216, 7E16..8760, im Lauf nie erreicht): Floppy ueber die Mailbox (WEGA-fd-Muster).
+/* dev0.c -- driver for major 0 / cdevsw[10] (kernel mutos_1216, 7E16..8760, never reached in the run): floppy disk through the mailbox.
+ *
+ * Origin:   none
+ * Source:   none.  MUTOS own driver (floppy controller of the U880 side behind the mailbox).  No UNIX V7 or System III counterpart:
+ *           V7 has no floppy driver; the nearest V7 / System III files are the tape and disk drivers tm.c / ht.c / rk.c (shape of the
+ *           strategy / start / interrupt triple and of physio) and WEGA dev/fd.c (the controller's command codes and the idea of a
+ *           mailbox command table are possibly related; *assumed*, not measured).  Possible relatives for AP H6: WEGA dev/fd.c (P8000),
+ *           UDOS / U880 side of the A5120 (mutos_io).
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): no function reaches 50% against V7 except fdsub (62% against tcommand
+ *           of tm.c) and fdioctl (51% against mpxchan): both are matches on short generic patterns, not a common origin.  File
+ *           similarity: V7 16% (dsort.c), System III 16% (ht.c), WEGA 18% (mt.c) / 10% (fd.c).
+ * Roundtrip: not in rundlauf_soll.txt (the module is compiled WITHOUT the optimiser in the original); checked by the full build only;
+ *           see doc/herkunft/dev0.md.
+ * Deviations: not applicable (no origin).
+ *
  * fdopen 7E16, fdclose 7E94, fdsub 7F00, fdstrategy 7F94, fdstart 7FDC, fdintr 821A, fdadj 8468, fdread 84E4, fdwrite 851C, fdphys 8554, fdioctl 85B0.
- * fdintr und fdadj haben im Kernel keinen Aufrufer ueber die Aufrufkarte (fdintr kommt aus dem Interrupt) und standen deshalb nicht in
- * funktionen.txt; die Uebersicht (uebersicht.py) zaehlt sie nicht mit.
- * Dieses Modul ist im Kernel OHNE Optimierer uebersetzt (alle Spruenge JP statt JR, Rumpf hinter einem `JP` am Funktionsanfang): beim
- * Vergleich die Zeile ohne -O (Datei <name>.o) benutzen, nicht <name>O.o.
- * Daten: fdtab 8E6A (struct buf-Kopf wie rktab; b_bcount 8E76 = Zustand, b_resid 8E80 = Wiederholungen), fdu D566 (16 Byte je Laufwerk, 1 Laufwerk),
- * fdmbx D558 (Mailbox 14 Byte), fdbuf D540 (Puffer fuer fdsub), rfdbuf CEAC (physio).  Die Tabelle fdcmd 8D6A und die Sprungtabellen der
- * switch-Anweisungen (8D5E, 8D64, 8D78, 8D88) liegen hinter den Tabellen von tty2.c. */
+ * fdintr and fdadj have no caller in the kernel via the call map (fdintr comes from the interrupt) and were therefore not in
+ * funktionen.txt; the overview (uebersicht.py) does not count them.
+ * This module is compiled WITHOUT the optimiser in the kernel (all jumps JP instead of JR, body behind a `JP` at the start of the function): when
+ * comparing, use the line without -O (file <name>.o), not <name>O.o.
+ * Data: fdtab 8E6A (struct buf head like rktab; b_bcount 8E76 = state, b_resid 8E80 = retries), fdu D566 (16 bytes per drive, 1 drive),
+ * fdmbx D558 (mailbox 14 bytes), fdbuf D540 (buffer for fdsub), rfdbuf CEAC (physio).  The table fdcmd 8D6A and the jump tables of the
+ * switch statements (8D5E, 8D64, 8D78, 8D88) lie behind the tables of tty2.c. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -16,10 +30,10 @@
 #include "mbx.h"
 
 struct fdu {
-	char		fu_flag;	/* 00 offen */
+	char		fu_flag;	/* 00 open */
 	char		fu_x1;		/* 01 */
 	daddr_t		fu_blk;		/* 02 */
-	unsigned	fu_x6;		/* 06 (unsigned: fdstart vergleicht mit LD R5 / XOR R4,R4) */
+	unsigned	fu_x6;		/* 06 (unsigned: fdstart compares with LD R5 / XOR R4,R4) */
 	int		fu_x8, fu_xa, fu_xc;
 	int		fu_init;	/* 0E */
 };
@@ -110,9 +124,9 @@ register struct buf *bp;
 	spl0();
 }
 
-/* fdstart: naechsten Auftrag aus fdtab holen und ueber die Mailbox starten (fdtab.b_bcount = Zustand: 1 Positionieren, 2 Lesen/Schreiben,
- * 3 Befehl der Steuerung (fdbuf), 4 Befehl 51H); fdtab.b_resid zaehlt Wiederholungen.  b_resid des Auftrags traegt den Mailbox-Befehl
- * (25H/27H Spur vor/zurueck, 0/1 Lesen/Schreiben, sonst die Steuerbefehle von fdsub). */
+/* fdstart: take the next request from fdtab and start it through the mailbox (fdtab.b_bcount = state: 1 seek, 2 read/write,
+ * 3 controller command (fdbuf), 4 command 51H); fdtab.b_resid counts retries.  b_resid of the request carries the mailbox command
+ * (25H/27H track forward/back, 0/1 read/write, otherwise the controller commands of fdsub). */
 /* KERNEL 7FDC */
 fdstart()
 {
@@ -200,7 +214,7 @@ fdstart()
 	}
 }
 
-/* fdintr: Ende eines Mailbox-Auftrags (Interrupt; kein Aufrufer im Kernel, nie gelaufen) */
+/* fdintr: end of a mailbox request (interrupt; no caller in the kernel, never run) */
 /* KERNEL 821A */
 fdintr()
 {
@@ -295,8 +309,8 @@ start:
 	fdstart();
 }
 
-/* fdadj: Blocknummer nach einem Positionsfehler nachfuehren.  Im Kernel ist `mp` (R12) NICHT belegt: die Funktion liest das R12 des
- * Aufrufers fdintr (dort bp); hier genauso als nicht initialisierte Registervariable nachgebaut. */
+/* fdadj: update the block number after a seek error.  In the kernel `mp` (R12) is NOT assigned: the function reads the R12 of its
+ * caller fdintr (there: bp); rebuilt here the same way as an uninitialised register variable. */
 /* KERNEL 8468 */
 fdadj(bp)
 register struct buf *bp;
@@ -356,10 +370,10 @@ dev_t dev;
 	fp->fu_x6 = (int)lb + 1;
 }
 
-/* Mailbox-Befehle von fdioctl 6D01 (Befehl 0..6): Lesen-Spur 61H, 45H, 47H, 25H/27H Spur vor/zurueck, 51H, 6 */
+/* Mailbox commands of fdioctl 6D01 (command 0..6): read track 61H, 45H, 47H, 25H/27H track forward/back, 51H, 6 */
 int fdcmd[] = { 0x61, 0x45, 0x47, 0x25, 0x27, 0x51, 6 };
 
-/* fdioctl: 6D01 Auftrag an die Steuerung (Befehlscode, Anzahl), 6D02 Zustand lesen */
+/* fdioctl: 6D01 request to the controller (command code, count), 6D02 read the state */
 /* KERNEL 85B0 */
 fdioctl(dev, cmd, arg, flag)
 dev_t dev;

@@ -19,8 +19,8 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 * **MUTOS-eigen (kein V7/SysIII-Bezug):** Diskettentreiber `dev0.c` (`fd*`), Drucker `lp.c`, Mailbox-Terminal `tty.c` (`tc*`),
   Plattentreiber-Teil von `rk.c`, `mapalloc`/`mapstart` in `bio.c`, Header `mbx.h`, `user_ext.h`, `devtab` in `conf.h`, die
   Z8001-Teile von `machdep.c`, `trap.c`, `ureg.c`.
-* **Offen:** `tty2.c` (Zeilendisziplin, 20 Funktionen, 4700 Token) hat nur 17-34 % Aehnlichkeit zu jeder Referenz (bestes: V7 `tty.c`);
-  entweder stark umgeschrieben oder aus anderer Quelle (WEGA/ZEUS?) -- Plan H6.
+* **Geklaert in H6 (Abschnitt 13, `fremd.md`):** `tty2.c` (Zeilendisziplin, 20 Funktionen) hat gegen V7/System III nur 17-34 %, geht aber auf `usr/sys/dev/tty.c` der V7-Variante
+  `Torsten_Hippe_v7` zurueck (Tabellen byte-gleich); dieselbe Variante erklaert die uebrigen "Fremdzuege" und "System-III-Zuege" des Kerns.
 
 ## 1a. Feature-Bewertung: Neuerungen von System III gegenueber V7
 
@@ -325,3 +325,53 @@ Funktionen bytegleich** (vorher 38).  Gesamtbau-Ergebnis auf dem endgueltigen St
 6. `sys1.c` `fork`/`wait`: `proctop` als variable Tabellengroesse.
 
 Offen: ob `rdwri.c`-Probekopie (196 B, 9/98 Woerter) und echte Datei (194 B, bytegleich) beim `iomove` anders uebersetzen, ist ungeklaert (*Ursache unbekannt*).
+
+## 12. H5: trap, machdep, ureg, rk, dev0, lp, tty (2026-10-31)
+
+Einzelheiten in `trap.md`, `machdep.md`, `ureg.md`, `rk.md`, `dev0.md`, `lp.md`, `tty.md`.  `tty2.c` und `kernel/c/varianten/` sind nicht Teil dieses Pakets (H6).  Headern und `kernel/conf` aus H4 geprueft: alle 25 Dateien tragen den Herkunftskopf, kein Nicht-ASCII-Zeichen.
+
+Rundlauf (`tools/herkunft/rundlauf.sh`, 6 Module, **vorher = nachher**, gemessen; `dev0` wird im Original ohne `-O` uebersetzt und ist nur vom Gesamtbau abgedeckt):
+
+| Modul | Origin | bytegleich | Aenderung |
+|---|---|---|---|
+| trap | partial | 2/3 | V7-Kommentare, Kopf; V7-Text nicht einsetzbar (anderer Rahmen) |
+| machdep | partial (schwach) | 3/4 | V7-`sendsig` als Kommentar, Kopf |
+| ureg | partial | 2/3 | `cinit` in V7-Form (bytegleich), V7-`sureg` als Kommentar |
+| rk | partial | 13/13 | `sy*` in V7-Text (bytegleich), V7-Kommentare an `mm*`, `rk*` |
+| dev0 | none | -- (Gesamtbau) | nur Uebersetzung der Kommentare, Kopf |
+| lp | none | 4/7 | nur Kommentare, Kopf |
+| tty | none | 10/11 | nur Kommentare, Kopf |
+
+Befunde entgegen der Erwartung:
+
+* Der Spencer-V7-Baum hat **keine `lp.c`**; `lp.c` aehnelt eher System III `lp.c` (Merker- und Namensfamilie), 23 % Dateiaehnlichkeit.  Der Vermerk "folgt V7 lp.c" war nicht pruefbar.
+* "WEGA-fd-Muster" im Kopf von `dev0.c` ist nicht belegt (WEGA `fd.c` 10 %, WEGA `lp.c` 10 %, `ttydev.c` 13 %): WEGA ist fuer diese Treiber **nicht** der Vorfahre (gemessen).
+* `cinit` (in `ureg.c`) kommt aus V7 `prim.c`, nicht aus V7 `ureg.c`.
+
+### Fremdzuege (weder V7 noch System III) fuer H6
+
+1. `trap.c`: Zufallsinterrupt (Fall 15) mit `ident` in der Meldung und `goto out` (V7: `return`); Paritaetsfall 11 mit Auswertung von `ident` (Z8001-Hardware, *angenommen*).
+2. `trap.c`: Systemaufruf 0 ist `sigret` (V7: indirekter Systemaufruf); Argumente aus dem Registerrahmen (vier Worte, `blk4`), nicht aus dem Befehlsstrom.
+3. `machdep.c`: `kstub` (leere Funktion zwischen `startup` und `sendsig`), `sigret` (kein V7-Gegenstueck); `startup` mit Speicherpruefung ueber `usegm` und `mfree(swapmap, nswap, 1)`.
+4. `ureg.c`: `estabur` ohne Segmentregister (nur Groessenpruefung, 256 Segmente).
+5. `rk.c`: Mailbox-Plattentreiber (`rkstart`, Status 0xC8 = Einheit fehlt, 3 Wiederholungen, Blockgrenze 0x260); `mmread`/`mmwrite` waehlen das Segment ueber `usrseg`.
+6. `lp.c`: Familie "klassischer UNIX-Zeilendrucker" (SysIII-Namen, `lpcanon`), ohne belegten Vorfahren; Kandidaten 2.9BSD/3BSD `usr/sys/dev/lp.c`, V7-Originalband (beide nicht lokal).
+7. `dev0.c`: Diskettentreiber `fd*` mit Controller-Befehlen 25H/27H/51H/61H ueber Mailbox -- keine Quelle gefunden.
+8. `tty.c`: Konsolenring `conlog` (8DE8..8E68) in `putchar`; Ausgabeablauf `ttstart`/`ttxfer` ueber Mailbox -- eigen.
+
+## 13. H6: Fremdherkunft -- die Torsten-Hippe-V7-Variante (2026-10-31)
+
+Ausfuehrlich in `fremd.md` (Quellen mit URL und SHA-256, Befehle, Tabellen).  Geladen und ausgewertet: Hippe-V7, Nijmegen-V7, V7-Patches/-Addenda, Bostic-V7-Band, 2.8/2.9/2.10/2.11BSD, 3BSD, 4.1BSD, 32V, PWB, Interdata-V6, WEGA.
+
+* **Quelle: `Distributions/Research/Torsten_Hippe_v7/v7.tar.gz`** (`usr/sys`, Standardkonfiguration aus `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; `SYSACCT`, `SYSPHYS`, `SYSLOCK`, `DISKMON`, `MX`, `SGTTY`, `XBUF`, `UNIBMAP`
+  aus).  Mit dieser Konfiguration (Schalter aufgeloest) ist `sysent` zu 64 von 64 Zeilen gleich MUTOS (V7: 58 von 64); NPROC 30, NINODE 50, NFILE 50, NMOUNT 5, MAXUPRC 15, HZ 50, TIMEZONE 0, `MAPSIZ = NPROC/2 = 15`.
+* **Fremdzuege aus Hippe (sicher, je mit Fundstelle):** `malloc`-Kartenlimit mit `panic("map overflow")`, `seek` `off < 0`, `sumount`-Busytest, `stime`/`i_lastr` und `iget`/`iput`-LRU (`LRUI`), `breada`-Freilistentest,
+  `exit`-Schleife (`EXIT`), `exece` mit `B_AGE`-Fehlerschleife, `proctop` (`PROC_MAX`), dazu die bisherigen "System-III-Zuege" `s_tfree`/`s_tinode` (`alloc.c`), `smount` -> `out1`, `iodone` ohne `B_MAP`, kein `DISKMON`.
+  In keinem anderen der 15 Baeume treten `malloc`-Grenze, `seek`-Pruefung, `breada`-Test oder `exece`-Schleife auf (Nijmegen, Schwestervariante mit denselben Schaltern, hat nur `LRUI`/`EXIT`/`PROC_MAX`).
+* **`tty2.c`: Quelle gefunden (sicher).** `maptab`/`cchars`/`wchars` sind Byte fuer Byte gleich Hippe `dev/tty.c`; Funktionen entsprechen eins zu eins (`ttywipe`=`ttyrub`, `ttyretype`=`ttycol`, `zapc`=`unputc`, `ttybit`=`bitset`,
+  `ttyspcl`=`ttyspec`, `ttyblock`=`ttflow`, `ttstart`=`ttkick`, `ttychars`=`ttinit`, `ttioccomm`=`ttioctl`, `wflushtty`=`ttywait`, `flushtty`=`ttyflush`); `struct tty` stimmt im Layout bis +34.  Dateiaehnlichkeit 43 %
+  (mit Namensabbildung 55 %) gegen 17-34 % bei allen anderen Baeumen; die Namen in `tty2.c` waren frei vergeben.  Empfehlung (Funktionsreihenfolge, erwartete Abweichungen): `fremd.md` Abschnitt 5.3.
+* **`ptrace`-Reihenfolge** `req, pid, addr, data`: Konvention der Nicht-PDP-11-Systeme (32V, System III VAX, WEGA), kein Fremdzug.
+* **Ungeklaert (keine Quelle in 15 Baeumen, vermutet MUTOS-eigen):** 30-s-`update()`-Anforderung (`clock` -> `sflag1` -> `sched`; `cf_x88a` ist 0, also abgeschaltet), `setregs` `u_exname` -> `u_dbuf`, `lp.c` (alle <= 23 %).
+* **Ablage:** `original/hippe-v7/` nur als Vorschlag; Lizenz der Zusaetze Dritter unklar (V7-Basis Caldera), deshalb nicht abgelegt (`fremd.md` Abschnitt 7).
+* Folge fuer H3/H4: `CMAPSIZ`/`SMAPSIZ 50 (guessed)` in `param.h` falsch (Karten haben `MAPSIZ+1 = 16` Eintraege); `linesw`-Namen auf V7 (`l_rint`..`l_modem`); `XTABS 02000` ist belegt (Hippe `sgtty.h`).

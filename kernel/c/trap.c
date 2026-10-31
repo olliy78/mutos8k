@@ -1,12 +1,25 @@
-/* trap.c -- Trap- und Systemaufruf-Eintritt in C (Kernel mutos_1216, 087A..0B3A): trap, nosys, nullsys.
- * Der Eintritt selbst (trapent 030E) ist Assembler.  Rahmen am Aufruf von trap (r14-relativ): dev 4, ident 6, dann der gerettete
- * Registerrahmen ab 8 (u.u_ar0 = &r0): ar0[8] = Nutzer-SP (18h), FCW 1Ch, Segment-PC 1Eh, PC 20h.  Bit 14 des FCW = Systembetrieb
- * (fehlt es, wird USER (16) zu dev addiert), Bit 7 = C-Flag (Fehleranzeige wie EBIT in V7), Bit 11 geloescht beim Einzelschritt.
- * Fallunterscheidung ueber dev (10..31): 10/26 Paritaet, 11/27 Paritaet II, 15/31 unerwartete Unterbrechung, 16 Busfehler-Signal,
- * 17 Befehlsemulation (F009), 18 privilegierter Befehl (ident = Opcode 7C04..06), 19 Einzelschritt, 22 SYSTEMAUFRUF, 25 Segmentfehler
- * (Stackwachstum), 28 nichts.
- * Daten: nested = 88E0, argp = 88E2 (enthaelt FC9E = u.u_arg), Texte 88E4 "parity during ", 8920.., 8969, 8990, 8997, 89C3,
- * sysent = 8B58 (4 Byte je Eintrag), Sprungtabelle der Faelle 88F4.  Gleitpunkt: savfp 03F8 / restfp 03FE (Assembler). */
+/* trap.c -- trap and system call entry in C (kernel mutos_1216, 087A..0B3A): trap, nosys, nullsys.
+ *
+ * Origin:   partial
+ * Source:   UNIX V7 usr/sys/sys/trap.c.  The frame of trap() (what the entry code at 030E saves), the case labels and the
+ *           tail "out:" (issig/psig, setpri, qswtch, addupc, restfp) follow V7; nosys and nullsys are V7 text.  The trap types, the
+ *           register frame, the system call argument fetch and the parity / random interrupt messages are Z8001 specific and
+ *           MUTOS own (V7: PDP-11 traps, args fetched through fuiword from the instruction stream).  System III PDP-11
+ *           uts/pdp11/os/trap.c is closer to V7 than to MUTOS in these parts; no System III feature is present.
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): trap 48% against V7 (System III 32%), nosys and nullsys 100%
+ *           (V7 = System III for nullsys); file similarity 46% (V7), 29% (System III).
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/trap.md.
+ * Deviations: trap(): see the V7 comments before each case and doc/herkunft/trap.md.  nosys keeps the unused register variable
+ *           (needed for the same prologue; V7 has none).
+ *
+ * The entry itself (trapent 030E) is assembler.  Frame at the call of trap (r14 relative): dev 4, ident 6, then the saved register
+ * frame from 8 on (u.u_ar0 = &r0): ar0[8] = user SP (18h), FCW 1Ch, segment PC 1Eh, PC 20h.  Bit 14 of the FCW = system mode
+ * (if clear, USER (16) is added to dev), bit 7 = C flag (error indication like EBIT in V7), bit 11 cleared on single step.
+ * Cases of dev (10..31): 10/26 parity, 11/27 parity II, 15/31 unexpected interrupt, 16 bus error signal, 17 instruction emulation
+ * (F009), 18 privileged instruction (ident = opcode 7C04..06), 19 single step, 22 SYSTEM CALL, 25 segment fault (stack growth),
+ * 28 nothing.
+ * Data: nested = 88E0, argp = 88E2 (holds FC9E = u.u_arg), texts 88E4 "parity during ", 8920.., 8969, 8990, 8997, 89C3,
+ * sysent = 8B58 (4 bytes per entry), jump table of the cases 88F4.  Floating point: savfp 03F8 / restfp 03FE (assembler). */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -24,6 +37,13 @@ struct blk4 {
 	int	w[4];
 };
 
+/*
+ * Called from the trap entry (030E) when a processor trap occurs.
+ * The arguments are the words saved on the system stack
+ * by the hardware and software during the trap processing.
+ * dev is the kind of trap that occurred.
+ * (V7 comment; MUTOS: dev, ident and the frame as described above.)
+ */
 /* KERNEL 087A */
 trap(dev, ident, r0, r1, r2, r3, r4, r5, r6, r7, sp, xx, ps, pcseg, pc)
 register unsigned ident;
@@ -41,6 +61,12 @@ register unsigned ident;
 		dev |= USER;
 	u.u_ar0 = &r0;
 	switch (dev & 0xFF) {
+	/*
+	 * Trap not expected.
+	 * Usually a kernel mode bus error.
+	 * (V7 prints ka6, aps, pc, ps and the trap type; MUTOS prints
+	 * seg, aps, pc and ps, the trap type and ident.)
+	 */
 	default:
 		if (nested)
 			for (;;)
@@ -53,18 +79,24 @@ register unsigned ident;
 		printf("ident = %x\n", ident);
 		panic("trap");
 
-	case 0+USER:
+	case 0+USER: /* bus error */
 		i = SIGBUS;
 		break;
 
-	case 1+USER:
+	/*
+	 * If illegal instructions are not
+	 * being caught and the offending instruction
+	 * is the floating point probe (V7: SETD, MUTOS: F009),
+	 * the trap is ignored.
+	 */
+	case 1+USER: /* illegal instruction */
 		pc += 2;
 		if (fuword(pc-4) == 0xF009 && u.u_signal[SIGILL] == 0)
 			goto out;
 		i = SIGILL;
 		break;
 
-	case 2+USER:
+	case 2+USER: /* privileged instruction used as bpt, iot, emt (MUTOS: 7C04..06) */
 		if (ident == 0x7C06)
 			i = SIGTRAP;
 		else if (ident == 0x7C04)
@@ -75,12 +107,12 @@ register unsigned ident;
 			i = SIGILL;
 		break;
 
-	case 3+USER:
+	case 3+USER: /* trace (V7: bpt or trace) */
 		i = SIGTRAP;
 		ps &= ~0x0800;
 		break;
 
-	case 6+USER:
+	case 6+USER: /* sys call */
 		u.u_error = 0;
 		ps &= ~EBIT;
 		a = pc;
@@ -110,7 +142,13 @@ register unsigned ident;
 		}
 		goto out;
 
-	case 9+USER:
+	/*
+	 * If the user SP is below the stack segment,
+	 * grow the stack automatically.
+	 * (V7: relies on the hardware restarting a half executed
+	 * instruction; MUTOS: backup() and grow() with the saved SP.)
+	 */
+	case 9+USER: /* segmentation exception */
 		a = sp;
 		if (backup(u.u_ar0) == 0)
 			if (grow(a))
@@ -118,6 +156,10 @@ register unsigned ident;
 		i = SIGSEG;
 		break;
 
+	/*
+	 * V7: the half-hearted attempt to do something with the
+	 * 11/70 parity registers.  MUTOS: message and signal / panic.
+	 */
 	case 10:
 	case 10+USER:
 		printf("%s running - segment = %x offset = %x\n", "parity during ", pcseg, pc);
@@ -132,11 +174,20 @@ register unsigned ident;
 		printf("%s waiting - segment = %x offset = %x + ??\n", "parity during ", i, t);
 		goto out;
 
+	/*
+	 * Locations 0-2 specify this style trap, since
+	 * DEC hardware often generates spurious
+	 * traps through location 0.  (V7 comment; MUTOS: unexpected
+	 * interrupt, message with ident.)
+	 */
 	case 15:
 	case 15+USER:
 		printf("Random interrupt (ident = %x) ignored\n", ident);
 		goto out;
 
+	/*
+	 * Allow process switch
+	 */
 	case 12+USER:
 		goto out;
 	}
@@ -158,6 +209,9 @@ sigbus:
 	goto out;
 }
 
+/*
+ * nonexistent system call-- set fatal error code.
+ */
 /* KERNEL 0B2A */
 nosys()
 {
@@ -166,6 +220,9 @@ nosys()
 	u.u_error = EINVAL;
 }
 
+/*
+ * Ignored system call
+ */
 /* KERNEL 0B38 */
 nullsys()
 {

@@ -1,6 +1,22 @@
-/* lp.c -- Drucker (cdevsw[7]; Kernel mutos_1216, 6444..6970): lpopen, lpclose, lpwrite, lpcanon, lpoutput, lpintr, lpxfer.
- * Zwei Drucker (lpt, D3E2, 26 Byte je Eintrag), Anzahl nlp = 8C98, Puffer lpbuf D416 (128 Byte je Drucker), Mailbox-Eintraege lpmbx D516 (14 Byte).
- * Der Aufbau folgt V7 lp.c, die Ausgabe geht aber ueber die Mailbox (Befehl 2) zur U880-Seite.  6432 (tty-Merker setzen) steht in dev1, hier ttyinit. */
+/* lp.c -- line printer (cdevsw[7]; kernel mutos_1216, 6444..6970): lpopen, lpclose, lpwrite, lpcanon, lpoutput, lpintr, lpxfer.
+ *
+ * Origin:   none
+ * Source:   none proven.  The shape follows the classic UNIX line printer driver (open / close / write with a canonicalising lpcanon,
+ *           flag bits OPEN / CAP / NOCR / ASLP, the columns ind / col / ccc / mcc / mlc / line, form feed handling): UNIX System III
+ *           PDP-11 uts/pdp11/io/lp.c has lpopen, lpclose, lpwrite, lpoutput, lpintr with the same flag logic (similar, 25..32% only).
+ *           UNIX V7 (Spencer tape) contains NO lp.c in usr/sys/dev (measured: `ls original/unix-v7/usr/sys/dev`).  The output path
+ *           (mailbox command 2 to the U880 side, lpxfer) and the transmit buffer are MUTOS own.  Possible relatives for AP H6:
+ *           the V7 lp.c from the original tape (not in the Spencer tarball), 2.9BSD / 3BSD usr/sys/dev/lp.c; WEGA dev/lp.c is
+ *           measurably unrelated (10%).
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): lpopen 25%, lpwrite 29%, lpcanon 32% (against System III lpoutput)
+ *           and the rest under 15% against System III; against V7 all functions under 15%; file similarity System III 23%, V7 11%.
+ * Roundtrip: cc -O in the guest, per function against mutos_1216 (module is in rundlauf_soll.txt as it stands today);
+ *           see doc/herkunft/lp.md.
+ * Deviations: not applicable (no proven origin); the text is MUTOS as decompiled.
+ *
+ * Two printers (lpt, D3E2, 26 bytes per entry), count nlp = 8C98, buffer lpbuf D416 (128 bytes per printer), mailbox entries lpmbx D516 (14 bytes).
+ * The structure follows the classic lp.c (see above), but the output goes through the mailbox (command 2) to the U880 side.
+ * 6432 (set tty flag) is in dev1, here ttyinit. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -11,7 +27,7 @@
 
 struct lp {
 	struct clist	l_outq;		/* 00 */
-	char		l_flag;		/* 06: 04H roh, 08H offen, 10H Grossschrift, 20H kein CR, 40H Schlaf, 80H Ausgabe laeuft */
+	char		l_flag;		/* 06: 04H raw, 08H open, 10H capitals only, 20H no CR, 40H sleeping, 80H output running */
 	char		l_ind;		/* 07 */
 	int		l_ccc;		/* 08 */
 	int		l_col;		/* 0A */

@@ -1,8 +1,21 @@
-/* tty.c -- Terminalleitungen ueber die Mailbox (Kernel mutos_1216, 60CC..6432 und 6D44..7E16 soweit zurueckgebaut).
- * Vier Leitungen (Major 0, cdevsw[0]); Ausgabe/Eingabe laufen ueber Mailbox-Eintraege je Leitung (ttyhw, D26A, 14 Byte) zur U880-Seite,
- * die Zeichen kommen mit Aufruf von tcrint(dev, zeichen<<8) herein.  Ausgabepuffer ttyobuf D2A2 (80 Byte je Leitung).
- * Handassembler: nichts hier (getc/putc stehen in pipe.c).  Bildschirmprotokoll der Konsole: conptr 8C96 (Ring 8DE8..8E68).
- * Struktur der tty: h/tty.h.  Namen der Wrapper (60CC..623C) frei vergeben (tc...), die V7-Namen tragen die Kernfunktionen. */
+/* tty.c -- terminal lines through the mailbox (kernel mutos_1216, 60CC..6432 and 6D44..7E16 as far as rebuilt).
+ *
+ * Origin:   none
+ * Source:   none.  MUTOS own terminal driver: four lines (major 0, cdevsw[0]); input and output go through one mailbox entry per line
+ *           (ttyhw, D26A, 14 bytes) to the U880 side.  The wrappers tcopen..tcioctl call the generic tty routines (ttyopen, ttyclose, ttread,
+ *           ttwrite, ttyinput, ttioctl, ttinit, ttkick: those are in tty2.c = H6) and have the shape of the V7 line drivers
+ *           (usr/sys/dev/kl.c klopen / klclose / klread / klrint / klxint / klioctl; dc.c dcread / dcxint): measured 33..67% on these short
+ *           functions, which is the shared pattern "call the generic routine with the right tty structure", not an origin.
+ *           ttstart, ttxfer, putchar, ttyinit (mailbox output, console log) have no counterpart; System III kl.c has a putchar of
+ *           another form (31%).  Possible relatives for AP H6: none found (WEGA dev/ttydev.c / siok.c: 13% / 11%).
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): tcopen 51% (noise: against mpxchan), tcclose 62%, tcioctl 67%,
+ *           tcxint 53%, tcrint 39%, tcread / tcwrite 33%; ttstart 22%, ttxfer 8%, putchar 10%, ttyinit 9%; file similarity V7 kl.c 25%,
+ *           System III 15%.
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/tty.md.
+ * Deviations: not applicable (no origin); the text is MUTOS as decompiled.
+ *
+ * Handassembler: nothing here (getc/putc are in pipe.c).  Screen log of the console: conptr 8C96 (ring 8DE8..8E68).
+ * Structure of the tty: h/tty.h.  Names of the wrappers (60CC..623C) assigned freely (tc...), the V7 names carry the core functions. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
