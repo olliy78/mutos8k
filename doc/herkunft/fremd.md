@@ -1,8 +1,14 @@
-# Fremdherkunft des MUTOS-Kernels (AP H6): Torsten-Hippe-V7 als naechster bekannter Verwandter
+# Fremdherkunft des MUTOS-Kernels (AP H6): Hippe-Sammlung (TUHS) als naechster bekannter Verwandter
 
 Stand 2026-10-31.  Plan: `doc/plan/42_unix_herkunft.md` (H6).  Kurzfassung: `uebersicht.md` Abschnitt 13.
 Alle Zahlen **gemessen**, sofern nicht als *vermutet* oder *angenommen* gekennzeichnet.  Stufen: **sicher** (mehrere unabhaengige Merkmale, Gegenprobe negativ),
 **wahrscheinlich**, **vermutet**, **ungeklaert**.  Es wurde nichts in `kernel/` oder `original/` veraendert; alle Quellen liegen nur im Scratchpad (Abschnitt 2).
+
+> **Zuordnung (Stand 2026-10-31, Recherche des Projektinhabers):** "Hippe" bezeichnet in diesem Dokument nur die **Sammlung** `Distributions/Research/Torsten_Hippe_v7` im TUHS-Archiv, nicht den
+> Urheber der Inhalte.  Torsten Hippe hat die Sammlung im Maerz 1995 als Student aus nicht naeher bekannten Quellen zusammengestellt und dem TUHS uebergeben; er ist weder Autor des Kernels noch
+> kommt er als Urheber von MUTOS in Frage.  Dokumentiert wird die **grosse Uebereinstimmung** des Codes dieser Sammlung mit dem MUTOS-Code (Messungen in den Abschnitten 1, 5 und 8).  Wer die
+> Aenderungen gegenueber Bell-V7 urspruenglich geschrieben hat, ist unbekannt (Linie nach den Funden: UNSW -> Vrije/Nijmegen -> unbekannt; `m.h` nennt Johan Stevenson, Vrije, fuer `XBUF`).
+> Wo unten "Hippe-Kernel", "Hippe-Zuege" o. ae. steht, ist stets "Kernel/Zuege der Hippe-Sammlung" gemeint.
 
 ## 1. Ergebnis in Kuerze
 

@@ -6,6 +6,13 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 
 ## 1. Ergebnis in Kuerze
 
+> **Zuordnung (Stand 2026-10-31, Recherche des Projektinhabers):** "Hippe" bezeichnet in der Herkunftsdoku nur die **Sammlung** `Distributions/Research/Torsten_Hippe_v7` im TUHS-Archiv, nicht den
+> Urheber der Inhalte.  Torsten Hippe hat die Sammlung im Maerz 1995 als Student aus nicht naeher bekannten Quellen zusammengestellt und dem TUHS uebergeben; er ist weder Autor des Kernels noch
+> kommt er als Urheber von MUTOS in Frage.  Dokumentiert wird die **grosse Uebereinstimmung** des Codes dieser Sammlung mit dem MUTOS-Code (`fremd.md`).  Wer die
+> Aenderungen gegenueber Bell-V7 urspruenglich geschrieben hat, ist unbekannt (Linie nach den Funden: UNSW -> Vrije/Nijmegen -> unbekannt; `m.h` nennt Johan Stevenson, Vrije, fuer `XBUF`).
+> Wo unten "Hippe-Kernel", "Hippe-Zuege" o. ae. steht, ist stets "Kernel/Zuege der Hippe-Sammlung" gemeint.
+
+
 * **Hauptquelle: UNIX V7** (Spencer-Tarball `original/unix-v7`).  Einstufung **sicher** fuer den maschinenunabhaengigen
   Kern (alloc, iget, fio, bio, slp, sig, pipe, nami, rdwri, sys2-4, subr, prf, malloc, main).
 * **System III ist im Kern nicht belegt.**  Kein Merkmal, das nur SysIII hat (`utssys`, `fcntl`, `ulimit`, `setpgrp`, `acct`/`errlog`,
@@ -22,7 +29,7 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 * **Geklaert in H6 (Abschnitt 13, `fremd.md`):** `tty2.c` (Zeilendisziplin, 20 Funktionen) hat gegen V7/System III nur 17-34 %, stimmt aber mit `usr/sys/dev/tty.c` der V7-Variante
   `Torsten_Hippe_v7` ueberein (Tabellen byte-gleich); dieselbe Variante erklaert die uebrigen "Fremdzuege" und "System-III-Zuege" des Kerns.
   **Vorbehalt (2026-10-31):** Das belegt Verwandtschaft, nicht Abstammung.  Hippes Baum (Kernel-Quellen 1981-82, Neuubersetzung 1986, Laufzeitdaten bis 1988) ist
-  der naechste *bekannte* Verwandte.  Die Gegenprobe (Abschnitt 14, `fremd.md` Abschnitt 8) ergibt: MUTOS ist inhaltlich der Hippe-Kernel (H-A *wahrscheinlich*); eine gemeinsame unbekannte Vorlage
+  der naechste *bekannte* Verwandte.  Die Gegenprobe (Abschnitt 14, `fremd.md` Abschnitt 8) ergibt: MUTOS stimmt inhaltlich weitgehend mit dem Kernel der Hippe-Sammlung ueberein (H-A *wahrscheinlich*, Urheberschaft der Sammlung ausdruecklich ausgeschlossen); eine gemeinsame unbekannte Vorlage
   (Linie UNSW/Vrije/Nijmegen) ist *vermutet*, aber nicht zu trennen.  Dateidaten sind schwache Belege.
 
 ## 1a. Feature-Bewertung: Neuerungen von System III gegenueber V7
@@ -362,7 +369,7 @@ Befunde entgegen der Erwartung:
 7. `dev0.c`: Diskettentreiber `fd*` mit Controller-Befehlen 25H/27H/51H/61H ueber Mailbox -- keine Quelle gefunden.
 8. `tty.c`: Konsolenring `conlog` (8DE8..8E68) in `putchar`; Ausgabeablauf `ttstart`/`ttxfer` ueber Mailbox -- eigen.
 
-## 13. H6: Fremdherkunft -- die Torsten-Hippe-V7-Variante (2026-10-31)
+## 13. H6: Fremdherkunft -- die V7-Variante der Hippe-Sammlung (2026-10-31)
 
 Ausfuehrlich in `fremd.md` (Quellen mit URL und SHA-256, Befehle, Tabellen).  Geladen und ausgewertet: Hippe-V7, Nijmegen-V7, V7-Patches/-Addenda, Bostic-V7-Band, 2.8/2.9/2.10/2.11BSD, 3BSD, 4.1BSD, 32V, PWB, Interdata-V6, WEGA.
 
