@@ -19,8 +19,11 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 * **MUTOS-eigen (kein V7/SysIII-Bezug):** Diskettentreiber `dev0.c` (`fd*`), Drucker `lp.c`, Mailbox-Terminal `tty.c` (`tc*`),
   Plattentreiber-Teil von `rk.c`, `mapalloc`/`mapstart` in `bio.c`, Header `mbx.h`, `user_ext.h`, `devtab` in `conf.h`, die
   Z8001-Teile von `machdep.c`, `trap.c`, `ureg.c`.
-* **Geklaert in H6 (Abschnitt 13, `fremd.md`):** `tty2.c` (Zeilendisziplin, 20 Funktionen) hat gegen V7/System III nur 17-34 %, geht aber auf `usr/sys/dev/tty.c` der V7-Variante
-  `Torsten_Hippe_v7` zurueck (Tabellen byte-gleich); dieselbe Variante erklaert die uebrigen "Fremdzuege" und "System-III-Zuege" des Kerns.
+* **Geklaert in H6 (Abschnitt 13, `fremd.md`):** `tty2.c` (Zeilendisziplin, 20 Funktionen) hat gegen V7/System III nur 17-34 %, stimmt aber mit `usr/sys/dev/tty.c` der V7-Variante
+  `Torsten_Hippe_v7` ueberein (Tabellen byte-gleich); dieselbe Variante erklaert die uebrigen "Fremdzuege" und "System-III-Zuege" des Kerns.
+  **Vorbehalt (2026-10-31):** Das belegt Verwandtschaft, nicht Abstammung.  Hippes Baum (Kernel-Quellen 1981-82, Neuubersetzung 1986, Laufzeitdaten bis 1988) ist
+  der naechste *bekannte* Verwandte.  Die Gegenprobe (Abschnitt 14, `fremd.md` Abschnitt 8) ergibt: MUTOS ist inhaltlich der Hippe-Kernel (H-A *wahrscheinlich*); eine gemeinsame unbekannte Vorlage
+  (Linie UNSW/Vrije/Nijmegen) ist *vermutet*, aber nicht zu trennen.  Dateidaten sind schwache Belege.
 
 ## 1a. Feature-Bewertung: Neuerungen von System III gegenueber V7
 
@@ -375,3 +378,23 @@ Ausfuehrlich in `fremd.md` (Quellen mit URL und SHA-256, Befehle, Tabellen).  Ge
 * **Ungeklaert (keine Quelle in 15 Baeumen, vermutet MUTOS-eigen):** 30-s-`update()`-Anforderung (`clock` -> `sflag1` -> `sched`; `cf_x88a` ist 0, also abgeschaltet), `setregs` `u_exname` -> `u_dbuf`, `lp.c` (alle <= 23 %).
 * **Ablage:** `original/hippe-v7/` nur als Vorschlag; Lizenz der Zusaetze Dritter unklar (V7-Basis Caldera), deshalb nicht abgelegt (`fremd.md` Abschnitt 7).
 * Folge fuer H3/H4: `CMAPSIZ`/`SMAPSIZ 50 (guessed)` in `param.h` falsch (Karten haben `MAPSIZ+1 = 16` Eintraege); `linesw`-Namen auf V7 (`l_rint`..`l_modem`); `XTABS 02000` ist belegt (Hippe `sgtty.h`).
+
+## 14. H6b: Gegenprobe zur Abstammung (2026-10-31)
+
+Ausfuehrlich in `fremd.md` Abschnitt 8 (Variantentabelle, SHA-256, Befehle).  Frage: direkt von Hippe (H-A), gemeinsame unbekannte Vorlage (H-B) oder andere Variante (H-C)?  Zusaetzlich geladen und entpackt: alle UNSW-Baender
+(1, 4-7, 81-83, 85-87, 90, 92, 93, 106-110), V7M 2.1 (Jean Huens), Ultrix-11 3.1-Quellen, Bostic-V7-Band (jetzt als Baum), V7-Abbilder und Y2K-Platte, `Net.v7bugs`.  Nicht geladen (Grund in `fremd.md` 8.2): Coherent (i386), Research V8-V10,
+Venix, Ultrix-3.0-Baender, CB_Unix.
+
+* **Abweichungsanalyse** (`tools/herkunft/devdiff.py`): 177 MUTOS-Funktionen mit Hippe-Gegenstueck, 146 als Text vergleichbar, 112 ohne Abweichung; 95 Abweichungen: 72 Z8001-/Namensanpassung, 14 Hippe-Inhalt in anderer Schreibweise, 7 MUTOS-eigen,
+  1 Z8001, **1 fraglich** (`exece`-Fehlerausgang `goto bad2` hat Nijmegen-/V7-Form, Hippe `iput; return`).  Keine eindeutige Stelle, an der MUTOS aelter oder einfacher als Hippe waere.  In allen 26 Funktionen, in denen Hippe von Bell-V7
+  abweicht, traegt MUTOS die Hippe-Abweichung.  Vier Merkmale gibt es nur in Hippe (`malloc`-Kartengrenze mit `map overflow`, `getxfile(.., ns)`, `NPROC 30`/`NINODE 50`/`MAPSIZ`, die 128-Byte-`maptab`); MUTOS hat alle vier.
+* **UNSW:** UNSW 81/83 sind identisch und gleich Bell-V7; UNSW 92 (V7, 1981) hat `exece`-`B_AGE` und `s_tfree`, aber nicht LRUI/PROC_MAX/Tabellen.  Die Hippe-Merkmale `i_lrt`, `max_proc`, `breada`-Test, `sumount`-`i_count` stehen schon in den **UNSW-V6-Kerneln**
+  (UNSW 1, 4, 106): die Linie ist UNSW/AUSAM -> Vrije/Nijmegen -> Hippe, `exece`/`B_AGE`, `s_tfree` und `seek` sind keine Hippe-Eigenheiten (Korrektur an Abschnitt 13).  V7M (Overlay-Kernel) und Ultrix-11 haben das Hippe-Bild nicht.
+* **Zeit:** Hippes Quellstempel (35 x 1980, 19 x 1981-82, 40 x 1986) sagen nichts ueber das Alter der Zuege: 22 von 25 Kernelmoduln sind in Hippes Bibliothek `LIB1.ok` (1982-01-13) und `LIB1` (1986-04-03) **byte-gleich**; die einzige
+  Quelltextaenderung 1982 -> 1986 ist `malloc.c` (`map overflow`), und MUTOS hat sie.  Der Hippe-Kernel `rkunix` von 1982 enthaelt die MUTOS-Tabellen `maptab`/`cchars`/`wchars` byte-gleich.  Ein Kerneldatum fuer MUTOS ist aus den Disketten nicht
+  ableitbar (keine `/unix`-Datei; Dateien ab 1986-01-09, `nroff`-Tabellen 1985).
+* **Eigenanteil:** 30-s-`update()`, `setregs`-Kopie, Tickzaehlung in `clock`, `binit` `b_error`, `core` `namei(uchar)`, `setpri` ohne `return`, die Treiber und der Z8001-Teil (`fremd.md` 8.7).
+* **Rangfolge:** H-A *wahrscheinlich* (gemessen: 26/26 Hippe-Abweichungen, 4/4 Hippe-eigene Merkmale, `malloc`-Stand; angenommen: kein Zwischenglied), H-B *vermutet* (nicht zu trennen, die Vorlage muesste Hippe-Text gewesen sein; Indiz: der
+  `exece`-Ausgang und Dateistempel), H-C *unwahrscheinlich* (kein geladener Baum kommt MUTOS naeher).  Entscheiden wuerden weitere Staende der Linie (Vrije/Calgary, Hippe vor 1986), ein Kerneldatum von MUTOS und Hinweise der Beteiligten.
+* **Werkzeuge** (`tools/herkunft/`): `devdiff.py`, `traits.py`, `v7dump.py`, `v7fs_read.py`, `ifdef_resolve.py`, `mapnames.py`, `tables.py`, `tap2files.py`, `ftable.py`; Test `tests/test_herkunft_gegenprobe.py`.
+* **Korrektur:** MUTOS hat kein DISKMON (der `io_info`-Text in `bio.c` ist tot); in Abschnitt 13 gilt "in keinem anderen Baum" nur fuer die damaligen 15 Baeume (siehe `fremd.md` 8.5).
