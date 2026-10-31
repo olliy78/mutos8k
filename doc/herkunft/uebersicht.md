@@ -383,7 +383,7 @@ Ausfuehrlich in `fremd.md` (Quellen mit URL und SHA-256, Befehle, Tabellen).  Ge
   (mit Namensabbildung 55 %) gegen 17-34 % bei allen anderen Baeumen; die Namen in `tty2.c` waren frei vergeben.  Empfehlung (Funktionsreihenfolge, erwartete Abweichungen): `fremd.md` Abschnitt 5.3.
 * **`ptrace`-Reihenfolge** `req, pid, addr, data`: Konvention der Nicht-PDP-11-Systeme (32V, System III VAX, WEGA), kein Fremdzug.
 * **Ungeklaert (keine Quelle in 15 Baeumen, vermutet MUTOS-eigen):** 30-s-`update()`-Anforderung (`clock` -> `sflag1` -> `sched`; `cf_x88a` ist 0, also abgeschaltet), `setregs` `u_exname` -> `u_dbuf`, `lp.c` (alle <= 23 %).
-* **Ablage:** `original/hippe-v7/` nur als Vorschlag; Lizenz der Zusaetze Dritter unklar (V7-Basis Caldera), deshalb nicht abgelegt (`fremd.md` Abschnitt 7).
+* **Ablage:** seit 2026-11-01 unter `original/hippe-v7/` (Entscheidung des Projektinhabers; Lizenzlage im README).
 * Folge fuer H3/H4: `CMAPSIZ`/`SMAPSIZ 50 (guessed)` in `param.h` falsch (Karten haben `MAPSIZ+1 = 16` Eintraege); `linesw`-Namen auf V7 (`l_rint`..`l_modem`); `XTABS 02000` ist belegt (Hippe `sgtty.h`).
 
 ## 14. H6b: Gegenprobe zur Abstammung (2026-10-31)

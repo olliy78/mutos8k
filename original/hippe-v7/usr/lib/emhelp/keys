@@ -1,0 +1,17 @@
+
+    Display commands			    Delete commands
+
+^A	display next word		^F	delete to end of line
+^B	backup one word			^U	delete back to start
+^D	reset to start of line		^W	delete preceeding word
+^E	display to end of line		RUBOUT	delete preceeding char.
+^R	re-type the line
+^X	display next char.
+^Y	backup one char.
+
+			    Others
+
+		^C	exit with unchanged text
+		^G	turn off auto line breaks for this line
+		^H	give this summary of control keys
+		^Z	exit from `o' mode

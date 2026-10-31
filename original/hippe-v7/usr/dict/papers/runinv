@@ -1,0 +1,8 @@
+ID=397
+case $1 in
+-ID)	ID=997 ;;
+esac
+/usr/lib/refer/mkey R* | /usr/lib/refer/inv -v -h$ID -n Xind
+mv Xind.ia Ind.ia
+mv Xind.ib Ind.ib
+mv Xind.ic Ind.ic

@@ -1,0 +1,7 @@
+It is recommended that having selected the set  of  devices  that
+you  are liable to need, that the remainder of the drivers be put
+in here.  Not only is this tidier, but you can then if  you  wish
+make  'unused'  a separate mountable filesystem, and save on-line
+space.  Further,  the object modules for  unused  device  drivers
+can  then be removed from LIB2.  The space that this will save is
+considerable.

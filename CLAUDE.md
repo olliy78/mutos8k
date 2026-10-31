@@ -49,7 +49,7 @@ kernel/karte    disassembler maps (karte.txt, linkkarte.txt, adressen.txt)
 kernel/abdeckung  execution coverage of the original kernel (U8001 cover runs)
 mutos_io/       U880 side: reconstructed source (src/mutosio.mac), map, build, loader-disk pipeline
 userspace/      user-space programs (our make, toolchain probes; later the MUTOS commands)
-original/       ORIGINAL third-party sources for comparison (unix-v7/, wega/) -- read-only references
+original/       ORIGINAL third-party sources for comparison (unix-v7/, sys3/, hippe-v7/, wega/) -- read-only references
 disks/original  images of the original MUTOS disks and the source archives the disk builds start from
 disks/gebaut    built disks (NOT committed, see .gitignore)
 tools/          Python helpers (tools/emu.py, tools/kernel/*, tools/disks/*)

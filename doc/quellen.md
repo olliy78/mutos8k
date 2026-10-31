@@ -35,5 +35,6 @@ Die **fertigen** Disketten (`disks/gebaut/`) werden nicht eingecheckt; Referenzs
   Naechster Verwandter mit Quellen; nur Orientierung, nicht kopiert (`original/wega/README.md`).
 * **UNIX V7** (Bell Labs 1979, Caldera-Lizenz): TUHS-Archiv, https://www.tuhs.org (Unix Heritage Society).
   Liegt seit 2026-10-30 unveraendert unter `original/unix-v7/` (Herkunft, Pruefsumme: `original/unix-v7/README.md`).
+* **TUHS-Sammlung `Torsten_Hippe_v7`** (zusammengestellt 1995 aus unbekannten Quellen; der Sammler ist nicht Urheber): unter `original/hippe-v7/` (Herkunft, Pruefsumme, Lizenzlage: `original/hippe-v7/README.md`).  Naechster bekannter Verwandter des MUTOS-Kernels.
 * **UNIX System III** (USG 1980): GitHub-Spiegel `Krush206/unix-system-III`, unter `original/sys3/` (eingecheckt auf Entscheidung des Projektinhabers; `original/sys3/README.md`).
 * Schaltplaene/Geraeteunterlagen: tiffe.de (siehe `k1520emu: doc/design/16_k8915.md`, `17_a5120_16.md`).

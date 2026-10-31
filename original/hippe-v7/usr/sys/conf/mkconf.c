@@ -1,0 +1,971 @@
+#
+/*
+ * Ammended to do the following:
+ *
+ *	Now takes switches and arguments on command line
+ *		-i switch for making systems with separate i/d
+ *		-d switch to turn on diagnostics (lists devices)
+ *	The device switch tables are only as long as need be.
+ */
+#include <stdio.h>
+
+#define CHAR	01
+#define BLOCK	02
+#define INTR	04
+#define EVEN	010
+#define KL	020
+#define ROOT	040
+#define	SWAP	0100
+#define	PIPE	0200
+
+char	*btab[] =
+{
+	"tm|ht",
+	"tc",
+	"rp|hp|rm|hk|si",
+	"rl",
+	"rk",
+	"rf|hs",
+	"rx",
+	0
+};
+char	*ctab[] =
+{
+	"console",
+	"tty",
+	"mem",
+	"sem",
+	"pc",
+	"lp",
+	"dc",
+	"dj|dh|dz",
+	"dp|du",
+	"dn",
+	"tm|ht",
+	"rp|hp|rm|hk|si",
+	"rl",
+	"rk",
+	"rf|hs",
+	"rx",
+	0
+};
+struct tab
+{
+	char	*name;
+	int	count;
+	int	vector;
+	int	key;
+	char	*codea;
+	char	*codeb;
+	char	*codec;
+	char	*coded;
+	char	*codee;
+	char	*codef;
+	char	*codeg;
+} table[] =
+{
+	"console",
+	-1, 60, CHAR+INTR+KL,
+	"	klin; br4\n	klou; br4\n",
+	".globl	_klrint\nklin:	jsr	r0,call; jmp _klrint\n",
+	".globl	_klxint\nklou:	jsr	r0,call; jmp _klxint\n",
+	"",
+	"klopen,  klclose, klread,  klwrite, klioctl, nulldev,    0,",
+	"",
+	"int klopen(), klclose(), klread(), klwrite(), klioctl();",
+
+	"tty",
+	1, 0, CHAR,
+	"",
+	"",
+	"",
+	"",
+	"syopen,  nulldev, syread,  sywrite, sysioctl,nulldev,    0,",
+	"",
+	"int syopen(), syread(), sywrite(), sysioctl();",
+
+	"mem",
+	-1, 300, CHAR,
+	"",
+	"",
+	"",
+	"",
+	"nulldev, nulldev, mmread,  mmwrite, nodev,   nulldev,    0,",
+	"",
+	"int mmread(), mmwrite();",
+
+	"sem",
+	0, 300, CHAR,
+	"",
+	"",
+	"",
+	"",
+	"nulldev, semclose,nodev,   nodev,   semioctl,nulldev,    0,",
+	"",
+	"int semclose(), semioctl();",
+
+	"pc",
+	0, 70, CHAR+INTR,
+	"	pcin; br4\n	pcou; br4\n",
+	".globl	_pcrint\npcin:	jsr	r0,call; jmp _pcrint\n",
+	".globl	_pcpint\npcou:	jsr	r0,call; jmp _pcpint\n",
+	"",
+	"pcopen,  pcclose, pcread,  pcwrite, nodev,   nulldev,    0,",
+	"",
+	"int pcopen(), pcclose(), pcread(), pcwrite();",
+
+	"clock",
+	-2, 100, INTR,
+	"	kwlp; br6\n",
+	".globl	_clock\n",
+	"kwlp:	jsr	r0,call; jmp _clock\n",
+	"",
+	"",
+	"",
+	"",
+
+	"parity",
+	-1, 114, INTR,
+	"	trap; br7+10.		/ 11/70 parity\n",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+
+/*
+ * 110 unused
+ * 114 memory parity
+ * 120 XY plotter
+ * 124 DR11-B
+ * 130 AD01
+ * 134 AFC11
+ * 140 AA11
+ * 144 AA11
+ */
+
+	"rl",
+	0, 160, BLOCK+CHAR+INTR,
+	"	rlio; br5\n",
+	".globl	_rlintr\n",
+	"rlio:	jsr	r0,call; jmp _rlintr\n",
+	"	rlopen,  rlclose, rlstrategy, &rltab,",
+	"rlopen,  rlclose, rlread,  rlwrite, nodev,   nulldev,    0,",
+	"int rlopen(), rlclose(), rlstrategy();\nstruct buf rltab;",
+	"int rlread(), rlwrite();",
+
+
+	"lp",
+	0, 200, CHAR+INTR,
+	"	lpou; br4\n",
+	"",
+	".globl	_lpint\nlpou:	jsr	r0,call; jmp _lpint\n",
+	"",
+	"lpopen,  lpclose, nodev,   lpwrite, nodev,   nulldev,    0,",
+	"",
+	"int lpopen(), lpclose(), lpwrite();",
+
+	"rf",
+	0, 204, BLOCK+CHAR+INTR,
+	"	rfio; br5\n",
+	".globl	_rfintr\n",
+	"rfio:	jsr	r0,call; jmp _rfintr\n",
+	"	nulldev, nulldev, rfstrategy, &rftab, ",
+	"nulldev, nulldev, rfread,  rfwrite, nodev,   nulldev,    0,",
+	"int rfstrategy();\nstruct buf rftab;",
+	"int rfread(), rfwrite();",
+
+	"hs",
+	0, 204, BLOCK+CHAR+INTR,
+	"	hsio; br5\n",
+	".globl	_hsintr\n",
+	"hsio:	jsr	r0,call; jmp _hsintr\n",
+	"	nulldev, nulldev, hsstrategy, &hstab, ",
+	"nulldev, nulldev, hsread,  hswrite, nodev,   nulldev,    0,",
+	"int hsstrategy();\nstruct buf hstab;",
+	"int hsread(), hswrite();",
+
+	"hk",
+	0, 210, BLOCK+CHAR+INTR,
+	"	hkio; br5\n",
+	".globl	_hkintr\n",
+	"hkio:	jsr	r0,call; jmp _hkintr\n",
+	"	nulldev, nulldev, hkstrategy, &hktab, ",
+	"nulldev, nulldev, hkread,  hkwrite, nodev,   nulldev,    0,",
+	"int hkstrategy();\nstruct buf hktab;",
+	"int hkread(), hkwrite();",
+
+	"tc",
+	0, 214, BLOCK+INTR,
+	"	tcio; br6\n",
+	".globl	_tcintr\n",
+	"tcio:	jsr	r0,call; jmp _tcintr\n",
+	"	nulldev, tcclose, tcstrategy, &tctab,",
+	"",
+	"int tcstrategy(), tcclose();\nstruct buf tctab;",
+	"",
+
+	"rk",
+	0, 220, BLOCK+CHAR+INTR,
+	"	rkio; br5\n",
+	".globl	_rkintr\n",
+	"rkio:	jsr	r0,call; jmp _rkintr\n",
+	"	rkopen,  rkclose, rkstrategy, &rktab,",
+	"rkopen,  rkclose, rkread,  rkwrite, nodev,   nulldev,    0,",
+	"int rkopen(), rkclose(), rkstrategy();\nstruct buf rktab;",
+	"int rkread(), rkwrite();",
+
+	"tm",
+	0, 224, BLOCK+CHAR+INTR,
+	"	tmio; br5\n",
+	".globl	_tmintr\n",
+	"tmio:	jsr	r0,call; jmp _tmintr\n",
+	"	tmopen,  tmclose, tmstrategy, &tmtab, ",
+	"tmopen,  tmclose, tmread,  tmwrite, nodev,   nulldev,    0,",
+	"int tmopen(), tmclose(), tmstrategy();\nstruct buf tmtab;",
+	"int tmread(), tmwrite();",
+
+	"ht",
+	0, 224, BLOCK+CHAR+INTR,
+	"	htio; br5\n",
+	".globl	_htintr\n",
+	"htio:	jsr	r0,call; jmp _htintr\n",
+	"htopen,  htclose, htstrategy, &httab,",
+	"htopen,  htclose, htread,  htwrite, nodev,   nulldev,    0,",
+	"int htopen(), htclose(), htstrategy();\nstruct buf httab;",
+	"int htread(), htwrite();",
+
+	"cr",
+	0, 230, CHAR+INTR,
+	"	crin; br6\n",
+	"",
+	".globl	_crint\ncrin:	jsr	r0,call; jmp _crint\n",
+	"",
+	"cropen,  crclose, crread,  nodev,   nodev,   nulldev,    0,",
+	"",
+	"int cropen(), crclose(), crread();",
+
+/*
+ * 234 UDC11
+ */
+
+	"rp",
+	0, 254, BLOCK+CHAR+INTR,
+	"	rpio; br5\n",
+	".globl	_rpintr\n",
+	"rpio:	jsr	r0,call; jmp _rpintr\n",
+	"	nulldev, nulldev, rpstrategy, &rptab,",
+	"nulldev, nulldev, rpread,  rpwrite, nodev,   nulldev,    0,",
+	"int rpstrategy();\nstruct buf rptab;",
+	"int rpread(), rpwrite();",
+
+	"hp",
+	0, 254, BLOCK+CHAR+INTR,
+	"	hpio; br5\n",
+	".globl	_hpintr\n",
+	"hpio:	jsr	r0,call; jmp _hpintr\n",
+	"	nulldev, nulldev, hpstrategy, &hptab,",
+	"nulldev, nulldev, hpread,  hpwrite, nodev,   nulldev,    0,",
+	"int hpstrategy();\nstruct buf hptab;",
+	"int hpread(), hpwrite();",
+
+	"rm",
+	0, 254, BLOCK+CHAR+INTR,
+	"	rmio; br5\n",
+	".globl	_rmintr\n",
+	"rmio:	jsr	r0,call; jmp _rmintr\n",
+	"	nulldev, nulldev, rmstrategy, &rmtab,",
+	"nulldev, nulldev, rmread,  rmwrite, nodev,   nulldev,    0,",
+	"int rmstrategy();\nstruct buf rmtab;",
+	"int rmread(), rmwrite();",
+
+	"si",
+	0, 260, BLOCK+CHAR+INTR,
+	"	siio; br5\n",
+	".globl	_siintr\n",
+	"siio:	jsr	r0,call; jmp _siintr\n",
+	"	nulldev, nulldev, sistrategy, &sitab,",
+	"nulldev, nulldev, siread,  siwrite, nodev,   nulldev,    0,",
+	"int sistrategy();\nstruct buf sitab;",
+	"int siread(), siwrite();",
+
+/*
+ * 260 TA11
+ */
+
+	"rx",
+	0, 264, BLOCK+CHAR+INTR,
+	"	rxio; br5\n",
+	".globl	_rxintr\n",
+	"rxio:	jsr	r0,call; jmp _rxintr\n",
+	"	rxopen, nulldev, rxstrategy, &rxtab,",
+	"rxopen,  nulldev, rxread,  rxwrite, rxioctl, nulldev,    0,",
+	"int rxopen(), rxstrategy();\nstruct buf rxtab;",
+	"int rxread(), rxwrite(); rxioctl();",
+
+/*
+ * 270-274 unused
+ */
+
+	"dc",
+	0, 308, CHAR+INTR,
+	"	dcin; br5+%d.\n	dcou; br5+%d.\n",
+	".globl	_dcrint\ndcin:	jsr	r0,call; jmp _dcrint\n",
+	".globl	_dcxint\ndcou:	jsr	r0,call; jmp _dcxint\n",
+	"",
+	"dcopen,  dcclose, dcread,  dcwrite, dcioctl, nulldev, dc11,",
+	"",
+	"int dcopen(), dcclose(), dcread(), dcwrite(), dcioctl();\nstruct tty dc11[];",
+
+	"kl",
+	0, 308, INTR+KL,
+	"	klin; br4+%d.\n	klou; br4+%d.\n",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+
+	"dp",
+	0, 308, CHAR+INTR,
+	"	dpin; br6+%d.\n	dpou; br6+%d.\n",
+	".globl	_dprint\ndpin:	jsr	r0,call; jmp _dprint\n",
+	".globl	_dpxint\ndpou:	jsr	r0,call; jmp _dpxint\n",
+	"",
+	"dpopen,  dpclose, dpread,  dpwrite, nodev,   nulldev,    0,",
+	"",
+	"int dpopen(), dpclose(), dpread(), dpwrite();",
+
+/*
+ * DM11-A
+ */
+
+	"dn",
+	0, 304, CHAR+INTR,
+	"	dnou; br5+%d.\n",
+	"",
+	".globl	_dnint\ndnou:	jsr	r0,call; jmp _dnint\n",
+	"",
+	"dnopen,  dnclose, nodev,   dnwrite, nodev,   nulldev,    0,",
+	"",
+	"int dnopen(), dnclose(), dnwrite();",
+
+	"dhdm",
+	0, 304, INTR,
+	"	dmin; br4+%d.\n",
+	"",
+	".globl	_dmint\ndmin:	jsr	r0,call; jmp _dmint\n",
+	"",
+	"",
+	"",
+	"",
+
+/*
+ * DR11-A+
+ * DR11-C+
+ * PA611+
+ * PA611+
+ * DT11+
+ * DX11+
+ */
+
+	"dl",
+	0, 308, INTR+KL,
+	"	klin; br4+%d.\n	klou; br4+%d.\n",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+
+	"dz",
+	0, 308, CHAR+INTR+EVEN,
+	"	dzin; br6+%d.\t/ lock out scan from clock interrupt\n	dzou; br5+%d.\n",
+	".globl	_dzrint\ndzin:	jsr	r0,call; jmp _dzrint\n",
+	".globl	_dzxint\ndzou:	jsr	r0,call; jmp _dzxint\n",
+	"",
+	"dzopen,  dzclose, dzread,  dzwrite, dzioctl, nulldev, dz11,",
+	"",
+	"int dzopen(), dzclose(), dzread(), dzwrite(), dzioctl();\nstruct tty dz11[];",
+
+	"dh",
+	0, 308, CHAR+INTR+EVEN,
+	"	dhin; br5+%d.\n	dhou; br5+%d.\n",
+	".globl	_dhrint\ndhin:	jsr	r0,call; jmp _dhrint\n",
+	".globl	_dhxint\ndhou:	jsr	r0,call; jmp _dhxint\n",
+	"",
+	"dhopen,  dhclose, dhread,  dhwrite, dhioctl, dhstop,  dh11,",
+	"",
+	"int dhopen(), dhclose(), dhread(), dhwrite(), dhioctl(), dhstop();\nstruct tty dh11[];",
+
+/*
+ * GT40
+ * LPS+
+ * DQ11
+ * KW11-W
+ */
+
+	"du",
+	0, 308, CHAR+INTR,
+	"	duin; br6+%d.\n	duou; br6+%d.\n",
+	".globl	_durint\nduin:	jsr	r0,call; jmp _durint\n",
+	".globl	_duxint\nduou:	jsr	r0,call; jmp _duxint\n",
+	"",
+	"duopen,  duclose, duread,  duwrite, nodev,   nulldev,    0,",
+	"",
+	"int duopen(), duclose(), duread(), duwrite();",
+
+	0
+};
+
+char	*stra[] =
+{
+	"/ low core",
+	"",
+	"/.data\t\t\t\t/ non sep-I/D system",
+	"ZERO:",
+	"",
+	"br4 = 200",
+	"br5 = 240",
+	"br6 = 300",
+	"br7 = 340",
+	"",
+	". = ZERO+0",
+	"	br	1f",
+	"	4",
+	"",
+	"/ trap vectors",
+	"	trap; br7+0.		/ bus error",
+	"	trap; br7+1.		/ illegal instruction",
+	"	trap; br7+2.		/ bpt-trace trap",
+	"	trap; br7+3.		/ iot trap",
+	"	trap; br7+4.		/ power fail",
+	"	trap; br7+5.		/ emulator trap",
+	"	start;br7+6.		/ system  (overlaid by 'trap')",
+	"",
+	". = ZERO+40",
+	".globl	start, dump",
+	"1:	jmp	start",
+	"	jmp	dump",
+	"",
+	0,
+};
+
+char	*strb[] =
+{
+	"",
+	". = ZERO+240",
+	"	trap; br7+7.		/ programmed interrupt",
+	"	trap; br7+8.		/ floating point",
+	"	trap; br7+9.		/ segmentation violation",
+	0
+};
+
+char	*strc[] =
+{
+	"",
+	"/ floating vectors",
+	". = ZERO+300",
+	0,
+};
+
+char	*strd[] =
+{
+	"",
+	"//////////////////////////////////////////////////////",
+	"/		interface code to C",
+	"//////////////////////////////////////////////////////",
+	"",
+	"/.text\t\t\t\t/ non sep-I/D system",
+	".globl	call, trap",
+	0
+};
+
+char	*stre[] =
+{
+	"#include \"../h/param.h\"",
+	"#include \"../h/systm.h\"",
+	"#include \"../h/buf.h\"",
+	"#include \"../h/tty.h\"",
+	"#include \"../h/conf.h\"",
+	"#include \"../h/proc.h\"",
+	"#include \"../h/text.h\"",
+	"#include \"../h/dir.h\"",
+	"#include \"../h/user.h\"",
+	"#include \"../h/file.h\"",
+	"#include \"../h/inode.h\"",
+	"#include \"../h/filsys.h\"",
+	"#include \"../h/mount.h\"",
+	"#include \"../h/map.h\"",
+	"#ifdef	SYSACCT",
+	"#include \"sys/acct.h\"",
+	"#endif",
+	"",
+	"int nulldev();",
+	"int nodev();",
+	0
+};
+
+char	*strf1[] =
+{
+	"struct bdevsw	bdevsw[] = {",
+	0,
+};
+
+char	*strf2[] =
+{
+	"	0",
+	"};",
+	"",
+	0,
+};
+
+char	*strg1[] =
+{
+	"",
+	"struct cdevsw	cdevsw[] = {",
+	0,
+};
+
+char	*strg2[] =
+{
+	"	0",
+	"};",
+	"",
+	0,
+};
+
+char	*strh1[] =
+{
+	"",
+	"struct buf buf[NBUF];",
+	"struct inode inode[NINODE];",
+	"struct file file[NFILE];",
+	"struct mount mount[NMOUNT];",
+	"struct map coremap[MAPSIZ+1];",
+	"struct map swapmap[MAPSIZ+1];",
+	"struct proc proc[NPROC];",
+	"struct text text[NTEXT];",
+	"struct buf bfreelist;",
+	"",
+	"#ifdef SYSACCT",
+	"struct acct acctbuf;",
+	"struct inode *acctp;",
+	"#endif SYSACCT",
+	0,
+};
+
+char	*strh2[] =
+{
+	"",
+	"#ifdef MX",
+	"int mpxchan();",
+	"int (*ldmpx)() = mpxchan;",
+	"#endif MX",
+	0
+};
+
+
+char	*stri[] =
+{
+	"	0",
+	"};",
+	"",
+	"int ttyopen(), ttyclose(), ttread(), ttwrite(), ttyinput(), ttstart();",
+	0
+};
+
+char	*strj[] =
+{
+	"int pkopen(), pkclose(), pkread(), pkwrite(), pkioctl(), pkrint(), pkxint();",
+	0
+};
+
+char	*strk[] =
+{
+	"struct linesw	linesw[] = {",
+	"\tttyopen, nulldev, ttread, ttwrite, nodev,   ttyinput, ttstart, /* 0 */",
+	0
+};
+
+char	*strl[] =
+{
+	"\tpkopen,  pkclose, pkread, pkwrite, pkioctl, pkrint,   pkxint,  /* 1 */",
+	0
+};
+
+int	pack;
+int	mpx;
+int	rootmaj = -1;
+int	rootmin;
+int	swapmaj = -1;
+int	swapmin;
+int	pipemaj = -1;
+int	pipemin;
+long	swplo	= -1;
+int	nswap = -1;
+int	nldisp = 1;
+
+int debug,nocreate;
+
+main(argc,argv)
+int argc;
+char **argv;
+{
+	register struct tab *p;
+	register char *q;
+	int i, n, ev, nkl;
+	int flagf, flagb;
+	int bcount, ccount;
+	int files;
+
+	files = bcount = ccount = 0;
+	argc--; argv++;
+	while(argc) {
+		if(**argv == '-') {
+			switch(*++*argv) {
+			case 'i':
+				stra[2] = ".data\t\t\t\t/ sep-I/D system";
+				strd[5] = ".text\t\t\t\t/ sep-I/D system";
+				break;
+			case 'd':
+				debug++;
+				break;
+			default:
+				fprintf(stderr,"unknown flag '%c'\n",**argv);
+			}
+		}
+		else {
+			files++;
+			if(debug)
+				fprintf(stderr,"input from '%s':\n",*argv);
+			freopen(*argv,"r",stdin);
+			while(input());
+		}
+		argc--; argv++;
+	}
+	if(!files)
+		while(input());
+
+/*
+ * pass1 -- create interrupt vectors
+ */
+	if(debug)
+		fprintf(stderr,"Interrupt Vectors:\n");
+	nkl = 0;
+	flagf = flagb = 1;
+	freopen("l.s", "w", stdout);
+	puke(stra);
+	ev = 0;
+	for(p=table; p->name; p++) {
+		if(p->count != 0 && p->key & INTR) {
+			if(p->vector>240 && flagb) {
+				flagb = 0;
+				puke(strb);
+			}
+			if(p->vector >= 300) {
+				if(flagf) {
+					ev = 0;
+					flagf = 0;
+					puke(strc);
+				}
+				if(p->key & EVEN && ev & 07) {
+					fprintf(stdout,"	.=.+4\n");
+					ev += 4;
+				}
+				fprintf(stdout,"/%s %o\n", p->name, 0300+ev);
+			} else
+				fprintf(stdout,"\n. = ZERO+%d\n", p->vector);
+			n = p->count;
+			if(n < 0)
+				n = -n;
+			for(i=0; i<n; i++) {
+				if(p->key & KL) {
+					fprintf(stdout,p->codea, nkl, nkl);
+					nkl++;
+				} else
+					fprintf(stdout,p->codea, i, i);
+				if(debug) {
+					if (p->vector<300)
+						fprintf(stderr,"%7s at %d\n",p->name,p->vector+4*i);
+					else
+						fprintf(stderr,"%7s at %o\n",p->name,0300+ev);
+				}
+				ev += p->vector - 300;
+			}
+		}
+	}
+	if(flagb)
+		puke(strb);
+	puke(strd);
+	for(p=table; p->name; p++)
+		if(p->count != 0 && p->key & INTR)
+			fprintf(stdout,"\n%s%s", p->codeb, p->codec);
+
+/*
+ * pass 2 -- create configuration table
+ */
+	if(debug)
+		fprintf(stderr,"Device Assignments:\n");
+	freopen("c.c", "w", stdout);
+	/*
+	 * declarations
+	 */
+	puke(stre);
+	for (i=0; q=btab[i]; i++) {
+		for (p=table; p->name; p++) {
+			if(match(q, p->name) && (p->key&BLOCK) && p->count && *p->codef){
+				fprintf(stdout,"%s\n", p->codef);
+				bcount++;
+			}
+		}
+	}
+	puke(strf1);
+	for(i=0; q=btab[i]; i++) {
+		n = 0;
+		for(p=table; p->name; p++) {
+			if(match(q, p->name) && (p->key&BLOCK) && p->count) {
+				if(debug)
+					fprintf(stderr,"%7s at B%d\n",p->name,i);
+				fprintf(stdout,"%s\t/* %2d = %s */\n", p->coded, i, p->name);
+				if(p->key&ROOT)
+					rootmaj = i;
+				if(p->key&SWAP)
+					swapmaj = i;
+				if(p->key&PIPE)
+					pipemaj = i;
+				n++;
+			}
+		}
+		if(n == 0)
+			fprintf(stdout,"\tnodev,   nodev,   nodev,      0,\t/* %2d = %s */\n", i, q);
+		if(n > 1) {
+			fprintf(stderr,"Device clash, %d at device B%d\n",n,i);
+			nocreate++;
+		}
+		bcount -= n;
+		if(bcount == 0)
+			break;
+	}
+	puke(strf2);
+	if(swapmaj == -1){
+		swapmaj = rootmaj;
+		swapmin = rootmin;
+	}
+	if(pipemaj == -1){
+		pipemaj = rootmaj;
+		pipemin = rootmin;
+	}
+	for(i = 0; q = ctab[i]; i++) {
+		for(p = table; p->name; p++) {
+			if(match(q, p->name) && (p->key&CHAR) && p->count && *p->codeg) {
+				fprintf(stdout,"%s\n", p->codeg);
+				ccount++;
+			}
+		}
+	}
+	puke(strg1);
+	for(i = 0; q = ctab[i]; i++) {
+		n = 0;
+		for(p = table; p->name; p++) {
+			if(match(q, p->name) && (p->key&CHAR) && p->count){
+				if(debug)
+					fprintf(stderr,"%7s at C%d\n",p->name,i);
+				fprintf(stdout,"%s\t/* %2d = %s */\n", p->codee, i, p->name);
+				n++;
+			}
+		}
+		if(n == 0)
+		fprintf(stdout,"nodev,   nodev,   nodev,   nodev,   nodev,   nulldev,    0,\t/* %2d = %s */\n", i, q);
+		if(n > 1) {
+			fprintf(stderr,"Device clash, %d at device C%d\n",n,i);
+			nocreate++;
+		}
+		ccount -= n;
+		if(ccount == 0)
+			break;
+	}
+	puke(stri);
+	if (pack) {
+		nldisp++;
+		puke(strj);
+	}
+	puke(strk);
+	if (pack)
+		puke(strl);
+	if(rootmaj < 0) {
+		fprintf(stderr,"No root device given\n");
+		nocreate++;
+	}
+	if((swplo < 0) || (nswap < 0)) {
+		fprintf(stderr,"Swap space unspecified\n");
+		nocreate++;
+	}
+	puke(strg2);
+	fprintf(stdout,"int rootdev = makedev(%d, %d);\n",rootmaj,rootmin);
+	fprintf(stdout,"int swapdev = makedev(%d, %d);\n",swapmaj,swapmin);
+	fprintf(stdout,"int pipedev = makedev(%d, %d);\n",pipemaj,pipemin);
+	fprintf(stdout,"int nldisp  = %d;\n",nldisp);
+	fprintf(stdout,"daddr_t swplo = %ld;\n",swplo);
+	fprintf(stdout,"int     nswap = %l;\n",nswap);
+	puke(strh1);
+	if(!mpx)
+		puke(strh2);
+	if(nocreate) {
+		unlink("l.s");
+		unlink("c.c");
+		fprintf(stderr,"OUTPUT FILES NOT CREATED\n");
+		exit(1);
+	}
+	exit(0);
+}
+
+puke(s)
+char **s;
+{
+	char *c;
+
+	while(c = *s++)
+		fprintf(stdout,"%s\n",c);
+}
+
+input()
+{
+	char line[100];
+	register struct tab *q;
+	int i,j,count,n;
+	long num;
+	char keyw[32], dev[32];
+
+	if (fgets(line, 100, stdin) == NULL)
+		return(0);
+	count = -1;
+	n = sscanf(line, "%d%s%s%ld", &count, keyw, dev, &num);
+	if (count == -1 && n>0) {
+		count = 1;
+		n++;
+	}
+	if (n<2)
+		goto badl;
+	/* check for valid device and count */
+	for(q=table; q->name; q++) {
+		if(equal(q->name, keyw)) {
+			if(q->count < 0) {
+				fprintf(stderr,"%s: no more,no less\n",keyw);
+				return(1);
+			}
+			q->count += count;
+			if(q->vector < 300 && q->count > 1) {
+				q->count = 1;
+				fprintf(stderr,"%s: only one\n",keyw);
+			}
+			return(1);
+		}
+	}
+	/* special keywords */
+	if (equal(keyw, "nswap")) {
+		if (n<3)
+			goto badl;
+		if (sscanf(dev, "%ld", &num) <= 0)
+			goto badl;
+		nswap = num;
+		return(1);
+	}
+	if (equal(keyw, "swplo")) {
+		if (n<3)
+			goto badl;
+		if (sscanf(dev, "%ld", &num) <= 0)
+			goto badl;
+		swplo = num;
+		return(1);
+	}
+	if (equal(keyw, "pack")) {
+		pack++;
+		return(1);
+	}
+	if (equal(keyw, "mpx")) {
+		mpx++;
+		return(1);
+	}
+	if(equal(keyw, "done"))
+		return(0);
+	if (equal(keyw, "root")) {
+		if (n<4)
+			goto badl;
+		for (q=table; q->name; q++) {
+			if (equal(q->name, dev)) {
+				q->key |= ROOT;
+				rootmin = num;
+				return(1);
+			}
+		}
+		fprintf(stderr,"Can't find root\n");
+		nocreate++;
+		return(1);
+	}
+	if (equal(keyw, "swap")) {
+		if (n<4)
+			goto badl;
+		for (q=table; q->name; q++) {
+			if (equal(q->name, dev)) {
+				q->key |= SWAP;
+				swapmin = num;
+				return(1);
+			}
+		}
+		fprintf(stderr,"Can't find swap\n");
+		nocreate++;
+		return(1);
+	}
+	if (equal(keyw, "pipe")) {
+		if (n<4)
+			goto badl;
+		for (q=table; q->name; q++) {
+			if (equal(q->name, dev)) {
+				q->key |= PIPE;
+				pipemin = num;
+				return(1);
+			}
+		}
+		fprintf(stderr,"Can't find pipe\n");
+		nocreate++;
+		return(1);
+	}
+	fprintf(stderr,"%s: cannot find\n",keyw);
+	nocreate++;
+	return(1);
+badl:
+	fprintf(stderr,"Bad line: %s",line);
+	nocreate++;
+	return(1);
+}
+
+equal(a, b)
+char *a, *b;
+{
+	return(!strcmp(a, b));
+}
+
+match(a, b)
+char *a, *b;
+{
+	register char *s;
+
+	for(s=b; *a && *s; a++) {
+		if(*a != *s) {
+			while(*a && (*a != '|'))
+				a++;
+			if(*a == '\0')
+				return(0);
+			s = b;
+		}
+		else
+			s++;
+	}
+	if((*a == '\0') || (*a == '|'))
+		return(1);
+	return(0);
+}

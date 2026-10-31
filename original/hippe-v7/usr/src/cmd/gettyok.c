@@ -1,0 +1,422 @@
+#
+/*
+ * getty -- adapt to terminal speed on dialup, and call login
+ */
+#include <sgtty.h>
+#include <signal.h>
+
+#define ERASE	'\177'
+#define KILL	'\25'
+#define EOT	'\32'
+
+struct sgttyb tmode;
+
+struct tchars tchars = {
+	'\177',		/* DEL - interrupt */
+	'\034',		/* ^\ - quit */
+	'\021',		/* ^Q - start output */
+	'\023',		/* ^S - stop output */
+	'\004',		/* ^D - end-of-file */
+	'\377'		/* -1 - input delimeter */
+};
+
+struct tab {
+	char	tname;		/* this table name */
+	char	nname;		/* successor table name */
+	int	iflags;		/* initial flags */
+	int	fflags;		/* final flags */
+	int	ispeed;		/* input speed */
+	int	ospeed;		/* output speed */
+	char	nldly;		/* delay for nl */
+	char	crdly;		/* delay for cr */
+	char	htdly;		/* delay for ht */
+	char	vtdly;		/* delay for vt */
+	char	width;		/* screen width for vdu */
+	char	length;		/* screen length for vdu */
+	char	*message;	/* login message */
+} itab[] = {
+
+	/*
+	 * table '0'-1-2-3 300,1200,150,110
+	 */
+	'0', 1,
+	ANYP+RAW, ANYP+ECHO,
+	B300, B300,
+	10, 20, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	1, 2,
+	ANYP+RAW, ANYP+XTABS+ECHO+CRMOD,
+	B1200, B1200,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	2, 3,
+	ANYP+RAW, EVENP+ECHO,
+	B150, B150,
+	10, 20, 10, 10,
+	0, 0,
+	"\n\r\07login: ",
+
+	3, '0',
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS+LCASE,
+	B110, B110,
+	10, 20, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * 4 through 15 - cycle through all speeds
+	 * called at end of several others
+	 */
+	4, 5,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B50, B50,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	5, 6,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B75, B75,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	6, 7,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B110, B110,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	7, 8,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B134, B134,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	8, 9,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B150, B150,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	9, 10,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B300, B300,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	10, 11,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B600, B600,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	11, 12,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B1200, B1200,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	12, 13,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B1800, B1800,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	13, 14,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B2400, B2400,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	14, 15,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B4800, B4800,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	15, 4,
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B9600, B9600,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '-' -- Console TTY 300 baud
+	 */
+	'-', '-',
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS+LCASE,
+	B300, B300,
+	10, 20, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '1' -- 150
+	 */
+	'1', '1',
+	ANYP+RAW, EVENP+ECHO,
+	B150, B150,
+	10, 20, 10, 10,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '2' -- 9600
+	 */
+	'2', '2',
+	ANYP+RAW, ANYP+XTABS+ECHO+CRMOD,
+	B9600, B9600,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '3'-'5' -- 1200,300
+	 */
+	'3', '5',
+	ANYP+RAW, ANYP+XTABS+ECHO+CRMOD,
+	B1200, B1200,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '5'-'3' -- 300,1200
+	 */
+	'5', '3',
+	ANYP+RAW, ANYP+ECHO,
+	B300, B300,
+	10, 20, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table '4' - Console Decwriter
+	 */
+	'4', '4',
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B300, B300,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table 'd' -- Dacoll 241 VDU, 4800 baud
+	 */
+	'd',	4,
+	RAW, CRMOD+ECHO+XTABS+SCOPE+ANYP,
+	B4800, B4800,
+	0, 0, 0, 0,
+	80, 24,
+	"\n\r\07login: ",
+
+	/*
+	 * table 't' -- Tektronix 4013 storage scope, 9600 baud
+	 */
+	't',	4,
+	RAW, CRMOD+ECHO+XTABS+ANYP,
+	B9600, B9600,
+	0, 0, 0, 0,
+	72, 30,
+	"\n\r\07login: ",
+
+	/*
+	 * table 'b' -- Perkin Elmer 550 (Bantam), 9600 baud
+	 */
+	'b', 4,
+	RAW, CRMOD+ECHO+XTABS+SCOPE+ANYP,
+	B9600, B9600,
+	0, 0, 0, 0,
+	80, 24,
+	"\n\r\07login: ",
+
+	/*
+	 * table 's' - satellite computer 9600
+	 */
+	's', 's',
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS+LCASE,
+	B9600, B9600,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+
+	/*
+	 * table 'm' - modem line 300
+	 */
+	'm', 'm',
+	ANYP+RAW, ANYP+ECHO+CRMOD+XTABS,
+	B300, B300,
+	0, 0, 0, 0,
+	0, 0,
+	"\n\r\07login: ",
+};
+
+#define	NITAB	sizeof itab/sizeof itab[0]
+
+char	name[16];
+int	crmod;
+int	upper;
+int	lower;
+
+char partab[] = {
+	0001,0201,0201,0001,0201,0001,0001,0201,
+	0202,0004,0003,0205,0005,0206,0201,0001,
+	0201,0001,0001,0201,0001,0201,0201,0001,
+	0001,0201,0201,0001,0201,0001,0001,0201,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0000,0200,0200,0000,0200,0000,0000,0200,
+	0000,0200,0200,0000,0200,0000,0000,0200,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0000,0200,0200,0000,0200,0000,0000,0200,
+	0000,0200,0200,0000,0200,0000,0000,0200,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0000,0200,0200,0000,0200,0000,0000,0200,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0200,0000,0000,0200,0000,0200,0200,0000,
+	0000,0200,0200,0000,0200,0000,0000,0201
+};
+
+main(argc, argv)
+char **argv;
+{
+	register struct tab *tabp;
+	int tname;
+
+while (--argc>0)
+{
+   printf("%s\n",*++argv);
+}
+
+	tname = '-';
+	if(argc > 1)
+		tname = argv[1][0];
+	for(; ; ){
+		for(tabp = itab; tabp < &itab[NITAB]; tabp++)
+			if(tabp->tname == tname)
+				break;
+		if(tabp >= &itab[NITAB])
+			tabp = itab;
+		tmode.sg_flags = tabp->iflags;
+		tmode.sg_ispeed = tabp->ispeed;
+		tmode.sg_ospeed = tabp->ospeed;
+		tmode.sg_nldly = tabp->nldly;
+		tmode.sg_crdly = tabp->crdly;
+		tmode.sg_htdly = tabp->htdly;
+		tmode.sg_vtdly = tabp->vtdly;
+		ioctl(0, TIOCSETA, &tmode);
+		ioctl(0, TIOCSETC, &tchars);
+		puts(tabp->message);
+		if(getname()){
+			tmode.sg_erase = ERASE;
+			tmode.sg_kill = KILL;
+			tmode.sg_flags = tabp->fflags;
+			tmode.sg_width = tabp->width;
+			tmode.sg_length = tabp->length;
+			if(crmod)
+				tmode.sg_flags |= CRMOD;
+			if(upper)
+				tmode.sg_flags |= LCASE;
+			if(lower)
+				tmode.sg_flags &= ~LCASE;
+			ioctl(0, TIOCSETA, &tmode);
+			putchr('\n');
+			execl("/bin/login", "login", name, 0);
+			exit(1);
+		}
+		tname = tabp->nname;
+	}
+}
+
+getname()
+{
+	register char *np;
+	register c;
+	char cs;
+	int xerase = 0;
+
+	crmod = 0;
+	upper = 0;
+	lower = 0;
+	np = name;
+	for(; ; ){
+		if(read(0, &cs, 1) <= 0)
+			exit(0);
+		c = cs&0177;
+		if(xerase && (c != ERASE)){
+			putchr(']');
+			xerase = 0;
+		}
+		if(c == 0)
+			return(0);
+		if(c == EOT)
+			exit(1);
+		if(c == '\r' || c == '\n' || np >= &name[16])
+			break;
+		putchr(cs);
+		if(c >= 'a' && c <= 'z')
+			lower++;
+		else if(c >= 'A' && c <= 'Z'){
+			upper++;
+			c += 'a'-'A';
+		}
+		else if(c == ERASE){
+			if(np > name){
+				if(xerase == 0){
+					xerase++;
+					putchr('[');
+				}
+				putchr(*--np);
+			}
+			else
+				putchr('\07');
+			continue;
+		}
+		else if(c == KILL){
+			putchr('\r');
+			putchr('\n');
+			np = name;
+			continue;
+		}
+		else if(c == ' ')
+			c = '_';
+		*np++ = c;
+	}
+	*np = 0;
+	if(c == '\r')
+		crmod++;
+	return(1);
+}
+
+puts(as)
+char *as;
+{
+	register char *s;
+
+	s = as;
+	while(*s)
+		putchr(*s++);
+}
+
+putchr(cc)
+{
+	char c;
+	c = cc;
+	c |= partab[c&0177] & 0200;
+	write(1, &c, 1);
+}

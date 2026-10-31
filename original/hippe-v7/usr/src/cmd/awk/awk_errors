@@ -1,0 +1,40 @@
+ 1 :  unknown type (null) in penter
+ 2 :  unknown type (null) in freetr
+ 3 :  regular expression too long
+ 4 :  unknown type (null) in cfoll
+ 5 :  unknown type (null) in first
+ 6 :  can't open (null)
+ 7 :  record `(null)...' too long
+ 8 :  record `(null)...' has too many fields
+ 9 :  record `(null)...' has too many fields
+10 :  built giant record `(null)...'
+11 :  trying to access field (null)
+12 :  can't open (null)
+13 :  out of space in ALLOC
+14 :  illegal statement (null)
+15 :  unexpected break, continue or next
+16 :  unexpected break, continue or next
+17 :  unknown boolean operator (null)
+18 :  unknown relational operator (null)
+19 :  out of temporaries in gettemp
+20 :  format item (null)... too long
+21 :  not enough arguments in printf((null))
+22 :  illegal arithmetic operator (null)
+23 :  division by zero
+24 :  division by zero
+25 :  division by zero
+26 :  division by zero
+27 :  illegal assignment operator (null)
+28 :  (null) is not an array
+29 :  illegal jump type (null)
+30 :  illegal function type (null)
+31 :  string (null) ... too long to print
+32 :  too many output files (null)
+33 :  can't open file (null)
+34 :  out of space in makesymtab
+35 :  symbol table overflow at (null)
+36 :  can't set $0
+37 :  can't set $0
+38 :  illegal reference to array (null)
+39 :  funny variable (null): (null) (null) (null) (null)
+40 :  out of space in tostring on (null)

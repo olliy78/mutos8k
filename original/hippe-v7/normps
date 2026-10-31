@@ -1,0 +1,8 @@
+tty owner     pid status      size cptime     command
+--- -----     --- ------      ---- ------ --- -------
+% -             0 SLP*runout    0k   1:17 85% system scheduler 
+  ->            1 slp*proc[01]  2k   0:01     /etc/init 
+  ->>          15 slp*pause     1k   0:00     /etc/update 
+  ->>          21 slp*pause     2k   0:00     /etc/cron 
+C -            22 slp*proc[02]  2k   0:02     -sh  
+  ->           25 RUN*          8k   0:01 14% ps  

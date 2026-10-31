@@ -1,0 +1,2 @@
+0,10,20,30,40,50 * *	*	*	/etc/dmesg - >>/usr/adm/messages
+20	1	*	*	*	/bin/calendar -

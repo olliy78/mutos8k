@@ -1,0 +1,51 @@
+There are 3 machine language assists here, m40.s, mch.c
+and smch.c. The 'C' versions are actually assembler, and only
+use the C pre-processor for ifdefs and includes.
+The distribution UNIX versions are made using m40.s but this
+is unkikely to be best for your machine, change m.h and the makefile.
+
+**** m40.s ****
+This is the original Bell one, which they have only tried on
+an 11/23. It does run on 11/40's correctly, and also on the
+11/34 and 11/60, but see smch.c below for these machines.
+
+**** mch.c ****
+This one is for 11/44,45,70
+
+**** smch.c ****
+This one is for 11/23,34,40,60.
+It correctly backs up from segmentation faults due to
+a growing stack for 11/34 and 11/60 processors. This is also
+the one to use if you intend to do the `XBUF' mod.
+
+What to do.
+Look at the `m.h' file. This contains all the `defines' to
+tailor the system to the hardware, plus some extras.
+It is included in `../h/param.h', `smch.c', and `mch.c'.
+The `makefile' needs to be tailored with the name of the
+machine support to be used, and whether or not separate
+I/D is available.
+You should `make tests' after you have installed the new
+system and it is running, to ensure it backs up correctly.
+
+A system is made by `make ???', where '???' represents 'rk'
+or 'rl1' or 'rl2'.
+It is advised that you 'link' conf to the configuration file
+best suited to you, thereafter 'make unix' will suffice.
+
+
+NOTES:
+1)   The code in some files has been  re-arranged  slightly,
+     to  reduce  the  number  of  `ifdefs'  required, and to
+     remove unnecessary tests on `cputype', as the  `ifdefs'
+     do it all:
+
+             machdep.c - comment out test on cputype (70)
+             trap.c - make sure that r3 is passed to `backup'
+             trap.c - comment out test on cputype (70)
+             ureg.c - comment out test on cputype (40)
+
+
+2)   In the file  /usr/sys/h/param.h,  CMAPSIZ  and  SMAPSIZ
+     should  both  be defined as (NPROC/2) otherwise trouble
+     will occur with very large memories.

@@ -1,0 +1,37 @@
+	FP Addressing modes
+
+As is explained in m34.s, the recovery from segmentation traps
+caused by floating-point instructions depends on certain features
+of the 11's base microcode. The programs in this directory are
+intended to test for correct recovery.
+
+To execute the tests, type:-
+
+	run *.s
+
+If all is not well, one or more messages of the form:-
+
+	< test name>: fails
+
+will appear.
+
+The backup code in m34.s has been tested on the following machines:-
+
+	11/60
+	11/34+FP11A
+
+It should also work for the following machines, but the tests should
+be run to find out:-
+
+	11/60+FP11E
+	11/23+KEF11A
+
+
+The names of the programs are composed of a letter and a number
+thus:-
+	Letter	Data-type
+	d	double
+	f	float
+	l	long
+	i	int
+The number indicates the addressing mode.

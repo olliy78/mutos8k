@@ -1,0 +1,65 @@
+NOTE:
+  This file is read out line by line.  There  are two sorts of lines.
+    1. Commentary, Format: free
+    2. Names of directories, Format:
+	 [SBM: absolute name]
+
+	 "S" means source-directories,
+	 "B" means binary-directories,
+	 "M" means manual-directories
+
+I. BINARY DIRECTORIES:
+
+B: /etc
+B: /bin
+B: /usr/bin
+B: /usr/lbin
+B: /usr/lib
+B: /usr/lib/uucp
+B: /usr/lib/acct
+B: /usr/ucb
+B: /usr/games
+
+
+
+II. MANUAL DIRECTORIES
+
+M: /usr/man/u_man/man1
+M: /usr/man/u_man/man2
+M: /usr/man/u_man/man3
+M: /usr/man/u_man/man4
+M: /usr/man/u_man/man5
+M: /usr/man/u_man/man6
+M: /usr/man/u_man/man7
+M: /usr/man/u_man/man8
+M: /usr/man/a_man/man1
+M: /usr/man/a_man/man2
+M: /usr/man/a_man/man3
+M: /usr/man/a_man/man4
+M: /usr/man/a_man/man5
+M: /usr/man/a_man/man6
+M: /usr/man/a_man/man7
+M: /usr/man/a_man/man8
+M: /usr/man/local/man1
+M: /usr/man/local/man2
+M: /usr/man/local/man3
+M: /usr/man/local/man4
+M: /usr/man/local/man5
+M: /usr/man/local/man6
+M: /usr/man/local/man7
+M: /usr/man/local/man8
+
+
+III. SOURCE DIRECTORIES:
+
+S: /usr/src/cmd
+S: /usr/src/games
+S: /usr/src/ucb/cmd
+S: /usr/src/local
+S: /usr/src/lib/libc/port/gen
+S: /usr/src/lib/libc/port/stdio
+S: /usr/src/lib/libc/port/print
+S: /usr/src/lib/libc/port/sys
+S: /usr/lsrc
+S: /usr/include
+S: /usr/include/sys

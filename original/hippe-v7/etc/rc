@@ -1,0 +1,21 @@
+PATH=/bin
+rm /etc/mtab
+cat /dev/null > /etc/utmp
+cat /dev/null > /etc/mtab
+chown bin /etc/mtab
+chgrp bin /etc/mtab
+: mount any on-line disks here!!
+rm -f /usr/spool/lpd/lock
+rm -f /usr/spool/plock
+rm -f /usr/spool/slock
+rm -f /usr/tmp/*
+rm -f /tmp/*
+/etc/update
+while true
+do
+if /etc/dateset
+then break
+else echo "Have another go"
+fi
+done < /dev/console > /dev/console
+/etc/cron

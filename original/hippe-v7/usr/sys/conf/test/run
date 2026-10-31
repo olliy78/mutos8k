@@ -1,0 +1,10 @@
+for A in $*
+do
+	as -o tmp.o /usr/include/sys.s $A
+	ld -n tmp.o
+	if a.out
+		then  echo $A:
+	else echo $A": fails"
+	fi
+done
+rm -f a.out tmp.o core

@@ -1,0 +1,18 @@
+b+	line breaks on			r	read file in
+b-	line breaks off			s	substitute /old/new/
+d	delete line(s)			t	copy line(s)
+e	edit a new file			v	globally if not
+f	set file name			x	enter encryption mode
+g	globally if			w	write to file
+h	display this summary		z	delete interactively
+j	join lines			/	delimit search string
+k	mark line			?	delimit backward
+m	move line(s)					  search string
+l	list line(s)			!	Unix command
+o	open line(s) for mods		=	line number
+		(^h for help in `o')	>	prompts off
+o:	replace line(s)			%	display context
+o-	insert new lines		&	.-24,.p
+o+ or o; append new lines		"	.+1,.+24p
+p	print line(s)
+q	quit editor			|	pipe output to program

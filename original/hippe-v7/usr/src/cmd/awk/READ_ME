@@ -1,0 +1,29 @@
+The files here are a modified version of the sources for 'awk'
+distributed by Bell Labs.  There are two distinct, but related
+sets of alterations.Firstly, debugging information is now compiled
+conditionally.  The default is to omit debug code.  To compile a
+version of awk with debug code the variable `DEBUG' must be defined
+to the C preprocessor (use `make CFLAGS=-DDEBUG awk'). Secondly,
+if the variable `SMALLAWK' is defined to the C preprocessor,
+textual error messages are replaced by error numbers. A list of
+the possible error numbers and corresponding messages may be found
+in the file `awk_errors'. The appearance of `(null)' -- note the
+parenthesis -- indicates that some diagnostic information
+available from the full version of awk has been lost at that
+point. Usually sufficient information is available to deduce
+what is missing !!
+The object of the two sets of alterations has been to produce
+a version of awk which will run reasonably on small PDP-11's,
+without separate I+D space and without floating point hardware.
+If you intend to run the cutdown version of awk, a suitable
+manual page is located in `awk.1'. If you run into difficulties,
+contact
+
+	Colin Prosser,	
+	Rutherford & Appleton Laboratories,
+	Computing Division,
+	Atlas Centre,
+	Chilton,
+	Didcot,
+	Oxfordshire.
+	Phone: Abingdon (0235) 21900 x 6279

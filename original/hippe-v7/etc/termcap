@@ -1,0 +1,80 @@
+d1|vt100|vt-100|pt100|pt-100|dec vt100:\
+	:is=\E>\E[?3l\E[?4l\E[?5l\E[?7h\E[?8h\E[1:24r:\
+	:co#80:li#24:am:cl=\E[;H\E[2J:bs:cm=\E[%i%2;%2H:nd=\E[C:up=\E[A:\
+	:ce=\E[K:cd=\E[J:so=\E[7m:se=\E[m:us=\E[4m:ue=\E[m:\
+	:ks=\E[?1h\E=:\
+	:ke=\E[?1l\E>:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:\
+	:kh=\E[H:pt:sr=\EM:xn:\
+	:dl=\E[M:al=\E[L:
+tv|tvi950|950|televideo950:\
+	:co#80:li#24:am:cl=\E*:bs:\
+	:is=\EDF\EC\Ed\EG0\Eg\Er\EO\E\047\E(\E%\Ew\EX\Ee ^O\
+	\Ek\E016\E004\Ex0\200\200\Ex1\200\200\Ex2\200\200\
+	\Ex3\200\200\Ex4\r\200\E3:\
+	:al=\EE:bt=\EI:cd=\Ey:ce=\Et:cm=\E=%+ %+ :\
+	:dc=\EW:dl=\ER:do=^V:ei=\Er:ho=^^:im=\Eq:k0=^A0\r:\
+	:k1=^A@\r:k2=^AA\r:k3=^AB\r:k4=^AC\r:k5=^AD\r:k6=^AE\r:\
+	:k7=^AF\r:k8=^AG\r:k9=^AH\r:kb=^H:kd=^V:kh=^^:kl=^H:\
+	:ko=ic\054dc\054al\054dl\054cl\054bt\054ce\054cd:kr=^L:\
+	:ku=^K:ma=^Vj^Kk^Hh^Ll^^H:mi:ms:nd=^L:pt:se=\EG0:\
+	:sg#1:so=\EG4:sr=\Ej:ue=\EG0:ug#1:up=^K:us=\EG8:\
+	:vb=\Eb\200\200\200\200\200\200\200\200\200\200\200\200\200\200\200\Ed:\
+	:xn:
+ft|ft20|eurobee ft20:\
+	:co#80:li#24:am:cl=\EE:bs:cm=\EF%+ %+ :nd=\EC:up=\EA:\
+	:ce=\EK:cd=\EJ:so=\EdP:se=\Ee:us=\Ed`:ue=\Ee:dc=\EP:\
+	:is=\EX\E.B:im=\EQ:ei=\E@:\
+	:ku=^k:kd=^j:kr=^l:kl=^h:\
+	:kh=^^:pt:dl=\EM:al=\EL:
+cy|cybernex|cybernex MDL 110:\
+	:li#24:co#80:am:bs:bt=^n^i:\
+	:im=:ei=:cl=^x:cm=^p%+ %+ :nd=^u:up=^z:\
+	:do=^j:ce=^v:cd=^w:\
+	:al=^n^]:ic=^]:dl=^N^^:dc=^^:\
+	:kn#4:ko=al,ic,dl,dc:\
+	:kd=^j:ku=^z:kr=^u:kh=^y:\
+	:us=^nF:ue=^nG:\
+	:os:xn:eo:
+ex|155|ex155|exor155|exorterm|EXORterm 155:\
+	:li#24:co#80:am:bs:\
+	:cl=\E@\ET:cm=50\EE%+ %+ :nd=\014:\
+	:ku=\013:kd=\012:kr=\014:\
+	:kh=\E@:ho=\E@:cd=\ET:cr=50*^M:nl=50*\n:\
+	ce=\EU:sf=50\012:sr=150\EE7 \EU\EG\EV\EH:
+Qm|qm|qvt|QVT101|Qume QVT101:\
+	:co#80:li#24:am:cl=^z:bs:cm=\E=%+ %+ :nd=^l:up=^k:\
+	:ce=\Et:cd=\Ey:so=\EG4:se=\EG0:us=\EG8:ue=:\
+	:is=\EC:ic=\EQ:dc=\EW:vb=\200:\
+	:ku=^k:kd=^j:kr=^l:kl=^h:\
+	:kh=^^:dl=\ER:al=\EE:
+ma|martins Terminal:\
+	:li#25:im=:ei=:ic=\EQ:tc=tvi950:
+64|ulrichs 64 zeilen terminal:\
+	:li#64:tc=tvi950:
+72|m72|72 Zeilen Terminal Emulation auf GIOP:\
+	:co#80:li#60:am:cl=\E*:bs:\
+	:ti=\Ep7\043\Ep1\0431o[\Ep3\043  \Ep6\043:\
+	:te=\Ep7\043\Ep1\0431oc\Ep3\043  \Ep6\043:\
+	:tc=tvi950:
+#  Convention: First entry is two chars, first char is manufacturer,
+#  second char is canonical abbreviation for model or mode.
+#  Second entry is canonical abbreviation.
+#  Third entry is the one the editor will print with "set" command.
+#  Last entry is verbose description.
+#  Others are mnemonic synonyms for the terminal.
+#
+#  If you absolutely MUST check for a specific terminal (this is discouraged)
+#  check for the 2nd entry (the canonical form) since all other codes are
+#  subject to change.  The two letter codes are there for version 6 and are
+#  EXTREMELY subject to change, or even to go away if version 6 becomes for
+#  all practical purposes obsolete.
+#
+#  Special manufacturer codes:
+#	M: Misc. (with only a few terminals)
+#  	q: Homemade
+#  	s: special (dialup, etc.)
+#  
+#  This file is to be installed with an editor script that moves the most
+#  common terminals to the front of the file. If the source is not available,
+#  it can be constructed by sorting
+#  the above entries by the 2 char initial code.

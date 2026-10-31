@@ -1,0 +1,11 @@
+	With the `XBUF' mod, not all device drivers (e.g. hp.c)
+will compile - the only block-device drivers which have been
+tried with this mod are RK05, RL01, RL02  SI/CDC  9762,TM-11 and TC-11.
+	The RL driver has been re-written to cope with both RL01
+and RL02 drives, at the same time checks have been put in for
+off-line and write protected volumes. These checks have also
+been put into the RK and TM drivers.
+	The file 'rk.boston' is a modified V6 boston Childrens
+Museum driver, which will handle overlapped seeks on multiple
+rk drives. It lacks however the 'open' checks of the standard
+driver.
