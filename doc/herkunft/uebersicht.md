@@ -299,3 +299,29 @@ Neue Header `stat.h`, `timeb.h` (V7-Text, vorher lokale Deklarationen in `sys3.c
   5. `sys4.c` `ftime`: Zeitzone 0 / kein DST (Konfigurationswert, keine Herkunftsaussage).
   6. `sys3.c` `exec`-Stumpf (`u_ap[2] = 0; exece()`): V7 hat `exec` in `sys1.c`; zusammen mit der leeren `expand` Teil der Z8001-Anpassung.
   7. Z8001-bedingt (kein Fremdzug): `proctop` in `kill`, kein `suibyte`/`fuibyte`, Zeiger auf `u` bei 0xFC00.
+
+## 11. H3 Gruppe 2: nami, rdwri, bio, main, sys1, clock, text
+
+Rundlauf (`tools/herkunft/rundlauf.sh`, alle 7 Module, Exit 0, keine Regression gegen `daten/rundlauf_soll.txt`): **39 von 46
+Funktionen bytegleich** (vorher 38).  Gesamtbau-Ergebnis auf dem endgueltigen Stand: **BYTEGLEICH** (0 Byte ungleich, 36352 Byte), 185 von 227 Funktionen aus C (vorher 184), Arbeitstests ok (`summe = 5050`, `cc -O -c prf.c` 1600 B); `swbuf1`/`swbuf2` als reines `extern` in `bio.c` bauen und binden problemlos.  Gemessen.
+
+| Modul | bytegleich vorher -> nachher | Stand |
+|-------|------------------------------|-------|
+| nami | 1/1 -> 1/1 | V7-Text (ohne mpx-Teile) |
+| rdwri | 2/4 -> 3/4 | `iomove` jetzt bytegleich (V7-Form `do..while(--n)` mit `NBPW-1`: DJNZ war Quellform, keine `c2`-Abweichung, wie bei `bcopy`); `readi` V7-Text, aber nahe (108/206 Woerter) |
+| bio | 17/19 -> 17/19 | 15 Funktionen V7-Text; `mapalloc` (14/37), `mapstart` (28/44) MUTOS-eigen; `swap`, `physio` MUTOS-Form mit V7-Original als Kommentar |
+| main | 2/3 -> 2/3 | `binit` weicht in 1 von 84 Woertern ab (`b_error` bei +15) |
+| sys1 | 6/8 -> 6/8 | V7-Code nicht einsetzbar (anderer Kopf, Argumentrahmen, Speicheraufbau): nur V7-Kommentare und `/* MUTOS: */`-Marken; `exece` (1/389), `getxfile` (177/401) nahe |
+| clock | 0/1 -> 0/1 | Prozessteil V7 (`SCHMAG 8/10`), nahe (210/260); alter Kopf "System-III-Form (WEGA)" war falsch |
+| text | 10/10 -> 10/10 | `xfree` in V7-Form bytegleich, aber nur mit vorzeichenbehaftetem `ctod` (`ctodu` macht 1/71 Woerter falsch) |
+
+### Fremdzuege (weder V7 noch System III) fuer H6
+
+1. `bio.c` `breada`: Vorauslesen nur bei freiem Puffer (`bfreelist.av_forw != &bfreelist`); System III prueft `b_bcount>1`, V7 nichts.
+2. `sys1.c` `exit`: eine Schleife ueber `proc[0]..proctop` mit Zombie-Zaehler und einem `wakeup(&proc[1])` (V7: zwei Schleifen; System III: `resume`/`SIGCLD`).
+3. `sys1.c` `exece`: bei Fehler werden die 10 Argumentbloecke im Cache ungueltig gemacht (`B_AGE`).
+4. `clock.c`: alle 30 s bei gesetztem `cf_x88a` `sflag1` erhoeht und `runout` geweckt (*angenommen*: der Scheduler ruft daraufhin `update()`).
+5. `sys1.c` `setregs`: Name von `u_exname` nach `u_dbuf` (V7: `u_dbuf` -> `u_comm`).
+6. `sys1.c` `fork`/`wait`: `proctop` als variable Tabellengroesse.
+
+Offen: ob `rdwri.c`-Probekopie (196 B, 9/98 Woerter) und echte Datei (194 B, bytegleich) beim `iomove` anders uebersetzen, ist ungeklaert (*Ursache unbekannt*).

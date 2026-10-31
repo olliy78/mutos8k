@@ -1,6 +1,15 @@
-/* nami.c -- Pfadnamen (Kernel mutos_1216, 36A0..39B9): namei.  (uchar steht im Kernel hinter namei, 39BA, in pipe.c; ein schar gibt es nicht.)
- * Daten: rootdir 8DC6 (Zeiger), mount[] A07E (6 Byte je Eintrag; die Suche nach ".." beginnt bei 1), u_dbuf FC32, u_dent FC42.
- * Abweichung gegenueber V7: die Namensteile werden vor dem Verzeichnis-/Rechtetest gesammelt (Marke cl2). */
+/* nami.c -- path name lookup (kernel mutos_1216, 36A0..39B9): namei.  uchar sits behind namei in the kernel (39BA) and
+ * is in pipe.c; MUTOS has no schar.
+ *
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/nami.c (namei).  System III PDP-11 uts/os/nami.c is the same text with multiplexed-file
+ *           and per-user-root changes; no System III feature is present.
+ * Evidence: measured with tools/herkunft/herkunft.py (level abs): 1 of 1 function above 50% against V7 (87% before the
+ *           restoration, System III 64%).
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/nami.md.
+ * Deviations: no multiplexed files (the mpxip tests of V7 are removed, marked below); eo is daddr_t.
+ *
+ * Data: rootdir 8DC6 (pointer), mount[] A07E (6 bytes per entry; the search for ".." starts at 1), u_dbuf FC32, u_dent FC42. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
@@ -11,6 +20,17 @@
 
 extern struct inode *rootdir;
 
+/*
+ * Convert a pathname into a pointer to
+ * an inode. Note that the inode is locked.
+ *
+ * func = function called to get next char of name
+ *	&uchar if name is in user space
+ *	(V7 also has &schar for the system space; MUTOS has no schar)
+ * flag = 0 if name is sought
+ *	1 if name is to be created
+ *	2 if name is to be deleted
+ */
 /* KERNEL 36A0 */
 struct inode *
 namei(func, flag)
@@ -22,58 +42,90 @@ int (*func)();
 	struct buf *bp;
 	int i;
 	dev_t d;
-	daddr_t eo;
+	daddr_t eo;	/* MUTOS: daddr_t (V7: off_t), both long */
+
+	/*
+	 * If name starts with '/' start from
+	 * root; otherwise start from current dir.
+	 */
 
 	dp = u.u_cdir;
-	c = (*func)();
-	if (c == '/') {
-		dp = u.u_rdir;
-		if (dp == NULL)
+	if((c=(*func)()) == '/')
+		if ((dp = u.u_rdir) == NULL)
 			dp = rootdir;
-	}
 	iget(dp->i_dev, dp->i_number);
-	while (c == '/')
+	while(c == '/')
 		c = (*func)();
-	if (c == '\0' && flag != 0)
+	if(c == '\0' && flag != 0)
 		u.u_error = ENOENT;
 
 cloop:
-	if (u.u_error)
+	/*
+	 * Here dp contains pointer
+	 * to last component matched.
+	 */
+
+	if(u.u_error)
 		goto out;
-	if (c == '\0')
+	if(c == '\0')
 		return(dp);
+
+	/*
+	 * If there is another component,
+	 * Gather up name into
+	 * users' dir buffer.
+	 */
+
 	cp = &u.u_dbuf[0];
-	while (c != '/' && c != '\0' && u.u_error == 0) {
-		if (cp < &u.u_dbuf[DIRSIZ])
+	while (c != '/' && c != '\0' && u.u_error == 0 ) {
+		/* MUTOS: no multiplexed files; V7 breaks here on "mpxip!=NULL && c=='!'" */
+		if(cp < &u.u_dbuf[DIRSIZ])
 			*cp++ = c;
 		c = (*func)();
 	}
-	while (cp < &u.u_dbuf[DIRSIZ])
+	while(cp < &u.u_dbuf[DIRSIZ])
 		*cp++ = '\0';
-	while (c == '/')
+	while(c == '/')
 		c = (*func)();
+	/* MUTOS: no multiplexed files; V7 returns mpxip here for "c == '!' && mpxip != NULL" */
 
-cl2:
-	if ((dp->i_mode & IFMT) != IFDIR)
+seloop:
+	/*
+	 * dp must be a directory and
+	 * must have X permission.
+	 */
+
+	if((dp->i_mode&IFMT) != IFDIR)
 		u.u_error = ENOTDIR;
 	access(dp, IEXEC);
-	if (u.u_error)
+	if(u.u_error)
 		goto out;
+
+	/*
+	 * set up to search a directory
+	 */
 	u.u_offset = 0;
 	u.u_segflg = 1;
 	eo = 0;
 	bp = NULL;
 
 eloop:
-	if (u.u_offset >= dp->i_size) {
-		if (bp != NULL)
+
+	/*
+	 * If at the end of the directory,
+	 * the search failed. Report what
+	 * is appropriate as per flag.
+	 */
+
+	if(u.u_offset >= dp->i_size) {
+		if(bp != NULL)
 			brelse(bp);
-		if (flag == 1 && c == '\0') {
-			if (access(dp, IWRITE))
+		if(flag==1 && c=='\0') {
+			if(access(dp, IWRITE))
 				goto out;
 			u.u_pdir = dp;
-			if (eo)
-				u.u_offset = eo - sizeof(struct direct);
+			if(eo)
+				u.u_offset = eo-sizeof(struct direct);
 			else
 				dp->i_flag |= IUPD|ICHG;
 			return(NULL);
@@ -81,45 +133,73 @@ eloop:
 		u.u_error = ENOENT;
 		goto out;
 	}
-	if ((u.u_offset & BMASK) == 0) {
-		if (bp != NULL)
+
+	/*
+	 * If offset is on a block boundary,
+	 * read the next directory block.
+	 * Release previous if it exists.
+	 */
+
+	if((u.u_offset&BMASK) == 0) {
+		if(bp != NULL)
 			brelse(bp);
-		bp = bread(dp->i_dev, bmap(dp, (daddr_t)(u.u_offset >> BSHIFT), B_READ));
+		bp = bread(dp->i_dev,
+			bmap(dp, (daddr_t)(u.u_offset>>BSHIFT), B_READ));
 		if (bp->b_flags & B_ERROR) {
 			brelse(bp);
 			goto out;
 		}
 	}
-	bcopy(bp->b_un.b_addr + (u.u_offset & BMASK), (caddr_t)&u.u_dent, sizeof(struct direct));
+
+	/*
+	 * Note first empty directory slot
+	 * in eo for possible creat.
+	 * String compare the directory entry
+	 * and the current component.
+	 * If they do not match, go back to eloop.
+	 */
+
+	bcopy(bp->b_un.b_addr+(u.u_offset&BMASK), (caddr_t)&u.u_dent,
+		sizeof(struct direct));
 	u.u_offset += sizeof(struct direct);
-	if (u.u_dent.d_ino == 0) {
-		if (eo == 0)
+	if(u.u_dent.d_ino == 0) {
+		if(eo == 0)
 			eo = u.u_offset;
 		goto eloop;
 	}
-	for (i = 0; i < DIRSIZ; i++)
-		if (u.u_dbuf[i] != u.u_dent.d_name[i])
+	for(i=0; i<DIRSIZ; i++)
+		if(u.u_dbuf[i] != u.u_dent.d_name[i])
 			goto eloop;
-	if (bp != NULL)
+
+	/*
+	 * Here a component matched in a directory.
+	 * If there is more pathname, go back to
+	 * cloop, otherwise return.
+	 */
+
+	if(bp != NULL)
 		brelse(bp);
-	if (flag == 2 && c == '\0') {
-		if (access(dp, IWRITE))
+	if(flag==2 && c=='\0') {
+		if(access(dp, IWRITE))
 			goto out;
 		return(dp);
 	}
 	d = dp->i_dev;
-	if (u.u_dent.d_ino == ROOTINO && dp->i_number == ROOTINO && u.u_dent.d_name[1] == '.')
-		for (i = 1; i < NMOUNT; i++)
-			if (mount[i].m_bufp != NULL && mount[i].m_dev == d) {
+	if(u.u_dent.d_ino == ROOTINO)
+	if(dp->i_number == ROOTINO)
+	if(u.u_dent.d_name[1] == '.')
+		for(i=1; i<NMOUNT; i++)
+			if(mount[i].m_bufp != NULL)
+			if(mount[i].m_dev == d) {
 				iput(dp);
 				dp = mount[i].m_inodp;
 				dp->i_count++;
 				plock(dp);
-				goto cl2;
+				goto seloop;
 			}
 	iput(dp);
 	dp = iget(d, u.u_dent.d_ino);
-	if (dp == NULL)
+	if(dp == NULL)
 		return(NULL);
 	goto cloop;
 
