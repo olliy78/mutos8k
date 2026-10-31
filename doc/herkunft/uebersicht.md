@@ -29,7 +29,7 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 * **Geklaert in H6 (Abschnitt 13, `fremd.md`):** `tty2.c` (Zeilendisziplin, 20 Funktionen) hat gegen V7/System III nur 17-34 %, stimmt aber mit `usr/sys/dev/tty.c` der V7-Variante
   `Torsten_Hippe_v7` ueberein (Tabellen byte-gleich); dieselbe Variante erklaert die uebrigen "Fremdzuege" und "System-III-Zuege" des Kerns.
   **Vorbehalt (2026-10-31):** Das belegt Verwandtschaft, nicht Abstammung.  Hippes Baum (Kernel-Quellen 1981-82, Neuubersetzung 1986, Laufzeitdaten bis 1988) ist
-  der naechste *bekannte* Verwandte.  Die Gegenprobe (Abschnitt 14, `fremd.md` Abschnitt 8) ergibt: MUTOS stimmt inhaltlich weitgehend mit dem Kernel der Hippe-Sammlung ueberein (H-A *wahrscheinlich*, Urheberschaft der Sammlung ausdruecklich ausgeschlossen); eine gemeinsame unbekannte Vorlage
+  der naechste *bekannte* Verwandte.  Die Gegenprobe (Abschnitt 14, `fremd.md` Abschnitt 8) ergibt: MUTOS stimmt inhaltlich weitgehend mit dem Kernel der Hippe-Sammlung ueberein (direkte Ableitung *wahrscheinlich*, Urheberschaft der Sammlung ausdruecklich ausgeschlossen); eine gemeinsame unbekannte Vorlage
   (Linie UNSW/Vrije/Nijmegen) ist *vermutet*, aber nicht zu trennen.  Dateidaten sind schwache Belege.
 
 ## 1a. Feature-Bewertung: Neuerungen von System III gegenueber V7
@@ -388,7 +388,7 @@ Ausfuehrlich in `fremd.md` (Quellen mit URL und SHA-256, Befehle, Tabellen).  Ge
 
 ## 14. H6b: Gegenprobe zur Abstammung (2026-10-31)
 
-Ausfuehrlich in `fremd.md` Abschnitt 8 (Variantentabelle, SHA-256, Befehle).  Frage: direkt von Hippe (H-A), gemeinsame unbekannte Vorlage (H-B) oder andere Variante (H-C)?  Zusaetzlich geladen und entpackt: alle UNSW-Baender
+Ausfuehrlich in `fremd.md` Abschnitt 8 (Variantentabelle, SHA-256, Befehle).  Frage: direkt von Hippe (direkte Ableitung), gemeinsame unbekannte Vorlage (gemeinsame Vorlage) oder andere Variante (andere Variante)?  Zusaetzlich geladen und entpackt: alle UNSW-Baender
 (1, 4-7, 81-83, 85-87, 90, 92, 93, 106-110), V7M 2.1 (Jean Huens), Ultrix-11 3.1-Quellen, Bostic-V7-Band (jetzt als Baum), V7-Abbilder und Y2K-Platte, `Net.v7bugs`.  Nicht geladen (Grund in `fremd.md` 8.2): Coherent (i386), Research V8-V10,
 Venix, Ultrix-3.0-Baender, CB_Unix.
 
@@ -401,7 +401,7 @@ Venix, Ultrix-3.0-Baender, CB_Unix.
   Quelltextaenderung 1982 -> 1986 ist `malloc.c` (`map overflow`), und MUTOS hat sie.  Der Hippe-Kernel `rkunix` von 1982 enthaelt die MUTOS-Tabellen `maptab`/`cchars`/`wchars` byte-gleich.  Ein Kerneldatum fuer MUTOS ist aus den Disketten nicht
   ableitbar (keine `/unix`-Datei; Dateien ab 1986-01-09, `nroff`-Tabellen 1985).
 * **Eigenanteil:** 30-s-`update()`, `setregs`-Kopie, Tickzaehlung in `clock`, `binit` `b_error`, `core` `namei(uchar)`, `setpri` ohne `return`, die Treiber und der Z8001-Teil (`fremd.md` 8.7).
-* **Rangfolge:** H-A *wahrscheinlich* (gemessen: 26/26 Hippe-Abweichungen, 4/4 Hippe-eigene Merkmale, `malloc`-Stand; angenommen: kein Zwischenglied), H-B *vermutet* (nicht zu trennen, die Vorlage muesste Hippe-Text gewesen sein; Indiz: der
-  `exece`-Ausgang und Dateistempel), H-C *unwahrscheinlich* (kein geladener Baum kommt MUTOS naeher).  Entscheiden wuerden weitere Staende der Linie (Vrije/Calgary, Hippe vor 1986), ein Kerneldatum von MUTOS und Hinweise der Beteiligten.
+* **Rangfolge:** direkte Ableitung *wahrscheinlich* (gemessen: 26/26 Hippe-Abweichungen, 4/4 Hippe-eigene Merkmale, `malloc`-Stand; angenommen: kein Zwischenglied), gemeinsame Vorlage *vermutet* (nicht zu trennen, die Vorlage muesste Hippe-Text gewesen sein; Indiz: der
+  `exece`-Ausgang und Dateistempel), andere Variante *unwahrscheinlich* (kein geladener Baum kommt MUTOS naeher).  Entscheiden wuerden weitere Staende der Linie (Vrije/Calgary, Hippe vor 1986), ein Kerneldatum von MUTOS und Hinweise der Beteiligten.
 * **Werkzeuge** (`tools/herkunft/`): `devdiff.py`, `traits.py`, `v7dump.py`, `v7fs_read.py`, `ifdef_resolve.py`, `mapnames.py`, `tables.py`, `tap2files.py`, `ftable.py`; Test `tests/test_herkunft_gegenprobe.py`.
 * **Korrektur:** MUTOS hat kein DISKMON (der `io_info`-Text in `bio.c` ist tot); in Abschnitt 13 gilt "in keinem anderen Baum" nur fuer die damaligen 15 Baeume (siehe `fremd.md` 8.5).

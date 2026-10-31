@@ -25,7 +25,7 @@ Alle Zahlen **gemessen**, sofern nicht als *vermutet* oder *angenommen* gekennze
 * Rechtlich: die Hippe-Variante steht **nicht** unter einer klaren Lizenz (Abschnitt 7); empfohlen wird, sie nicht unter `original/` abzulegen, bevor das geklaert ist.
 
 > **Vorbehalt:** Uebereinstimmung heisst Verwandtschaft, nicht Abstammung.  "Vorlage" in diesem Dokument meint den naechsten bekannten Verwandten; ob MUTOS direkt von Hippe
-> abstammt oder von einer gemeinsamen unbekannten Vorlage, prueft die Gegenprobe in **Abschnitt 8** (Stand 2026-10-31): MUTOS ist inhaltlich der Hippe-Kernel (H-A *wahrscheinlich*), eine gemeinsame unbekannte Vorlage
+> abstammt oder von einer gemeinsamen unbekannten Vorlage, prueft die Gegenprobe in **Abschnitt 8** (Stand 2026-10-31): MUTOS ist inhaltlich der Hippe-Kernel (direkte Ableitung *wahrscheinlich*), eine gemeinsame unbekannte Vorlage
 > ist *vermutet*, nicht widerlegbar; Dateidaten sind schwache Belege.
 
 ## 2. Quellen (Scratchpad, nichts davon im Repo)
@@ -238,15 +238,15 @@ Namenslaenge: signifikant 8 Zeichen -- `ttyretype`, `wflushtty`, `ttioccomm` wer
 
 ## 8. Gegenprobe (AP H6b): Abstammung oder nur Verwandtschaft?
 
-Stand 2026-10-31.  Frage: Stammt MUTOS **direkt** von Hippes Kernel ab (H-A), von einer **gemeinsamen unbekannten Vorlage** (H-B: Linie Vrije/Nijmegen/UNSW) oder von einer **anderen,
-Hippe nur aehnelnden Variante** (H-C)?  Alles *gemessen*, sofern nicht als *angenommen* oder *vermutet* gekennzeichnet.  Werkzeuge: `tools/herkunft/` (Abschnitt 8.9).  Es wurde nichts in `kernel/` oder
+Stand 2026-10-31.  Frage: Stammt MUTOS **direkt** vom Kernelstand der Hippe-Sammlung ab (*direkte Ableitung*), von einer **gemeinsamen unbekannten Vorlage** (*gemeinsame Vorlage*, Linie Vrije/Nijmegen/UNSW) oder von einer **anderen,
+der Sammlung nur aehnelnden Variante** (*andere Variante*)?  (Fruehere Kurzbezeichnungen H-A/H-B/H-C sind durch diese Begriffe ersetzt.)  Alles *gemessen*, sofern nicht als *angenommen* oder *vermutet* gekennzeichnet.  Werkzeuge: `tools/herkunft/` (Abschnitt 8.9).  Es wurde nichts in `kernel/` oder
 `original/` veraendert; alle Quellen liegen im Scratchpad (Wurzel wie Abschnitt 2, Verzeichnisse `h6_unsw*`, `h6_v7m*`, `h6_ultrix11`, `h6_bostic`, `h6_y2k_*`, `h6_v7bugs`, `h6_out2`).
 
 ### 8.1 Ergebnis in Kuerze
 
-* **Rangfolge:** (1) **H-A, genauer: der MUTOS-Kern ist inhaltlich der Hippe-Kernel** (Stand mindestens mit der `malloc`-Aenderung von 1982-86) -- *wahrscheinlich*; (2) **H-B** (gemeinsame unbekannte Vorlage) -- *vermutet/moeglich*,
-  aber nur mit der Zusatzannahme, dass die Vorlage in allen gemessenen Punkten gleich Hippe ist, also praktisch Hippe-Text war; (3) **H-C** -- *unwahrscheinlich*, ohne jeden Beleg in 30+ geladenen Baeumen.
-  Begruendung und Grenzen in 8.8.  **Vorbehalt aus Abschnitt 1 bleibt**: H-A und H-B unterscheiden sich im Text nicht, nur in der Weitergabe (wer hat von wem kopiert); das entscheiden nur Daten, die nicht vorliegen (8.8).
+* **Rangfolge:** (1) **direkte Ableitung vom Kernelstand der Hippe-Sammlung (der MUTOS-Kern stimmt inhaltlich weitgehend mit ihm ueberein)** (Stand mindestens mit der `malloc`-Aenderung von 1982-86) -- *wahrscheinlich*; (2) **Gemeinsame Vorlage** (gemeinsame unbekannte Vorlage) -- *vermutet/moeglich*,
+  aber nur mit der Zusatzannahme, dass die Vorlage in allen gemessenen Punkten gleich Hippe ist, also praktisch Hippe-Text war; (3) **Andere Variante** -- *unwahrscheinlich*, ohne jeden Beleg in 30+ geladenen Baeumen.
+  Begruendung und Grenzen in 8.8.  **Vorbehalt aus Abschnitt 1 bleibt**: Direkte Ableitung und gemeinsame Vorlage unterscheiden sich im Text nicht, nur in der Weitergabe (wer hat von wem kopiert); das entscheiden nur Daten, die nicht vorliegen (8.8).
 * **Abweichungsanalyse (8.4):** 177 MUTOS-Funktionen haben ein gleichnamiges Hippe-Gegenstueck; 146 sind als Text vergleichbar, davon 112 ohne jede Abweichung.  Von 95 Abweichungen sind 72 Z8001-/Namens-/Makroanpassung,
   **keine ist eindeutig "MUTOS aelter/einfacher als Hippe"** (MUTOS = V7/Nijmegen/UNSW, Hippe hat Zusatz), 14 sind Hippe-Inhalt in anderer Schreibweise, 7 sind MUTOS-eigen, 1 ist Z8001.  **Eine Stelle ist fraglich**: der Fehlerausgang von `exece` (`goto bad2` -> `iput`) hat die Form von Nijmegen/V7, Hippe hat `iput(ip); return;` -- das einzige Indiz gegen eine reine Hippe-Kopie.
   In allen 26 Funktionen, in denen Hippe textlich von Spencer-V7 abweicht, traegt MUTOS die Hippe-Abweichung.
@@ -380,9 +380,9 @@ Funktionen mit Anweisungsverhaeltnis < 0,6 gelten als **Kompilatorform** (Z8001-
 | B2a: `exece` Fehlerausgang `goto bad2` statt Hippe `iput; return` | 0 | 1 | 1 | **MUTOS = Nijmegen/V7-Form**, Funktion `NAHE` (1 von 389 Woertern ungleich, `sys1.md`) |
 | B3: MUTOS-eigen (30-s-`update`, `sched`-`update`, `binit`-`b_error`, `clock` Tickzaehlung 2x, `core` `namei(uchar)`, `setpri` ohne `return`) | 3 | 4 | 7 | 8.7 |
 | B4: Z8001 (`procxmt`: 16 statt 8 Register) | 1 | 0 | 1 | von der Regel nicht erfasst |
-| **MUTOS aelter/einfacher als Hippe (= V7/Nijmegen/UNSW, Hippe hat Zusatz)** | | | **0 eindeutig, 1 fraglich (B2a)** | spraeche fuer H-B |
+| **MUTOS aelter/einfacher als Hippe (= V7/Nijmegen/UNSW, Hippe hat Zusatz)** | | | **0 eindeutig, 1 fraglich (B2a)** | spraeche fuer gemeinsame Vorlage |
 | **MUTOS hat Zusatz, den es ausser in Hippe nirgends gibt (als Hunk)** | | | 0 | siehe Merkmalsliste unten |
-| **MUTOS = anderer Baum als Hippe, mit Inhalt** | | | 0 | spraeche fuer H-C/H-B |
+| **MUTOS = anderer Baum als Hippe, mit Inhalt** | | | 0 | spraeche fuer andere Variante/gemeinsame Vorlage |
 
 Ohne Schalteraufloesung der MUTOS-Seite stuenden 5 weitere Hunks (`io_info` in `bread`, `breada`, `bwrite`, `getblk`) als "MUTOS = V7/UNSW 81, Hippe hat es nicht" da; `kernel/c/bio.c` Zeile 29 zeigt, dass es toter Text ist
 (`#define DISKMON` entfernt), das Binaerabbild hat keine `io_info`-Zaehler.  Das ist die einzige Stelle, an der MUTOS "V7-naeher" als Hippe aussieht, und sie ist Textstand, nicht Kernstand.
@@ -484,7 +484,7 @@ Geprueft gegen Hippe, Nijmegen, V7/Bostic/Boot-Abbilder, V7M, UNSW (1, 4, 81, 83
 Die 30 Funktionen ohne Hippe-Gegenstueck: `mapalloc`, `mapstart`, `fd*` (11), `lpcanon`, `lpintr`, `lpxfer`, `kstub`, `sigret`, `syioctl`, `copen`, `xstub1`, `xstub2`, `tc*` (6), `ttxfer`, `ttyinit`.
 Hinweis: DISKMON, `proctop` und `NBUF 20`/`NCALL 9` (Hippe 12/10) sind Konfiguration, kein Eigenanteil im Sinn von Quelltext.
 
-### 8.8 Auswertung: H-A, H-B, H-C
+### 8.8 Auswertung: direkte Ableitung, gemeinsame Vorlage, andere Variante
 
 **Gemessene Tatsachen:**
 
@@ -499,21 +499,21 @@ Hinweis: DISKMON, `proctop` und `NBUF 20`/`NCALL 9` (Hippe 12/10) sind Konfigura
 
 | Rang | Hypothese | Stufe | gemessen / angenommen |
 |---|---|---|---|
-| 1 | **H-A**: Der MUTOS-Kern ist inhaltlich der Hippe-Kernel (Stand >= `malloc`-Aenderung), ueber den Z8001-Anteil und kleine eigene Aenderungen hinaus uebernommen | **wahrscheinlich** (nicht sicher) | gemessen: 1., 2., 4.; angenommen: dass kein unbekannter Zwischenschritt dazwischen liegt und `exece` MUTOS-eigen geaendert wurde |
-| 2 | **H-B**: gemeinsame unbekannte Vorlage (Linie UNSW/Vrije/Nijmegen), aus der Hippe und MUTOS unabhaengig stammen | **vermutet**, nicht widerlegt | gemessen: die Linie (3.); angenommen: eine Vorlage, die in allen vier Hippe-eigenen Merkmalen und in `getxfile`/`maptab` mit Hippe uebereinstimmt, also Hippe-Text war |
-| 3 | **H-C**: eine andere Variante, die Hippe nur aehnelt | **unwahrscheinlich** | gemessen: kein geladener Baum kommt MUTOS naeher als Hippe; angenommen: keine nicht geladene Variante (Calgary, Vrije, Johan Stevensons System) |
+| 1 | **Direkte Ableitung**: Der MUTOS-Kern ist inhaltlich der Hippe-Kernel (Stand >= `malloc`-Aenderung), ueber den Z8001-Anteil und kleine eigene Aenderungen hinaus uebernommen | **wahrscheinlich** (nicht sicher) | gemessen: 1., 2., 4.; angenommen: dass kein unbekannter Zwischenschritt dazwischen liegt und `exece` MUTOS-eigen geaendert wurde |
+| 2 | **Gemeinsame Vorlage**: gemeinsame unbekannte Vorlage (Linie UNSW/Vrije/Nijmegen), aus der Hippe und MUTOS unabhaengig stammen | **vermutet**, nicht widerlegt | gemessen: die Linie (3.); angenommen: eine Vorlage, die in allen vier Hippe-eigenen Merkmalen und in `getxfile`/`maptab` mit Hippe uebereinstimmt, also Hippe-Text war |
+| 3 | **Andere Variante**: eine andere Variante, die Hippe nur aehnelt | **unwahrscheinlich** | gemessen: kein geladener Baum kommt MUTOS naeher als Hippe; angenommen: keine nicht geladene Variante (Calgary, Vrije, Johan Stevensons System) |
 
-Begruendung: H-B und H-A sind im Text nicht zu trennen -- jede Vorlage, aus der MUTOS stammen koennte, muesste die vier Hippe-eigenen Merkmale tragen und damit Hippe *sein* (inhaltlich).  Gegen eine *unabhaengige* Entwicklung von Hippe-Merkmalen
-spricht, dass sie keine bekannten Fehlerberichte sind (`Net.v7bugs` ohne `malloc`/`seek`) und dass MUTOS die komplette `maptab` (128 Byte) hat.  Fuer H-B (und gegen "Hippe-Band direkt") sprechen nur (a) die Dateistempel (Hippe-Stand mit
+Begruendung: Gemeinsame Vorlage und direkte Ableitung sind im Text nicht zu trennen -- jede Vorlage, aus der MUTOS stammen koennte, muesste die vier Hippe-eigenen Merkmale tragen und damit Hippe *sein* (inhaltlich).  Gegen eine *unabhaengige* Entwicklung von Hippe-Merkmalen
+spricht, dass sie keine bekannten Fehlerberichte sind (`Net.v7bugs` ohne `malloc`/`seek`) und dass MUTOS die komplette `maptab` (128 Byte) hat.  Fuer gemeinsame Vorlage (und gegen "Hippe-Band direkt") sprechen nur (a) die Dateistempel (Hippe-Stand mit
 `malloc`-Pruefung im Objekt erst 1986-04-03, erste MUTOS-Dateien 1986-01-09 -- schwach, 8.6), (b) dass MUTOS nach Quelle `NBUF 20`/`NCALL 9`/`HZ 50` fuehrt, die in `m.h` ebenfalls einstellbar sind (kein Beleg), (c) dass `exece` das `goto`-Ende von
 Nijmegen/V7 statt Hippes `iput; return` hat (Funktion `NAHE` mit 1 von 389 ungleichen Woertern, die Form ist also im Binaerabbild gestuetzt; Hippes Form steht schon im 1982er Objekt -- ein MUTOS-Stand mit der alten `exece`-Form *und* der
-spaeteren `malloc`-Pruefung passt auf keinen Hippe-Stand; er wuerde eine MUTOS-eigene Aenderung oder einen Zweig mit Mischstand bedeuten).  H-C haette ein Gegenstueck; es gibt keines.  Von Hippes **Zusatzoptionen** (`XBUF`, `SYSACCT`,
+spaeteren `malloc`-Pruefung passt auf keinen Hippe-Stand; er wuerde eine MUTOS-eigene Aenderung oder einen Zweig mit Mischstand bedeuten).  andere Variante haette ein Gegenstueck; es gibt keines.  Von Hippes **Zusatzoptionen** (`XBUF`, `SYSACCT`,
 `SYSPHYS`, `SYSLOCK`, `INSTRM`, `SEPID`, `MX`, `SGTTY`) steckt nichts in MUTOS (`traits.py` T16-T20: 0 Treffer); das passt zu Hippes Standardkonfiguration (`m.h`), nicht zu einer fruehen Vorlage mit Optionen.
 
 **Was die Frage entscheiden wuerde (nicht vorhanden):**
 
-* weitere Staende der Linie (Johan Stevensons Vrije-/Calgary-System, Hippes Band vor 1986, Fassungen zwischen Nijmegen und Hippe) -- sie lieferten ein H-B-Zwischenglied oder schlossen es aus;
-* das **Datum des MUTOS-Kernels**: aus den Disketten nicht ableitbar (kein `/unix` im Dateisystem; Kernel in den Bootspuren); ein Datum vor dem Hippe-`malloc`-Stand wuerde H-A mindestens fuer diese Stelle ausschliessen;
+* weitere Staende der Linie (Johan Stevensons Vrije-/Calgary-System, Hippes Band vor 1986, Fassungen zwischen Nijmegen und Hippe) -- sie lieferten ein gemeinsame Vorlage-Zwischenglied oder schlossen es aus;
+* das **Datum des MUTOS-Kernels**: aus den Disketten nicht ableitbar (kein `/unix` im Dateisystem; Kernel in den Bootspuren); ein Datum vor dem Hippe-`malloc`-Stand wuerde direkte Ableitung mindestens fuer diese Stelle ausschliessen;
 * Dateistempel des **Originalbandes** von Hippe (nicht der TUHS-Kopie) und ein Vergleich der Hippe-`dev/*.o` mit Quellen (1982er Objekte fuer `dev`, `conf` fehlen);
 * eine PDP-11-Uebersetzung der Hippe-Quellen (`cc -O`), um `iget`/`subr` 1982 gegen 1986 gegen den Quelltext zu pruefen (hier nur als "ohne -O gebaut" *angenommen*);
 * Hinweise der Beteiligten (Wer brachte die Hippe-/Nijmegen-Fassung nach Robotron/DDR?).
@@ -534,7 +534,7 @@ Stand 2026-10-31.  Keine Quelltexte von MUTOS1600 bekannt; alles Folgende ist Li
 * `robotrontechnik.de/html/computer/k1600.html`: K1600-Rechner waren auf Anwenderebene PDP-11-kompatibel, Betriebssysteme aber nicht austauschbar (andere Geraetetreiber).  MUTOS1600 gilt dort als "ausgestorben".
 * TIB-Eintrag "Programmierwerkzeuge unter dem Betriebssystem MUTOS 1630": entwickelt von INEUM Leningrad, VEB Kombinat Robotron und TH Ilmenau fuer den K1630; "kompatibel zu UNIX Version 7".
 * Widerspruch: die deutsche Wikipedia ("K 1600") nennt MUTOS 1630 eine "Unix-5-Variante" (ohne Beleg); Messungen (V7-Kern, Abschnitt 1 der `uebersicht.md`) sprechen fuer V7.
-* Deutung (*vermutet*): V7-Derivat auf PDP-11-Basis -> K1630 (MUTOS1600) -> Z8001 (MUTOS8000).  Passt zu H-A/H-B (Abschnitt 8): die Vorlage waere dann die Hippe-nahe PDP-11-Konfiguration.  Ohne MUTOS1600-Quellen nicht pruefbar.
+* Deutung (*vermutet*): V7-Derivat auf PDP-11-Basis -> K1630 (MUTOS1600) -> Z8001 (MUTOS8000).  Passt zu direkte Ableitung/gemeinsame Vorlage (Abschnitt 8): die Vorlage waere dann die Hippe-nahe PDP-11-Konfiguration.  Ohne MUTOS1600-Quellen nicht pruefbar.
 
 ### 9.1 Speicherverwaltung: V7-Vorlage mit MMU, MUTOS ohne
 
