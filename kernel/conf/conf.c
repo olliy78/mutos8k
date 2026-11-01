@@ -8,7 +8,7 @@
  *           cdevsw 14 rows + terminator, linesw 1 entry, rootdev/swapdev/pipedev 0402, swplo 250, nswap 244.  H2 file similarity 34% (partab.c,
  *           i.e. no real counterpart: V7 c.c is generated for PDP-11 devices).  Check: datenvergleich.py KERNEL conf.o 8766.
  * Deviations: whole contents.  The nlist substitute for ps/pstat (cf_nlist, 22 addresses) and the fillers cf_x* are MUTOS.
- *           Note K6b: the printer is cdevsw[5] (not 7); cdevsw[10] = raw access to major 0, cdevsw[13] = rk raw, linesw[0] = ttyopen...
+ *           Note K6b: the printer is cdevsw[5] (not 7); cdevsw[10] = raw access to major 0, cdevsw[13] = rk raw, linesw[0] = ttyopen..., l_rint = ttyinput, l_rend = ttstart (as in c.c of the collection)
  */
 #include "param.h"
 #include "systm.h"
@@ -34,7 +34,7 @@ int rkopen(), rkclose(), rkstrategy(), rkread(), rkwrite();
 int tcopen(), tcclose(), tcread(), tcwrite(), tcioctl();
 int syopen(), syread(), sywrite(), syioctl(), mmread(), mmwrite();
 int lpopen(), lpclose(), lpwrite();
-int ttyopen(), ttread(), ttwrite(), ttyinput(), ttkick();
+int ttyopen(), ttread(), ttwrite(), ttyinput(), ttstart();
 
 
 struct bdevsw bdevsw[] = {
@@ -65,13 +65,13 @@ struct cdevsw cdevsw[] = {
 };
 
 struct linesw linesw[] = {
-	{ ttyopen, nulldev, ttread, ttwrite, nodev, ttyinput, ttkick, { 0, 0, 0 } }
+	{ ttyopen, nulldev, ttread, ttwrite, nodev, ttyinput, ttstart, 0, 0, 0 }
 };
 
 dev_t rootdev = 0x0402;				/* 887C */
 dev_t swapdev = 0x0402;				/* 887E */
 dev_t pipedev = 0x0402;				/* 8880 */
-int cf_x882 = 1;				/* 8882 */
+int nldisp = 1;				/* 8882 number of line disciplines */
 daddr_t swplo = 250;				/* 8884 */
 int nswap = 244;				/* 8888 */
 int cf_x88a = 0;				/* 888A */

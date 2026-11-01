@@ -1,17 +1,18 @@
 /* tty.c -- terminal lines through the mailbox (kernel mutos_1216, 60CC..6432 and 6D44..7E16 as far as rebuilt).
  *
  * Origin:   partial
- * Source:   The wrappers tcopen..tcioctl call the generic tty routines (ttyopen, ttyclose, ttread, ttwrite, ttyinput, ttioctl, ttinit,
- *           ttkick: those are in tty2.c) and have the shape of the line driver wrappers of V7 / the TUHS collection
+ * Source:   The wrappers tcopen..tcioctl call the generic tty routines (ttyopen, ttyclose, ttread, ttwrite, ttyinput, ttioccomm, ttychars,
+ *           ttstart: those are in tty2.c) and have the shape of the line driver wrappers of V7 / the TUHS collection
  *           Research/Torsten_Hippe_v7 (usr/sys/dev/kl.c klopen / klclose / klread / klrint / klxint / klioctl; V7 dc.c dcread / dcxint):
- *           measured 33..67% on these short functions (tcopen 44% against the Hippe klopen).  ttstart, ttxfer, putchar, ttyinit
+ *           measured 33..67% on these short functions (tcopen 44% against the Hippe klopen).  tcstart, ttxfer, putchar, ttyinit
  *           (mailbox output, console log) are MUTOS own; System III kl.c has a putchar of another form (31%).  The terminal hardware
  *           coupling (one mailbox entry per line, ttyhw, D26A, 14 bytes, to the U880 side) is MUTOS own; WEGA dev/ttydev.c / siok.c: 13% / 11%.
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): tcopen 51% (noise: against mpxchan), tcclose 62%, tcioctl 67%,
- *           tcxint 53%, tcrint 39%, tcread / tcwrite 33%; ttstart 22%, ttxfer 8%, putchar 10%, ttyinit 9%; file similarity V7 kl.c 25%,
+ *           tcxint 53%, tcrint 39%, tcread / tcwrite 33%; tcstart 22%, ttxfer 8%, putchar 10%, ttyinit 9%; file similarity V7 kl.c 25%,
  *           System III 15%.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/tty.md.
- * Deviations: tc* bodies adapted to the mailbox; ttstart / ttxfer / putchar / ttyinit have no counterpart.
+ * Deviations: tc* bodies adapted to the mailbox; tcstart / ttxfer / putchar / ttyinit have no counterpart.
+ *           tcstart was called ttstart before: that name now belongs to the generic start routine of tty2.c (collection name, formerly ttkick).
  *
  * Handassembler: nothing here (getc/putc are in pipe.c).  Screen log of the console: conptr 8C96 (ring 8DE8..8E68).
  * Structure of the tty: h/tty.h.  Names of the wrappers (60CC..623C) assigned freely (tc...), the V7 names carry the core functions. */
@@ -29,7 +30,7 @@ extern char ttyobuf[4][80];		/* D2A2 */
 extern char *conptr;			/* 8C96 */
 extern char conlog[];			/* 8DE8 */
 extern char conend[];			/* 8E68 */
-int ttstart(), ttrstrt();
+int tcstart(), ttrstrt();
 
 /* KERNEL 60CC */
 tcopen(dev, flag)
@@ -45,17 +46,17 @@ dev_t dev;
 		return;
 	}
 	tp = &ttyt[d];
-	tp->t_obuf = ttyobuf[d];
+	tp->t_addr = ttyobuf[d];
 	hp = &ttyhw[d];
 	tp->t_hwp = hp;
 	tp->t_hwf = 0;
-	tp->t_oproc = ttstart;
+	tp->t_oproc = tcstart;
 	if ((tp->t_state & ISOPEN) == 0) {
 		tp->t_state = 0x14;
 		tp->t_flags = 0x518;
 		if (d)
 			hp->mb_stat = 1;
-		ttinit(tp);
+		ttychars(tp);
 	} else if ((tp->t_state & XCLUDE) && u.u_uid) {
 		u.u_error = EBUSY;
 		return;
@@ -94,7 +95,7 @@ dev_t dev;
 	register struct tty *tp;
 
 	tp = &ttyt[minor(dev)];
-	ttkick(tp);
+	ttstart(tp);
 	if (tp->t_outq.c_cc == 0 || tp->t_outq.c_cc <= 50)
 		wakeup(&tp->t_outq);
 }
@@ -116,12 +117,12 @@ register unsigned ch;
 tcioctl(dev, cmd, addr, flag)
 dev_t dev;
 {
-	if (ttioctl(cmd, &ttyt[minor(dev)], addr, dev) == 0)
+	if (ttioccomm(cmd, &ttyt[minor(dev)], addr, dev) == 0)
 		u.u_error = ENOTTY;
 }
 
 /* KERNEL 6274 */
-ttstart(tp)
+tcstart(tp)
 register struct tty *tp;
 {
 	register c, n;
@@ -129,8 +130,8 @@ register struct tty *tp;
 	register struct rkmbx *hp;
 
 	hp = tp->t_hwp;
-	cp = tp->t_obuf;
-	if (hp->mb_stat == 0 || (tp->t_state & 0x100) || (tp->t_lstate & 2))
+	cp = tp->t_addr;
+	if (hp->mb_stat == 0 || (tp->t_state & TTSTOP) || (tp->t_xstate & XPAGE1))
 		return;
 	n = 0;
 	while (n < 0x50) {
@@ -141,7 +142,7 @@ register struct tty *tp;
 		else if (c <= 0x7F)
 			*cp++ = c;
 		else if (c == 0x80) {
-			tp->t_lstate |= 2;
+			tp->t_xstate |= XPAGE1;
 			break;
 		} else {
 			timeout(ttrstrt, tp, (c & 0x7F) + 4);
@@ -153,8 +154,8 @@ register struct tty *tp;
 	}
 	if ((tp->t_ocnt = n) > 0)
 		ttxfer(tp);
-	if (c < 0 && (tp->t_state & 0x40)) {
-		tp->t_state &= ~0x40;
+	if (c < 0 && (tp->t_state & ASLEEP)) {
+		tp->t_state &= ~ASLEEP;
 		wakeup(&tp->t_outq);
 	}
 }
@@ -170,7 +171,7 @@ register struct tty *tp;
 	hp->mb_unit = minor(tp->t_dev);
 	hp->mb_stat = 0;
 	hp->mb_seg = 0;
-	hp->mb_addr = tp->t_obuf;
+	hp->mb_addr = tp->t_addr;
 	hp->mb_cnt = tp->t_ocnt;
 	hp->mb_dir = 1;
 	mapalloc(hp, 4);

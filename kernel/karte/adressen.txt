@@ -19,7 +19,7 @@ _nested  88E0
 _usegm   8DC0
 _mapq    D57C
 _conend  8E68
-_cf_x882 8882
+_nldisp 8882
 _maxmem  8DDC
 _conlog  8DE8
 _linesw  8868

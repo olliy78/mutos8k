@@ -1,75 +1,113 @@
-/* tty2.c -- generic tty line discipline (kernel mutos_1216, module 6D44..7E16): ttyopen, ttinit, ttyclose, ioctl (system call 54),
- * ttioctl, ttywait, ttyflush, ttyinput (with ttycol, ttyecho, ttyrub, unputc), bitset, ttyspec, ttflow, ttyoutput, ttrstrt, ttkick,
- * ttread, ttwrite, and the tables (character map 8C9A, control characters 8D1A, word characters 8D2A, pairs 8D52).
+/* tty2.c -- generic tty line discipline (kernel mutos_1216, module 6D44..7E16): ttyopen, ttychars, ttyclose, ioctl (system call 54),
+ * ttioccomm, wflushtty, flushtty, ttyinput (with ttyretype, ttyecho, ttywipe, zapc), ttybit, ttyspcl, ttyblock, ttyoutput, ttrstrt,
+ * ttstart, ttread, ttwrite, and the tables maptab, cchars, wchars (8C9A..8D3A).
  *
- * Origin:   partial
- * Source:   Line discipline usr/sys/dev/tty.c of the TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources;
- *           not the author): the tables are byte-identical (ttylcmap = maptab[128], ttyctl = cchars[16], ttyword = wchars[16]), the
- *           flow (ttyinput page switch ^P, ^R CRETYPE, ^W CWORD, XLITRL, SCOPE erase; ttyoutput page limit and LCASE pairs; ttread,
- *           ttwrite XPAGE2; ioctl codes TIOCSETA/TIOCGETA 0x740B/0x740C, TIOCNRD 0x740F, TIOCFLUSH 0x7410, TIOCSETC/TIOCGETC
- *           0x7411/0x7412) and the flag values agree; struct tty (h/tty.h) agrees up to t_line +34.  Spencer V7 and System III
- *           tty.c are far less similar (17..34%).  Which unknown source the collection itself used is open (doc/herkunft/fremd.md 5, 8).
- *           Name mapping MUTOS = collection: ttywipe = ttyrub, ttyretype = ttycol, zapc = unputc, ttybit = bitset, ttyspcl = ttyspec,
- *           ttyblock = ttflow, ttstart = ttkick, ttychars = ttinit, ttioccomm = ttioctl, wflushtty = ttywait, flushtty = ttyflush.
- *           (The names in this file are the ones assigned earlier: V7 / System III names, and ttycol / ttyecho / ttyrub / unputc and the
- *           table names freely; the mapping is a comment only, code and function names are unchanged on purpose.)
- * Evidence: measured with tools/herkunft/herkunft.py (level abs): file similarity 43% against the collection tty.c (55% with the
- *           name mapping), 17..34% against all other trees; tables compared byte by byte (doc/herkunft/fremd.md 5.1).
- * Roundtrip: not in rundlauf_soll.txt (the module is not part of the per-module round trip); covered by the full build.
- * Deviations: not yet compared function by function; recommended order and expected deviations in doc/herkunft/fremd.md 5.3.
+ * Origin:   complete
+ * Source:   usr/sys/dev/tty.c of the TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the author;
+ *           SHA-256 0271a7fab1fa668b13d0f577013fdcd60c28d08ff1a2a4a2c8d23cff81baf937), preprocessor resolved as in conf/m.h: DELTAB
+ *           defined (set in the source itself), MX, SGTTY, INSTRM undefined (so stty / gtty and the multiplexor and instrumentation
+ *           parts are absent; the commented-out ttyrend is left out).  Function names, variable names, macros (iscntrl, isspcl,
+ *           isupper, isword, max, ubyte), the tables and the comments are those of the collection; the headers are h/tty.h (struct tty,
+ *           struct tc, constants of usr/include/sys/tty.h of the collection) and h/conf.h (linesw with the V7 names).
+ *           Earlier versions of this file had names assigned freely when the code was decompiled (ttinit, ttioctl, ttywait, ttyflush,
+ *           ttycol, ttyrub, unputc, bitset, ttyspec, ttflow, ttkick): mapping in doc/herkunft/tty2.md.
+ * Evidence: tables compared byte by byte (doc/herkunft/fremd.md 5.1); round trip per function with the original MUTOS toolchain
+ *           (tools/herkunft/rundlauf.sh, doc/herkunft/tty2.md): 16 of 20 functions byte-identical to mutos_1216 with the text of the
+ *           collection (the earlier decompiled form: 12 of 20); the other four differ by Kernel-c2 properties, see Deviations.
+ * Roundtrip: cc -O in the guest, per function against mutos_1216; expected results in doc/herkunft/daten/rundlauf_soll.txt; the full
+ *           build (tools/kernel/gesamtbau.py) checks the whole kernel.
+ * Deviations: (1) MUTOS: CBSIZE 14 / CROUND 017 (16-byte clist blocks, as in ureg.c / pipe.c) and EXCLOSE 01 are defined here;
+ *           nldisp is a variable of conf.c at 8882 (it was called cf_x882).  (2) Not byte-identical, text unchanged: ttioccomm
+ *           (the old compiler uses "jr ne" for the error branch of TIOCSETA, ours "jp ne": one word more, the rest shifted),
+ *           ttyinput (the old compiler omits the load before "t_xstate ^= XPAGE": one word less in the kernel, the rest shifted),
+ *           ttyretype and ttread (one word: "cp r3,#0377" in the kernel, "cp r2,#0377" here, after "ld r2,r3").  The decompiled
+ *           form did no better (ttioctl 181, ttycol 1 word; ttyinput 348 and ttread 119 words differ).
+ * Handassembler: nothing here.
  *
- * The jump tables of the switch statements (8D3A ttioctl, 8D46 ttyoutput) are generated by the compiler itself (hash over
- * cmd % 6 and a dense table). */
+ * The jump tables of the switch statements (ttioccomm, ttyoutput) and the string of ttyoutput are generated by the compiler itself. */
 
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
-#include "inode.h"
-#include "proc.h"
-#include "file.h"
-#include "conf.h"
 #include "tty.h"
+#include "proc.h"
+#include "inode.h"
+#include "file.h"
+#include "reg.h"
+#include "conf.h"
+
+/* MUTOS: CBSIZE / CROUND are those of the MUTOS clist block (16 bytes, c_info[14]; ureg.c / pipe.c), EXCLOSE is in user.h of the collection. */
+#define	CBSIZE	14
+#define	CROUND	017
+#define	EXCLOSE	01
 
 struct cblock {
-	struct cblock	*c_next;
-	char		c_info[14];
-};
-extern struct cblock *cfreelist;	/* D266 */
-extern int cf_x882;			/* 8882 (conf.c): Zahl der Leitungsdisziplinen */
-extern char ttylcpr[];
-
-/* Tabellen (Datenbereich 8C9A..8D2A): Eingabeabbildung bei LCASE (Paritaetsbit 0x80 darin, Maske 0177 benutzt), Steuerzeichen (Bitmenge), Wortzeichen */
-char ttylcmap[128] = {
-	0x00, 0x80, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x80, 0x00, 0x00, 0x80, 0x00, 0x80, 0x80, 0x00,
-	0x80, 0x00, 0x00, 0x80, 0x00, 0x80, 0x80, 0x00,
-	0x00, 0x80, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x80, 0x7C, 0x00, 0x80, 0x00, 0x80, 0x80, 0x60,
-	0x7B, 0xFD, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x00, 0x80, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x80, 0x00, 0x00, 0x80, 0x00, 0x80, 0x80, 0x00,
-	0x80, 0x00, 0x00, 0x80, 0x00, 0x80, 0x80, 0x00,
-	0x00, 0x80, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x00, 0x80, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80,
-	0x80, 0x00, 0x00, 0x80, 0x5C, 0x80, 0xFE, 0x00,
-	0x00, 0xC1, 0xC2, 0x43, 0xC4, 0x45, 0x46, 0xC7,
-	0xC8, 0x49, 0x4A, 0xCB, 0x4C, 0xCD, 0xCE, 0x4F,
-	0xD0, 0x51, 0x52, 0xD3, 0x54, 0xD5, 0xD6, 0x57,
-	0x58, 0xD9, 0xDA, 0x00, 0x80, 0x00, 0x00, 0x80,
-};
-char ttyctl[16] = {
-	0x7F, 0xC0, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
-};
-char ttyword[16] = {
-	0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0xFF, 0x03,
-	0xFE, 0xFF, 0xFF, 0x07, 0xFE, 0xFF, 0xFF, 0x07,
+	struct cblock *c_next;
+	char	c_info[CBSIZE];
 };
 
+/*
+ * Input mapping table-- if an entry is non-zero, when the
+ * corresponding character is typed preceded by '\', the escape
+ * sequence is replaced by the table value.  Mostly used for
+ * upper-case only terminals.
+ * The lower-case representation is also or-ed with the parity bit.
+ */
+#define P	0200
 
-#define ASLEEP	0x40
+char maptab[] = {
+    0,     P,     P,     0,     P,     0,     0,     P,
+    P,     0,     0,     P,     0,     P,     P,     0,
+    P,     0,     0,     P,     0,     P,     P,     0,
+    0,     P,     P,     0,     P,     0,     0,     P,
+    P,   '|',     0,     P,     0,     P,     P,   '`',
+  '{', P+'}',     P,     0,     P,     0,     0,     P,
+    0,     P,     P,     0,     P,     0,     0,     P,
+    P,     0,     0,     P,     0,     P,     P,     0,
+    P,     0,     0,     P,     0,     P,     P,     0,
+    0,     P,     P,     0,     P,     0,     0,     P,
+    0,     P,     P,     0,     P,     0,     0,     P,
+    P,     0,     0,     P,  '\\',     P, P+'~',     0,
+    0, P+'A', P+'B',   'C', P+'D',   'E',   'F', P+'G',
+P+'H',   'I',   'J', P+'K',   'L', P+'M', P+'N',   'O',
+P+'P',   'Q',   'R', P+'S',   'T', P+'U', P+'V',   'W',
+  'X', P+'Y', P+'Z',     0,     P,     0,     0,     P
+};
 
+/*
+ * cchars is used to  determine which characters
+ * are non-printing (^G is printing).  Non-printing
+ * characters can be echoed as a pair of printing characters.
+ */
+char cchars[] = {
+	0177, 0300, 0377, 0377,    0,    0,    0,    0,
+	   0,    0,    0,    0,    0,    0,    0, 0200
+};
+
+/*
+ * wchars is used to determine whether a character is
+ * alphanumeric, and therefore part of a word.
+ */
+char wchars[] = {
+	   0,    0,    0,    0, 0200,    0, 0377,   03,
+	0376, 0377, 0377,   07, 0376, 0377, 0377,   07
+};
+
+#define iscntrl(c)	(ttybit(cchars, c))
+#define isspcl(c)	(ttyspcl(c, tp))
+#define isupper(c)	('A' <= c && c <= 'Z')
+#define isword(c)	(ttybit(wchars, c))
+#define max(a, b)	((a) > (b) ? (a): (b))
+#define ubyte(c)	((c)&0377)
+
+#define DELTAB		/* on-screen deletion of tabs if both SCOPE and XTABS */
+
+/*
+ * routine called on first teletype open.
+ * establishes a process group for distribution
+ * of quits and interrupts from the tty.
+ */
 /* KERNEL 6D44 */
 ttyopen(dev, tp)
 dev_t dev;
@@ -79,10 +117,10 @@ register struct tty *tp;
 
 	pp = u.u_procp;
 	tp->t_dev = dev;
-	if (pp->p_pgrp == 0) {
+	if(pp->p_pgrp == 0){
 		u.u_ttyp = tp;
 		u.u_ttyd = dev;
-		if (tp->t_pgrp == 0)
+		if(tp->t_pgrp == 0)
 			tp->t_pgrp = pp->p_pid;
 		pp->p_pgrp = tp->t_pgrp;
 	}
@@ -90,60 +128,72 @@ register struct tty *tp;
 	tp->t_state |= ISOPEN;
 }
 
+/*
+ * set default control characters
+ * and sizes
+ */
 /* KERNEL 6D8C */
-ttinit(tp)
+ttychars(tp)
 register struct tty *tp;
 {
-	tp->t_intrc = 03;
-	tp->t_quitc = 034;
-	tp->t_startc = 021;
-	tp->t_stopc = 023;
-	tp->t_eofc = 032;
-	tp->t_brkc = 0377;
-	tp->t_erase = 0177;
-	tp->t_kill = 025;
+	tun.t_intrc = CINTR;
+	tun.t_quitc = CQUIT;
+	tun.t_startc = CSTART;
+	tun.t_stopc = CSTOP;
+	tun.t_eofc = CEOT;
+	tun.t_brkc = CBRK;
+	tp->t_erase = CERASE;
+	tp->t_kill = CKILL;
 	tp->t_width = 0;
-	tp->t_page = 0;
+	tp->t_length = 0;
 }
 
+/*
+ * clean tp on last close
+ */
 /* KERNEL 6DD0 */
 ttyclose(tp)
 register struct tty *tp;
 {
 	tp->t_pgrp = 0;
-	ttywait(tp);
+	wflushtty(tp);
 	tp->t_state = 0;
-	tp->t_lstate = 0;
+	tp->t_xstate = 0;
 }
 
-struct a {
-	int	fdes;
-	int	cmd;
-	caddr_t	cmarg;
-};
 
+/*
+ * ioctl system call
+ * Check legality, execute common code, and switch out to individual
+ * device routine.
+ */
 /* KERNEL 6DF0 */
 ioctl()
 {
 	register struct file *fp;
 	register struct inode *ip;
-	register struct a *uap;
-	register dev, fmt;
+	register struct a {
+		int	fdes;
+		int	cmd;
+		caddr_t	cmarg;
+	} *uap;
+	register dev_t dev;
+	register fmt;
 
 	uap = (struct a *)u.u_ap;
-	if ((fp = getf(uap->fdes)) == NULL)
+	if((fp = getf(uap->fdes)) == NULL)
 		return;
-	if (uap->cmd == 0x6601) {
-		u.u_pofile[uap->fdes] |= 1;
+	if(uap->cmd == FIOCLEX){
+		u.u_pofile[uap->fdes] |= EXCLOSE;
 		return;
 	}
-	if (uap->cmd == 0x6602) {
-		u.u_pofile[uap->fdes] &= ~1;
+	if(uap->cmd == FIONCLEX){
+		u.u_pofile[uap->fdes] &= ~EXCLOSE;
 		return;
 	}
 	ip = fp->f_inode;
-	fmt = ip->i_mode & 0xF000;
-	if (fmt != 0x2000 && fmt != 0x3000) {
+	fmt = ip->i_mode&IFMT;
+	if(fmt != IFCHR && fmt != IFMPC){
 		u.u_error = ENOTTY;
 		return;
 	}
@@ -151,516 +201,583 @@ ioctl()
 	(*cdevsw[major(dev)].d_ioctl)(dev, uap->cmd, uap->cmarg, fp->f_flag);
 }
 
+/*
+ * Common code for several tty ioctl commands
+ */
+/* MUTOS: text of the collection; differs in the object code, see the header: ttioccomm: one "jp ne" where the kernel has "jr ne" (TIOCSETA), later code shifted by one word */
 /* KERNEL 6E7A */
-ttioctl(com, tp, arg, flag)
+ttioccomm(com, tp, addr, dev)
 register struct tty *tp;
-caddr_t arg;
+caddr_t addr;
 {
-	register x;
-	register char *q;
-	unsigned a;
+	unsigned t;
+	register n;
+	extern int nldisp;
+	struct	sttiocb {
+		char	ioc_ispeed;
+		char	ioc_ospeed;
+		char	ioc_erase;
+		char	ioc_kill;
+		short	ioc_flags;
+	};
 
-	switch (com) {
-
-	case 0x7400:
-		a = tp->t_line;
-		if (copyout((caddr_t)&a, arg, 2))
+	switch(com){
+	/*
+	 * get discipline number
+	 */
+	case TIOCGETD:
+		t = tp->t_line;
+		if(copyout((caddr_t)&t, addr, sizeof(t)))
 			u.u_error = EFAULT;
-		return(1);
-
-	case 0x7401:
-		if (copyin(arg, (caddr_t)&a, 2)) {
+		break;
+	/*
+	 * set line discipline
+	 */
+	case TIOCSETD:
+		if(copyin(addr, (caddr_t)&t, sizeof(t))){
 			u.u_error = EFAULT;
-			return(1);
+			break;
 		}
-		if (a >= cf_x882) {
+		if(t >= nldisp){
 			u.u_error = ENXIO;
-			return(1);
+			break;
 		}
-		if (tp->t_line)
+		if(tp->t_line)
 			(*linesw[tp->t_line].l_close)(tp);
-		if (a)
-			(*linesw[a].l_open)(flag, tp, arg);
-		if (u.u_error)
-			return(1);
-		tp->t_line = a;
-		return(1);
-
-	case 0x740D:
+		if(t)
+			(*linesw[t].l_open)(dev, tp, addr);
+		if(u.u_error == 0)
+			tp->t_line = t;
+		break;
+	/*
+	 * prevent more opens on channel
+	 */
+	case TIOCEXCL:
 		tp->t_state |= XCLUDE;
-		return(1);
-
-	case 0x740E:
+		break;
+	case TIOCNXCL:
 		tp->t_state &= ~XCLUDE;
-		return(1);
-
-	case 0x7409:
-		ttywait(tp);
-	case 0x740A:
-		if (copyin(arg, (caddr_t)&tp->t_x16, 6))
-			u.u_error = EFAULT;
-		return(1);
-
-	case 0x7408:
-		if (copyout((caddr_t)&tp->t_x16, arg, 6))
-			u.u_error = EFAULT;
-		return(1);
-
-	case 0x740B:
-		ttywait(tp);
-		x = tp->t_page;
-		if (copyin(arg, (caddr_t)&tp->t_x16, 12)) {
+		break;
+	/*
+	 * Set new parameters
+	 */
+	case TIOCSETP:
+		wflushtty(tp);
+	case TIOCSETN:
+		if(copyin(addr, (caddr_t)&tp->t_ispeed, sizeof(struct sttiocb))){
 			u.u_error = EFAULT;
 			return(1);
 		}
-		tp->t_page &= 0177;
-		if (tp->t_page != x) {
-			if (tp->t_page)
-				tp->t_lstate |= 1;
+		break;
+	/*
+	 * send current parameters to user
+	 */
+	case TIOCGETP:
+		if(copyout((caddr_t)&tp->t_ispeed, addr, sizeof(struct sttiocb)))
+			u.u_error = EFAULT;
+		break;
+	/*
+	 * Set all new parameters
+	 */
+	case TIOCSETA:
+		wflushtty(tp);
+		n = tp->t_length;
+		if(copyin(addr, (caddr_t)&tp->t_ispeed, sizeof(struct ttiocb))){
+			u.u_error = EFAULT;
+			return(1);
+		}
+		if((tp->t_length &= 0177) != n){
+			if(tp->t_length)
+				tp->t_xstate |= XPAGE;
 			else
-				tp->t_lstate &= ~1;
-			tp->t_cnt2c = 0;
+				tp->t_xstate &= ~XPAGE;
+			tp->t_lnum = 0;
 		}
-		return(1);
-
-	case 0x740C:
-		if (copyout((caddr_t)&tp->t_x16, arg, 12))
+		break;
+	/*
+	 * Send all current parameters to user
+	 */
+	case TIOCGETA:
+		if(copyout((caddr_t)&tp->t_ispeed, addr, sizeof(struct ttiocb)))
 			u.u_error = EFAULT;
-		return(1);
+		break;
+	/*
+	 * Hang up line on last close
+	 */
+	case TIOCHPCL:
+		tp->t_state |= HUPCLS;
+		break;
+	case TIOCNRD:
+		t = 0;
+		if(tp->t_flags&(RAW|CBREAK))
+			t = tp->t_rawq.c_cc;
+		else if(tp->t_delct) {
+			register char *cp;
 
-	case 0x7402:
-		tp->t_state |= 0x200;
-		return(1);
-
-	case 0x740F:
-		a = 0;
-		if (tp->t_flags & (RAW|CBREAK))
-			a = tp->t_inq.c_cc;
-		else if (tp->t_delct) {
-			q = tp->t_inq.c_cf;
-			while ((*q++ & 0377) != 0377)
-				a++;
+			cp = tp->t_rawq.c_cf;
+			while(ubyte(*cp++) != 0377)
+				t++;
 		}
-		if (copyout((caddr_t)&a, arg, 2))
+		if(copyout((caddr_t)&t, addr, sizeof(t)))
 			u.u_error = EFAULT;
-		return(1);
-
-	case 0x7410:
-		ttyflush(tp);
-		return(1);
-
-	case 0x6408:
-	case 0x6409:
-		(*linesw[tp->t_line].l_ioctl)(com, tp, arg);
-		return(1);
-
-	case 0x7411:
-		if (copyin(arg, (caddr_t)&tp->t_intrc, 6))
+		break;
+	case TIOCFLUSH:
+		flushtty(tp);
+		break;
+	/*
+	 * ioctl entries to line discipline
+	 */
+	case DIOCSETP:
+	case DIOCGETP:
+		(*linesw[tp->t_line].l_ioctl)(com, tp, addr);
+		break;
+	/*
+	 * set and fetch special characters
+	 */
+	case TIOCSETC:
+		if(copyin(addr, (caddr_t)&tun, sizeof(struct tc)))
 			u.u_error = EFAULT;
-		return(1);
-
-	case 0x7412:
-		if (copyout((caddr_t)&tp->t_intrc, arg, 6))
+		break;
+	case TIOCGETC:
+		if(copyout((caddr_t)&tun, addr, sizeof(struct tc)))
 			u.u_error = EFAULT;
-		return(1);
+		break;
+	default:
+		return(0);
 	}
-	return(0);
+	return(1);
 }
 
+/*
+ * Wait for output to drain, then flush input waiting.
+ */
 /* KERNEL 715C */
-ttywait(tp)
+wflushtty(tp)
 register struct tty *tp;
 {
 	spl5();
-	while (tp->t_outq.c_cc && (tp->t_state & CARR_ON)) {
+	while (tp->t_outq.c_cc && tp->t_state&CARR_ON){
 		(*tp->t_oproc)(tp);
 		tp->t_state |= ASLEEP;
-		sleep(&tp->t_outq, 29);
+		sleep((caddr_t)&tp->t_outq, TTOPRI);
 	}
-	ttyflush(tp);
+	flushtty(tp);
 	spl0();
 }
 
+/*
+ * flush all TTY queues
+ */
 /* KERNEL 71A4 */
-ttyflush(tp)
+flushtty(tp)
 register struct tty *tp;
 {
 	register s;
 
-	wakeup(tp);
-	wakeup(&tp->t_outq);
+	wakeup((caddr_t)&tp->t_rawq);
+	wakeup((caddr_t)&tp->t_outq);
 	s = spl6();
-	tp->t_state &= ~0x100;
-	tp->t_lstate &= ~0x1E;
+	tp->t_state &= ~TTSTOP;
+	tp->t_xstate &= ~(XPAGE1|XPAGE2|XLITRL|XERASE);
 	(*cdevsw[major(tp->t_dev)].d_stop)(tp);
-	while (getc(&tp->t_outq) >= 0)
-		;
-	while (getc(tp) >= 0)
-		;
+	while(getc(&tp->t_outq) >= 0);
+	while(getc(&tp->t_rawq) >= 0);
 	tp->t_delct = 0;
-	tp->t_cnt2c = 0;
+	tp->t_lnum = 0;
 	splx(s);
 }
 
+/*
+ * Place a character on TTY input queue, putting in delimiters
+ * and waking up top half as needed.
+ * Also do erase, kill processing, and echo if required.
+ * The arguments are the character and the appropriate
+ * tty structure.
+ */
+/* MUTOS: text of the collection; differs in the object code, see the header: ttyinput: the kernel has no load before "t_xstate ^= XPAGE" (c2), later code shifted by one word */
 /* KERNEL 7222 */
 ttyinput(c, tp)
 register c;
 register struct tty *tp;
 {
-	register flg;
+	register int t_flags;
 
 	c &= 0377;
-	if ((tp->t_flags & RAW) == 0)
+	if((tp->t_flags&RAW) == 0)
 		c &= 0177;
-	flg = tp->t_flags;
-	if (flg & TANDEM)
-		ttflow(tp);
-	if ((flg & RAW) == 0 || (flg & (RAW|CBREAK)) == (RAW|CBREAK)) {
-		if (tp->t_state & 0x100) {
-			if (tp->t_startc == c) {
-				tp->t_state &= ~0x100;
-				goto kick;
-			}
-			if (tp->t_stopc == c)
+	t_flags = tp->t_flags;
+	if(t_flags&TANDEM)
+		ttyblock(tp);
+	if((t_flags&RAW) == 0 || (t_flags&(RAW|CBREAK)) == (RAW|CBREAK)){
+		if(tp->t_state&TTSTOP){
+			if(c == tun.t_startc){
+				tp->t_state &= ~TTSTOP;
+				ttstart(tp);
 				return;
-			tp->t_state &= ~0x100;
-			ttkick(tp);
+			}
+			if(c == tun.t_stopc)
+				return;
+			tp->t_state &= ~TTSTOP;
+			ttstart(tp);
 		} else {
-			if (tp->t_stopc == c) {
-				tp->t_state |= 0x100;
+			if(c == tun.t_stopc){
+				tp->t_state |= TTSTOP;
 				(*cdevsw[major(tp->t_dev)].d_stop)(tp);
 				return;
 			}
-			if (tp->t_startc == c)
+			if(c == tun.t_startc)
 				return;
 		}
 	}
-	if (flg & RAW)
-		goto store;
-	if (tp->t_lstate & 8) {
-		tp->t_lstate &= ~8;
-		if ((flg & LCASE) && (ttylcmap[c] & 0177)) {
-			c = ttylcmap[c];
-			c &= 0177;
-			goto put;
-		}
-		if (ttyspec(c, tp))
-			goto put;
-		putc('\\', tp);
-	}
-	if (c == 0x10 && tp->t_page) {
-		tp->t_lstate ^= 1;
-		if ((tp->t_lstate & 2) == 0)
-			goto echo;
-	}
-	if (tp->t_lstate & 2) {
-		tp->t_lstate &= ~6;
-		if (c == '\r' || c == '\n')
-			tp->t_cnt2c = tp->t_page - 1;
-		else
-			tp->t_cnt2c = 0;
-		if (c != tp->t_quitc && c != tp->t_intrc)
-			goto kick;
-	}
-	if (c == tp->t_quitc || c == tp->t_intrc) {
-		ttyflush(tp);
-		c = (tp->t_intrc == c) ? SIGINT : SIGQUIT;
-		signal(tp->t_pgrp, c);
-		ttyecho('\n', tp);
-		goto kick;
-	}
-	if ((flg & CBREAK) == 0) {
-		if (c == tp->t_erase) {
-			if (bitset(ttyctl, c)) {
-				ttyrub(unputc(tp), tp);
-				goto kick;
+	if((t_flags&RAW) == 0){
+		if(tp->t_xstate&XLITRL){
+			tp->t_xstate &= ~XLITRL;
+			if((t_flags&LCASE) && (maptab[c]&0177))
+				c = maptab[c]&0177;
+			else if(!isspcl(c)){
+				putc('\\', &tp->t_rawq);
+				goto contin;
 			}
-			unputc(tp);
-			goto echo;
+			putc(c, &tp->t_rawq);
+			goto out2;
+		contin:;
 		}
-		if (c == tp->t_kill) {
-			if ((flg & 0x100) && bitset(ttyctl, c)) {
-				for (;;) {
-					c = unputc(tp);
-					if (c < 0)
-						goto kick;
-					if ((tp->t_col & 0377) > 0)
-						ttyrub(c, tp);
+		if((c == CPAGE) && tp->t_length){
+			tp->t_xstate ^= XPAGE;
+			if((tp->t_xstate&XPAGE1) == 0)
+				goto out2;
+		}
+		if(tp->t_xstate&XPAGE1){
+			tp->t_xstate &= ~(XPAGE1|XPAGE2);
+			if(c == '\r' || c == '\n')
+				tp->t_lnum = tp->t_length-1;
+			else
+				tp->t_lnum = 0;
+			if(c != tun.t_quitc && c != tun.t_intrc)
+				goto out3;
+		}
+		if(c == tun.t_quitc || c == tun.t_intrc){
+			flushtty(tp);
+			c = (c == tun.t_intrc) ? SIGINT:SIGQUIT;
+				signal(tp->t_pgrp, c);
+				ttyecho('\n', tp);
+				ttstart(tp);
+			return;
+		}
+		if(t_flags&CBREAK)
+			goto out0;
+		if(c == tp->t_erase){
+			if(iscntrl(c)){
+				ttywipe(zapc(&tp->t_rawq), tp);
+				goto out3;
+			}
+			else {
+				zapc(&tp->t_rawq);
+				goto out2;
+			}
+		}
+		else if(c == tp->t_kill){
+			if(((t_flags&SCOPE) == 0) || (!iscntrl(c))){
+				while(zapc(&tp->t_rawq) >= 0);
+				ttyecho(c, tp);
+				ttyecho('\n', tp);
+			}
+			else {
+				while((c = zapc(&tp->t_rawq)) >= 0){
+					if(ubyte(tp->t_col) > 0)
+						ttywipe(c, tp);
 				}
 			}
-			while (unputc(tp) >= 0)
-				;
+			goto out3;
+		}
+		else if(c == tun.t_eofc){
+			ttyecho('\n', tp);
+			goto out1;
+		}
+		else if(c == '\\'){
+			tp->t_xstate |= XLITRL;
 			ttyecho(c, tp);
+			goto out3;
+		}
+		else if(c == CRETYPE){
+			if(tp->t_outq.c_cc)
+				goto out3;
 			ttyecho('\n', tp);
-			goto kick;
+			ttyretype(tp, 1);
+			goto out3;
 		}
-		if (c == tp->t_eofc) {
-			ttyecho('\n', tp);
-			goto eol;
-		}
-		if (c == '\\') {
-			tp->t_lstate |= 8;
-			ttyecho(c, tp);
-			goto kick;
-		}
-		if (c == 0x12) {
-			if (tp->t_outq.c_cc)
-				goto kick;
-			ttyecho('\n', tp);
-			ttycol(tp, 1);
-			goto kick;
-		}
-		if (c == 0x17) {
-			ttyrub(c = unputc(tp), tp);
-			if (!bitset(ttyword, c))
-				goto kick;
-			for (;;) {
-				c = unputc(tp);
-				if (!bitset(ttyword, c))
-					break;
-				ttyrub(c, tp);
+		else if(c == CWORD){
+			ttywipe((c = zapc(&tp->t_rawq)), tp);
+			if(isword(c)){
+				while(isword(c = zapc(&tp->t_rawq)))
+					ttywipe(c, tp);
+				if(c >= 0)
+					putc(c, &tp->t_rawq);
 			}
-			if (c < 0)
-				goto kick;
-			putc(c, tp);
-			goto kick;
+			goto out3;
 		}
 	}
-store:
-	if (c == '\r' && (flg & CRMOD))
+out0:
+	if(c == '\r' && (t_flags&CRMOD))
 		c = '\n';
-	if ((flg & LCASE) && c >= 'A' && c <= 'Z')
-		c += 'a' - 'A';
-	if (tp->t_inq.c_cc > 256) {
-		ttyflush(tp);
+	if((t_flags&LCASE) && isupper(c))
+		c += 'a'-'A';
+	if(tp->t_rawq.c_cc > TTYHOG){
+		flushtty(tp);
 		return;
 	}
-put:
-	putc(c, tp);
-eol:
-	if ((flg & (RAW|CBREAK)) || c == '\n' || c == tp->t_eofc || c == tp->t_brkc) {
-		if ((flg & (RAW|CBREAK)) == 0)
-			if (putc(0377, tp) == 0)
-				tp->t_delct++;
-		wakeup((caddr_t)tp);
+	putc(c, &tp->t_rawq);
+out1:
+	if((t_flags&(RAW|CBREAK)) || (c == '\n' || c == tun.t_eofc || c == tun.t_brkc)){
+		if((t_flags&(RAW|CBREAK)) == 0 && putc(0377, &tp->t_rawq) == 0)
+			tp->t_delct++;
+			wakeup((caddr_t)&tp->t_rawq);
 	}
-echo:
-	if (ttyecho(c, tp) == 0)
+out2:
+	if(ttyecho(c, tp) == 0)
 		return;
-kick:
-	ttkick(tp);
+out3:
+	ttstart(tp);
 }
 
-/* KERNEL 75B2 -- Spalte am Ende der Eingabe berechnen (f = 1: dabei das Eingegebene neu ausgeben) */
-ttycol(tp, f)
+/*
+ * ttyretype performs two functions:
+ *	1) print the input buffer on CRETYPE (flag = 1);
+ *	2) count the column position for tab deletion
+ *	   (flag = 0).
+ */
+/* MUTOS: text of the collection; differs in the object code, see the header: ttyretype: compare through r3 in the kernel, r2 here (one word) */
+/* KERNEL 75B2 */
+ttyretype(tp, flag)
 register struct tty *tp;
 {
-	register char *p;
-	register n, dl, w;
-	register col;
+	register char *cp;
+	register int c, n;
+	register int width, col;
 
-	p = tp->t_inq.c_cf;
-	dl = tp->t_delct;
-	w = tp->t_width ? (tp->t_width & 0377) : 0377;
+	cp = tp->t_rawq.c_cf;
+	n = tp->t_delct;
+	width = tp->t_width ? ubyte(tp->t_width): 0377;
 	col = 0;
-	n = tp->t_inq.c_cc;
-	while (n--) {
-		if (dl) {
-			if ((*p++ & 0377) == 0377)
-				dl--;
-		} else {
-			if (((tp->t_flags & LCASE) && *p >= 'A' && *p <= 'Z') || ttyspec(*p, tp)) {
-				if (f)
+	for(c = tp->t_rawq.c_cc; c--; ){
+		if(n){
+			if(ubyte(*cp++) == 0377)
+				n--;
+		}
+		else {
+			if((tp->t_flags&LCASE) && isupper(*cp) || isspcl(*cp)){
+				if(flag)
 					ttyecho('\\', tp);
 				else
 					col++;
 			}
-			if (f)
-				ttyecho(*p++, tp);
+			if(flag)
+				ttyecho(*cp++, tp);
 			else {
-				if (*p++ == '\t')
-					col += 8 - (col & 07);
+				if(*cp++ == '\t')
+					col += 8 - (col&07);
 				else
 					col++;
-				if (col >= w)
-					col -= w;
+				if(col >= width)
+					col -= width;
 			}
 		}
-		if (((int)p & 15) == 0)
-			p = ((char **)p)[-8] + 2;
+		if(((int)cp & CROUND) == 0)
+			cp = (((struct cblock *)cp) - 1)->c_next->c_info;
 	}
 	return(col);
 }
 
-/* KERNEL 769A -- Zeichen zurueckmelden (Echo) */
+/*
+ * Echo a character on the terminal.
+ * All echoed characters are only 7 bits wide.
+ */
+/* KERNEL 769A */
 ttyecho(c, tp)
 register c;
 register struct tty *tp;
 {
 	c &= 0177;
-	if ((tp->t_flags & ECHO) == 0)
+	if((tp->t_flags&ECHO) == 0 || (iscntrl(c) && (tp->t_flags&INDCTL) == 0))
 		return(0);
-	if (bitset(ttyctl, c) && (tp->t_flags & 0x200) == 0)
-		return(0);
-	if (tp->t_lstate & 0x10) {
-		tp->t_lstate &= ~0x10;
+	if(tp->t_xstate&XERASE){
+		tp->t_xstate &= ~XERASE;
 		ttyoutput(']', tp);
 	}
-	if ((tp->t_flags & LCASE) && c >= 'A' && c <= 'Z')
-		c += 'a' - 'A';
-	if (c == '\n' && (tp->t_lstate & 1) && (tp->t_flags & RAW) == 0 && tp->t_cnt2c)
-		tp->t_cnt2c--;
+	if((tp->t_flags&LCASE) && isupper(c))
+		c += 'a'-'A';
+	/*
+	 * kludge for paging - yuck
+	 */
+	if((c == '\n') && (tp->t_xstate&XPAGE) && ((tp->t_flags&RAW) == 0)){
+		if(tp->t_lnum > 0)
+			tp->t_lnum--;
+	}
 	ttyoutput(c, tp);
 	return(1);
 }
 
-/* KERNEL 772E -- Zeichen auf dem Bildschirm loeschen (Rubout, CRT-Form) */
-ttyrub(c, tp)
+/*
+ * indicate the deletion of a character
+ * on the terminal
+ */
+/* KERNEL 772E */
+ttywipe(c, tp)
 register c;
 register struct tty *tp;
 {
-	register n;
+	if((tp->t_flags&ECHO) == 0)
+		return;
+	if(c < 0){
+		ttyoutput(CBELL, tp);
+		return;
+	}
+	if(tp->t_flags&SCOPE){
+		register n = 1;
 
-	if ((tp->t_flags & ECHO) == 0)
-		return;
-	if (c < 0) {
-		ttyoutput(7, tp);
-		return;
-	}
-	if ((tp->t_flags & 0x100) == 0) {
-		if ((tp->t_lstate & 0x10) == 0) {
-			tp->t_lstate |= 0x10;
-			ttyoutput('[', tp);
+		if(iscntrl(c)){
+			n = 0;
+			if(tp->t_flags&INDCTL)
+				n = 2;
+			if(isspcl(c))
+				n++;
 		}
-		ttyoutput(c, tp);
-		return;
-	}
-	n = 1;
-	if (bitset(ttyctl, c)) {
-		n = 0;
-		if (tp->t_flags & 0x200)
-			n = 2;
-		if (ttyspec(c, tp))
-			n++;
-	} else if (c == '\t') {
-		n = ttycol(tp, 0);
-		if (n) {
-			n = (tp->t_col & 0377) - ((tp->t_dtab & 0377) >= n ? (tp->t_dtab & 0377) : n);
-		} else {
-			n = (tp->t_col & 0377) - (tp->t_dtab & 0377);
-			if (n == 0)
+		else if(c == '\t'){
+			if(n = ttyretype(tp, 0))
+				n = ubyte(tp->t_col) - max(n,ubyte(tp->t_htdly));
+			else if((n = ubyte(tp->t_col) - ubyte(tp->t_htdly)) == 0)
 				n = 8;
+			if(ubyte(tp->t_htdly) >= (ubyte(tp->t_col) - n))
+				tp->t_htdly = 0;
 		}
-		if ((tp->t_dtab & 0377) >= (tp->t_col & 0377) - n)
-			tp->t_dtab = 0;
-	} else if (tp->t_flags & LCASE) {
-		if ((c >= 'A' && c <= 'Z') || c == '`' || c >= '{')
-			n++;
-	}
-	if (n < 0 || (tp->t_col & 0377) < n) {
-		ttyoutput('\n', tp);
-		ttycol(tp, 1);
+		else if(tp->t_flags&LCASE){
+			if(isupper(c) || c == '`' || c >= '{')
+				n++;
+		}
+		if((n < 0) || (n > ubyte(tp->t_col))) {
+			/* if(tp->t_col) */
+				ttyoutput('\n',tp);
+			ttyretype(tp,1);
+		}
+		else
+		while(n--){
+			ttyoutput('\b', tp);
+			ttyoutput(' ', tp);
+			ttyoutput('\b', tp);
+		}
 		return;
 	}
-	while (n--) {
-		ttyoutput('\b', tp);
-		ttyoutput(' ', tp);
-		ttyoutput('\b', tp);
+	if((tp->t_xstate&XERASE) == 0){
+		tp->t_xstate |= XERASE;
+		ttyoutput('[', tp);
 	}
+	ttyoutput(c, tp);
 }
 
-/* KERNEL 78A8 -- letztes Zeichen aus der Zeichenliste nehmen (-1, wenn leer oder Zeilenende) */
-unputc(p)
-register struct clist *p;
+/*
+ * remove a character from the end of
+ * a queue, unless it is a delimeter
+ */
+/* KERNEL 78A8 */
+zapc(q)
+register struct clist *q;
 {
+	extern struct cblock *cfreelist;
 	register struct cblock *bp;
 	register char *cp;
-	register c, s;
+	register int c, s;
 
 	s = spl6();
-	if ((cp = p->c_cl) == 0 || (c = *--cp & 0377) == 0377) {
+	if(((cp = q->c_cl) == NULL) || ((c = ubyte(*--cp)) == 0377)){
 		splx(s);
 		return(-1);
 	}
-	p->c_cl = cp;
-	cp -= 2;
-	if (--p->c_cc <= 0) {
-		bp = (struct cblock *)((int)cp & ~15);
-		p->c_cf = p->c_cl = 0;
+	q->c_cl = cp;
+	cp -= sizeof(char *);
+	if(--q->c_cc <= 0){
+		bp = (struct cblock *) ((int) cp & ~CROUND);
+		q->c_cf = q->c_cl = NULL;
 		bp->c_next = cfreelist;
 		cfreelist = bp;
-	} else if (((int)cp & 15) == 0) {
-		bp = (struct cblock *)cp;
+	}
+	else if(((int) cp & CROUND) == 0){
+		bp = (struct cblock *) cp;
 		bp->c_next = cfreelist;
 		cfreelist = bp;
-		bp = (struct cblock *)((int)p->c_cf & ~15);
-		while (bp->c_next != (struct cblock *)cp)
+		bp = (struct cblock *) q->c_cf;
+		bp = (struct cblock *) ((int) bp & ~CROUND);
+		while(bp->c_next != (struct cblock *) cp)
 			bp = bp->c_next;
-		bp->c_next = 0;
-		p->c_cl = (char *)bp + 16;
+		bp->c_next = NULL;
+		q->c_cl = &bp->c_info[CBSIZE];
 	}
 	splx(s);
 	return(c);
 }
 
+/*
+ * ttybit returns non-zero if the bit in the area is set
+ */
 /* KERNEL 7948 */
-bitset(map, n)
-char *map;
-register n;
+ttybit(area, bit)
+char *area;
+register int bit;
 {
-	if (n < 0)
-		return(0);
-	return(map[n >> 3] & (1 << (n & 7)));
+	return(bit < 0 ? 0: area[bit >> 3]&(1 << (bit&07)));
 }
 
+/*
+ * Check if this is one of the special characters.
+ */
 /* KERNEL 797A */
-ttyspec(c, tp)
+ttyspcl(c, tp)
 register c;
 register struct tty *tp;
 {
-	register char *p;
-	register unsigned i;
+	register char *cp;
+	register n;
 
-	if (c < 0)
+	if(c < 0)
 		return(0);
-	p = &tp->t_intrc;
-	for (i = 0; i < 6; i++)
-		if (*p++ == c)
+	for(cp = &tun.t_intrc, n = 0; n < sizeof(struct tc); n++){
+		if(c == *cp++)
 			return(1);
-	if (tp->t_erase == c)
-		return(1);
-	if (tp->t_kill == c)
-		return(1);
-	switch (c) {
-	case 0x10:
-		if (tp->t_page == 0)
-			break;
-	case 0x12:
-	case 0x17:
-		return(1);
 	}
+	if((c == tp->t_erase) || (c == tp->t_kill))
+		return(1);
+	if((c == CRETYPE) || (c == CWORD) || ((c == CPAGE) && tp->t_length))
+		return(1);
 	return(0);
 }
 
+/*
+ * Send stop character on input overflow.
+ */
 /* KERNEL 79E0 */
-ttflow(tp)
+ttyblock(tp)
 register struct tty *tp;
 {
-	register n;
-
-	n = tp->t_inq.c_cc;
-	if (n > 0x100) {
-		ttyflush(tp);
-		tp->t_state &= ~0x400;
+	register x;
+	x = tp->t_rawq.c_cc;
+	if(x > TTYHOG){
+		flushtty(tp);
+		tp->t_state &= ~TBLOCK;
 	}
-	if (n >= 0x80 && (tp->t_state & 0x400) == 0) {
-		if (putc(tp->t_stopc, &tp->t_outq) == 0) {
-			tp->t_state |= 0x400;
-			ttkick(tp);
+	if((x >= TTYHOG/2) && ((tp->t_state&TBLOCK) == 0)) {
+		if(putc(tun.t_stopc, &tp->t_outq) == 0){
+			tp->t_state |= TBLOCK;
+			ttstart(tp);
 		}
 	}
 }
 
+/*
+ * put character on TTY output queue, adding delays,
+ * expanding tabs, and handling the CR/NL bit.
+ * It is called both from the top half for output, and from
+ * interrupt level for echoing.
+ * The arguments are the character and the tty structure.
+ */
 /* KERNEL 7A34 */
 ttyoutput(c, tp)
 register c;
@@ -668,34 +785,49 @@ register struct tty *tp;
 {
 	register char *colp;
 
-	if (c == '\n' && (tp->t_flags & CRMOD))
+	/*
+	 * Turn <nl> to <cr><lf> if desired.
+	 */
+	if(c == '\n' && (tp->t_flags&CRMOD))
 		ttyoutput('\r', tp);
-	if ((tp->t_flags & RAW) == 0) {
+	if((tp->t_flags&RAW) == 0){
 		c &= 0177;
-		if ((tp->t_flags & 0x200) && bitset(ttyctl, c)) {
+		/*
+		 * Print control characters as ^<char+0140>.
+		 */
+		if((tp->t_flags&INDCTL) && iscntrl(c)){
 			ttyoutput('^', tp);
-			if (c == 0177)
+			if(c == 0177)
 				c = '#';
 			else
 				c |= 0140;
 		}
-		if (tp->t_page && (tp->t_lstate & 1)) {
-			if ((c == '\n' && ++tp->t_cnt2c >= tp->t_page) || c == '\f') {
-				tp->t_cnt2c = 0;
-				tp->t_lstate |= 4;
+		/*
+		 * Whoa there Trigger! - it's a page boundary
+		 */
+		if(tp->t_length && (tp->t_xstate&XPAGE)){
+			if((c == '\n' && (ubyte(++(tp->t_lnum)) >= ubyte(tp->t_length))) || c == '\014'){
+				tp->t_lnum = 0;
+				tp->t_xstate |= XPAGE2;
 				putc(0200, &tp->t_outq);
 			}
 		}
 	}
-	if (tp->t_flags & LCASE) {
-		if (c >= 'a' && c <= 'z')
-			c -= 'a' - 'A';
-		else if (c >= 'A' && c <= 'Z')
+	/*
+	 * For upper-case-only terminals,
+	 * generate escapes.
+	 * Also, upper-case characters are printed
+	 * with a preceeding '\\'.
+	 */
+	if(tp->t_flags&LCASE){
+		if('a' <= c && c <= 'z')
+			c += 'A' - 'a';
+		else if(isupper(c))
 			ttyoutput('\\', tp);
 		else {
-			colp = ttylcpr;
-			while (*colp++) {
-				if (*colp++ == c) {
+			colp = "({)}!|^~'`";
+			while(*colp++){
+				if(c == *colp++){
 					ttyoutput('\\', tp);
 					c = colp[-2];
 					break;
@@ -703,165 +835,171 @@ register struct tty *tp;
 			}
 		}
 	}
+	/*
+	 * If it is a printing character, count it,
+	 * and fold the line if it is too long.
+	 */
 	colp = &tp->t_col;
-	if (c == '\t' && (tp->t_flags & XTABS)) {
-		if (tp->t_dtab == 0)
-			tp->t_dtab = tp->t_col;
+	/*
+	 * Turn tabs to spaces as required
+	 */
+	if(c == '\t' && (tp->t_flags&XTABS)){
+		if(tp->t_htdly == 0)
+			tp->t_htdly = tp->t_col;
 		do
 			ttyoutput(' ', tp);
-		while ((*colp & 07) != 0);
+		while((*colp)&07);
 		return;
 	}
-	if (c >= ' ' && c <= '~') {
-		if (tp->t_width && (*colp & 0377) >= (tp->t_width & 0377))
+	if(' ' <= c && c <= '~'){
+		if(tp->t_width && (ubyte(*colp) >= ubyte(tp->t_width)))
 			ttyoutput('\n', tp);
 		(*colp)++;
 		putc(c, &tp->t_outq);
 		return;
 	}
 	putc(c, &tp->t_outq);
-	switch (c & 0177) {
-
-	case 8:
-		if (*colp)
+	/*
+	 * Calculate delays.
+	 * The delays are indicated by characters above 0200.
+	 * In raw mode there are no delays and the
+	 * transmission path is 8 bits wide. However, do the
+	 * column calculation.
+	 */
+	switch(c&0177){
+	case '\b':
+		if(*colp)
 			(*colp)--;
-		return;
-
-	case 9:
-		*colp |= 07;
-		(*colp)++;
-		c = tp->t_dtab;
-		break;
-
-	case 10:
-		if (tp->t_flags & XTABS)
-			tp->t_dtab = 0;
-		*colp = 0;
-		c = tp->t_dnl;
-		break;
-
-	case 11:
-	case 12:
-		c = tp->t_dvt;
-		break;
-
-	case 13:
-		*colp = 0;
-		c = tp->t_dcr;
-		break;
-
 	default:
 		return;
-	}
-	if (c && (tp->t_flags & RAW) == 0)
-		putc(c | 0200, &tp->t_outq);
+	case '\t':
+		*colp |= 07;
+		(*colp)++;
+		c = tp->t_htdly;
+		break;
+	case '\n':
+		if(tp->t_flags&XTABS)
+			tp->t_htdly = 0;
+		*colp = 0;
+		c = tp->t_nldly;
+		break;
+	case 013:
+	case 014:
+		c = tp->t_vtdly;
+		break;
+	case '\r':
+		*colp = 0;
+		c = tp->t_crdly;
+		break;
+	}	
+	if(c && ((tp->t_flags&RAW) == 0))
+		putc(c|0200, &tp->t_outq);
 }
 
-/* Paare (Zeichen, Ersatz) fuer die Ausgabe bei LCASE, abgeschlossen durch 0 */
-char ttylcpr[] = "({)}!|^~'`";
-
+/*
+ * Restart typewriter output following a delay
+ * timeout.
+ * The name of the routine is passed to the timeout
+ * subroutine and it is called during a clock interrupt.
+ */
 /* KERNEL 7C4A */
 ttrstrt(tp)
 register struct tty *tp;
 {
 	tp->t_state &= ~TIMEOUT;
-	ttkick(tp);
+	ttstart(tp);
 }
 
+/*
+ * Start output on the typewriter. It is used from the top half
+ * after some characters have been put on the output queue,
+ * from the interrupt routine to transmit the next
+ * character, and after a timeout has finished.
+ */
 /* KERNEL 7C62 */
-ttkick(tp)
+ttstart(tp)
 register struct tty *tp;
 {
 	register s;
 
 	s = spl5();
-	if ((tp->t_state & 0x121) == 0)
+	if((tp->t_state&(TIMEOUT|TTSTOP|BUSY)) == 0)
 		(*tp->t_oproc)(tp);
 	splx(s);
 }
 
+/*
+ * Called from device's read routine after it has
+ * calculated the tty-structure given as argument.
+ */
+/* MUTOS: text of the collection; differs in the object code, see the header: ttread: compare through r3 in the kernel, r2 here (one word) */
 /* KERNEL 7C90 */
 ttread(tp)
 register struct tty *tp;
 {
-	register c;
+	register int c;
 
-	if ((tp->t_state & CARR_ON) == 0)
+	if((tp->t_state&CARR_ON) == 0)
 		return(0);
 	spl5();
-	goto top;
-chk:
-	if (tp->t_inq.c_cc != 0)
-		goto have;
-wt:
-	if ((tp->t_state & CARR_ON) == 0)
-		goto out;
-	sleep(tp, 28);
-top:
-	if ((tp->t_flags & 0x22) == 0 && tp->t_delct == 0)
-		goto wt;
-	if (tp->t_flags & 0x22)
-		goto chk;
-have:
-	spl0();
-	if (tp->t_flags & 0x22) {
-		while (tp->t_inq.c_cc && passc(getc(tp)) >= 0)
-			;
-	} else {
-		do {
-			c = getc(tp);
-			if (c == 0xFF)
-				break;
-		} while (passc(c) >= 0);
-		if (c != 0xFF && (*tp->t_inq.c_cf & 0xFF) == 0xFF)
-			c = getc(tp);
-		if (c == 0xFF)
-			tp->t_delct--;
-		if (tp->t_page) {
-			tp->t_lstate |= 1;
-			tp->t_lstate &= ~6;
-			tp->t_cnt2c = 0;
-		} else
-			tp->t_lstate &= ~1;
+	while(((tp->t_flags&(RAW|CBREAK)) == 0 && tp->t_delct == 0)
+	      || ((tp->t_flags&(RAW|CBREAK)) != 0 && tp->t_rawq.c_cc == 0)){
+		if((tp->t_state&CARR_ON) == 0)
+			return(tp->t_rawq.c_cc);
+		sleep((caddr_t)&tp->t_rawq, TTIPRI);
 	}
-	if ((tp->t_state & 0x400) && tp->t_inq.c_cc < 0x33) {
-		if (putc(tp->t_startc, &tp->t_outq) == 0) {
-			tp->t_state &= ~0x400;
-			ttkick(tp);
+	spl0();
+	if(tp->t_flags&(RAW|CBREAK)){
+		while(tp->t_rawq.c_cc && passc(getc(&tp->t_rawq)) >= 0);
+		goto out;
+	}
+	while((c = getc(&tp->t_rawq)) != 0377 && passc(c) >= 0);
+	if((c != 0377) && ubyte(*(tp->t_rawq.c_cf)) == 0377)
+		c = getc(&tp->t_rawq);
+	if(c == 0377)
+		tp->t_delct--;
+	if(tp->t_length){
+		tp->t_xstate |= XPAGE;
+		tp->t_xstate &= ~(XPAGE1|XPAGE2);
+		tp->t_lnum = 0;
+	}
+	else
+		tp->t_xstate &= ~XPAGE;
+out:
+	if((tp->t_state&TBLOCK) && tp->t_rawq.c_cc < TTYHOG/5){
+		if(putc(tun.t_startc, &tp->t_outq) == 0){
+			tp->t_state &= ~TBLOCK;
+			ttstart(tp);
 		}
 	}
-out:
-	return(tp->t_inq.c_cc);
+	return(tp->t_rawq.c_cc);
 }
 
+/*
+ * Called from the device's write routine after it has
+ * calculated the tty-structure given as argument.
+ */
 /* KERNEL 7DA6 */
+caddr_t
 ttwrite(tp)
 register struct tty *tp;
 {
 	register c;
 
-	if ((tp->t_state & CARR_ON) == 0)
-		return(0);
-	goto cnt;
-slp:
-	ttkick(tp);
-	tp->t_state |= ASLEEP;
-	sleep(&tp->t_outq, 29);
-	goto top;
-put:
-	ttyoutput(c, tp);
-cnt:
-	if (u.u_count == 0)
-		goto fin;
-	spl5();
-top:
-	if (tp->t_outq.c_cc > 100 || (tp->t_lstate & 4))
-		goto slp;
-	spl0();
-	c = cpass();
-	if (c >= 0)
-		goto put;
-fin:
-	ttkick(tp);
-	return(0);
+	if((tp->t_state&CARR_ON) == 0)
+		return(NULL);
+	while(u.u_count){
+		spl5();
+		while(tp->t_outq.c_cc > TTHIWAT || (tp->t_xstate&XPAGE2)){
+			ttstart(tp);
+			tp->t_state |= ASLEEP;
+			sleep((caddr_t)&tp->t_outq, TTOPRI);
+		}
+		spl0();
+		if((c = cpass()) < 0)
+			break;
+		ttyoutput(c, tp);
+	}
+	ttstart(tp);
+	return(NULL);
 }

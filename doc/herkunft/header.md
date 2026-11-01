@@ -29,9 +29,9 @@ Klassen: **I** identisch, **F** Layout identisch, Form jetzt V7 (vorher flach), 
 | `types.h` | E/teilweise V7 | gemessen (Breiten, `label_t` 9 Worte) | V7 hat die Typen in `param.h`; `cnt_t` aus SysIII (unbenutzt) |
 | `param.h` | teilweise V7 | gemessen: NOFILE, BSIZE, NINODE, NFILE, NBUF, NMOUNT, NPROC, MAXUPRC, NCALL, HZ, DIRSIZ, NSIG; Rest *angenommen* | MUTOS-Werte; Click 256 B (`ctod`); SysIII-Signalnamen mit V7-Aliassen; `SUPERB` int |
 | `systm.h` | teilweise V7 | Adressen gemessen; `sy_nrarg` = 0 in allen 64 Zeilen gemessen | nur Deklarationen (`extern`) |
-| `conf.h` | teilweise V7 | gemessen (8 / 14 / 20 B) | `linesw` mit SysIII-Namen; `devtab` MUTOS (weder V7 noch SysIII) |
+| `conf.h` | teilweise V7 | gemessen (8 / 14 / 20 B) | `linesw` mit V7-/Sammlungsnamen (`l_rint`, `l_rend`, `l_meta`, `l_start`, `l_modem`; bis 2026-10-31 SysIII-Namen), `l_write` liefert `int`; `devtab` MUTOS (weder V7 noch SysIII) |
 | `user.h` | L teilweise | Offsets gemessen (Liste im Kopf); Fuellfelder angenommen | Z8001-Layout; `u_ex[]`, `u_exname` statt `u_exdata`, `u_comm`; `u_ttyp/u_ttyd` benannt (loest `user_ext.h` ab) |
-| `tty.h` | L | gemessen (60 B) | SysIII/ZEUS-Aufbau, nicht V7 (`rawq/canq`); `XTABS 02000` |
+| `tty.h` | L | gemessen (60 B) | Aufbau und Namen der Hippe-Sammlung (`usr/include/sys/tty.h`; seit 2026-10-31, `tty2.md`), nicht V7 (`rawq/canq`); MUTOS-Zusatz `t_ocnt`, `t_hwp`, `t_hwf` hinter `t_line` |
 | `reg.h` | E (Origin none) | ungemessen | Platzhalter |
 | `mbx.h` | E (Origin none) | gemessen | U880-Mailbox |
 | `user_ext.h` | entfallen | -- | Makros durch `u.u_sep`, `u.u_ttyp`, `u.u_ttyd`, `u.u_cmask`, `u.u_ar0` ersetzt, Objektcode gleich |

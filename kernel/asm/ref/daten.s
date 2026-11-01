@@ -249,7 +249,7 @@ L8868:
 L886A:
 	WV _nulldev;WV _ttread;WV _ttwrite
 L8870:
-	WV _nodev;WV L7222;WV _ttkick;WV %0000
+	WV _nodev;WV L7222;WV _ttstart;WV %0000
 	WV %0000;WV %0000
 ! rootdev (Major 4, Minor 02), 887E swapdev, 8880 pipedev, 8884 swplo (4 Byte), 8888 nswap (2 Byte) !
 _rootdev:

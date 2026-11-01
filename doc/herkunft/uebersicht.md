@@ -461,3 +461,13 @@ Kein eigenes Subsystem; Einzelzeilen ohne Gegenstueck in allen geladenen Baeumen
 
 Maschinenunabhaengiger Kern: weitgehend Text der V7-Linie (Hippe-Sammlung).  Eigenleistung liegt in der Anpassung an die A5120.16-Hardware: Speicher ohne MMU (2-3 %, weit 5 % des C-Kerns,
 `speicher.md`), Z8001-Kontext (1-3,4 %), Treiber (3,7-12,9 %), dazu Assembler und die U880-Seite `mutos_io` als eigenstaendige Konstruktion.  Vorlagen aus dem Z8000-Umfeld: WEGA-`libc`-ABI.
+
+## 20. H6c: `tty2.c` im Text der Hippe-Sammlung (2026-10-31)
+
+Ausfuehrlich in `tty2.md`.  Die Zeilendisziplin (6D44..7DA6, 20 Funktionen, Tabellen `maptab`/`cchars`/`wchars`) steht jetzt im Quelltext als `usr/sys/dev/tty.c` der Sammlung (Schalter `DELTAB` an, `MX`/`SGTTY`/`INSTRM` aus), mit Originalnamen
+(`ttychars`, `ttioccomm`, `wflushtty`, `flushtty`, `ttyretype`, `ttywipe`, `zapc`, `ttybit`, `ttyspcl`, `ttyblock`, `ttstart`) und Originalkommentaren; Mailbox-Start in `tty.c` heisst `tcstart`.
+
+* **Rundlauf:** 16 von 20 Funktionen bytegleich (die Dekompilatform: 12 von 20); `ttioccomm`, `ttyinput`, `ttyretype`, `ttread` bleiben wie vorher "nahe" (Kernel-`c2`: Sprungweite `jr`/`jp`, ausgelassenes Laden bei `^=`, Vergleichsregister `r3` statt `r2`).
+  Kein Rueckfall auf die Dekompilatform noetig.  Tabellen weiter byte-gleich zur Vorlage.
+* **Folgeaenderungen:** `h/tty.h` und `h/conf.h` (`linesw`) auf die Namen der Sammlung, Layout unveraendert (`tests/test_header_layout.py`); Karte, Referenzdisassemblat und `gesamtbau_adressen.txt` nachgezogen; `gesamtbau.py` unveraendert.
+* **Gesamtbau:** `--uebersetzen --stufe 1 --boot`: **190 von 227** Funktionen aus C (vorher 186), BYTEGLEICH 36 352 Byte, Boot und Arbeitstests ok.  Dafuer war eine Anpassung in `gesamtbau.py` noetig (Sprungtabelle von `ttyoutput`, `tote_marken` Stufe 1; `tty2.md`).

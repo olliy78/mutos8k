@@ -58,7 +58,7 @@ L60E6:
 	add	r12,#%D26A
 	ld	%0038(r13),r12
 	clrb	%003A(r13)
-	ld	r2,#_ttstart
+	ld	r2,#_tcstart
 	ld	%000C(r13),r2
 	ld	r2,%0028(r13)
 	and	r2,#%0004
@@ -70,7 +70,7 @@ L60E6:
 	ldb	%0003(r12),#%01
 L6140:
 	push	@r15,r13
-	call	_ttinit
+	call	_ttychars
 	inc	r15,#2
 L6148:
 	push	@r15,r13
@@ -127,7 +127,7 @@ _tcxint:
 	ld	r13,r3
 	add	r13,#LA530
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 	test	%0006(r13)
 	jr	eq,L61FE
@@ -167,14 +167,14 @@ _tcioctl:
 	add	r2,#LA530
 	push	@r15,r2
 	push	@r15,%0006(r14)
-	call	_ttioctl
+	call	_ttioccomm
 	inc	r15,#8
 	test	r2
 	jr	ne,L6270
 	ldb	%FC13,#%19
 L6270:
 	jp	cret
-_ttstart:
+_tcstart:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r9,%0038(r13)

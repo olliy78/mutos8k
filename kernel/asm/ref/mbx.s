@@ -18,13 +18,13 @@ constant
 G
 _ttyopen	L
 G
-_ttinit	L
+_ttychars	L
 G
 L6DD0	L
 G
 _ioctl	L
 G
-_ttioctl	L
+_ttioccomm	L
 G
 L70D6	L
 G
@@ -52,7 +52,7 @@ L7C1E	L
 G
 _ttrstrt	L
 G
-_ttkick	L
+_ttstart	L
 G
 _ttread	L
 G
@@ -81,7 +81,7 @@ L6D80:
 	res	%0028(r13),#1
 	set	%0028(r13),#2
 	jp	cret
-_ttinit:
+_ttychars:
 	call	csv
 	ld	r13,%0004(r14)
 	ldb	%0022(r13),#%03
@@ -100,7 +100,7 @@ L6DD0:
 	ld	r13,%0004(r14)
 	clr	%0010(r13)
 	push	@r15,r13
-	call	_ttywait
+	call	_wflushtty
 	inc	r15,#2
 	clr	%0028(r13)
 	clr	%002A(r13)
@@ -156,7 +156,7 @@ L6E4A:
 	inc	r15,#8
 L6E76:
 	jp	cret
-_ttioctl:
+_ttioccomm:
 	call	csv
 	ld	r13,%0006(r14)
 	dec	r15,#2
@@ -244,7 +244,7 @@ L6F4A:
 	jr	L6EEC
 L6F50:
 	push	@r15,r13
-	call	_ttywait
+	call	_wflushtty
 	inc	r15,#2
 L6F58:
 	push	@r15,#%0006
@@ -270,7 +270,7 @@ L6F74:
 	jr	L6EBC
 L6F90:
 	push	@r15,r13
-	call	_ttywait
+	call	_wflushtty
 	inc	r15,#2
 	ldb	rl2,%0021(r13)
 	xorb	rh2,rh2
@@ -435,7 +435,7 @@ L714A:
 	cp	r2,#%1357
 	jp	eq,L7010
 	jr	L70EA
-_ttywait:
+_wflushtty:
 	call	csv
 	ld	r13,%0004(r14)
 	call	_spl5
@@ -524,7 +524,7 @@ L7240:
 	bit	r11,#0
 	jr	eq,L7250
 	push	@r15,r12
-	call	_ttflow
+	call	_ttyblock
 	inc	r15,#2
 L7250:
 	ld	r2,r11
@@ -550,7 +550,7 @@ L727C:
 	jp	eq,L75AE
 	res	%0028(r12),#8
 	push	@r15,r12
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 	jr	L72CE
 L7296:
@@ -600,7 +600,7 @@ L72FE:
 L730C:
 	push	@r15,r12
 	push	@r15,r13
-	call	_ttyspec
+	call	_ttyspcl
 	inc	r15,#4
 	test	r2
 	jr	ne,L72FE
@@ -679,9 +679,9 @@ L73CA:
 L73D2:
 	push	@r15,r12
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	ld	@r15,r2
-	call	_ttyrub
+	call	_ttywipe
 	jp	L7512
 L73E4:
 	ldb	rl2,%0018(r12)
@@ -690,12 +690,12 @@ L73E4:
 	jr	ne,L7408
 	push	@r15,r13
 	push	@r15,#L8D1A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	ne,L73D2
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	jp	L7596
 L7408:
 	ldb	rl2,%0019(r12)
@@ -707,13 +707,13 @@ L7408:
 	jr	eq,L742A
 	push	@r15,r13
 	push	@r15,#L8D1A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	ne,L7440
 L742A:
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	inc	r15,#2
 	test	r2
 	jr	pl,L742A
@@ -723,7 +723,7 @@ L742A:
 	jr	L73C2
 L7440:
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	inc	r15,#2
 	ld	r13,r2
 	test	r13
@@ -735,7 +735,7 @@ L7440:
 	jr	eq,L7440
 	push	@r15,r12
 	push	@r15,r13
-	call	_ttyrub
+	call	_ttywipe
 	inc	r15,#4
 	jr	L7440
 L746A:
@@ -765,22 +765,22 @@ L7490:
 	inc	r15,#2
 	ld	@r15,#%0001
 	push	@r15,r12
-	call	_ttycol
+	call	_ttyretype
 	jr	L7512
 L74B6:
 	cp	r13,#%0017
 	jr	ne,L751C
 	push	@r15,r12
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	inc	r15,#2
 	ld	r13,r2
 	push	@r15,r13
-	call	_ttyrub
+	call	_ttywipe
 	inc	r15,#2
 	ld	@r15,r13
 	push	@r15,#L8D2A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	eq,L75A6
@@ -788,16 +788,16 @@ L74B6:
 L74E2:
 	push	@r15,r12
 	push	@r15,r13
-	call	_ttyrub
+	call	_ttywipe
 	inc	r15,#4
 L74EC:
 	push	@r15,r12
-	call	_unputc
+	call	_zapc
 	inc	r15,#2
 	ld	r13,r2
 	push	@r15,r13
 	push	@r15,#L8D2A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	ne,L74E2
@@ -875,12 +875,12 @@ L7598:
 	jr	eq,L75AE
 L75A6:
 	push	@r15,r12
-	call	_ttkick
+	call	_ttstart
 L75AC:
 	inc	r15,#2
 L75AE:
 	jp	cret
-_ttycol:
+_ttyretype:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r12,%0002(r13)
@@ -926,7 +926,7 @@ L7614:
 	ldb	rl0,@r12
 	xorb	rh0,rh0
 	push	@r15,r0
-	call	_ttyspec
+	call	_ttyspcl
 	inc	r15,#4
 	test	r2
 	jr	eq,L763C
@@ -996,7 +996,7 @@ _ttyecho:
 	jr	eq,L76CE
 	push	@r15,r13
 	push	@r15,#L8D1A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	eq,L76D4
@@ -1041,7 +1041,7 @@ L7720:
 	inc	r15,#4
 	ldk	r2,#1
 	jr	L76D0
-_ttyrub:
+_ttywipe:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r12,%0006(r14)
@@ -1059,7 +1059,7 @@ L7754:
 	ldk	r11,#1
 	push	@r15,r13
 	push	@r15,#L8D1A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	eq,L7788
@@ -1070,7 +1070,7 @@ L7754:
 L7778:
 	push	@r15,r12
 	push	@r15,r13
-	call	_ttyspec
+	call	_ttyspcl
 	inc	r15,#4
 	test	r2
 	jr	eq,L7828
@@ -1080,7 +1080,7 @@ L7788:
 	jr	ne,L7808
 	push	@r15,#%0000
 	push	@r15,r12
-	call	_ttycol
+	call	_ttyretype
 	inc	r15,#4
 	ld	r11,r2
 	test	r2
@@ -1155,7 +1155,7 @@ L783A:
 	inc	r15,#2
 	ld	@r15,#%0001
 	push	@r15,r12
-	call	_ttycol
+	call	_ttyretype
 	jr	L78A2
 L7852:
 	ld	r2,r11
@@ -1193,7 +1193,7 @@ L78A2:
 	inc	r15,#4
 L78A4:
 	jp	cret
-_unputc:
+_zapc:
 	call	csv
 	ld	r13,%0004(r14)
 	call	_spl6
@@ -1260,7 +1260,7 @@ L793C:
 	inc	r15,#2
 	ld	r2,r10
 	jr	L78DE
-_bitset:
+_ttybit:
 	call	csv
 	ld	r13,%0006(r14)
 	test	r13
@@ -1281,7 +1281,7 @@ L795A:
 	and	r3,r4
 	ld	r2,r3
 	jr	L7956
-_ttyspec:
+_ttyspcl:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r12,%0006(r14)
@@ -1329,7 +1329,7 @@ L79CC:
 	cp	r13,#%0010
 	jr	eq,L79C0
 	jr	L798A
-_ttflow:
+_ttyblock:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r12,@r13
@@ -1357,7 +1357,7 @@ L79FC:
 	jr	ne,L7A30
 	set	%0028(r13),#10
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 L7A30:
 	jp	cret
@@ -1382,7 +1382,7 @@ L7A58:
 	jr	eq,L7A98
 	push	@r15,r13
 	push	@r15,#L8D1A
-	call	_bitset
+	call	_ttybit
 	inc	r15,#4
 	test	r2
 	jr	eq,L7A98
@@ -1582,10 +1582,10 @@ _ttrstrt:
 	ld	r13,%0004(r14)
 	res	%0028(r13),#0
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 	jp	cret
-_ttkick:
+_ttstart:
 	call	csv
 	ld	r13,%0004(r14)
 	call	_spl5
@@ -1708,7 +1708,7 @@ L7D70:
 	jr	ne,L7DA0
 	res	%0028(r13),#10
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 L7DA0:
 	ld	r2,@r13
@@ -1725,7 +1725,7 @@ L7DB8:
 	jp	cret
 L7DBE:
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 	set	%0028(r13),#6
 	push	@r15,#%001D
@@ -1756,7 +1756,7 @@ L7DF0:
 	jr	pl,L7DDC
 L7E0C:
 	push	@r15,r13
-	call	_ttkick
+	call	_ttstart
 	inc	r15,#2
 	jr	L7DB8
 end _p_mbx

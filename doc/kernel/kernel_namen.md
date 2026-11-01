@@ -4,6 +4,8 @@ Abbild 36 352 B, nichtsegmentiert, Ladeadresse 0; Grundlage `kernel_struktur.md`
 Karte `kernel/karte/karte_basis.txt`.  Referenz: WEGA-`uts` (`OlliL/P8000`, `WEGA/src/uts/{sys,dev,conf}`, `WEGA/src/head/sys/*.h`), nur als Namens- und
 Reihenfolgegeber; WEGA ist mit einem anderen Compiler gebaut, byteweise Gleichheit gibt es nicht.  Alles, was nicht aus dem Abbild folgt, ist als Vermutung gekennzeichnet.
 
+> **Nachtrag 2026-10-31 (AP H6c):** die Namen der Zeilendisziplin (6D44..7DA6) sind die der Hippe-Sammlung (`ttioccomm`, `wflushtty`, `flushtty`, `ttyretype`, `ttywipe`, `zapc`, `ttybit`, `ttyspcl`, `ttyblock`, `ttstart`, `ttychars`); die Mailbox-Routine 6274 heisst `tcstart`.  Zuordnung: `herkunft/tty2.md`.
+
 ## 0. Methode und Sicherheitsstufen
 
 Belege (Spalte "Beleg"):
@@ -220,8 +222,8 @@ Modulnamen ohne Endung `.c`: `mch.s`, `clist.s` sind Assembler.  `dev/...` = Tre
 | 61B0 | 34 | `syswrite` | dev/sys.c | cdevsw[0].d_write -> 7DA6 (ttwrite) | wahrscheinlich |
 | 61D2 | 60 | `tt_intr1` | dev/tty | Aufrufer: 7C62 + wakeup | vermutet |
 | 620E | 46 | `tt_intr2` | dev/tty | ruft ttyinput 7222 | vermutet |
-| 623C | 56 | `sysioctl` | dev/sys.c | cdevsw[0].d_ioctl -> 6E7A (ttioctl) | wahrscheinlich |
-| 6274 | 198 | `ttystart` | dev/tty | ruft timeout 2A4C, getc 3BFC, wakeup | vermutet |
+| 623C | 56 | `sysioctl` | dev/sys.c | cdevsw[0].d_ioctl -> 6E7A (ttioccomm) | wahrscheinlich |
+| 6274 | 198 | `tcstart` | dev/tty | ruft timeout 2A4C, getc 3BFC, wakeup | vermutet |
 | 633A | 74 | `ttstart1` | dev/tty | ruft mapalloc 5CAE | vermutet |
 | 6384 | 174 | `ttyout1` | dev/tty | splx x2, mapalloc, rekursiv | vermutet |
 | 6432 | 18 | `physinit` | machdep.c | 18 B, von startup gerufen | vermutet |
@@ -244,23 +246,24 @@ Modulnamen ohne Endung `.c`: `mch.s`, `clist.s` sind Assembler.  `dev/...` = Tre
 | 6CC6 | 38 | `mmread` | mem.c | cdevsw[1].d_read | wahrscheinlich |
 | 6CEC | 38 | `mmwrite` | mem.c | cdevsw[1].d_write | wahrscheinlich |
 | 6D12 | 50 | `mmioctl` | mem.c | cdevsw[1].d_ioctl | vermutet |
-| 6D44 | 72 | `ttopen` | dev/tty | 72 B, von 60CC | vermutet |
-| 6D8C | 68 | `ttclose_hlp` | dev/tty | 68 B, von 60CC | vermutet |
-| 6DD0 | 32 | `ttclose` | dev/tty | von 616C, ruft 715C (ttywait) | vermutet |
+| 6D44 | 72 | `ttyopen` | dev/tty | 72 B, von 60CC | vermutet |
+| 6D8C | 68 | `ttychars` | dev/tty | 68 B, von 60CC | vermutet |
+| 6DD0 | 32 | `ttyclose` | dev/tty | von 616C, ruft 715C (wflushtty) | vermutet |
 | 6DF0 | 138 | `ioctl` | sys3.c | sysent 54; getf 2AD4, indirekter Aufruf d_ioctl | sicher |
-| 6E7A | 738 | `ttioctl` | dev/tty | 738 B, copyin x3/copyout x5, ruft 715C | wahrscheinlich |
-| 715C | 72 | `ttywait` | dev/tty | sleep bis Ausgabe leer, ruft 71A4 | wahrscheinlich |
-| 71A4 | 126 | `ttyflush` | dev/tty | splx, getc x2, wakeup x2 | wahrscheinlich |
+| 6E7A | 738 | `ttioccomm` | dev/tty | 738 B, copyin x3/copyout x5, ruft 715C | wahrscheinlich |
+| 715C | 72 | `wflushtty` | dev/tty | sleep bis Ausgabe leer, ruft 71A4 | wahrscheinlich |
+| 71A4 | 126 | `flushtty` | dev/tty | splx, getc x2, wakeup x2 | wahrscheinlich |
 | 7222 | 912 | `ttyinput` | dev/tty | 912 B, signal 0B3A (^C), putc x5, ruft 75B2..7C62 | wahrscheinlich |
-| 75B2 | 232 | `tty_sub1` | dev/tty | 232 B Teil von ttyinput (Zeichenbehandlung) | vermutet |
-| 769A | 148 | `tty_sub2` | dev/tty | 148 B; ruft 7948, 7A34 | vermutet |
-| 772E | 378 | `tty_sub3` | dev/tty | 378 B; ruft 7A34 x6 (Echo/Ausgabe) | vermutet |
-| 78A8 | 160 | `tty_sub4` | dev/tty | 160 B; spl | vermutet |
-| 7948 | 50 | `ttxput` | dev/tty | 50 B, 7 Aufrufer | vermutet |
-| 797A | 102 | `tty_sub5` | dev/tty | 102 B | vermutet |
-| 79E0 | 84 | `tty_sub6` | dev/tty | 84 B; putc, 71A4, 7C62 | vermutet |
+| 75B2 | 232 | `ttyretype` | dev/tty | 232 B Teil von ttyinput (Zeile neu ausgeben / Spalte zaehlen) | wahrscheinlich |
+| 769A | 148 | `ttyecho` | dev/tty | 148 B; ruft 7948, 7A34 | vermutet |
+| 772E | 378 | `ttywipe` | dev/tty | 378 B; ruft 7A34 x6 (Echo/Ausgabe) | vermutet |
+| 78A8 | 160 | `zapc` | dev/tty | 160 B; spl | vermutet |
+| 7948 | 50 | `ttybit` | dev/tty | 50 B, 7 Aufrufer | vermutet |
+| 797A | 102 | `ttyspcl` | dev/tty | 102 B | vermutet |
+| 79E0 | 84 | `ttyblock` | dev/tty | 84 B; putc, 71A4, 7C62 | vermutet |
 | 7A34 | 534 | `ttyoutput` | dev/tty | 534 B, rekursiv, putc x3 | wahrscheinlich |
-| 7C62 | 46 | `ttrstrt` | dev/tty | 46 B; spl; 7 Aufrufer | vermutet |
+| 7C4A | 24 | `ttrstrt` | dev/tty | Zeitgeberaufruf nach Verzoegerung, ruft 7C62 | wahrscheinlich |
+| 7C62 | 46 | `ttstart` | dev/tty | 46 B; spl; 7 Aufrufer | wahrscheinlich |
 | 7C90 | 278 | `ttread` | dev/tty | 278 B, sleep, getc, passc x2 | wahrscheinlich |
 | 7DA6 | 112 | `ttwrite` | dev/tty | 112 B, sleep, cpass, ttyoutput | wahrscheinlich |
 | 7E16 | 126 | `fdopen` | fd.c | bdevsw[0].d_open, cdevsw[10].d_open (Floppy ueber U880?) | vermutet |

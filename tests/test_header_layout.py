@@ -102,6 +102,17 @@ class Layout:
             i = j + 1
             if not decl:
                 continue
+            anon = re.fullmatch(r"struct\s+(\w+)", decl)
+            if anon and anon.group(1) in self.structs:
+                # "struct tc;" inside a union: the members of struct tc become members of the enclosing aggregate (V7 cc extension)
+                ssize, smem = self.structs[anon.group(1)]
+                at = 0 if union else off
+                for k, v in smem.items():
+                    members.setdefault(k, at + v)
+                if not union:
+                    off += ssize
+                size = max(size, at + ssize)
+                continue
             msize, malign, mname = self.decl(decl)
             if malign == 2:
                 off = (off + 1) & ~1 if not union else 0
@@ -165,10 +176,10 @@ EXPECT = {
     "map": (4, dict(m_size=0, m_addr=2)),
     "rkmbx": (14, dict(mb_cmd=0, mb_unit=1, mb_dir=2, mb_stat=3, mb_seg=4, mb_addr=6, mb_cnt=8, mb_blk=0xA)),
     "bdevsw": (8, dict(d_open=0, d_close=2, d_strategy=4, d_tab=6)),
-    "linesw": (20, dict(l_open=0, l_input=0xA, l_output=0xC, l_x=0xE)),
+    "linesw": (20, dict(l_open=0, l_rint=0xA, l_rend=0xC, l_meta=0xE, l_start=0x10, l_modem=0x12)),
     "sysent": (4, dict(sy_narg=0, sy_nrarg=1, sy_call=2)),
-    "tty": (0x3C, dict(t_inq=0, t_outq=6, t_oproc=0xC, t_pgrp=0x10, t_obuf=0x12, t_dev=0x14, t_erase=0x18, t_kill=0x19,
-                       t_flags=0x1A, t_state=0x28, t_lstate=0x2A, t_delct=0x2E, t_line=0x34, t_ocnt=0x36, t_hwp=0x38, t_hwf=0x3A)),
+    "tty": (0x3C, dict(t_rawq=0, t_outq=6, t_oproc=0xC, t_iproc=0xE, t_pgrp=0x10, t_addr=0x12, t_dev=0x14, t_ispeed=0x16, t_erase=0x18, t_kill=0x19,
+                       t_flags=0x1A, t_nldly=0x1C, t_width=0x20, t_length=0x21, t_un=0x22, t_intrc=0x22, t_brkc=0x27, t_ctlq=0x22, t_state=0x28, t_xstate=0x2A, t_lnum=0x2C, t_col=0x2D, t_delct=0x2E, t_chan=0x30, t_linep=0x32, t_line=0x34, t_ocnt=0x36, t_hwp=0x38, t_hwf=0x3A)),
     "user": (0x3FC, dict(u_segflg=0x12, u_error=0x13, u_uid=0x16, u_gid=0x18, u_ruid=0x1A, u_rgid=0x1C, u_procp=0x1E, u_ap=0x20,
                          u_r=0x22, r_val1=0x22, r_val2=0x24, u_base=0x26, u_count=0x28, u_offset=0x2A, u_cdir=0x2E, u_rdir=0x30,
                          u_dbuf=0x32, u_dirp=0x40, u_dent=0x42, u_pdir=0x52, u_ofile=0x62, u_pofile=0x8A, u_arg=0x9E,

@@ -199,6 +199,11 @@ Namenslaenge: signifikant 8 Zeichen -- `ttyretype`, `wflushtty`, `ttioccomm` wer
 
 ### 5.3 Empfehlung: `tty2.c` auf den Hippe-Text bringen
 
+> **Status (2026-10-31, AP H6c):** umgesetzt, Bericht und Funktionstabelle in `tty2.md`.  `tty2.c` traegt den Text der Sammlung (alle 20 Funktionen, Originalnamen), Rundlauf **16 von 20 bytegleich** (vorher 12);
+> `ttioccomm`, `ttyinput`, `ttyretype`, `ttread` bleiben wegen Eigenheiten des Kernel-`c2` nahe (1 bis 181 Woerter), die Dekompilatform war dort nicht besser.  Die Namen der Tabelle 5.2 gelten jetzt im Quelltext
+> (`ttkick` -> `ttstart`; die frueher `ttstart` genannte Mailbox-Routine heisst `tcstart`).  Die unten stehende Empfehlung ist der Plan von damals; zu den erwarteten Abweichungen 1 bis 8 siehe `tty2.md`
+> (`ttyspcl` ist mit dem Vorlagentext bytegleich, also keine Abweichung; `ioctl`, `ttychars` ebenso).
+
 * **Vorlage:** `usr/sys/dev/tty.c` (SHA-256 `0271a7fab1fa668b13d0f577013fdcd60c28d08ff1a2a4a2c8d23cff81baf937`), Praeprozessor aufgeloest mit `DELTAB` definiert (steht im Quelltext), `MX`, `SGTTY`, `INSTRM` undefiniert
   (`stty`/`gtty` und die `scontrol`/`sdata`-Teile entfallen -- passt zu `sysent` mit `nosys`); die auskommentierte `ttyrend` weglassen.
   Header: `usr/include/sys/tty.h` und `usr/include/sgtty.h` (Konstanten `CPAGE`, `CRETYPE`, `CWORD`, `CBELL`, `TTHIWAT 100`, `TTYHOG 256`, `XPAGE..`, `CNTLQ`).

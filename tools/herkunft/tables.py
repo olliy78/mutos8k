@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """tables.py -- compare the three tty tables (maptab/cchars/wchars) of reference tty.c files with MUTOS tty2.c.
 
-MUTOS names: ttylcmap = maptab[128], ttyctl = cchars[16], ttyword = wchars[16].  `P` in a table is the parity
+tty2.c uses the names of the collection (older versions: ttylcmap, ttyctl, ttyword).  `P` in a table is the parity
 bit 0200.  Prints IDENTICAL, `differs at n of m positions` or `absent` per table and reference file.
 
 Usage:
@@ -40,7 +40,8 @@ def main(argv):
     if len(argv) < 3:
         print(__doc__)
         return 2
-    mine = {"maptab": parse(argv[1], "ttylcmap"), "cchars": parse(argv[1], "ttyctl"), "wchars": parse(argv[1], "ttyword")}
+    # tty2.c carries the names of the collection (maptab, cchars, wchars); earlier versions had ttylcmap, ttyctl, ttyword
+    mine = {n: parse(argv[1], n) or parse(argv[1], old) for n, old in (("maptab", "ttylcmap"), ("cchars", "ttyctl"), ("wchars", "ttyword"))}
     for ref in argv[2:]:
         r = []
         for n, mv in mine.items():

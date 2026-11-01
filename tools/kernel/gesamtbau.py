@@ -572,15 +572,17 @@ def linkkarte_neu(segs, dstuecke):
     return "\n".join(z + m) + "\n"
 
 
-def tote_marken(text, segs, definiert):
-    """In Datenmodulen zeigen Sprungtabellen des ALTEN Codes auf Marken, die es im neuen nicht mehr gibt: null setzen."""
+def tote_marken(text, segs, definiert, fest=False):
+    """In Datenmodulen zeigen Sprungtabellen des ALTEN Codes auf Marken, die es im neuen nicht mehr gibt: null setzen.
+    fest (Stufe 1, Layout unveraendert): Die Marke liegt in einer bytegleichen C-Funktion an derselben Adresse wie im Kernel
+    (Sprungtabelle von ttyoutput, 8D46); sie wird als Zahl eingesetzt statt genullt."""
     cb = [(s[2], s[3]) for s in segs if s[1] == "c"]
 
     def ers(m):
         a = int(m.group(1), 16)
         if m.group(0) in definiert or not any(v <= a < b for v, b in cb):
             return m.group(0)
-        return "%0000"
+        return ("%%%04X" % a) if fest else "%0000"
     return re.sub(r"(?<![A-Za-z0-9_])L([0-9A-F]{4})(?![A-Za-z0-9_:])", ers, text)
 
 
@@ -785,7 +787,7 @@ def main(argv=None):
             namen.append((name, "c"))
     for i in range(len(dst)):
         n = "da%02d" % i
-        quellen[n + ".s"] = tote_marken(zdis(n), segs, definiert)
+        quellen[n + ".s"] = tote_marken(zdis(n), segs, definiert, a.stufe == 1)
         namen.append((n, "a"))
     # Auffuellen, damit die BSS-Variablen (8DC0..D256) an ihren Original-Adressen bleiben (Postfach ab D256 ist fest)
     tt = sum(bis - von for n, k, von, bis, *r in segs if k == "a")
