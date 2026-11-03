@@ -103,11 +103,48 @@ Beobachtung: `lp` an `fdopen 7E16`, `fdstrategy 7F94`, `fdstart 7FDC`, `fdintr 8
 **Ueberraschungen:** (1) `dd` meldet keinen Lesefehler (`0+0 records`), im Gegensatz zu `rk` (`read: I/O error`) -- der `B_ERROR` aus `fdintr` erreicht `dd` also nicht als Fehlerrueckgabe (Ursache in `fdphys 8554`/`fdread 84E4` nicht untersucht); (2) kein Haengen trotz fehlender Hardware; (3) der Kommandoblock im Nukleus wird zerstoert -- ein Floppy-Zugriff im Gast ist nicht folgenlos fuer das UDOS-Fenster (nur `01B5..01BD`, Folgen nicht untersucht).
 **Offen:** Verhalten mit einer anderen Maschinenvariante (WD179x-aehnlicher Controller, Port 1CH belegt); Statuswege F1..F6.
 
-## V1-V3 noch offen (nicht Teil dieses Auftrags)
+## V1-V3 Speicherschutz, privilegierte Befehle, Stapel und brk (AP H10, 2026-11-03)
 
-* **V1 Speicherschutz:** ob ein Benutzerprozess ueber ein nichtsegmentiertes Programm das Kernel-/Fremdsegment erreichen kann (Segmentweiche Modus 2, SN-Leitungen); Anknuepfung `speicher.md`, Vorarbeit `versuche/schutz/` (`schreib.c`, `wache.c`).
-* **V2 Privilegierte Befehle im Benutzermodus:** Verhalten von `LDCTL`/`DI`/`HALT`/`IN`/`OUT` im Normalmodus (PRIV-Trap -> `trap` Fall 2 -> SIGILL?) und von SC mit ungueltiger Nummer; die PRIV-Behandlung ist hier nur als Haltepunkt `7C06` beobachtet.
-* **V3 Stapelueberlauf:** `sendsig` prueft den Benutzerstapel nicht (`z8001_kontext.md` Abschnitt 9, Punkt 5); Verhalten bei Stapel am Segmentende ungeprueft.
+**Methode (rein Debugger, kein neues Gastprogramm, Kernel und Emulator unveraendert).**  Ein vorhandenes Kommando (`cat`, wartet auf der Konsole) wird mit Haltepunkten `b <<1..3>>%0000` an seinem ersten Benutzerbefehl angehalten (FCW `1020`, nichtsegmentiert, Normalbetrieb; hier Segment 3).
+Dort ueberschreibt der Debugger den Befehl bei PC 0 (`e`/`a`) und setzt Register (`set`); der Kernel wird mit Logpoints an Funktionseintritten protokolliert (`[SP+2]w`, `[SP+4]w` = erste zwei Argumente): `trap` 087A (dev, ident), `psignal` 0B6E, `psig` 0C7C, `core` 0D56, `exit` 48C4, `sigret` 3630, `sendsig` 35AE, `sbreak` 4BD0.
+`e`/`d` im Benutzerzustand gehen durch die Segmentweiche (Benutzersegment); Kernelspeicher wird roh ueber `em:` gelesen (Segment 0 = `em:0xxxx`, Segment 3 = `em:3xxxx`).
+Ein Gastboot je Fall (`gen_faelle.sh` erzeugt `faelle/*.dbg`, `alle.sh` fuehrt sie mit vier parallelen Emulatoren aus; V1 mit `lauf.sh V1 ARBEITSORDNER`).  Auszuege: `versuche/gast_v1v3/auszug_v1.txt`, `auszug_v2.txt`, `auszug_v3.txt`.
+Mehrere Faelle nacheinander in einem Boot waren nicht brauchbar (der Gast nahm danach keine Zeilen mehr an; Ursache nicht untersucht), daher ein Boot je Fall.  Absolute Werte (Stapelinhalt, Bytes von `u`) schwanken zwischen Bootlaeufen, die Befunde nicht.
+
+### V1 Speicherschutz -- gemessen
+
+* `LD R1,@R2` mit `R2 = FC00` im Normalbetrieb: `R1 = 5A5A`, das vorher mit `e %FC00` in das **eigene Segment 3** geschriebene Muster; Buszyklus `N W R <<3>>%FC00`, Rohwatch `RD <<3>>%FC00 (em:3FC00)=5A`.  Die Kernelkopie von `u` (`em:0FC00`) bleibt unveraendert, der Watch auf `em:0FC00` spricht nicht an.  `LDB RL1,@R2` liefert `005A`.
+* `LD @R2,R1` mit `R2 = D586` (freier Bereich in Segment 0), `R1 = A5A5`: Schreibzugriff `WR <<3>>%D586 (em:3D586)`; `em:0D586` bleibt `FF FF ...`.
+* **Ergebnis:** ein nichtsegmentierter Benutzerzugriff erreicht nur das eigene 64-KB-Segment (Segmentnummer = PC-Segment), weder `u` noch Kernel noch fremde Segmente.  **Grenze:** gemessen am *Emulatormodell* der Segmentweiche (Modus 2); ob die echte Karte gleich arbeitet, bleibt *angenommen*.
+
+### V2 Privilegierte Befehle und ungueltiger SC -- gemessen
+
+* **DI `7C00`, HALT `7A00`, IN `3B04 0080`, OUT `3B06 0080`, LDCTL R0,FCW `7D02`, LDCTL FCW,R0 `7D0A`, IRET `7B00`:** in allen sieben Faellen derselbe Ablauf: PRIV-Ausnahme (PSA-Eintrag 10h, Kennzahl 2), `trap(2, ident = Opcode)` (Fall `2+USER`, `ident` nicht 7C04..06), `psignal(p, 4)` = SIGINS, `psig` -> `core` -> `exit(0x84)` (Signal 4 mit Core-Bit 0200).  Konsole: `Illegal instruction - core dumped`.  Der Befehl wird nicht ausgefuehrt.  Das bestaetigt die Lesung von `trap.c`; `7C04..7C06` ergeben SIGEMT/SIGIOT/SIGTRC (Haltepunkt `7C06` aus V4).
+* **SC `7F20`, `7F3F`, `7FFF`:** `trap(6, 7Fnn)`, **kein** `psignal`, kein Prozessende.  Hinter dem SC `R4 = 0016` (EINVAL) und Carry gesetzt (FCW `10A0`): V7-Fehlerrueckgabe von `nosys`; der Prozess laeuft weiter (kein SIGSYS).  `ident & 077` bildet `7FFF` auf Eintrag 63 ab.
+* **SC `7F40`** (`ident & 077 = 0`): die Nummer wird auf Eintrag 0 abgebildet, `trap` ruft `sigret` (3630) statt `nosys`.  Der Lauf endete mit `trap(3, FFFF)` im Systembetrieb und `panic: trap` (Konsole: `trap type 3`, `ident = FFFF`, `panic: trap`).  Die Nummern 64..255 sind also **keine** ungueltigen Aufrufe, sondern Aliase von 0..63.  Weitere Auswertung dieses Falls (Abhaengigkeit vom Stapelinhalt) ist nicht Teil dieser Messung.
+
+### V3 Stapel und brk -- gemessen
+
+* **Signalzustellung bei SP nahe 0** (`u_signal[4]` per `e em:0FCDA` auf Handler `0200` gesetzt, Handler = `SC #1`, DI bei PC 0): `sendsig(0200, 4)` ruft **keine** Pruefung auf.
+  * `SP = 0000`: Rahmen `7C00 1020 0300 0002` (ident, FCW, PC-Segment, PC) bei `FFF8..FFFF`; die Umgebungsstrings am Segmentende (`PATH=/bin:/usr/bin:/m...`) werden still ueberschrieben, der Handler laeuft, `exit(0)`.
+  * `SP = 0008`: Rahmen bei `0000..0007`, ueberschreibt den eigenen Programmtext (den DI-Befehl).
+  * `SP = 0004`: Rahmen laeuft ueber die Segmentgrenze (Woerter bei `FFFC`, `FFFE`, `0000`, `0002`): der 16-Bit-Offset wickelt um, ohne Segmentfehler.
+  * Der Rahmen bleibt immer im eigenen Segment.
+* **brk** (`SC #17` = `7F11`, Argument in R0; `u_dsize` vorher `0017`):
+
+  | R0 | `u_dsize` danach | Befund |
+  |---|---|---|
+  | `FF00` | `00FF` | Klicks bis `FEFF` geloescht, Carry nicht gesetzt |
+  | `FF01` | `0000` | 16-Bit-Ueberlauf in `btoc` (`FF01 + 255 = 0`) |
+  | `FFFF` | `0000` | wie `FF01` |
+  | `0100` | `0001` | Verkleinern, nichts geloescht |
+
+  * Mit `SP = FE80` und dem Muster `77..` bei `FE80` ist das Muster nach `brk(FF00)` null: **brk loescht Stapeldaten**, die unterhalb des neuen Datenendes liegen (keine Pruefung gegen den Stapel).  `brk` nahe `FFFF` fuehrt nicht zu einer Kollision, sondern zu `u_dsize = 0` (Ueberlauf).
+  * *Nicht gemessen:* Auslagerung (`xswap`/`swap`) mit solchen Groessen.
+
+### Folgerung fuer die Doku
+
+`speicher.md` 5.8: die Zeilen "Benutzerprozess greift auf Kernel zu" und "E/A-Befehle, `ldctl`, `iret`" sind jetzt gemessen; "Stapelueberlauf in die Daten" ist fuer `sendsig` und `brk` gemessen (kein Fehler, Umlauf bzw. Loeschen).  Offen bleibt: Auslagern nach `brk`, echte Karte statt Emulatormodell, Vorgehen bei Stapelwachstum durch `call` (nicht durch Signal) nahe 0.
 
 ## Nachpruefen
 
@@ -117,4 +154,5 @@ K1520EMU_NOBUILD=1 bash versuche/gast_h9/lauf.sh V4 $SCR/v4     # ~6 Minuten, Au
 K1520EMU_NOBUILD=1 bash versuche/gast_h9/lauf.sh V5 $SCR/v5     # ~8 Minuten
 K1520EMU_NOBUILD=1 bash versuche/gast_h9/lauf.sh V6 $SCR/v6     # ~2 Minuten
 versuche/gast_h9/auszug.sh V4 $SCR/v4/lauf.log
+# V1-V3 (AP H10): gen_faelle.sh; alle.sh $SCR/fa (V2/V3, 19 Faelle, 4 parallel); lauf.sh V1 $SCR/v1 (V1); auszug.sh v1 $SCR; auszug.sh v2|v3 $SCR/fa
 ```

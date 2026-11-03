@@ -1,0 +1,62 @@
+(dbg) # === V1.0 state at the stop: kernel u (raw seg 0) and the process' own FC00 (through the segment switch)
+(dbg) d em:0FC00 32
+  em:0FC00       1D BA FF FF 00 06 80 00 00 36 00 C6 A1 70 FF 0E  |.........6...p..|
+  <<3>>%FC00     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+(dbg) d em:0D586 16
+  em:0D586       FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  |................|
+  <<3>>%D586     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+(dbg) # === V1.1 poke patterns into the OWN segment (through the switch), then look at both sides again
+(dbg) e %FC00 5A 5A 5A 5A 5A 5A 5A 5A
+  poked 8 byte(s) @<<3>>%FC00
+(dbg) e %D586 77 77 77 77
+  poked 4 byte(s) @<<3>>%D586
+(dbg) d em:0FC00 16
+  em:0FC00       1D BA FF FF 00 06 80 00 00 36 00 C6 A1 70 FF 0E  |.........6...p..|
+  <<3>>%FC00     5A 5A 5A 5A 5A 5A 5A 5A 00 00 00 00 00 00 00 00  |ZZZZZZZZ........|
+(dbg) # === V1.2 read: LD R1,@R2 with R2=FC00
+(dbg) a %0000 ld r1,@r2
+(dbg) u %0000 2
+(dbg) set R2 %FC00
+(dbg) set R1 0
+(dbg) wpa em:0FC00..0FC01
+  [16:0] watch-rw [em:0FC00..em:0FC01]  (roh: U8001 und U880)
+(dbg) wpa em:3FC00..3FC01
+  [16:1] watch-rw [em:3FC00..em:3FC01]  (roh: U8001 und U880)
+(dbg) s
+[wr16] c626026088 RD <<3>>%FC00 (em:3FC00)=5A  U8001 PC=<<3>>%0000 (DATA, Normal)
+[wr16] c626026088 RD <<3>>%FC01 (em:3FC01)=5A  U8001 PC=<<3>>%0000 (DATA, Normal)
+    R0 =0000 R1 =5A5A R2 =FC00 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =5A5A R2 =FC00 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+(dbg) # === V1.3 write: LD @R2,R1 with R2=D586, R1=A5A5
+(dbg) a %0000 ld @r2,r1
+(dbg) u %0000 2
+(dbg) set R2 %D586
+(dbg) set R1 %A5A5
+(dbg) wpa em:0D586..0D587
+  [16:0] watch-rw [em:0D586..em:0D587]  (roh: U8001 und U880)
+(dbg) wpa em:3D586..3D587
+  [16:1] watch-rw [em:3D586..em:3D587]  (roh: U8001 und U880)
+(dbg) s
+[wp16] c626026107 WR <<3>>%D586 (em:3D586)=A5  U8001 PC=<<3>>%0000 (DATA, Normal)
+[wp16] c626026107 WR <<3>>%D587 (em:3D587)=A5  U8001 PC=<<3>>%0000 (DATA, Normal)
+    R0 =0000 R1 =A5A5 R2 =D586 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    Bus:  DATA  (1000) N W W <<3>>%D586 <-%A5A5
+    R0 =0000 R1 =A5A5 R2 =D586 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    Bus:  DATA  (1000) N W W <<3>>%D586 <-%A5A5
+(dbg) # === V1.4 result: segment 0 free area vs. own segment
+(dbg) d em:0D586 16
+  em:0D586       FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  |................|
+  <<3>>%D586     A5 A5 77 77 00 00 00 00 00 00 00 00 00 00 00 00  |..ww............|
+(dbg) d em:3D586 16
+  em:3D586       A5 A5 77 77 00 00 00 00 00 00 00 00 00 00 00 00  |..ww............|
+(dbg) d em:0FC00 16
+  em:0FC00       1D BA FF FF 00 06 80 00 00 36 00 C6 A1 70 FF 0E  |.........6...p..|
+(dbg) d em:3FC00 16
+  em:3FC00       5A 5A 5A 5A 5A 5A 5A 5A 00 00 00 00 00 00 00 00  |ZZZZZZZZ........|
+(dbg) # === V1.5 byte access LDB RL1,@R2 on FC00 and a read of address 0 of segment 0 area (E000)
+(dbg) a %0000 ldb rl1,@r2
+(dbg) set R2 %FC00
+(dbg) set R1 0
+(dbg) s
+    R0 =0000 R1 =005A R2 =FC00 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =005A R2 =FC00 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000

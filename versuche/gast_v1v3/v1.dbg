@@ -1,0 +1,57 @@
+# V1: does a non-segmented user access to FC00 / D586 reach segment 0 (kernel) or the process' own segment?
+# A fresh "cat" is stopped at its first user instruction (PC 0 in segment 1..3, user FCW), then the debugger pokes one
+# instruction at PC 0, sets registers and single-steps.  No guest program is written.
+cpu u8000
+b <<1>>%0000
+b <<2>>%0000
+b <<3>>%0000
+keys cat\r
+g 60000000
+r
+# === V1.0 state at the stop: kernel u (raw seg 0) and the process' own FC00 (through the segment switch)
+dev em
+d em:0FC00 32
+d %FC00 32
+d em:0D586 16
+d %D586 16
+# === V1.1 poke patterns into the OWN segment (through the switch), then look at both sides again
+e %FC00 5A 5A 5A 5A 5A 5A 5A 5A
+e %D586 77 77 77 77
+d em:0FC00 16
+d %FC00 16
+# === V1.2 read: LD R1,@R2 with R2=FC00
+a %0000 ld r1,@r2
+u %0000 2
+set R2 %FC00
+set R1 0
+wpa em:0FC00..0FC01
+wpa em:3FC00..3FC01
+s
+r
+# R1=5A5A would mean the own segment; the u contents (see V1.0) would mean segment 0
+# === V1.3 write: LD @R2,R1 with R2=D586, R1=A5A5
+wd all
+a %0000 ld @r2,r1
+u %0000 2
+set PC %0000
+set R2 %D586
+set R1 %A5A5
+wpa em:0D586..0D587
+wpa em:3D586..3D587
+s
+r
+# === V1.4 result: segment 0 free area vs. own segment
+d em:0D586 16
+d %D586 16
+d em:3D586 16
+d em:0FC00 16
+d em:3FC00 16
+# === V1.5 byte access LDB RL1,@R2 on FC00 and a read of address 0 of segment 0 area (E000)
+wd all
+a %0000 ldb rl1,@r2
+set PC %0000
+set R2 %FC00
+set R1 0
+s
+r
+q

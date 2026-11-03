@@ -157,10 +157,10 @@ Folge: **hoechstens 3 Benutzerprozesse gleichzeitig im Speicher** (EM256); jeder
 |---|---|---|
 | Prozess A ueberschreibt Speicher von Prozess B? | **nein**: `schreib` ueberschrieb 59 778 Byte seines Raums, `wache B` blieb heil (beide an denselben Adressen) | **gemessen** (2026-10-28) |
 | Mechanismus dafuer | Datenzugriffe im nichtsegmentierten Modus tragen die Segmentnummer des PC (Emulator `dataSeg() = pcSeg`; EM-Segmentweiche Modus 2 nimmt SN von der CPU) | Emulatormodell gemessen; reale Chipeigenschaft *angenommen* (Z8000-Handbuch, hier nicht geprueft) |
-| Benutzerprozess greift auf Kernel (Segment 0) zu? | nach dem Mechanismus nicht erreichbar; **nicht versucht** | **unbekannt** (erwartet: nein) |
-| E/A-Befehle, `ldctl`, `iret` im Benutzerbetrieb | privilegiert -> Trap 2 -> `SIGILL` (`trap`, Fall 2+USER) | Code gelesen; Ausloesung **nicht getestet** |
+| Benutzerprozess greift auf Kernel (Segment 0) zu? | nicht erreichbar: Zugriff auf FC00/D586 trifft das eigene Segment 3 (`em:3FC00`, `em:3D586`), `u` und Segment 0 bleiben unveraendert (`gastversuche.md` V1) | **gemessen** (Emulatormodell, 2026-11-03) |
+| E/A-Befehle, `ldctl`, `iret` im Benutzerbetrieb | privilegiert -> Trap 2 -> SIGINS (`trap`, Fall 2+USER) -> `core`, `exit(0x84)`, "Illegal instruction - core dumped" (sieben Befehle) | **gemessen** (`gastversuche.md` V2) |
 | Segmentfehler / Bus-Error durch ungueltige Adresse | die Schaltplanauswertung nennt `SEGT` fest auf H (kein Segment-Trap, `doc/referenz/a5120_16.md`); der Kernel-Fall 9 ist zudem wirkungslos (5.9) | Schaltplan-Auswertung; keine Messung am Kernel |
-| Stapelueberlauf in die Daten | keine Grenze, kein Wachstum: ueberschreibt eigene Daten oder Text | *angenommen* (nicht getestet) |
+| Stapelueberlauf in die Daten | keine Grenze, kein Wachstum: ueberschreibt eigene Daten oder Text | `sendsig` und `brk` gemessen: kein Fehler, Rahmen laeuft im Segment um bzw. `brk` loescht Stapeldaten (`gastversuche.md` V3); Stapel durch `call` nicht getestet |
 | Schreibschutz des Programmtexts | keiner (`estabur` ignoriert `xrw`, kein `RO`-Segment) | gemessen (Code) |
 | Prueft der Kernel Benutzerzeiger? | nein, ausser `physio` (5.4) | gemessen (Code) |
 | `u` eines Prozesses durch den Prozess erreichbar? | nein: `u` liegt in Segment 0 | gemessen (Layout) |
@@ -304,7 +304,7 @@ rg -n '^(040E|0E38)' kernel/abdeckung/funktionen.txt   # 0E38: 0/3 Befehle gelau
 
 ## 10. Offene Punkte und naechste Messungen
 
-1. **Schutz des Kernels gegen Benutzerprozesse** (unbekannt): Versuchsprogramm im Gast, das (a) eine Schleife ueber `0000..FFFF` liest, (b) `ldctl`/`out` ausfuehrt (erwartet `SIGILL`), (c) den Stapel bis in die Daten laufen laesst, (d) `brk` bis `FFFF` ausdehnt und danach ausgelagert wird.  Ablauf wie `versuche/schutz/`; nicht begonnen (Gastlauf, Minuten).
+1. **Schutz des Kernels gegen Benutzerprozesse** (Teile (a)-(d) per Debugger gemessen, AP H10, `gastversuche.md` V1-V3; hier der urspruengliche Entwurf): Versuchsprogramm im Gast, das (a) eine Schleife ueber `0000..FFFF` liest, (b) `ldctl`/`out` ausfuehrt (erwartet `SIGILL`), (c) den Stapel bis in die Daten laufen laesst, (d) `brk` bis `FFFF` ausdehnt und danach ausgelagert wird.  Ablauf wie `versuche/schutz/`; nicht begonnen (Gastlauf, Minuten).
 2. **Reale Z8001-Eigenschaft "nichtsegmentierte Zugriffe tragen die Segmentnummer des PC"**: hier nur ueber das Emulatormodell (`dataSeg()`) und `befund.md` gestuetzt; am Handbuch zu belegen.
 3. **Stapelueberlauf**: ob der Z8001-Stapelzeiger bei 0 auf `FFFE` umbricht (Folge: unauffaelliges Ueberschreiben) -- Messung im Emulator.
 4. **`adressen.txt` `_backup`**: auf 040E setzen und `gesamtbau.py` laufen lassen (aendert `kernel/`, nicht in diesem AP); pruefen, ob die 37 abweichenden Woerter von `trap` verschwinden.

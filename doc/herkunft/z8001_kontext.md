@@ -341,6 +341,7 @@ Massstab wie `speicher.md` Abschnitt 8: (i) reines Weglassen, (ii) Anpassung / E
 3. **Bits der Vektorkennung bei Paritaet** (`ident >> 14`, `& F600`): Schaltplan/EM-Karte (`doc/referenz/a5120_16.md`) nicht ausgewertet.
 4. **Port 0x80** (Schatten `8DC2`, Impulsfolge am Ende von `trapent`): Bedeutung der Bits nur aus der U880-Seite abzuleiten (`mutos_io`).
 5. **Fehlerbehandlung `sendsig`**: ungueltiger Benutzerstapel wird nicht geprueft; Verhalten bei Stapelueberlauf im Gast nicht getestet (`speicher.md` 10 Punkt 3).
+   *Nachtrag AP H10 (2026-11-03, `gastversuche.md` V3, gemessen):* mit Benutzer-SP 0, 4 und 8 legt `sendsig` den 4-Wort-Rahmen ohne Fehler ab; der 16-Bit-Offset wickelt um (`FFF8..FFFF` bzw. ueber die Grenze `FFFC..0003`), bei SP 8 wird der eigene Programmtext ueberschrieben; der Rahmen bleibt im eigenen Segment, der Handler laeuft.  Privilegierte Befehle im Normalbetrieb: SIGINS mit Core (`gastversuche.md` V2); SC-Nummern 64..255 sind Aliase von 0..63 (`ident & 077`).
 6. **Datierung der WEGA-Bibliothek gegenueber MUTOS**: SCCS-Kopf 1983 gegen "ab 1986" der MUTOS-Dateien -- schwache Indizien, kein Beleg fuer die Richtung der Uebernahme; Zilog-ZEUS/Onyx-Quellen nicht gefunden (`speicher.md` 6.1).
 7. **`r8..r14` im Benutzerkontext**: Erhalt ueber `csv`-Rahmen von `trap` ist aus `regloc` und `csv` abgeleitet, nicht in einem Wechselversuch geprueft (`resume` sichert `r8..r15` ueber `save`).
 8. **Das Gleitkomma-Modell**: `savfp/restfp` sind Stumpfe; ob eine FPU/Emulation im Original je vorhanden war (`F009`-Probe), unbekannt.

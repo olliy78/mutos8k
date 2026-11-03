@@ -1,0 +1,140 @@
+##### v2_DI
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7C00                      DI VI,NVI
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=31744(%7C00)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_HALT
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7A00                      HALT
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=31232(%7A00)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_IN
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 3B04 0080                 IN R0,%0080
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=15108(%3B04)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_IRET
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7B00                      IRET
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=31488(%7B00)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_LDCTL_FCW_R0
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7D0A                      LDCTL FCW,R0
+  %0000: 7D0A                      LDCTL FCW,R0
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=32010(%7D0A)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_LDCTL_R0_FCW
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7D02                      LDCTL R0,FCW
+  %0000: 7D02                      LDCTL R0,FCW
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=32002(%7D02)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_OUT
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 3B06 0080                 OUT %0080,R0
+[lp] c626026353 %087A[SP+2]w=2(%2)  [SP+4]w=15110(%3B06)
+[lp] c626026591 %0B6E[SP+2]w=41328(%A170)  [SP+4]w=4(%4)
+[lp] c626027247 %0C7C
+[lp] c626027765 %0D56
+[lp] c638984736 %48C4[SP+2]w=132(%84)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 22 NMI 0 SEGT 0 VI 38755 NVI 0 (gesamt 38778)
+  |Illegal instruction - core dumped                                               |
+##### v2_SC_20
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7F20                      SC #%20
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=6(%6)  [SP+4]w=32544(%7F20)
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+[lp] c626028555 %48C4[SP+2]w=0(%0)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 21 NMI 0 SEGT 0 VI 30621 NVI 0 (gesamt 30642)
+##### v2_SC_3F
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7F3F                      SC #%3F
+  %0002: A1F7                      LD R7,R15
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+[lp] c626028555 %48C4[SP+2]w=0(%0)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 21 NMI 0 SEGT 0 VI 30621 NVI 0 (gesamt 30642)
+##### v2_SC_40
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+(dbg) d %FFB0 32
+  <<3>>%FFB0     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  <<3>>%FFC0     00 00 00 00 00 00 00 00 00 00 00 00 00 01 FF D8  |................|
+(dbg) x/8xw SP
+  <<3>>%FFCC    : 0001 FFD8 0000 FFDC FFE3 0000 6361 7400
+  %0000: 7F40                      SC #%40
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=6(%6)  [SP+4]w=32576(%7F40)
+[lp] c626026610 %3630
+[lp] c626028212 %087A[SP+2]w=3(%3)  [SP+4]w=65535(%FFFF)
+  U8001 PC=<<0>>%05F0 FCW=%508C NONSEG SYS VIE nvi- [C---DH]  PSAP=<<0>>%0000 REFRESH=%88E8 cyc=4148117405 [HALT]
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 17 NMI 0 SEGT 0 VI 38741 NVI 1 (gesamt 38759)
+  |seg = 0                                                                         |
+  |aps = FFFA                                                                      |
+  |pc = 0 FFDC   ps = F8D8                                                         |
+  |trap type 3                                                                     |
+  |ident = FFFF                                                                    |
+  |panic: trap                                                                     |
+##### v2_SC_FF
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0000 R5 =0000 R6 =0000 R7 =0000
+  %0000: 7FFF                      SC #%FF
+  %0002: A1F7                      LD R7,R15
+[lp] c626026353 %087A[SP+2]w=6(%6)  [SP+4]w=32767(%7FFF)
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+  U8001 PC=<<3>>%0002 FCW=%10A0 NONSEG NORM VIE nvi- [C-S---]  PSAP=<<0>>%0000 REFRESH=%881A cyc=1045947051 [run]
+    R0 =0000 R1 =0000 R2 =0000 R3 =0000 R4 =0016 R5 =0000 R6 =0000 R7 =0000
+[lp] c626028555 %48C4[SP+2]w=0(%0)
+  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 21 NMI 0 SEGT 0 VI 30621 NVI 0 (gesamt 30642)
