@@ -1,0 +1,73 @@
+# V5: Mailbox-Treiber.  (a) Vektorzuordnung per Logpoints an den Kellerstuecken und Handlern, (b) Fehlerpfad rk ohne Diskette.
+# Kellerstuecke (low.s): 0246 clock, 0256 lpintr, 025E rkintr, 0266 tcrint, 026E tcxint, 0276 fdintr; am Stueck-Eintritt steht die Kennung bei [SP]
+cpu u8000
+lp <<0>>%0246 [SP]w count 3
+lp <<0>>%0256 [SP]w count 4
+lp <<0>>%025E [SP]w count 4
+lp <<0>>%0266 [SP]w count 6
+lp <<0>>%026E [SP]w count 6
+lp <<0>>%0276 [SP]w count 6
+lp <<0>>%6874 PC count 4
+lp <<0>>%6BCA PC [<<0>>%D535] count 4
+lp <<0>>%61D2 PC count 6
+lp <<0>>%620E PC count 6
+lp <<0>>%821A PC count 6
+# === V5a Teil 1: ls -l / ; cat /etc/motd
+keys ls\s-l\s/;echo\sA''1\r
+gscreen "A1" 400000000
+lpl
+# === V5a Teil 2: Drucker
+keys cat\s/etc/motd\s>\s/dev/lp;echo\sA''2\r
+gscreen "A2" 600000000
+lpl
+screen
+# === V5a Teil 3: Plattenzugriffe mit Schreiben, dann sync
+keys cat\s/etc/passwd\s>\s/tmp/p;ls\s-l\s/tmp;sync;echo\sA''3\r
+gscreen "A3" 400000000
+lpl
+screen
+# --- (b) Fehlerpfad: Laufwerk B (rk1, /usr) leeren
+lpd <<0>>%0246
+lpd <<0>>%0256
+lpd <<0>>%025E
+lpd <<0>>%0266
+lpd <<0>>%026E
+lpd <<0>>%0276
+lpd <<0>>%6874
+lpd <<0>>%6BCA
+lpd <<0>>%61D2
+lpd <<0>>%620E
+lpd <<0>>%821A
+keys cd\s/;/etc/umount\s/dev/rk1;PATH=/bin:/mnt:.;echo\sB''0\r
+gscreen "B0" 300000000
+screen
+eject B
+lp <<0>>%6B60 [<<0>>%D534] [<<0>>%D535] [<<0>>%D533] if [<<0>>%D535] != 1
+lp <<0>>%6BCA [<<0>>%D534] [<<0>>%D535] if [<<0>>%D535] != 1
+lp <<0>>%18A4 [SP+4]w [SP+6]w
+wp em:0D535 changed
+# === V5b Fall 1: Rohlesen rrk1 (Block 0)
+keys dd\sif=/dev/rrk1\sof=/dev/null\scount=1;echo\sB''1\r
+gscreen "B1" 1500000000
+lpl
+screen
+# === V5b Fall 2: Blockgeraet rk1 Block 5
+keys dd\sif=/dev/rk1\sskip=5\sof=/dev/null\scount=1;echo\sB''2\r
+gscreen "B2" 1500000000
+lpl
+screen
+# === V5b Fall 3: mount mit leerem Laufwerk
+keys /etc/mount\s/dev/rk1\s/usr;echo\sB''3\r
+gscreen "B3" 1500000000
+lpl
+screen
+# === V5b Fall 4: ueber das Plattenende (Block 700 >= 608) auf rk3 roh
+keys dd\sif=/dev/rrk3\sskip=700\sof=/dev/null\scount=1;echo\sB''4\r
+gscreen "B4" 1500000000
+lpl
+screen
+keys sync;echo\sE''1\r
+gscreen "E1" 300000000
+keys sync\r
+g 30000000
+q

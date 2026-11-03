@@ -1,0 +1,69 @@
+839:(dbg) # === A1: :s ohne Haltepunkt
+4985:  <<0>>%FF76    : 1E52 0002 0010 CE28
+4994:  A53 (Einzelbefehlszaehler)=11 (Vorlast 11) NVI=0  A54 (Freigabe)=0 gehalten (geladen bis A33 Bit 3)
+5004:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 99 NMI 0 SEGT 0 VI 1072 NVI 0 (gesamt 1171)
+5044:  |stopped at          #0:            ld   r6,@SP                                  |
+5046:(dbg) # === A2: :s ohne Haltepunkt
+5466:[io16] c690293199 OUT STD %0080=00C8  U8001 PC=<<0>>%03E2 (IO, System)
+5467:[io16] c690293220 OUT STD %0080=00C0  U8001 PC=<<0>>%03E8 (IO, System)
+5476:    Ausnahme: NVI   Kennung=%FFFF bei <<0>>%03F6 gekellert <<1>>%0000 FCW %1820->%400C Behandlung <<0>>%030E
+10538:  <<0>>%FFBA    : 1E52 0000 0100 FFFF
+10547:  A53 (Einzelbefehlszaehler)=11 (Vorlast 11) NVI=0  A54 (Freigabe)=0 gehalten (geladen bis A33 Bit 3)
+10556:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 81 NMI 0 SEGT 0 VI 1217 NVI 1 (gesamt 1299)
+10593:  |stopped at          #0:            ld   r6,@SP                                  |
+10596:  |stopped at          #0:            ld   r6,@SP                                  |
+10598:(dbg) # === A3: :s ohne Haltepunkt
+11071:[io16] c752025186 OUT STD %0080=00C8  U8001 PC=<<0>>%03E2 (IO, System)
+11072:[io16] c752025197 OUT STD %0080=00C0  U8001 PC=<<0>>%03E8 (IO, System)
+11081:    Ausnahme: NVI   Kennung=%FFFF bei <<0>>%03F6 gekellert <<1>>%0000 FCW %1820->%400C Behandlung <<0>>%030E
+16128:  <<0>>%FFBA    : 1E52 0000 0100 FFFF
+16137:  A53 (Einzelbefehlszaehler)=11 (Vorlast 11) NVI=0  A54 (Freigabe)=0 gehalten (geladen bis A33 Bit 3)
+16146:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 81 NMI 0 SEGT 0 VI 1218 NVI 1 (gesamt 1300)
+16180:  |stopped at          #0:            ld   r6,@SP                                  |
+16183:  |stopped at          #0:            ld   r6,@SP                                  |
+16186:  |stopped at          #0:            ld   r6,@SP                                  |
+16188:(dbg) # === A4: :s ohne Haltepunkt
+16650:[io16] c813767191 OUT STD %0080=00C8  U8001 PC=<<0>>%03E2 (IO, System)
+16651:[io16] c813767202 OUT STD %0080=00C0  U8001 PC=<<0>>%03E8 (IO, System)
+16660:    Ausnahme: NVI   Kennung=%FFFF bei <<0>>%03F6 gekellert <<1>>%0000 FCW %1820->%400C Behandlung <<0>>%030E
+21706:  <<0>>%FFBA    : 1E52 0000 0100 FFFF
+21715:  A53 (Einzelbefehlszaehler)=11 (Vorlast 11) NVI=0  A54 (Freigabe)=0 gehalten (geladen bis A33 Bit 3)
+21724:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 0 SC 81 NMI 0 SEGT 0 VI 1217 NVI 1 (gesamt 1299)
+21755:  |stopped at          #0:            ld   r6,@SP                                  |
+21758:  |stopped at          #0:            ld   r6,@SP                                  |
+21761:  |stopped at          #0:            ld   r6,@SP                                  |
+21764:  |stopped at          #0:            ld   r6,@SP                                  |
+21766:(dbg) # === A5: $r
+21786:  |stopped at          #0:            ld   r6,@SP                                  |
+21788:  |ps              #1020                                                           |
+21789:  |pc              #0                                                              |
+21808:(dbg) # === A6: :c (laufen lassen)
+21826:  |ps              #1020                                                           |
+21827:  |pc              #0                                                              |
+21848:  |process terminated                                                              |
+21952:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 164 NMI 0 SEGT 0 VI 1178 NVI 0 (gesamt 1343)
+21985:  |process terminated                                                              |
+21992:  |breakpoint              #0:        ld   r6,@SP                                  |
+21994:(dbg) # === B1: :s am Haltepunkt
+22015:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 161 NMI 0 SEGT 0 VI 772 NVI 1 (gesamt 935)
+22045:  |process terminated                                                              |
+22052:  |breakpoint              #0:        ld   r6,@SP                                  |
+22055:  |stopped at              #0:        ld   r6,@SP                                  |
+22057:(dbg) # === B2: :s am Haltepunkt
+22079:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 84 NMI 0 SEGT 0 VI 822 NVI 0 (gesamt 907)
+22106:  |process terminated                                                              |
+22113:  |breakpoint              #0:        ld   r6,@SP                                  |
+22116:  |stopped at              #0:        ld   r6,@SP                                  |
+22119:  |breakpoint              #0:        ld   r6,@SP                                  |
+22121:(dbg) # === B3: :s am Haltepunkt
+22142:  U8001-Ausnahmen: RESET 0 EPA 0 PRIV 1 SC 161 NMI 0 SEGT 0 VI 778 NVI 1 (gesamt 941)
+22166:  |process terminated                                                              |
+22173:  |breakpoint              #0:        ld   r6,@SP                                  |
+22176:  |stopped at              #0:        ld   r6,@SP                                  |
+22179:  |breakpoint              #0:        ld   r6,@SP                                  |
+22182:  |stopped at              #0:        ld   r6,@SP                                  |
+22203:  |stopped at              #0:        ld   r6,@SP                                  |
+22205:  |ps          #1020                                                               |
+22206:  |pc          #0                                                                  |
+22313:  |ps          #1020                                                               |
+22314:  |pc          #0                                                                  |

@@ -1,0 +1,103 @@
+# V4: adb-Einzelschritt an /mnt/echo.  'echo' ist kein Debugger-Befehl; die Zeile erscheint als Marke im Protokoll (und '? unknown command').
+cpu u8000
+psa 4
+trap clear
+keys ./adb\s./echo\r
+g 30000000
+# Teil A: kein Haltepunkt; Prozess steht nach exec bei PC 0; dreimal :s
+b <<0>>%030E if FCW == %400C
+# === A1: :s ohne Haltepunkt
+trap clear
+iow %80
+keys :s\r
+g 30000000
+r
+x/4xw SP
+dev em
+iod %80
+g 30000000
+trap
+screen
+# === A2: :s ohne Haltepunkt
+trap clear
+iow %80
+keys :s\r
+g 30000000
+r
+x/4xw SP
+dev em
+iod %80
+g 30000000
+trap
+screen
+# === A3: :s ohne Haltepunkt
+trap clear
+iow %80
+keys :s\r
+g 30000000
+r
+x/4xw SP
+dev em
+iod %80
+g 30000000
+trap
+screen
+# === A4: :s ohne Haltepunkt
+trap clear
+iow %80
+keys :s\r
+g 30000000
+r
+x/4xw SP
+dev em
+iod %80
+g 30000000
+trap
+screen
+# === A5: $r
+keys $r\r
+g 30000000
+screen
+# === A6: :c (laufen lassen)
+keys :c\r
+g 60000000
+screen
+bd <<0>>%030E
+# Teil B: Haltepunkt am Einstieg, :r, dann :s
+keys ./adb\s./echo\r
+g 30000000
+keys 0:b\r
+g 20000000
+trap clear
+keys :r\r
+g 60000000
+trap
+screen
+# === B1: :s am Haltepunkt
+trap clear
+keys :s\r
+g 40000000
+trap
+screen
+# === B2: :s am Haltepunkt
+trap clear
+keys :s\r
+g 40000000
+trap
+screen
+# === B3: :s am Haltepunkt
+trap clear
+keys :s\r
+g 40000000
+trap
+screen
+keys $r\r
+g 30000000
+screen
+keys $q\r
+g 30000000
+keys sync;echo\sE''NDE\r
+gscreen "ENDE" 200000000
+keys sync\r
+g 30000000
+q

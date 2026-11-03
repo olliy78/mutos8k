@@ -125,6 +125,7 @@ sind jetzt bytegleich (u. a. `bcopy`, `iomove`, `iupdat`, `swtch`, `newproc`, `c
 * **Userspace (H7)**: `cmd`, `libc` und die Disketten sind noch nicht gegen V7/Hippe verglichen; die WEGA-`libc`-Uebereinstimmung ist bisher nur fuer die Systemaufruf-Huellen gemessen.
 * **Schutz Prozess gegen Kernel**, Stapelueberlauf und das Verhalten nichtsegmentierter Zugriffe im Gast: nicht gemessen (`speicher.md` Abschnitt 10).
 * **Mailbox**: Wiederholungs-/Fehlerpfade, Vektorzuordnung und die Floppy-Kette (`fd*`, nie ausgefuehrt) ungemessen; Z8001-Einzelschritt (NVI) und Paritaetsbits offen (`z8001_kontext.md`).
+  *Stand AP H9 (`gastversuche.md`):* Vektorzuordnung, `rk`-Fehlerpfad (Status C2/C5, 3 Wiederholungen) und Floppy-Kette (F7, kein Haenger) gemessen; Einzelschritt: Mechanismus gemessen, aber ohne Befehlsfortschritt im Emulator (Verdacht Abtastzeitpunkt NVI nach `IRET`).  Weiter offen: Status `0xC8`, `lp`-/`fd`-Wiederholungen, Paritaetsbits, Speicherschutz/privilegierte Befehle/Stapelueberlauf (V1-V3, Abschnitt dort).
 * **Nahe Funktionen** (25, Abschnitt 5): Quellformen fuer `ssig`, `bmap`, `readi`, `malloc`/`mfree`, `ialloc` u. a. nicht gefunden; ob der Unterschied am Kernel-`c2` oder an der Quellform liegt, ist je Funktion offen.
 * **Echtheit des System-III-Spiegels** gegen ein TUHS-Original; V7-Patches/Addenda sind nicht in `original/` (nur im Scratchpad geladen).
 * **MUTOS1600**-Quellen und Zilog-ZEUS: nicht gefunden.
@@ -138,6 +139,7 @@ sind jetzt bytegleich (u. a. `bcopy`, `iomove`, `iupdat`, `swtch`, `newproc`, `c
 | Speicherverwaltung ohne MMU | `speicher.md` |
 | Z8001-Prozessorkontext, WEGA-`libc` | `z8001_kontext.md` |
 | Mailbox-Treiber, U880-Seite, `fd*` als Bandtreiber | `mailbox_treiber.md` |
+| Gastversuche H9: Einzelschritt, Mailbox-Fehlerpfad, Vektoren, Floppy-Kette | `gastversuche.md`, `versuche/gast_h9/` |
 | Zeilendisziplin | `tty2.md` |
 | Header, `conf.c`, `sysent.c` | `header.md` |
 | Rundlaufverfahren, Sollwerte | `rundlauf.md`, `daten/rundlauf_soll.txt` |

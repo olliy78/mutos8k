@@ -1,0 +1,44 @@
+# V6: Floppy-Kette dev0 (bdevsw 0 = fd, cdevsw 10 = fd roh).  Kernel-Seite per Logpoint, U880-Seite (Klasse 3, 9A00/9B00) und Port 1CH.
+# U880-Adressen (mutos_io/karte.txt): 9A00 Klasse 3, 9BEE KMD_STARTEN (OUT (1CH),A), 9BFC KMD_ZEIT (Zeitablauf, C2), 9C00 Status-Rueckmeldung
+cpu zve1
+iow 0x1C
+lp 0x9A00 IX [IX+7] [IX+8]
+lp 0x9BEE SP
+lp 0x9BFC SP count 2
+lp 0x9C00 IY
+cpu u8000
+lp <<0>>%7E16 PC [SP+2]w [SP+4]w
+lp <<0>>%7F94 PC
+lp <<0>>%7FDC PC
+lp <<0>>%821A PC [<<0>>%D55B]
+lp <<0>>%18A4 [SP+4]w [SP+6]w
+# === V6 Knoten
+keys mknod\sfd0\sb\s0\s0;mknod\srfd0\sc\s10\s0;ls\s-l\sfd0\srfd0;echo\sC''0\r
+gscreen "C0" 400000000
+screen
+# === V6 Zugriff roh (Kommandoblock 01B5 vorher/nachher)
+cpu zve1
+d 0x1B5 16
+cpu u8000
+keys dd\sif=rfd0\sof=/dev/null\scount=1;echo\sC''1\r
+gscreen "C1" 1500000000
+lpl
+screen
+cpu zve1
+d 0x1B5 16
+cpu u8000
+# === V6 Zugriff Block
+keys dd\sif=fd0\sof=/dev/null\scount=1;echo\sC''2\r
+gscreen "C2" 1500000000
+lpl
+screen
+# === V6 Zugriff mit mehr Bloecken (Wiederholung?)
+keys dd\sif=rfd0\sof=/dev/null\sbs=1k\scount=4;echo\sC''3\r
+gscreen "C3" 1500000000
+lpl
+screen
+keys sync;echo\sE''NDE\r
+gscreen "ENDE" 300000000
+keys sync\r
+g 30000000
+q

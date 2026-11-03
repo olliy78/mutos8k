@@ -1,0 +1,152 @@
+770:(dbg) # === V6 Knoten
+1031:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1032:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1056:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1057:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1059:(dbg) # === V6 Zugriff roh (Kommandoblock 01B5 vorher/nachher)
+1064:  01B5: E7 03 7E CD F7 03 CD 36 04 CD 6B 04 28 06 E1 77  |..~....6..k.(..w|
+1238:[lp] c713256261 %7E16: 5F00 05F8                 CALL %05F8  PC=32278(%7E16)  [SP+2]w=2560(%A00)  [SP+4]w=0(%0)
+1239:[lp] c715730029 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1240:[lp] c715730224 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1241:[lp] c715734330 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1242:[lp] c715735458 9BEE: AF             XOR A  SP=52066(0xCB62)
+1243:[io] c715735466 OUT (1CH)=00  ZVE1.PC=9BF2
+1246:[lp] 9BFC: Limit 2 erreicht - weitere Treffer stumm (gezaehlt, siehe lpl)
+1247:[lp] c715741253 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1248:[lp] c715743148 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1249:[lp] c715747018 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=1(%1)
+1250:[lp] c716349895 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1251:[lp] c716350093 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1252:[lp] c716353863 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1253:[lp] c716355149 9BEE: AF             XOR A  SP=52066(0xCB62)
+1254:[io] c716355157 OUT (1CH)=00  ZVE1.PC=9BF2
+1255:[lp] c716360944 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1256:[lp] c716362839 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1257:[lp] c716377575 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=247(%F7)
+1274:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1275:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1279:  |0+0 records in                                                                  |
+1280:  |0+0 records out                                                                 |
+1281:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1283:(dbg) lpl
+1284:    U8001 <<0>>%18A4 [SP+4]w [SP+6]w 
+1285:    U8001 <<0>>%7E16 PC [SP+2]w [SP+4]w 
+1286:    U8001 <<0>>%7F94 PC 
+1287:    U8001 <<0>>%7FDC PC 
+1288:    U8001 <<0>>%821A PC [<<0>>%D55B] 
+1289:    9A00 IX [IX+7] [IX+8] 
+1290:    9BEE SP 
+1291:    9BFC SP  count 2  [Treffer=256 ausgegeben=2]
+1292:    9C00 IY 
+1309:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1310:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1314:  |0+0 records in                                                                  |
+1315:  |0+0 records out                                                                 |
+1316:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1322:  01B5: 83 00 00 00 00 00 00 00 00 CD 6B 04 28 06 E1 77  |..........k.(..w|
+1326:(dbg) # === V6 Zugriff Block
+1493:[lp] c767871607 %7E16: 5F00 05F8                 CALL %05F8  PC=32278(%7E16)  [SP+2]w=0(%0)  [SP+4]w=0(%0)
+1494:[lp] c769784484 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1495:[lp] c769784683 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1496:[lp] c769788632 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1497:[lp] c769789760 9BEE: AF             XOR A  SP=52066(0xCB62)
+1498:[io] c769789768 OUT (1CH)=00  ZVE1.PC=9BF2
+1499:[lp] c769795555 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1500:[lp] c769797450 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1501:[lp] c769801320 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=1(%1)
+1502:[lp] c770403676 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1503:[lp] c770403875 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1504:[lp] c770407625 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1505:[lp] c770408911 9BEE: AF             XOR A  SP=52066(0xCB62)
+1506:[io] c770408919 OUT (1CH)=00  ZVE1.PC=9BF2
+1507:[lp] c770414706 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1508:[lp] c770416601 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1509:[lp] c770431356 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=247(%F7)
+1522:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1523:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1526:  |0+0 records in                                                                  |
+1527:  |0+0 records out                                                                 |
+1528:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1531:  |0+0 records in                                                                  |
+1532:  |0+0 records out                                                                 |
+1533:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1535:(dbg) lpl
+1536:    U8001 <<0>>%18A4 [SP+4]w [SP+6]w 
+1537:    U8001 <<0>>%7E16 PC [SP+2]w [SP+4]w 
+1538:    U8001 <<0>>%7F94 PC 
+1539:    U8001 <<0>>%7FDC PC 
+1540:    U8001 <<0>>%821A PC [<<0>>%D55B] 
+1541:    9A00 IX [IX+7] [IX+8] 
+1542:    9BEE SP 
+1543:    9BFC SP  count 2  [Treffer=512 ausgegeben=2]
+1544:    9C00 IY 
+1557:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1558:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1561:  |0+0 records in                                                                  |
+1562:  |0+0 records out                                                                 |
+1563:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1566:  |0+0 records in                                                                  |
+1567:  |0+0 records out                                                                 |
+1568:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1570:(dbg) # === V6 Zugriff mit mehr Bloecken (Wiederholung?)
+1765:[lp] c827090876 %7E16: 5F00 05F8                 CALL %05F8  PC=32278(%7E16)  [SP+2]w=2560(%A00)  [SP+4]w=0(%0)
+1766:[lp] c829000580 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1767:[lp] c829000783 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1768:[lp] c829005434 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1769:[lp] c829006562 9BEE: AF             XOR A  SP=52066(0xCB62)
+1770:[io] c829006570 OUT (1CH)=00  ZVE1.PC=9BF2
+1771:[lp] c829012357 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1772:[lp] c829014252 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=0(0x0)
+1773:[lp] c829018122 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=1(%1)
+1774:[lp] c829621022 %7F94: 5F00 05F8                 CALL %05F8  PC=32660(%7F94)
+1775:[lp] c829621236 %7FDC: 5F00 05F8                 CALL %05F8  PC=32732(%7FDC)
+1776:[lp] c829624967 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1777:[lp] c829626253 9BEE: AF             XOR A  SP=52066(0xCB62)
+1778:[io] c829626261 OUT (1CH)=00  ZVE1.PC=9BF2
+1779:[lp] c829632048 9C00: FD 36 0A C2    LD (IY+0AH),C2H  IY=42356(0xA574)
+1780:[lp] c829633943 9A00: F3             DI  IX=42215(0xA4E7)  [IX+7]=0(0x0)  [IX+8]=81(0x51)
+1781:[lp] c829648714 %821A: 5F00 05F8                 CALL %05F8  PC=33306(%821A)  [<<0>>%D55B]=247(%F7)
+1789:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1790:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1793:  |0+0 records in                                                                  |
+1794:  |0+0 records out                                                                 |
+1795:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1798:  |0+0 records in                                                                  |
+1799:  |0+0 records out                                                                 |
+1800:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1803:  |0+0 records in                                                                  |
+1804:  |0+0 records out                                                                 |
+1805:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1807:(dbg) lpl
+1808:    U8001 <<0>>%18A4 [SP+4]w [SP+6]w 
+1809:    U8001 <<0>>%7E16 PC [SP+2]w [SP+4]w 
+1810:    U8001 <<0>>%7F94 PC 
+1811:    U8001 <<0>>%7FDC PC 
+1812:    U8001 <<0>>%821A PC [<<0>>%D55B] 
+1813:    9A00 IX [IX+7] [IX+8] 
+1814:    9BEE SP 
+1815:    9BFC SP  count 2  [Treffer=768 ausgegeben=2]
+1816:    9C00 IY 
+1824:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1825:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1828:  |0+0 records in                                                                  |
+1829:  |0+0 records out                                                                 |
+1830:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1833:  |0+0 records in                                                                  |
+1834:  |0+0 records out                                                                 |
+1835:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1838:  |0+0 records in                                                                  |
+1839:  |0+0 records out                                                                 |
+1840:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1916:  |brw-rw-r-- 1 root 0;echo C''0                                                   |
+1917:  |brw-rw-r-- 1 root    0,  0 Jan  1 12:00 fd0                                     |
+1918:  |crw-rw-r-- 1 root   10,  0 Jan  1 12:00 rfd0                                    |
+1921:  |0+0 records in                                                                  |
+1922:  |0+0 records out                                                                 |
+1923:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1926:  |0+0 records in                                                                  |
+1927:  |0+0 records out                                                                 |
+1928:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
+1931:  |0+0 records in                                                                  |
+1932:  |0+0 records out                                                                 |
+1933:  |tm0: bn = 0 0 old er = F7 err stat = F7                                         |
