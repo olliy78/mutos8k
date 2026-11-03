@@ -26,3 +26,42 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+----------------------------------------------------------------------------
+Third-party sources in this repository (the BSD 3-Clause licence above is
+unchanged and covers the original work of this project only)
+----------------------------------------------------------------------------
+
+This repository contains reference material from third parties.  The notes
+below state what is known; they are not legal advice and make no claim beyond
+that.  Files under original/ are kept unchanged for research and comparison.
+
+* original/unix-v7/ -- UNIX Version 7 (Bell Laboratories, 1979), as distributed
+  in Henry Spencer's tarball from the Unix Heritage Society (TUHS).  Released
+  in 2002 under the Caldera licence (BSD-style):
+  https://www.tuhs.org/Archive/Caldera-license.pdf
+
+* original/sys3/ -- UNIX System III (PDP-11 and VAX), from the GitHub mirror
+  Krush206/unix-system-III.  The 2002 Caldera licence does not mention System
+  III explicitly.  The files are included for research purposes on the
+  decision of the project owner; the authenticity of the mirror has not been
+  checked against a TUHS original.
+
+* original/hippe-v7/ -- the collection "Torsten_Hippe_v7" from the TUHS
+  archive (Distributions/Research), assembled in 1995 from sources unknown to
+  us; the person who assembled the collection is not the author of its contents.  Its
+  UNIX V7 base falls under the Caldera licence.  For additions by third
+  parties no licence statement is known, and their authors are unknown.  The
+  files are included for research and comparison purposes on the decision of
+  the project owner.
+
+* original/wega/ -- contains only a reference note (README); no WEGA source is
+  copied into this repository.
+
+* Reconstructed MUTOS sources (kernel/, mutos_io/, userspace/) -- MUTOS 8000
+  is a derivative of UNIX Version 7.  The reconstructed sources are the
+  result of research on the original binaries; where they follow V7 text (or
+  the text of the collection above), that text remains subject to the terms
+  stated for its source.  The original MUTOS disk images under disks/original/
+  are kept for research.

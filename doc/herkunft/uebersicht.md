@@ -1,5 +1,8 @@
 # Herkunft des MUTOS-Kernels: Grobvergleich mit UNIX V7 und UNIX System III (AP H2)
 
+> **Hinweis (2026-11-03):** Gesamtbericht und aktueller Stand: [`README.md`](README.md).  Dieses Dokument ist das **zeitlich geordnete Arbeitsprotokoll**; spaetere Abschnitte (13-21)
+> korrigieren fruehere.  Aussagen, die dadurch ueberholt sind, tragen die Marke **[UEBERHOLT]** mit Verweis; sie bleiben als Dokumentation des Erkenntnisweges stehen.
+
 Stand 2026-10-30.  Plan: `doc/plan/42_unix_herkunft.md`.  Werkzeug: `tools/herkunft/herkunft.py` (AP H1).
 Alle Zahlen sind **gemessen** (Befehle in Abschnitt 2 und an den Stellen), sofern nicht ausdruecklich als *angenommen*
 gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urteil auf Basis der Messung.
@@ -15,6 +18,7 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
 
 * **Hauptquelle: UNIX V7** (Spencer-Tarball `original/unix-v7`).  Einstufung **sicher** fuer den maschinenunabhaengigen
   Kern (alloc, iget, fio, bio, slp, sig, pipe, nami, rdwri, sys2-4, subr, prf, malloc, main).
+* **[UEBERHOLT in Teilen, s. Abschnitte 10, 13, 14 und `README.md` 4.1]**  Der Befund "System III nicht beteiligt" gilt weiter; die unten genannten "System-III-Zuege" sind durch die Hippe-Sammlung erklaert.
 * **System III ist im Kern nicht belegt.**  Kein Merkmal, das nur SysIII hat (`utssys`, `fcntl`, `ulimit`, `setpgrp`, `acct`/`errlog`,
   `sysinfo`, `var.h`, `utsname`, `NSIG 20`, `p_swaddr`, `m_flags`, ...) steht in `kernel/c`, `kernel/h` oder `kernel/conf`.  Mehrere
   Merkmale, die nur V7 hat, stehen darin (Abschnitt 4).  PDP-11 und VAX von SysIII sind gegenueber V7 gleich schlecht (47 % / 46 %
@@ -23,6 +27,8 @@ gekennzeichnet.  Die Einstufung sicher / wahrscheinlich / vermutet ist ein Urtei
   tut das nicht (`rg s_tfree original/unix-v7/usr/sys/sys` ohne Treffer; nur `mkfs`/`icheck` fassen die Felder an), `original/sys3/uts/pdp11/os/alloc.c` hat
   genau diese 6 Stellen.  Der Kern ist also V7 mit mindestens einem System-III-Zug; Herkunft offen (Plan H6).  Die Aussage "System III nicht belegt" gilt
   damit fuer die Feature-Ebene (Abschnitt 1a), nicht mehr absolut.
+  **[UEBERHOLT]** "V7 mit mindestens einem System-III-Zug; Herkunft offen": `s_tfree`/`s_tinode`, `smount` -> `out1` u. a. stehen in der Hippe-Sammlung (Abschnitt 13, `fremd.md`); es sind keine System-III-Zuege, sondern V7-Variantenzuege.
+* **[TEILWEISE UEBERHOLT]** Die folgende Liste stammt von H2.  Inzwischen: `fd*` (`dev0.c`) ist ein umgebauter Bandtreiber `tm.c` (Abschnitt 17), `rk`/`lp`/`tc*` haben Vorlagen (Abschnitt 17), `tty2.c` stammt aus der Hippe-Sammlung (Abschnitte 13, 20); `mapalloc`/`mapstart`, `mbx.h`, Mailbox-Protokoll und U880-Seite bleiben eigen.
 * **MUTOS-eigen (kein V7/SysIII-Bezug):** Diskettentreiber `dev0.c` (`fd*`), Drucker `lp.c`, Mailbox-Terminal `tty.c` (`tc*`),
   Plattentreiber-Teil von `rk.c`, `mapalloc`/`mapstart` in `bio.c`, Header `mbx.h`, `user_ext.h`, `devtab` in `conf.h`, die
   Z8001-Teile von `machdep.c`, `trap.c`, `ureg.c`.
@@ -57,11 +63,11 @@ exakt dem Original entspraeche: er stuetzt sich auf das *Fehlen* von Merkmalen, 
 **Zwei Praezisierungen zur Ausgangsfrage:** (1) IPC mit `msgbuf`/`msqid_ds` gibt es erst in System V, nicht in III.  (2) Ein
 Dateisperr-Mechanismus kam weder in III noch in V7; er ist Xenix- bzw. System-V-Gut.  Beides ist hier nur Negativbefund fuer MUTOS.
 
-**Nebenbefund (gemessen, Deutung angenommen):** `kernel/c/tty2.c` (Zeilendisziplin) benutzt Funktionen, die weder V7 noch System III
+**Nebenbefund [UEBERHOLT: Ursprung geklaert, `tty2.c` ist die Zeilendisziplin der Hippe-Sammlung, Abschnitte 13 und 20; "Origin: none" gilt nicht mehr]** (gemessen, Deutung angenommen): `kernel/c/tty2.c` (Zeilendisziplin) benutzt Funktionen, die weder V7 noch System III
 haben (`ttyrub`, `ttyecho`, `ttycol`, `unputc`, `bitset`, `ttyspec`, `ttkick`).  Gegen das Berkeley-Neutreiber `ttynew.c` aus
 2.8BSD (`https://www.tuhs.org/Archive/Distributions/UCB/2BSD/2.8bsd.tar.gz`, nur zu diesem Test geladen, nicht abgelegt) liegt
 `tty2.c` bei nur 20 %; dort heissen die Funktionen `ntyrub`/`ntyecho`.  Ursprung offen; moegliche Quellen: 2.9BSD/4.1BSD-`tty.c`,
-WEGA/ZEUS.  Das wird in H6 geklaert.  Bis dahin: `tty2.c` -> `Origin: none` (Ursprung unbekannt).
+WEGA/ZEUS.  Das wird in H6 geklaert.  Bis dahin: `tty2.c` -> `Origin: none` (Ursprung unbekannt).  **[UEBERHOLT, s. o.]**
 
 ## 2. Messverfahren
 
@@ -93,6 +99,8 @@ python3 -I tools/herkunft/herkunft.py structs --mutos kernel/h --ref v7=$V/h s3p
 ## 3. Matrix Modul x Quelle
 
 ### 3.1 Funktionsdateien (`kernel/c`)
+
+**[Stand H2, Einstufung teils UEBERHOLT]** Die Spalte "Einstufung" (z. B. `tty2` partial/unklar, `dev0` none) ist der Stand vor H3-H6; aktuell gelten die `Origin`-Werte der Dateikoepfe, siehe Tabelle in `README.md` Abschnitt 5.
 
 Spalten V7 / SysIII-PDP / SysIII-VAX: gewichtetes Mittel (Funktionen >= 50 % / Funktionen).  "Datei" = die V7-Datei mit den meisten
 Treffern.  Einstufung nach Plan Abschnitt 5 (`Origin`).
@@ -260,7 +268,7 @@ WEGA/ZEUS (Z8001, SysIII-Abkoemmling) bleibt als moegliche Vorlage fuer Z8001-Te
   `rkopen`, `rkstart`, `rkintr`, `rkstrategy`: unter 50 %.  **vermutet**: Plattentreiber ueber Mailbox ist eigen, `mm*`/`sy*` V7-nah.
 * `bio.c`: `mapalloc`, `mapstart` ohne Gegenstueck (V7 `mapalloc` ist UNIBUS-Mapping): eigen.
 * `machdep.c`, `ureg.c`, `trap.c`, `clock.c`: V7-Gerippe mit Z8001-Teilen (`startup`, `sigret`, Segmentverwaltung); `trap` 48 %.
-* `tty2.c`: Ursprung offen (siehe 1).
+* `tty2.c`: Ursprung offen (siehe 1).  **[UEBERHOLT]** Quelle gefunden, Abschnitte 13 und 20.
 * `conf.c`: Geraetetabellen sind MUTOS-spezifisch; Token-Vergleich nicht aussagekraeftig.
 * Header: `mbx.h`, `user_ext.h`, `devtab` und `linesw` in `conf.h`, `tty.h`, `reg.h`.
 
@@ -269,7 +277,7 @@ WEGA/ZEUS (Z8001, SysIII-Abkoemmling) bleibt als moegliche Vorlage fuer Z8001-Te
 1. H3 nimmt als Referenz **V7** (`usr/sys/sys`, `dev`), Herkunftsvermerk `Source: UNIX V7 usr/sys/sys/<datei>`; SysIII nur bei Textgleichheit ("= SysIII").
 2. Der Z8001-Nahtstelleneffekt (`i_addr`/`i_un`, `b_addr`/`b_un`, Skalartypen) ist je Datei zu pruefen; Rundlaufpruefung nach Plan 3.4.
 3. `kernel/conf/sysent.c`-Kommentar in H4 auf V7-Nummern korrigieren (Dateikopf nennt WEGA/SysIII).
-4. Offen: `tty2.c` (H6, WEGA/ZEUS), `rk.c`-Mischung (H5), V7-Addenda laden (Plan 2).
+4. Offen (damals; **[UEBERHOLT]**, `tty2.c` in H6 geklaert): `tty2.c` (H6, WEGA/ZEUS), `rk.c`-Mischung (H5), V7-Addenda laden (Plan 2).
 
 ## 7. Dateien
 
@@ -298,7 +306,7 @@ Neue Header `stat.h`, `timeb.h` (V7-Text, vorher lokale Deklarationen in `sys3.c
 * Gesamtbau `gesamtbau.py --uebersetzen --stufe 1 --boot` auf dem endgueltigen Stand: **184 von 227** Funktionen aus C (vorher 181), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte,
   Boot bis zur Shell und Arbeitstests (`summe = 5050` zweimal, `cc -O -c prf.c` 1600 B).  Gesamtes `pytest`: 213 bestanden, 2 uebersprungen.
 * Noch "nahe" (Muster des aelteren Kernel-`c2`, `c_rueckbau.md` K7b/K7c): `bmap` 263/308, `ssig` 39/52, `malloc` 24/52, `mfree` 1/119 abweichende Woerter -- unveraendert gegenueber vorher.
-  Befund entgegen K7a: `bcopy` war keine `c2`-Abweichung (kein "anderer c2-Stand"), sondern die Quellform (`register count` als Parameter); `doc/kernel/c_rueckbau.md` ist an dieser Stelle ueberholt.
+  Befund entgegen K7a: `bcopy` war keine `c2`-Abweichung (kein "anderer c2-Stand"), sondern die Quellform (`register count` als Parameter); `doc/kernel/c_rueckbau.md` ist an dieser Stelle ueberholt (dort inzwischen markiert).
 * **Aussage "Kern V7, nur einzelne System-III-Zuege" bestaetigt**, Zahl der SysIII-Zuege waechst um einen: `smount` springt nach fehlgeschlagenem `d_open` nach `out1` (SysIII textgleich; V7 `out`).
   (Vorher: `s_tfree`/`s_tinode` in `alloc.c`.)  `seek` hat eine `off < 0`-Pruefung wie SysIII, aber in anderer Form (siehe unten).  Kein SysIII-Alleinmerkmal sonst; `pipe` ist V7 (kein `IFIFO`).
 * **Fremdzuege (weder V7 noch System III) fuer H6:**
@@ -338,7 +346,7 @@ Offen: ob `rdwri.c`-Probekopie (196 B, 9/98 Woerter) und echte Datei (194 B, byt
 
 ## 12. H5: trap, machdep, ureg, rk, dev0, lp, tty (2026-10-31)
 
-Einzelheiten in `trap.md`, `machdep.md`, `ureg.md`, `rk.md`, `dev0.md`, `lp.md`, `tty.md`.  `tty2.c` und `kernel/c/varianten/` sind nicht Teil dieses Pakets (H6).  Headern und `kernel/conf` aus H4 geprueft: alle 25 Dateien tragen den Herkunftskopf, kein Nicht-ASCII-Zeichen.
+Einzelheiten in `trap.md`, `machdep.md`, `ureg.md`, `rk.md`, `dev0.md`, `lp.md`, `tty.md`.  `tty2.c` und `kernel/c/varianten/` sind nicht Teil dieses Pakets (H6).  (`kernel/c/varianten/` ist inzwischen als historisch beschrieben und uebersetzt nicht mehr: `kernel/c/varianten/README.md`.)  Headern und `kernel/conf` aus H4 geprueft: alle 25 Dateien tragen den Herkunftskopf, kein Nicht-ASCII-Zeichen.
 
 Rundlauf (`tools/herkunft/rundlauf.sh`, 6 Module, **vorher = nachher**, gemessen; `dev0` wird im Original ohne `-O` uebersetzt und ist nur vom Gesamtbau abgedeckt):
 

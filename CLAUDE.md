@@ -78,5 +78,6 @@ tests/          pytest; guest tests are marked `gast` and skip (exit 77 / pytest
 
 ## Licence
 
-BSD 3-Clause (see LICENSE).  MUTOS 8000 is a UNIX V7 derivative; the V7 sources are under the Caldera licence
-(BSD-style), to be added to LICENSE.  Original disk images and reconstructed sources are kept here for research.
+BSD 3-Clause (see LICENSE) for the original work of this project.  MUTOS 8000 is a UNIX V7 derivative; LICENSE lists the third-party sources
+(V7 under the Caldera licence, System III and the Hippe collection checked in for research on the owner's decision).  Original disk images and
+reconstructed sources are kept here for research.

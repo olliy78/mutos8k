@@ -2,7 +2,7 @@
 
 Stand 2026-10-31.  Plan: `doc/plan/42_unix_herkunft.md` (H6).  Kurzfassung: `uebersicht.md` Abschnitt 13.
 Alle Zahlen **gemessen**, sofern nicht als *vermutet* oder *angenommen* gekennzeichnet.  Stufen: **sicher** (mehrere unabhaengige Merkmale, Gegenprobe negativ),
-**wahrscheinlich**, **vermutet**, **ungeklaert**.  Es wurde nichts in `kernel/` oder `original/` veraendert; alle Quellen liegen nur im Scratchpad (Abschnitt 2).
+**wahrscheinlich**, **vermutet**, **ungeklaert**.  Es wurde nichts in `kernel/` oder `original/` veraendert; die Quellen lagen zur Zeit der Untersuchung nur im Scratchpad (Abschnitt 2).  **Nachtrag 2026-11-01:** Die Hippe-Sammlung liegt inzwischen unter `original/hippe-v7/` (Beschluss des Projektinhabers).
 
 > **Zuordnung (Stand 2026-10-31, Recherche des Projektinhabers):** "Hippe" bezeichnet in diesem Dokument nur die **Sammlung** `Distributions/Research/Torsten_Hippe_v7` im TUHS-Archiv, nicht den
 > Urheber der Inhalte.  Torsten Hippe hat die Sammlung im Maerz 1995 als Student aus nicht naeher bekannten Quellen zusammengestellt und dem TUHS uebergeben; er ist weder Autor des Kernels noch
@@ -22,7 +22,7 @@ Alle Zahlen **gemessen**, sofern nicht als *vermutet* oder *angenommen* gekennze
   bei der Rueckuebersetzung frei vergeben worden; die Originalnamen sind `ttywipe`, `ttyretype`, `ttybit`, ... (Abschnitt 5).
 * **Nicht erklaert** (keine Quelle in 15 Baeumen): die 30-s-`update()`-Anforderung in `clock`/`sched`, die Kopierrichtung in `setregs` (`u_exname` -> `u_dbuf`).  Beides vermutlich MUTOS-eigen.
 * `ptrace`-Argumentreihenfolge `req, pid, addr, data` ist die Konvention aller Nicht-PDP-11-Systeme im Satz (32V, System III VAX, WEGA/Z8001) und von 2.10BSD an; kein Fremdzug, sondern Portierung.
-* Rechtlich: die Hippe-Variante steht **nicht** unter einer klaren Lizenz (Abschnitt 7); empfohlen wird, sie nicht unter `original/` abzulegen, bevor das geklaert ist.
+* Rechtlich: die Hippe-Variante steht **nicht** unter einer klaren Lizenz (Abschnitt 7); empfohlen wurde, sie nicht unter `original/` abzulegen, bevor das geklaert ist.  **[UEBERHOLT 2026-11-01]** Auf Beschluss des Projektinhabers unter `original/hippe-v7/` eingecheckt (Lizenzlage: README dort und `LICENSE`).
 
 > **Vorbehalt:** Uebereinstimmung heisst Verwandtschaft, nicht Abstammung.  "Vorlage" in diesem Dokument meint den naechsten bekannten Verwandten; ob MUTOS direkt von Hippe
 > abstammt oder von einer gemeinsamen unbekannten Vorlage, prueft die Gegenprobe in **Abschnitt 8** (Stand 2026-10-31): MUTOS ist inhaltlich der Hippe-Kernel (direkte Ableitung *wahrscheinlich*), eine gemeinsame unbekannte Vorlage

@@ -83,7 +83,7 @@ Diese vier stehen in `doc/herkunft/daten/rundlauf_soll.txt` als `NAHE`; die 16 a
 * **Namensabbildung im Gesamtbau:** `tools/kernel/gesamtbau.py` bildet C-Namen ueber die Marken `/* KERNEL xxxx */` im Quelltext auf Adressen ab (`funktionen_aus_quelle`, Symbol = `"_" + Name`, auf 8 Zeichen gekuerzt) und
   liest zusaetzlich `kernel/karte/karte.txt` (`name ADRESSE _NAME`) fuer die Namen, die der aus dem Original-Abbild uebernommene Rest benutzt.  Die Umbenennung musste daher an **beiden** Stellen stattfinden (Quelltext und Karte),
   sonst haengen die aus dem Abbild disassemblierten Funktionen an den alten Namen.  Eine Alias-Abbildung war nicht noetig.
-* `kernel/c/varianten/var7d*.c` (Wegwerf-Probedateien) benutzen die alten Mitgliedsnamen und uebersetzen mit dem neuen `tty.h` nicht mehr; sie sind nicht Teil des Baus.
+* `kernel/c/varianten/var7d*.c` (Wegwerf-Probedateien) benutzen die alten Mitgliedsnamen und uebersetzen mit dem neuen `tty.h` nicht mehr; sie sind nicht Teil des Baus (`kernel/c/varianten/README.md`).
 
 ## Aenderung an `tools/kernel/gesamtbau.py` (noetig geworden)
 

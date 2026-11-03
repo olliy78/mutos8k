@@ -1,6 +1,7 @@
 # Entwurf 42: Herkunft des MUTOS-Codes -- Vergleich mit UNIX V7 und UNIX System III
 
-Stand 2026-10-30.  Status: **Plan, noch nichts umgesetzt** (ausser dem Beschaffen der Quellen, Abschnitt 2).
+Stand 2026-11-03.  Status: **Kernel-Herkunftsanalyse abgeschlossen (H0-H6, H8); Userspace (H7) offen.**  Ergebnis: `doc/herkunft/README.md`; Statustabelle in Abschnitt 4a.
+(Ursprungsstand 2026-10-30: Plan, nur Quellen beschafft; der Text der Abschnitte 1-7 ist der Plan und wurde nicht umgeschrieben.)
 
 ## 1. Ziel
 
@@ -83,6 +84,36 @@ Reihenfolge pro Datei: Vergleich -> Doku-Eintrag (`doc/herkunft/<modul>.md`) -> 
 | H8 | Abschluss: Herkunftsvermerke in allen Dateikoepfen, Gesamtbericht, `CLAUDE.md`/README nachziehen | |
 
 H1 und H2 zuerst; H3 beginnt mit den Modulen, die durch `kernel_namen.md` bereits "sicher" benannt sind (`alloc`, `iget`, `slp`, `sig`).
+
+## 4a. Status der Arbeitspakete (2026-11-03)
+
+| AP | Status | Ergebnis / Fundstelle |
+|----|--------|-----------------------|
+| H0 | erledigt | Quellen V7, System III (Abschnitt 2); spaeter Hippe-Sammlung (`original/hippe-v7/`) |
+| H1 | erledigt | `tools/herkunft/herkunft.py`, `tests/test_herkunft.py` |
+| H2 | erledigt | `doc/herkunft/uebersicht.md` Abschnitte 1-7 (Abschnitt 1 teils ueberholt, dort markiert): V7 Hauptquelle, System III nicht beteiligt |
+| H3 | erledigt | maschinenunabhaengige Module (alloc, iget, slp, sig, sys1-4, fio, prf, subr, malloc, pipe, nami, rdwri, bio, main, clock, text), je `doc/herkunft/<modul>.md` |
+| H4 | erledigt | Header, `conf.c`, `sysent.c`, `header.md`; Layout unveraendert (`tests/test_header_layout.py`) |
+| H5 | erledigt | trap, machdep, ureg, rk, dev0, lp, tty |
+| H6 | erledigt | Fremdherkunft: Hippe-Sammlung als naechster bekannter Verwandter, `fremd.md`; `tty2.c` geklaert |
+| H6b | erledigt (zusaetzlich) | Gegenprobe Abstammung (direkte Ableitung wahrscheinlich, gemeinsame Vorlage vermutet), `fremd.md` Abschnitt 8; Robotron-Umfeld/MUTOS1600 als Hypothese (Abschnitt 9) |
+| H6c, H6d | erledigt (zusaetzlich) | `tty2.c` und weitere Kernelquellen im Text der Hippe-Sammlung (`tty2.md`, Abschnitte "Nachzug H6d") |
+| H7 | **offen** | Userspace (`userspace/`, Best-of-Disketten: `cmd`, `libc`) gegen V7/Hippe/WEGA |
+| H7-Speicher | erledigt (zusaetzlich) | Speicherverwaltung ohne MMU: `speicher.md` |
+| H8 | erledigt | Herkunftsvermerke in den Dateikoepfen (27 Module, 25 Header/Konfiguration), Gesamtbericht `doc/herkunft/README.md`, `CLAUDE.md`/README/LICENSE nachgezogen |
+| H8a | erledigt (zusaetzlich) | Z8001-Prozessorkontext, WEGA-`libc`-ABI: `z8001_kontext.md` |
+| H8b | erledigt (zusaetzlich) | Mailbox-Treiber, U880-Seite, `fd*` als umgebauter Bandtreiber: `mailbox_treiber.md` |
+
+Stand der Quellen: 191 von 227 Kernelfunktionen bytegleich aus C, Gesamtbau BYTEGLEICH 36 352 Byte (`doc/herkunft/README.md` Abschnitt 5).
+
+## 4b. Beschluesse des Projektinhabers (Festhaltung)
+
+* **MOSS/CCFinderX:** kein Upload von Quelltexten; eigene Winnowing-Implementierung (Abschnitt 7 Nr. 1).
+* **System III:** wird im Repository eingecheckt (`original/sys3/`, 2026-10-30); belegte Abschnitte und Kommentare duerfen uebernommen werden.  Die Caldera-Lizenz nennt System III nicht ausdruecklich; die Lage steht in `LICENSE`.
+* **Hippe-Sammlung:** wird im Repository eingecheckt (`original/hippe-v7/`, 2026-11-01), zu Forschungs- und Vergleichszwecken; Zusaetze Dritter ohne Lizenzangabe, Urheber unbekannt.  Der Sammler ist nicht Urheber (Zuordnung 2026-10-31).
+* **Mittelweg bei der Wiederherstellung** (Abschnitt 7 Nr. 3): Originaltext einsetzen, Rundlauf pruefen; bytegleich -> Originaltext gilt, sonst bytegleiche Fassung behalten und Originaltext als Kommentar.
+* Weitere TUHS-Baeume (UNSW, BSD, Nijmegen u. a.) liegen nur im Scratchpad und sind nicht eingecheckt (`fremd.md` Abschnitt 2); WEGA bleibt Referenz ohne Kopie.
+
 
 ## 5. Einheitlicher Herkunftsvermerk im Dateikopf
 

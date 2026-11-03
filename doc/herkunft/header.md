@@ -43,7 +43,7 @@ Klassen: **I** identisch, **F** Layout identisch, Form jetzt V7 (vorher flach), 
 * `tests/test_header_layout.py`: Offsets/Groessen aller Strukturen gegen die gemessenen Werte (host, ohne Emulator).
 * `tests/test_quelltext_regeln.py`: nur `/* */`, keine Verschachtelung, kein vorzeitiges `*/`, 7-Bit-ASCII ueber `kernel/{c,h,conf}` (ohne `c/varianten`).
   Der Test fand ein vorzeitiges `*/` in `systm.h` (`dk_*/tk_*` im Kommentar), das den Gast-`cc` abbrechen liess.
-* Offen: Header-Kommentare in `kernel/c` ausserhalb der vier H3-Module sind noch teils deutsch (H3); `c/varianten/*` nicht angepasst (Probedateien).
+* Offen: Header-Kommentare in `kernel/c` ausserhalb der vier H3-Module sind noch teils deutsch (H3); `c/varianten/*` nicht angepasst (Probedateien, `kernel/c/varianten/README.md`).
 
 
 ## Nachzug H6d (2026-11-03): Header und Konfiguration auf die Namen der Hippe-Sammlung

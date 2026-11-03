@@ -1,5 +1,21 @@
 # K7-Pilot: erzeugt der MUTOS-`cc` den Kernel `mutos_1216` aus C? (2026-10-27)
 
+> **Hinweis (2026-11-03): Dieses Protokoll ist der Stand der K7-Arbeiten (2026-10-27/28) und wurde nicht umgeschrieben.**  Seine Deutung "alle Abweichungen sind Eigenheiten eines aelteren Kernel-`c2`"
+> hat sich fuer viele Funktionen als falsch erwiesen: die Herkunftsanalyse (`doc/herkunft/`) fand die Quellform (V7-/Hippe-Text), mit der die Funktionen **bytegleich** wurden.  Betroffene Stellen sind unten mit
+> **[UEBERHOLT]** und Verweis markiert.  Aktueller Stand: `doc/herkunft/README.md` (191 von 227 Funktionen bytegleich aus C, Gesamtbau BYTEGLEICH).
+>
+> **Durch die Quellform bytegleich geworden (vorher dem alten `c2` oder offener Quellform zugeschrieben)** -- Fundstelle in `doc/herkunft/`:
+> `bcopy` (`subr.md`, subr 6/7); `iomove` (`rdwri.md`); `iupdat` (`iget.md`); `swtch`, `newproc`, `swapin` (`slp.md`); `core`, `procxmt` (`sig.md`; ein Quelltextfehler der Dekompilierung, kein `c2`-Effekt);
+> `rdwr` (`sys2.md`); `chdirec` (`sys4.md`); `binit` (`uebersicht.md` Abschnitt 21: die Zeile loescht `b_xmem` +14, nicht `b_error` +15); `trap` samt Fall 15 und Marke `sigbus:` (`trap.md`, `z8001_kontext.md`);
+> `ttyecho`, `ttywipe` (=`ttyrub`), `ttyoutput`, `ttyspcl` (=`ttyspec`) und alle uebrigen `tty2`-Funktionen ausser den vier unten (`tty2.md`: 16 von 20).
+> Die in diesem Protokoll genannten Versuchsdateien (`djnz.c`, `varianten.c`, `k7bvar.c`, `var7c.c`, `var7d*.c`, `pilot.c`) liegen in `kernel/c/varianten/` und uebersetzen nicht mehr (`kernel/c/varianten/README.md`).
+> Folge: Muster (A) und (F) aus K7b sind keine `c2`-Eigenheiten; die "Plan B"-Empfehlungen (Handassembler, gepatchte `.s`) fuer diese Funktionen entfallen.
+>
+> **Verbleibende "nahe" Funktionen (25; `doc/herkunft/daten/rundlauf_soll.txt`, Wortzahl = abweichende Woerter):** `alloc` 84/158, `ialloc` 169/220, `update` 85/119, `itrunc` 61/93, `tloop` 42/79 (Muster B/C),
+> `bmap` 263/308 (B), `ssig` 39/52 (Kernel laedt `uap` erneut), `malloc` 24/52, `mfree` 1/119, `readi` 108/206 (E), `mapalloc` 14/37, `mapstart` 28/44 (D), `exece` 1/389, `getxfile` 177/401, `clock` 210/260,
+> `startup` 45/90, `estabur` 8/20 (`LDK`-Form), `lpwrite` 42/124, `lpcanon` 104/212, `lpintr` 21/75 (Blockanordnung), `putchar` 54/88, `ttioccomm` (=`ttioctl`) 181/371, `ttyinput` 281/458, `ttyretype` (=`ttycol`) 1/116, `ttread` 1/139.
+> Ob die Ursache jeweils der Kernel-`c2` oder eine noch nicht gefundene Quellform ist, ist offen.  `dev0.c` (11 Funktionen, ohne `-O` im Original) ist nur vom Gesamtbau abgedeckt.
+
 **Antwort: ja.**  Mit `cc -O` (Optimierer `c2` an) liefert der Disketten-`cc` aus K&R-C **bytegleiche** Kernelfunktionen
 (`call csv` ... `jp cret`, Registerwahl, Sprungform, Konstanten).  Ohne `-O` ist keine einzige Funktion gleich (0 von 25):
 der Kernel wurde mit `-O` gebaut.  Von 25 Pilotfunktionen sind **22 bytegleich**, 3 weichen nur in einem erklaerten Detail ab.
@@ -31,6 +47,7 @@ Nahe (3, je ein erklaerter Unterschied):
   `unsigned`) aendern daran nichts.  Der Kernel enthaelt selbst zwei `DJNZ` (`283C`, `63C0`), den Peephole kennt der Kernel-Compiler also;
   welche Bedingung ihn dort ausloest/verhindert, ist **offen** (Hypothese: anderer Stand von `c2` als auf den Disketten, oder eine Schleifenform,
   die wir noch nicht getroffen haben -- die Disketten-`c0/c1/c2/cpp/as` sind in `usr`, `cc1`, `cc2` identisch, SHA-1 gleich).
+  > **[UEBERHOLT, Stand 2026-11-03]** `bcopy` ist mit der V7-Form (Parameter `register count`, `do *t++ = *f++; while(--count);`) bytegleich (`doc/herkunft/subr.md`); es war die Quellform, kein anderer `c2`-Stand.  `3D42` (`estabur`) bleibt nahe.
 * `3D42` `a+b+c > 256`: Kernel legt die Konstante 12 ueber `LDK R2,#12 ; LDB u_error,RL2` ab, `cc` erzeugt `LDB u_error,#12`.  Alle anderen Fehlernummern im
   Kernel (1, 6, 9, 24) gehen als Direktwert; hier steckt also noch etwas anderes dahinter (Quelle unbekannt).  Restliche Funktion gleich.
 
@@ -52,6 +69,7 @@ Nahe (3, je ein erklaerter Unterschied):
   (`R13` abwaerts), Adressierung, Optimierungen (`JR`-Auswahl, `LDK`, `INC/DEC #n`, `CLRB`, Konstantenfaltung) stimmen in 22 von 25 Faellen Byte fuer Byte.
 * **Optionen:** `-O` (c2) ist noetig; ohne `-O` ist der Text um etwa die Haelfte laenger und in keinem Fall gleich.
 * **Version:** wahrscheinlich nicht ganz dieselbe -- DJNZ-Unterschied und `LDK`-Fall deuten auf einen leicht anderen `c2`-Stand (oder auf Quellformen).
+  > **[UEBERHOLT, Stand 2026-11-03]** Der DJNZ-Unterschied war Quellform (`bcopy`, `iomove`).  Nur der `LDK`-Fall (`estabur`) und die Blockanordnungen in `lp*`/`ttread`-Verwandten sprechen weiter fuer einen Unterschied; ungeklaert.
   Das ist erst mit mehr Funktionen mit Schleifen zu entscheiden; kein Hindernis fuer 90 % des Kernels.
 * `as` kodiert unsere Ausgabe wie den Kernel (Relokation ausgenommen); der Kernel wird nicht als ein Objekt, sondern aus vielen `.o` gelinkt worden sein
   (Textabstaende: Funktionen liegen lueckenlos, gerade ausgerichtet).
@@ -79,21 +97,26 @@ Korrektur an K6b: `p_sig` ist EIN Wort (+06), `p_uid` +08, `p_pgrp` +0A; `NSIG` 
 ## Trefferliste (cc -O, je Funktion bytegleich gegen mutos_1216)
 28 von 35 Funktionen bytegleich.
 * `prf.c` 5/5: printf 1724, printn 17E0, panic 1856, prdev 187A, deverror 18A4.  Daten: Ziffern 8A4A, "panic: %s\n" 8A5B, "%s on dev %u/%u\n" 8A66, "err" 8A77, "bn=%D er=%o,%o\n" 8A7B; `panicstr` CEC4 (BSS).  `putchar` = 6384 (Treiberteil, nicht hier).
-* `slp.c` 8/11: sleep, wakeup, setrq, setrun, setpri, sched, qswtch, expand gleich.  Offen: `swapin` 1CCA (8 Woerter, vermutl. Argumentreihenfolge von `swap`), `swtch` 1DA4 und `newproc` 1EA2 (Quellform noch nicht getroffen; Grundgeruest steht).  Daten: slpque CEC6, Texte 8A8E/8A99/8AA4/8AB8, mpid 8DD4, runq 8DC8, sflag 8DE0/8DE2.
+* `slp.c` 8/11: sleep, wakeup, setrq, setrun, setpri, sched, qswtch, expand gleich.  Offen: `swapin` 1CCA (8 Woerter, vermutl. Argumentreihenfolge von `swap`), `swtch` 1DA4 und `newproc` 1EA2 (Quellform noch nicht getroffen; Grundgeruest steht).
+  > **[UEBERHOLT, Stand 2026-11-03]** `slp.c` ist 11/11 bytegleich: `swapin` (Registerdeklarationen `t`, `x`), `swtch`, `newproc` mit V7-Text, `doc/herkunft/slp.md`.  Daten: slpque CEC6, Texte 8A8E/8A99/8AA4/8AB8, mpid 8DD4, runq 8DC8, sflag 8DE0/8DE2.
 * `fio.c` 8/8: getf, closef, openi, access, owner, suser, ufalloc, falloc.  Daten: file[] 9EEE..A07E, Text "no file\n" 8ADA.
-* `subr.c` 5/7: passc, cpass, nodev, nulldev, timeout (2A4C) gleich.  Offen: `bmap` 20FE (Quellform weicht stark ab; Kernel kennt Indirektstufen mit Zaehler 13-j und `SDAL`), `bcopy` 243A (nur DJNZ, s. u.).  Daten: rablock 8DE4, callout CE58, Text 8AC2.
+* `subr.c` 5/7: passc, cpass, nodev, nulldev, timeout (2A4C) gleich.  Offen: `bmap` 20FE (Quellform weicht stark ab; Kernel kennt Indirektstufen mit Zaehler 13-j und `SDAL`), `bcopy` 243A (nur DJNZ, s. u.).
+  > **[UEBERHOLT, Stand 2026-11-03]** `bcopy` bytegleich (`subr.md`), `subr.c` 6/7; `bmap` bleibt nahe.  Daten: rablock 8DE4, callout CE58, Text 8AC2.
 * `rdwri.c` 2/4: writei 25FE, min 2766 gleich.  Offen: `readi` 2460 (Kernel testet `diff` vor `bmap` und nutzt `breada`-Zweig; Reihenfolge des Blocks 24F2..2514 noch nicht getroffen), `iomove` 2780 (Variante `ioB` mit `do..while(--n)` bis auf 9 Woerter, davon 2 Woerter DJNZ-Effekt).
+  > **[UEBERHOLT, Stand 2026-11-03]** `iomove` ist mit der V7-Form (`do ... while (--n)`, `NBPW-1`) bytegleich (`rdwri.md`); `readi` bleibt nahe (108/206).
 
 ## DJNZ-Frage
 Ergebnis (Versuche `djnz.c`, `djnz3.c`, `varianten.c`): der hiesige `c2` erzeugt `DJNZ` fuer fast jede `do..while(--n)`-/`while(n--)`-Schleife mit Registerzaehler (t1..t6, fh, fi, fn, `ioB`),
 und `DEC Rn,#1 ; JR NZ` nur, wenn der Zaehler in einer Schleife steht, deren Rumpf mit einem Test auf `n` am Anfang beginnt (`while (n--)` mit Kopf-Test, `iR2/iR3`: `if/else` mit zwei Schleifen)
 oder wenn Zaehler und Zeiger anders belegt sind (`cbA`/`cbD`: Kernel-`clrbuf` wird ueber `do *p++=0; while(--c);` mit `bp` ALS STACKPARAMETER bytegleich -- dort setzt c2 kein DJNZ).
 Fuer `bcopy` (243A) fand keine der acht Formen (`do..while(--i)`, `while(--i>=0)`, `i--`/`!=0`, `for(;i!=0;i--)`) den Kernelcode; vermutlich anderer `c2`-Stand.
+> **[UEBERHOLT, Stand 2026-11-03]** Falsch: `bcopy` wird mit der V7-Form bytegleich (Parameter `count` selbst `register`), kein anderer `c2`-Stand (`doc/herkunft/subr.md`).  Die folgende "Empfehlung (Plan B)" ist gegenstandslos.
 **Empfehlung (Plan B):** `bcopy` und `283C`-Verwandte als Handassembler-Modul oder mit manuell gepatchter `.s` (ein Befehl `DEC/JR NZ` statt `DJNZ`) belassen; betrifft 1 bis 2 Funktionen von 235.
 `clrbuf` (5C86) ist mit Form `cbA` gelost.
 
 ## Offen / naechste Schritte
 `swapin`, `swtch`, `newproc`, `bmap`, `readi`, `iomove`, `bcopy`.  Alle Datenanteile der Module sind in den Dateikoepfen mit Kerneladresse vermerkt (Eingabe fuer K5).
+> **[UEBERHOLT, Stand 2026-11-03]** Gelaest: `swapin`, `swtch`, `newproc`, `iomove`, `bcopy`.  Offen (nahe): `bmap`, `readi`.
 
 
 # AP K7b (2026-10-28): Dateisystem und Puffer -- iget, alloc, nami, pipe, bio, Reste von subr/rdwri
@@ -105,14 +128,17 @@ Header `h/{buf,inode}.h` ergaenzt, neu `h/user_ext.h` (Felder von `u`, die `user
 ## Trefferliste (cc -O, gegen mutos_1216)
 Status: **gleich** = alle Woerter (ohne Relokationen); **nahe** = nur die genannte c2-Abweichung; offen = keine.
 * `iget.c` 5/8: iget 1122, iexpand 126A, iput 12FE, maknode 1652, wdir 16C2 gleich.  **nahe:** iupdat 1372 (A), itrunc 14F6 (B), tloop 15B2 (B).
+  > **[UEBERHOLT, Stand 2026-11-03]** `iupdat` ist bytegleich (V7-Form des Blocks `if(getfs(...)->s_ronly)`, `iget.md`): iget.c 6/8; `itrunc`, `tloop` bleiben nahe.
 * `alloc.c` 4/7: free 3086, badblock 316A (intern, `static`, liegt im Bereich von free), ifree 335A, getfs 339E gleich.  **nahe:** alloc 2F48 (B), ialloc 319E (B, C), update 3400 (B).
 * `nami.c` 1/1: namei 36A0 gleich (768 B).  `schar` gibt es im Kernel nicht; `uchar` 39BA steht hinter namei in `pipe.c`.
 * `pipe.c` 8/8: uchar 39BA, pipe 39E2, readp 3A68, writep 3AFE, plock 3BBE, prele 3BE0, getc 3BFC, putc 3C80 gleich.  (K6b: `openp`/`closep` = V7 `readp`/`writep`; `getc`/`putc` sind die Zeichenlisten-Routinen, `cfreelist` D266.)
 * `bio.c` 17/19: bread 57D4, breada 581A, bwrite 58F0, bdwrite 594A, bawrite 5984, brelse 599A, incore 5A22, getblk 5A64, geteblk 5B70, iowait 5BFC, notavail 5C2E, iodone 5C62, clrbuf 5C86, swap 5D4A, bflush 5F10, physio 5F56, geterror 60A8 gleich.
   **nahe:** mapalloc 5CAE und mapstart 5CF6 (D; Warteschlange `mapq` D57C mit 4 Eintraegen, Merker D584, Mailbox-Wort bei Adresse 6, Aufruf von 065E).  `binit` (07D2) liegt im Kernel in `main.c` (K7c).
 * `subr.c`/`rdwri.c`: bmap 20FE nahe (B), readi 2460 nahe (E), iomove 2780 nahe (F), bcopy 243A nahe (F).
+  > **[UEBERHOLT, Stand 2026-11-03]** `iomove` und `bcopy` (F) sind bytegleich; `bmap` (B) und `readi` (E) bleiben nahe.
 
 ## Die Abweichungen sind alle Eigenheiten des Kernel-`c2`, nicht der Quelle
+> **[UEBERHOLT, Stand 2026-11-03]** Die Ueberschrift und die Deutung gelten nicht mehr allgemein: **(A) (`iupdat`) und (F) (`bcopy`, `iomove`) waren Quellform**, nicht `c2`.  (B), (C), (D), (E) bestehen auch mit dem reinen V7-/Hippe-Text weiter (`alloc`, `ialloc`, `update`, `itrunc`, `tloop`, `bmap`, `mapalloc`, `mapstart`, `readi`); ob sie `c2`-Eigenheiten sind, ist nicht bewiesen.  Die "Folgerung ... Plan B" am Ende des Abschnitts gilt nur noch fuer diese Funktionen.
 Der Kernel wurde mit einem **aelteren `c2`** (Peephole-Optimierer) gebaut als dem auf den Disketten: er kennt weniger Zusammenfassungen, nur DJNZ kennt er in bestimmten Faellen.
 * **(A)** `ldb rl3,@r2 ; xorb rh3,rh3 ; testb rl3` (Kernel) statt `testb @r2`: iupdat `s_ronly`.  Versuche `k7bvar.c` (`||`, `!= 0`, Hilfsvariable) und `k7bv2.c` (vc1..vc4) liefern keine der beiden Formen anders.
 * **(B)** Wert nicht weiterverwenden: Kernel `ldl rr4,@r2 ; ldl bn,rr4 ; testl bn(r14)` bzw. `push bn(r14)` statt `testl rr4` / `push r3` (itrunc, tloop, alloc `bno`, ialloc `ino`, bmap an drei Stellen, update `ld r2,fp(r14)`).  Zuweisung-in-Bedingung, `!x`, `x == 0` aendern daran nichts (`k7bv2.c` vb1..vb3).
@@ -141,14 +167,20 @@ Header `h/user.h` (ab 104h aufgeloest), `h/param.h` (NPROC 30, MAXUPRC 15).  Sta
 * `sys4.c` 22/24: gtime, ftime, stime, setuid, getuid, setgid, getgid, getpid, sync, nice, unlink, chdir, chroot, chmod, chown, kill, times, profil,
   alarm (5100, nicht nice), pause, umask, utime.  Offen: `chdirec` 4EB0 (Layout der Fehlerbloecke), `ssig` 4FB0 (Kernel laedt `uap` nach dem Speichern
   nochmals vom Stack, `c2` hier nicht).
+  > **[UEBERHOLT, Stand 2026-11-03]** `chdirec` ist bytegleich (V7-Form mit `goto bad`, `sys4.md`); sys4.c 23/24, nur `ssig` nahe.
 * `sys2.c` 10/11: read, write, open, creat, copen, close, seek, link, mknod, saccess.  Offen: `rdwr` 51D6 (Kernel prueft FPIPE mit AND, hier BITB; Variante rdwrA).
+  > **[UEBERHOLT, Stand 2026-11-03]** `rdwr` ist mit der V7-Form bytegleich (`sys2.md`); sys2.c 11/11.  `copen` heisst jetzt `open1`.
 * `sig.c` 8/10: signal, psignal, issig, stop, psig, fsig, grow, ptrace.  `core` 0D56: 2 Woerter (Rest des Layouts); `procxmt` 0F12 (K6b: core): 67 Woerter,
   Fallverteilung/Registerzuteilung offen.
+  > **[UEBERHOLT, Stand 2026-11-03]** `core` und `procxmt` sind bytegleich (`sig.md`, ein Quelltextfehler der Dekompilierung); sig.c 10/10.
 * `sys1.c` 6/8: setregs, rexit, exit, wait, fork, sbreak.  Offen: `exece` 41AC (201 von 383 Woertern), `getxfile` 44B6 (177 von 401): die zwei Kopfformate
   (Magic E807 klein/16 B, E707 gross/40 B) und der Text-busy-Block liegen im Kernel in anderer Anordnung; Locals-Reihenfolge ist angepasst (zuerst deklariert = hoechste Adresse).
 * `slp.c` 9/11: swapin jetzt gleich (Deklarationsreihenfolge xp, a, t, x).  Offen: `swtch` 1DA4, `newproc` 1EA2.
+  > **[UEBERHOLT, Stand 2026-11-03]** `swtch`, `newproc` bytegleich, slp.c 11/11.
 * `main.c` 2/3: main, iinit gleich; `binit` 1 Wort (b_error liegt im Objekt bei +15 statt +14; Variante mit `b_pad15` uebersetzt nicht, Feld ist nicht lesbar).
+  > **[UEBERHOLT, Stand 2026-11-03]** `binit` ist bytegleich: die Zeile loescht `b_xmem` (+14), nicht `b_error` (+15) (`uebersicht.md` Abschnitt 21); main.c 3/3.
 * `trap.c` 2/3: nosys, nullsys gleich; `trap` 087A 37 von 343 Woertern (Rahmen, Fallverteilung ueber 10..31 stimmen; Rest: Layout der Faelle 10/11/15).
+  > **[UEBERHOLT, Stand 2026-11-03]** `trap` ist bytegleich (Fall 15 mit `return` statt `goto out`, Fall 10 mit `break` statt Marke `sigbus:`; `trap.md`, `z8001_kontext.md`); trap.c 3/3.
 * `machdep.c` 3/4: kstub 35AC, sendsig, sigret gleich; `startup` 34F6 noch 45 Woerter (Konstante 0xFCFF).
 * `ureg.c` 2/3: cinit, sureg gleich; `estabur` 3D42 (LDK-Form fuer ENOMEM nicht getroffen, Varianten in var7c.c).
 * `malloc.c` 0/2: `mfree` bis auf 1 Wort; `malloc` 24 Woerter (der Kernel hat nach `m_size -= size` ein `test r2`).
@@ -181,6 +213,7 @@ Der Kernel-Quellcode steckt hier wieder in einer Tabelle der Daten: **conf.c ist
 * `tty2.c` **11/13** (6D44..7E16 ohne Eingabe-/Ausgabeweg): ttyopen 6D44, ttinit 6D8C, ttyclose 6DD0, ioctl 6DF0 (Systemaufruf 54: FIOCLEX 6601/FIONCLEX 6602, sonst `cdevsw[major].d_ioctl`), ttywait 715C, ttyflush 71A4,
   bitset 7948, ttflow 79E0, ttrstrt 7C4A (Zeitgeberfunktion, die `ttstart` an `timeout` uebergibt), ttkick 7C62, ttwrite 7DA6 gleich.  **nahe:** ttyspec 797A (18 von 51 Woertern, Blockreihenfolge der Endabfragen `0x12/0x17/0x10`),
   ttread 7C90 (Eigenheit des Kernel-c2, siehe unten: der frueh liegende `return(0)` springt mit `JR` auf das letzte `JP cret`, hier `JP cret` -- ein Wort mehr, danach ist alles verschoben).
+  > **[UEBERHOLT, Stand 2026-11-03]** `ttyspec` (jetzt `ttyspcl`) ist mit dem Text der Hippe-Sammlung bytegleich; `ttread` bleibt nahe (1 von 139 Woertern mit Vorlagentext).  `tty2.c` insgesamt 16/20 (`tty2.md`).
 * `lp.c` **4/7**: lpopen 6444, lpclose 64DA, lpoutput 680E, lpxfer 690A gleich.  **offen:** lpwrite 6570 (42 von 124 Woertern), lpcanon 6668 (104 von 212), lpintr 6874 (21 von 75) -- alle drei nur in der Blockanordnung:
   der Kernel-`c2` legt hinter `JP cret` liegende Fortsetzungsbloecke ans Funktionsende und fuehrt gleiche Endstuecke (`INC R15,#2 ; JP cret`) zusammen, unser `c2` tut das hier nicht (derselbe Befund wie bei K7b "A..F").
   Struktur der Funktionen (V7-`lp.c`, Mailbox-Befehl 2, Zeilenpuffer 128 Byte, Drucker 0/1, Merker 0x80 = Ausgabe laeuft, 0x40 = Schlaf) ist belegt: die Schalterliste von lpcanon (`{ } ` | ~` Reihenfolge der Faelle = Quellreihenfolge, die Verzweigungskette steht aufsteigend sortiert) stimmt.
@@ -195,6 +228,7 @@ Der Kernel-Quellcode steckt hier wieder in einer Tabelle der Daten: **conf.c ist
 ## Neue Befunde
 * **Die tty-Struktur ist System III/ZEUS, nicht V7:** EINE Eingabewarteschlange `t_inq` (die kanonische Verarbeitung geschieht im Eingabeweg `ttyinput`, `t_delct` zaehlt Zeilenenden, Trenner ist 0xFF im Zeichenstrom), Zeichenfolge `t_intrc..t_brkc` (03, 1C, 11, 13, 1A, FF),
   Vorgabe-Flags 0518H.  Layout in `h/tty.h`.
+  > **[UEBERHOLT, Stand 2026-11-03]** Die tty-Struktur und Zeilendisziplin stammen nicht aus System III/ZEUS, sondern aus `usr/sys/dev/tty.c` der V7-Variante der Hippe-Sammlung (Tabellen byte-gleich; `doc/herkunft/fremd.md` Abschnitt 5, `tty2.md`); die Namen `ttyrub`, `ttycol`, `bitset` waren frei vergeben, Originale `ttywipe`, `ttyretype`, `ttybit`.
 * **Mailbox je Leitung/Drucker ist dieselbe 14-Byte-Struktur wie die der Platte** (`h/mbx.h`); `mb_stat` wirkt bei tty/lp als "Leitung frei"-Merker.
 * **Handassembler/nicht C-erreichbar in diesem AP: keiner.**  Alle Treiberfunktionen haben `call csv` (kein OUT/IN mit festem Port im Treibercode -- der Verkehr laeuft vollstaendig ueber die Mailbox und `mapalloc`/`mapstart` in bio.c;
   die Eintritte der Geraeteinterrupts liegen im Trap-Eintritt 030E, Assembler aus K7c).
@@ -202,7 +236,8 @@ Der Kernel-Quellcode steckt hier wieder in einer Tabelle der Daten: **conf.c ist
 
 ## Offen aus K7d
 `ttioctl` 6E7A (738 B, Sprungtabelle ueber cmd/6 und die Befehlstabelle 8D3A..), `ttyinput` 7222 (912 B) mit den Teilfunktionen 75B2, 769A, 772E, 78A8 und `ttyoutput` 7A34 (534 B, Sprungtabelle 8D46, Tabellen 8D1A/8D52) -- alle in System-III-Form, noch ohne Zeichenvorlage;
-`fdstart` 7FDC, `fdioctl` 85B0.  Dazu die Blockanordnung von lpwrite/lpcanon/lpintr/ttread/ttyspec (Kernel-c2).
+`fdstart` 7FDC, `fdioctl` 85B0.
+> **[UEBERHOLT, Stand 2026-11-03]** Vorlage gefunden (Hippe-Sammlung `tty.c`, nicht System III); `ttyoutput` ist bytegleich, `ttioccomm` (=`ttioctl`) und `ttyinput` bleiben nahe.  `fd*` ist ein umgebauter Bandtreiber `tm.c` (`mailbox_treiber.md`).  Dazu die Blockanordnung von lpwrite/lpcanon/lpintr/ttread/ttyspec (Kernel-c2).
 
 # AP K7e (2026-10-28): restliche Funktionen in C, sysent
 
@@ -213,11 +248,14 @@ Header `h/tty.h` (Glieder 1C..21, 26, 2D, 34 benannt, Flag-Makros), `h/conf.h` (
 * **Zurueckgebaut, aber nicht bytegleich:** `clock` 2842 (die Form stimmt; Kernel ruft am Anfang ein Hilfsstueck 040C, `lbolt` wird ueber R2 verglichen -- Eigenheit des aelteren c2), `ttioctl` 6E7A (der Kernel-Compiler legt die
   switch-Verteilung ueber `cmd/6` und eine Sprungtabelle 8D3A an, unser cc nicht), `ttyinput` 7222, `ttyecho` 769A, `ttyrub` 772E, `ttyoutput` 7A34 (Sprungtabelle 8D46; Fallverteilung im Kernel ueber `c-8`, in `c` hier anders gebaut),
   `fdstart`, `fdintr`, `fdioctl` (Mailbox-Zustandsautomat; ohne -O uebersetzt, Abweichungen vor allem Registerzuteilung und Konstanten-Vergleiche ueber R2).  Funktional nach System III/Mailbox belegt, Namen frei.
+  > **[UEBERHOLT, Stand 2026-11-03]** `ttyecho`, `ttyrub` (=`ttywipe`) und `ttyoutput` sind seit H6c bytegleich, `ttycol` (=`ttyretype`) 1/116; `ttioctl` und `ttyinput` bleiben nahe (`tty2.md`).  `clock` ist unveraendert nahe (210/260).
 * **`procxmt` 0F12:** schon aus K7c in `sig.c`, Status offen (kein Zusatzlauf).
 * **Gleiche Kernelbefunde:** ttyoutput/ttyrub nutzen `t_dtab` (1E) als Tabulatorspalte bei XTABS; `t_width` (20) 0 = 255; Seitenbremse ueber `t_page` (21) und `t_cnt2c`.  `fdintr` hat keinen Aufrufer in der Aufrufkarte (Interrupt) -- fehlt in `funktionen.txt`, wird von `uebersicht.py` nicht gezaehlt.
 * **Nicht erreicht (Zeit):** exece/getxfile (nur `swplo`-Typ: `(daddr_t)bno` ergaenzt, ungeprueft), trap, malloc, newproc/swtch, readi, bmap: keine neuen Quellformen versucht.
 
 # GESAMTUEBERSICHT C-Rueckbau (Stand 2026-10-28, nach K7a-K7e)
+
+> **[UEBERHOLT, Stand 2026-11-03]** Die Tabelle (167 gleich / 14 nahe / 28 offen) ist der Stand vom 2026-10-28.  Aktuell: 191 von 227 Funktionen bytegleich aus C (Rundlauf 191 von 216 gepruefte; `dev0` nur im Gesamtbau), 25 nahe (die Spalten "offen"/"kein C" der Tabelle sind damit ueberholt); Liste der nahen Funktionen oben, Tabelle je Modul in `doc/herkunft/README.md` Abschnitt 5.
 
 Quelle: `werkzeug/uebersicht.py KERNEL <Objektverzeichnisse> --md` (Universum `kernel/lauf/funktionen.txt`, Modulgrenzen `linkkarte.txt`, Status je Funktion; Schwelle "nahe" = hoechstens 30 abweichende Woerter, ein verschobenes Wort
 zaehlt alle folgenden mit).  Status: **gleich** = alle Woerter wie im Kernel; **nahe** = Eigenheit des aelteren Kernel-`c2`/`c1` (siehe K7b "A..F", K7d); **offen** = in C vorhanden, aber weiter entfernt; **kein C** = noch nicht zurueckgebaut;
@@ -265,3 +303,7 @@ Die **offenen** Funktionen (20) und **nahen** (12) sind funktional gleich, nicht
 Mit dem V7-Originaltext (`doc/herkunft/*.md`) sind `iupdat` 1372 (Muster (A)), `swtch` 1DA4, `newproc` 1EA2, `core` 0D56 und `procxmt` 0F12 **bytegleich** geworden
 (`tools/herkunft/rundlauf.sh`, Weg in `doc/herkunft/rundlauf.md`).  Muster (A) war damit keine `c2`-Eigenheit, sondern Quellform (Frueh-Rueckkehr statt V7-Block).
 Offen (nahe) in diesen vier Modulen: `alloc`, `ialloc`, `update`, `itrunc`, `tloop` -- Muster (B)/(C) bestehen auch mit dem reinen V7-Text weiter.
+
+# Nachtrag AP H6-H8 (2026-11-03)
+
+Siehe den Hinweis am Dateianfang: weitere durch die Quellform geloeste Funktionen (`rdwr`, `chdirec`, `binit`, `trap`, `bcopy`, `iomove`, `tty2`-Funktionen u. a.) und die aktuelle Liste der verbleibenden 25 nahen Funktionen.  Der Gesamtbau (`tools/kernel/gesamtbau.py`) bestaetigt: BYTEGLEICH, 191 von 227 Funktionen aus C.
