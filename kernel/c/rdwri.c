@@ -17,7 +17,6 @@
 #include "buf.h"
 #include "conf.h"
 
-#define NBPW sizeof(int)	/* V7 param.h; not in MUTOS param.h */
 
 /*
  * Read the file corresponding to

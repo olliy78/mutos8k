@@ -43,7 +43,7 @@ sys2 write GLEICH
 sys2 rdwr GLEICH
 sys2 open GLEICH
 sys2 creat GLEICH
-sys2 copen GLEICH
+sys2 open1 GLEICH
 sys2 close GLEICH
 sys2 seek GLEICH
 sys2 link GLEICH
@@ -138,7 +138,7 @@ bio physio GLEICH
 bio geterror GLEICH
 main main GLEICH
 main iinit GLEICH
-main binit NAHE
+main binit GLEICH
 sys1 exece NAHE
 sys1 getxfile NAHE
 sys1 setregs GLEICH
@@ -221,3 +221,4 @@ tty2 ttrstrt GLEICH
 tty2 ttstart GLEICH
 tty2 ttread NAHE
 tty2 ttwrite GLEICH
+# H6d 2026-11-03: binit GLEICH (b_xmem statt b_error); sys2 open1 (frueher copen).

@@ -5,12 +5,12 @@
  * Source:   UNIX V7 usr/sys/sys/sig.c (all 10 functions; grow() is an empty stub here, core() and procxmt() are
  *           adapted to the Z8001 memory model).  System III pdp11 uts/os/sig.c is less similar.
  *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches proctop (PROC_MAX) in signal / stop / ptrace (fremd.md 4.1 no. 9).
+ *           author) - matches MAX_PROC (PROC_MAX) in signal / stop / ptrace (fremd.md 4.1 no. 9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 82% against V7 (10 of 10
  *           functions >= 50%), 73% against System III PDP-11 (issig, fsig, psignal 100% against V7).  After it:
  *           file 82% V7 / 70% System III.  Same string ("core").
  * Roundtrip: cc -O in the guest, per function against mutos_1216: 10 of 10 byte-identical.  Details: doc/herkunft/sig.md
- * Deviations: proctop instead of &proc[NPROC]; ip_addr is an int (16-bit user addresses); arguments of ptrace in
+ * Deviations: MAX_PROC instead of &proc[NPROC]; ip_addr is an int (16-bit user addresses); arguments of ptrace in
  *           another order; core() writes the u area and the data+stack segment of the Z8001 layout; procxmt without
  *           the separate I/D requests and with the Z8001 register map; grow() empty; see doc/herkunft/sig.md.
  *
@@ -64,7 +64,7 @@ register pgrp;
 
 	if(pgrp == 0)
 		return;
-	for(p = &proc[0]; p <= proctop; p++)	/* MUTOS: proctop (V7: p < &proc[NPROC]) */
+	for(p = &proc[0]; p <= MAX_PROC; p++)	/* MUTOS: MAX_PROC (V7: p < &proc[NPROC]) */
 		if(p->p_pgrp == pgrp)
 			psignal(p, sig);
 }
@@ -130,7 +130,7 @@ stop()
 loop:
 	cp = u.u_procp;
 	if(cp->p_ppid != 1)
-	for (pp = &proc[0]; pp <= proctop; pp++)	/* MUTOS: proctop */
+	for (pp = &proc[0]; pp <= MAX_PROC; pp++)	/* MUTOS: MAX_PROC */
 		if (pp->p_pid == cp->p_ppid) {
 			wakeup((caddr_t)pp);
 			cp->p_stat = SSTOP;
@@ -293,7 +293,7 @@ ptrace()
 		u.u_procp->p_flag |= STRC;
 		return;
 	}
-	for (p=proc; p <= proctop; p++)	/* MUTOS: proctop (V7: p < &proc[NPROC]) */
+	for (p=proc; p <= MAX_PROC; p++)	/* MUTOS: MAX_PROC (V7: p < &proc[NPROC]) */
 		if (p->p_stat==SSTOP
 		 && p->p_pid==uap->pid
 		 && p->p_ppid==u.u_procp->p_pid)

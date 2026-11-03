@@ -28,3 +28,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sys2.c`.  Alle Zahlen **gemessen
 | saccess | 55AE | 100 % -> 100 % | identisch | -- | **gleich** |
 
 * Rueckfall: keiner.  `saccess` steht im Kernel direkt vor `xswap` (55AE), gehoert aber nach V7 zu `sys2.c`.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/sys2.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Alle 11 Funktionen gleich der Vorlage bis auf Leerraum (`diff -w`); `copen` heisst jetzt `open1` (Vorlagenname; Marke `/* KERNEL 5344 */`, `kernel_namen.md`, `gesamtbau_adressen.txt`, `rundlauf_soll.txt` nachgezogen).  Der Kommentar `/* MUTOS: ... */` bei `seek` entfaellt (Zug steht in der Vorlage).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 11 von 11 bytegleich (wie vorher).

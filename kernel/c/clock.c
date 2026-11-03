@@ -5,14 +5,14 @@
  *           with p_cpu = p_cpu*SCHMAG + p_nice - NZERO (SCHMAG 8/10), p_clktim alarm, setpri, runin wakeup.  System III
  *           PDP-11 uts/os/clock.c has a different once-a-second loop (p_cpu >>= 1, no SCHMAG); not used.
  *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches proctop (PROC_MAX) in the once-a-second loop (fremd.md 4.1 no. 9).
+ *           author) - matches MAX_PROC (PROC_MAX) in the once-a-second loop (fremd.md 4.1 no. 9).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): clock 64% V7 / 41% System III PDP-11 (before the
  *           restoration; the earlier file header said "System III form (WEGA)": wrong, the decay is V7).  The signal name
  *           SIGALRM is the System III spelling of V7 SIGCLK (both 14).
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/clock.md.  Not bytegleich (before and after).
  * Deviations: the Z8001 interrupt entry passes the saved registers and the frame as arguments; the interrupt may stand for
  *           several ticks (t = tk >> 8); no display(), no dk_time[], no clock restart (lks); the MUTOS once-a-second block wakes
- *           the scheduler through sflag0/sflag1 (see slp.c); proctop instead of &proc[NPROC].
+ *           the scheduler through sflag0/sflag1 (see slp.c); MAX_PROC instead of &proc[NPROC].
  *
  * The interrupt entry hands over (argument words): 4 dev, 6 ticks (upper half of the word), 1A priority of the interrupted code
  * (and 7 = not nested), 1C FCW (4000 = system mode), 20 PC.
@@ -121,7 +121,7 @@ unsigned tk;
 		}
 		runrun++;
 		wakeup((caddr_t)&lbolt);
-		for (pp = &proc[0]; pp <= proctop; pp++)
+		for (pp = &proc[0]; pp <= MAX_PROC; pp++)
 			if (pp->p_stat && pp->p_stat < SZOMB) {
 				if (pp->p_time != 127)
 					pp->p_time++;

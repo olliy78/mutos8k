@@ -16,7 +16,7 @@
  *           collection (the earlier decompiled form: 12 of 20); the other four differ by Kernel-c2 properties, see Deviations.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; expected results in doc/herkunft/daten/rundlauf_soll.txt; the full
  *           build (tools/kernel/gesamtbau.py) checks the whole kernel.
- * Deviations: (1) MUTOS: CBSIZE 14 / CROUND 017 (16-byte clist blocks, as in ureg.c / pipe.c) and EXCLOSE 01 are defined here;
+ * Deviations: (1) MUTOS: CBSIZE 14 / CROUND 017 (16-byte clist blocks, as in ureg.c / pipe.c) are defined here (EXCLOSE 01 is in user.h, as in the collection);
  *           nldisp is a variable of conf.c at 8882 (it was called cf_x882).  (2) Not byte-identical, text unchanged: ttioccomm
  *           (the old compiler uses "jr ne" for the error branch of TIOCSETA, ours "jp ne": one word more, the rest shifted),
  *           ttyinput (the old compiler omits the load before "t_xstate ^= XPAGE": one word less in the kernel, the rest shifted),
@@ -37,10 +37,9 @@
 #include "reg.h"
 #include "conf.h"
 
-/* MUTOS: CBSIZE / CROUND are those of the MUTOS clist block (16 bytes, c_info[14]; ureg.c / pipe.c), EXCLOSE is in user.h of the collection. */
+/* MUTOS: CBSIZE / CROUND are those of the MUTOS clist block (16 bytes, c_info[14]; ureg.c / pipe.c), EXCLOSE is in user.h. */
 #define	CBSIZE	14
 #define	CROUND	017
-#define	EXCLOSE	01
 
 struct cblock {
 	struct cblock *c_next;

@@ -1,18 +1,16 @@
 /* malloc.c -- core and swap map allocation (kernel mutos_1216, 2DF0..2F48): malloc, mfree.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/malloc.c (both functions; System III PDP-11 uts/os/malloc.c has the same text as V7,
- *           so V7 = System III here).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches the map limit with panic("map overflow") (MAPSIZ = NPROC/2 = 15 entries; doc/herkunft/fremd.md
- *           4.1 no. 1).
+ * Source:   UNIX V7 usr/sys/sys/malloc.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           Both functions carry the text of the collection (map limit "< MAPSIZ", panic "map overflow"; MAPSIZ = NPROC/2 = 15).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 83% V7 and 83% System III, malloc 71%, mfree 91%
  *           before the restoration.  Same call graph (wakeup on runin when freeing core).  The only parts that are in
  *           neither source are the two map-size checks (see Deviations).
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/malloc.md.
- * Deviations: MUTOS limits a map to 15 entries plus the end mark: malloc stops the search at bp - mp >= 15, mfree
- *           panics "map overflow\n" when it would insert a 16th entry (not in V7, not in System III PDP-11/VAX; this is the
- *           map limit of the Hippe collection, see above).  The V7 comments are kept.  See doc/herkunft/malloc.md.
+ * Deviations: panic text "map overflow\n" (the kernel string at 8AE4 has the newline; the collection has none).  Otherwise the text is the collection's
+ *           (diff -w against the switch-resolved tree).  Before 2026-11-03: break at bp - mp >= 15 and bp - mp > 15 as literals.
  *
  * Data: coremap = A09C, swapmap = A0DC (16 entries each), runin = 8DD6, text 8AE4 "map overflow\n".
  * An entry is {m_size, m_addr}, 4 bytes. */
@@ -37,10 +35,7 @@ struct map *mp;
 	register unsigned int a;
 	register struct map *bp;
 
-	for (bp=mp; bp->m_size; bp++) {
-		/* MUTOS: map holds at most 15 entries (not in V7) */
-		if (bp - mp >= 15)
-			break;
+	for(bp=mp;bp->m_size && ((bp-mp) < MAPSIZ);bp++) {
 		if (bp->m_size >= size) {
 			a = bp->m_addr;
 			bp->m_addr += size;
@@ -91,9 +86,8 @@ register int a;
 			bp->m_size += size;
 		} else if (size) {
 			do {
-				/* MUTOS: map holds at most 15 entries (not in V7) */
-				if (bp - mp > 15)
-					panic("map overflow\n");
+				if((bp-mp) > MAPSIZ)
+					panic("map overflow\n");	/* Hippe: panic("map overflow"); MUTOS text has the newline (8AE4) */
 				t = bp->m_addr;
 				bp->m_addr = a;
 				a = t;

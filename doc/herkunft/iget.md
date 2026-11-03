@@ -40,3 +40,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/iget.c`.  Rundlauf wie in `rundl
 
 * Herkunft der LRU-Aenderung (eigene Idee, BSD, Xenix?) -- Plan H6.
 * `i_lastr` als eigenes Feld ist eine Struktur-Abweichung (kein `i_un`), die `inode.h` nicht V7-gleich macht -- erledigt in H4.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/iget.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`iget`/`iput` in der Vorlagenform: `i_lrt` statt `i_un.i_lastr`, verschachtelte Abfrage `if(ip->i_count == 0){ if((oip == NULL) || (oip->i_lrt > ip->i_lrt)) oip = ip; }`.  `itrunc`/`tloop` standen schon im Vorlagentext (Gruppe B: nichts zu aendern).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 6 von 8 bytegleich (wie vorher); `itrunc` 61 von 93, `tloop` 42 von 79 unveraendert.

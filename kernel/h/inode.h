@@ -49,6 +49,7 @@ struct	inode
 		};
 	} i_un;
 };
+#define i_lrt	i_un.i_lastr	/* last reference time */
 
 
 extern struct inode inode[];	/* The inode table itself */

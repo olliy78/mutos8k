@@ -16,3 +16,10 @@ Stand 2026-10-31.  Quellen: UNIX V7 `usr/sys/sys/main.c` (`main`, `iinit`) und `
 | main | 0674 | veraendert | **gleich** |
 | iinit | 0746 | identisch | **gleich** |
 | binit | 07D2 | veraendert (`b_error`) | nahe (1/84, wie vorher) |
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/main.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`binit`: die MUTOS-Zeile loescht jetzt das Byte `b_xmem` (+14) statt `b_error` (+15); das war die eine abweichende Stelle (Wort `0015` statt `0014`), der Kernel loescht +14.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: `binit` vorher 1 von 84 Woertern, jetzt **bytegleich** (Rundlauf und Gesamtbau: 191 von 227 aus C).

@@ -3,16 +3,15 @@
  * (The K6b names were shifted by one: 5100 is alarm, not nice; nice is at 4D76.  There is no getswit here.)
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/sys4.c (all 24 functions).  System III PDP-11 uts/os/sys4.c differs (setpgrp, ulimit,
- *           utssys-style changes); not used.
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches stime clearing i_lastr (i_lrt) of all inodes and the proctop loop in kill (fremd.md 4.1 no. 4 and
- *           9).
+ * Source:   UNIX V7 usr/sys/sys/sys4.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           All 24 functions carry the text of the collection (stime clears i_lrt of all inodes, kill scans up to MAX_PROC).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 83% V7 / 58% System III PDP-11 (before the
  *           restoration), 21 of 24 functions above 50% against V7.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys4.md.
- * Deviations: stime also clears i_lastr of all inodes (Hippe LRUI); kill scans up to proctop instead of &proc[NPROC]; ftime returns
- *           timezone 0 and no daylight saving; see doc/herkunft/sys4.md.
+ * Deviations: ftime: (1000*(int)ms)/HZ (the kernel divides signed).  TIMEZONE (0) and DSTFLAG 0 now come from param.h as in the collection.
+ *           Otherwise the text is the collection's (diff -w).  ssig is not byte-identical (c2 pattern, see doc/herkunft/sys4.md).
  *
  * Data: time = 8DCC (long), lbolt = 8DCA (tick counter). */
 #include "param.h"
@@ -25,9 +24,6 @@
 #include "reg.h"
 #include "timeb.h"
 
-/* MUTOS: Greenwich time, no daylight saving (V7 param.h: TIMEZONE (5*60), DSTFLAG 1) */
-#define	TIMEZONE	0
-#define	DSTFLAG	0
 
 /*
  * Everything in this file is a routine implementing a system call.
@@ -85,9 +81,13 @@ stime()
 
 	uap = (struct a *)u.u_ap;
 	if(suser()) {
-		/* MUTOS: forget the release times of free inode entries (i_lastr, see iget.c) */
+		/*
+		 * On altering the time, clear the
+		 * last-referenced-time in the inode
+		 * table.
+		 */
 		for(ip = &inode[0]; ip < &inode[NINODE]; ip++)
-			ip->i_un.i_lastr = 0;
+			ip->i_lrt = 0;
 		time = uap->time;
 	}
 }
@@ -354,8 +354,7 @@ kill()
 		a = 0;
 	}
 	q = u.u_procp;
-	/* MUTOS: proctop instead of &proc[NPROC] (V7) */
-	for(p = &proc[0]; p <= proctop; p++) {
+	for(p = &proc[0]; p <= MAX_PROC; p++) {
 		if(p->p_stat == NULL)
 			continue;
 		if(a != 0 && p->p_pid != a)

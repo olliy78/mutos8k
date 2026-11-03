@@ -1,18 +1,18 @@
 /* param.h -- tunable variables, priorities, signals, fundamental constants.
  *
  * Origin:   partial
- * Source:   UNIX V7 usr/sys/h/param.h (names, order and comments); signal names SIGKILL/SIGALRM/SIGUSR1/SIGUSR2 and the
- *           Z8001 values are MUTOS (System III spells signals this way).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches NPROC 30, NINODE 50, NFILE 50, NMOUNT 5, MAXUPRC 15, HZ 50, TIMEZONE 0, DSTFLAG 0 and MAPSIZ = NPROC/2
- *           (Spencer V7: 150 / 200 / 175 / 8 / 25 / 60 / 5*60 / 1); NBUF 20 and NCALL 9 differ from it (Hippe 12 / 10).
+ * Source:   UNIX V7 usr/sys/h/param.h in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled
+ *           1995 from unknown sources; "Hippe" names the collection, not the author): names, order, comments; signal names SIGINS, SIGTRC,
+ *           SIGFPT, SIGKIL, SIGCLK as there (the System III aliases SIGILL, SIGTRAP, ... were removed 2026-11-03).  MAPSIZ (NPROC/2),
+ *           TIMEZONE (0), DSTFLAG 0, NPROC 30, NINODE 50, NFILE 50, NMOUNT 5, MAXUPRC 15, HZ 50 are the collection's values
+ *           (Spencer V7: 150 / 200 / 175 / 8 / 25 / 60 / 5*60 / 1); NBUF 20 and NCALL 9 differ (Hippe 12 / 10; measured in the kernel).
  * Evidence: H2 file similarity 52% V7 / 44% System III.  Measured in the kernel: NOFILE 20, BSIZE 512, NINODE 50, NFILE 50,
  *           NBUF 20, NMOUNT 5, NPROC 30 (proc A11C..A464, 0x348/0x1C), MAXUPRC 15 (fork compares with 15), NCALL 9 (callout
  *           CE58..CE8E), sleep queue 64 chains (slpque, hash (chan>>5)&63), clock 50 Hz, PZERO 25, NZERO 20, DIRSIZ 14,
  *           NSIG 17 (psignal: sig < 17; u_signal[17]), error numbers ENFILE 23 / EMFILE 24 / EBADF 9 / EPERM 1.
  *           Marked "guessed" below: not measured (taken from V7/WEGA, check before use).
  * Deviations: the tunables have MUTOS values; the click is 256 bytes (V7: 64), hence ctod; macros V7 has but the kernel does
- *           not use are not defined (SINCR, CANBSIZ, NTEXT, NCLIST, TIMEZONE, DSTFLAG, MSGBUFS, NBPW, BSLOP, USIZE, UBASE,
+ *           not use are not defined (SINCR, CANBSIZ, NTEXT, NCLIST, MSGBUFS, BSLOP, USIZE, UBASE,
  *           INFSIZE, CBSIZE, CROUND, ctos, stoc, ctob, btoc, UMODE, USERMODE, INTPRI, BASEPRI); the typedefs are in types.h.
  */
 #ifndef PARAM_H
@@ -30,11 +30,12 @@
 #define	MAXUPRC	15		/* max processes per user */
 #define	SSIZE	5		/* initial stack size (guessed) */
 #define	NOFILE	20		/* max open files per process */
-#define	CMAPSIZ	50		/* size of core allocation area (unused; the real maps have MAPSIZ+1 = 16 entries, MAPSIZ = NPROC/2 = 15 as in the Hippe collection) */
-#define	SMAPSIZ	50		/* size of swap allocation area (unused; see CMAPSIZ) */
+#define	MAPSIZ	(NPROC/2)	/* size of core/swap allocation area (the maps hold MAPSIZ+1 = 16 entries, coremap A09C, swapmap A0DC) */
 #define	NCALL	9		/* max simultaneous time callouts (callout CE58..CE8E, 6 bytes per entry) */
 #define	NPROC	30		/* max number of processes (proc[] A11C..A464) */
 #define	HZ	50		/* Ticks/second of the clock */
+#define	TIMEZONE (0)		/* Minutes westward from Greenwich */
+#define	DSTFLAG	0		/* Daylight Saving Time applies in this locality */
 #define	NCARGS	5120		/* # characters in exec arglist (guessed) */
 
 /*
@@ -66,31 +67,25 @@
 #define	SIGHUP	1	/* hangup */
 #define	SIGINT	2	/* interrupt (rubout) */
 #define	SIGQUIT	3	/* quit (FS) */
-#define	SIGILL	4	/* illegal instruction (System III name) */
 #define	SIGINS	4	/* illegal instruction */
-#define	SIGTRAP	5	/* trace or breakpoint (System III name) */
 #define	SIGTRC	5	/* trace or breakpoint */
 #define	SIGIOT	6	/* iot */
 #define	SIGEMT	7	/* emt */
-#define	SIGFPE	8	/* floating exception (System III name) */
 #define	SIGFPT	8	/* floating exception */
-#define	SIGKILL	9	/* kill, uncatchable termination (System III name) */
 #define	SIGKIL	9	/* kill, uncatchable termination */
 #define	SIGBUS	10	/* bus error */
 #define	SIGSEG	11	/* segmentation violation */
 #define	SIGSYS	12	/* bad system call */
 #define	SIGPIPE	13	/* end of pipe */
-#define	SIGALRM	14	/* alarm clock (System III name) */
 #define	SIGCLK	14	/* alarm clock */
 #define	SIGTRM	15	/* Catchable termination */
-#define	SIGUSR1	16	/* user defined signal 1 (System III) */
-#define	SIGUSR2	17	/* user defined signal 2 (System III) */
 
 /*
  * fundamental constants of the implementation--
  * cannot be changed easily
  */
 
+#define	NBPW	sizeof(int)	/* number of bytes in an integer */
 #define	BSIZE	512		/* size of secondary block (bytes) */
 #define	NINDIR	(BSIZE/sizeof(daddr_t))
 #define	BMASK	0777		/* BSIZE-1 */

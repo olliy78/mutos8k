@@ -23,3 +23,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/trap.c`.  Alle Zahlen **gemessen
 
 * `trap`, Fall 11: Ausgabe "parity during ... waiting - segment = %x offset = %x + ??" und Auswertung von `ident` (Bits 14/15 und Maske `0xF600`): kein V7-/SysIII-Gegenstueck (V7 gibt 11/70-Paritaetsregister aus) -- Z8001-Hardware (*angenommen*).
 * Text "Random interrupt (ident = %x) ignored" mit `ident` (V7: ohne), Rueckkehr wie V7 mit `return` (gemessen im Gast, Probe `trapD`, `z8001_kontext.md`; die fruehere Angabe "`goto out`" war falsch).
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/trap.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Folgeaenderung der Signalnamen: `SIGILL` -> `SIGINS`, `SIGTRAP` -> `SIGTRC` (Vorlage kennt nur die V7-Namen; `SIGKILL`/`SIGALRM`/`SIGUSR1`/`SIGUSR2`/`SIGFPE` entfallen in `param.h`).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 3 von 3 bytegleich (wie vorher).

@@ -2,20 +2,18 @@
  * getfs, update.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/alloc.c (all 7 functions).  The s_tfree/s_tinode bookkeeping lines are NOT in V7;
- *           they are also present in UNIX System III pdp11 uts/os/alloc.c (identical text) and in the Hippe collection (below).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches the s_tfree/s_tinode counters in alloc, free, ialloc, ifree (earlier read as a System III
- *           feature; doc/herkunft/fremd.md 4.1 no. 10).
+ * Source:   UNIX V7 usr/sys/sys/alloc.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           All 7 functions carry the text of the collection (s_tfree/s_tinode bookkeeping; also System III, not V7).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 88% against V7 (7 of 7
  *           functions >= 50%), 69% against System III PDP-11.  After it: file 94% V7 / 68% System III.  Same strings
  *           ("Bad free count", "no space", "bad block", "Out of inodes", "bad count", "no fs").
  * Roundtrip: cc -O in the guest, per function against mutos_1216: free, badblock, ifree, getfs byte-identical;
  *           alloc, ialloc, update differ only by the known older-c2 pattern (B)/(C), object code identical to the
  *           previous (decompiled) form.  Details: doc/herkunft/alloc.md
- * Deviations: s_tfree/s_tinode counters (as in the Hippe collection, not in V7); badblock is global here (static in the kernel);
- *           (daddr_t)SUPERB cast in update() (SUPERB is int in MUTOS);
- *           since AP H4 the text uses the V7 b_un/i_un accesses; see doc/herkunft/alloc.md.
+ * Deviations: (daddr_t)SUPERB cast in update() (SUPERB is an int in MUTOS param.h, the collection has ((daddr_t)1)); badblock is global here (static in
+ *           the kernel).  Otherwise the text is the collection's (diff -w).
  *
  * Data: updlock 8DDE, mount[] A07E (6 bytes per entry: m_dev, m_bufp, m_inodp), inode[] 907A..9EEE, time 8DCC.
  * Texts: 8AF2 "Bad free count", 8B01 "no space", 8B0A "bad block", 8B14 "Out of inodes", 8B22 "bad count", 8B2C "no fs".
@@ -87,7 +85,6 @@ dev_t dev;
 	}
 	bp = getblk(dev, bno);
 	clrbuf(bp);
-	/* MUTOS (as in the Hippe collection, not in V7): free block counter */
 	if(fp->s_tfree)
 		fp->s_tfree--;
 	fp->s_fmod = 1;
@@ -95,7 +92,7 @@ dev_t dev;
 
 nospace:
 	fp->s_nfree = 0;
-	fp->s_tfree = 0;	/* MUTOS (as in the Hippe collection, not in V7) */
+	fp->s_tfree = 0;
 	prdev("no space", dev);
 	u.u_error = ENOSPC;
 	return(NULL);
@@ -137,7 +134,7 @@ daddr_t bno;
 		wakeup((caddr_t)&fp->s_flock);
 	}
 	fp->s_free[fp->s_nfree++] = bno;
-	fp->s_tfree++;		/* MUTOS (as in the Hippe collection, not in V7) */
+	fp->s_tfree++;
 	fp->s_fmod = 1;
 }
 
@@ -202,7 +199,7 @@ loop:
 		if(ip->i_mode == 0) {
 			for (i=0; i<NADDR; i++)
 				ip->i_un.i_addr[i] = 0;
-			if(fp->s_tinode)	/* MUTOS (as in the Hippe collection, not in V7) */
+			if(fp->s_tinode)
 				fp->s_tinode--;
 			fp->s_fmod = 1;
 			return(ip);
@@ -247,7 +244,7 @@ loop:
 		goto loop;
 	prdev("Out of inodes", dev);
 	u.u_error = ENOSPC;
-	fp->s_tinode = 0;	/* MUTOS (as in the Hippe collection, not in V7) */
+	fp->s_tinode = 0;
 	return(NULL);
 }
 
@@ -266,7 +263,7 @@ ino_t ino;
 	register struct filsys *fp;
 
 	fp = getfs(dev);
-	fp->s_tinode++;		/* MUTOS (as in the Hippe collection, not in V7) */
+	fp->s_tinode++;
 	if(fp->s_ilock)
 		return;
 	if(fp->s_ninode >= NICINOD)

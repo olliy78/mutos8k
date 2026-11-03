@@ -1,17 +1,16 @@
 /* sys3.c -- fstat, stat, stat1, dup, smount, sumount, getmdev, exec (kernel mutos_1216, 3D6A..41AC).
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/sys3.c (7 functions); exec() is a MUTOS stub (see Deviations).  System III PDP-11
- *           uts/os/sys3.c is an extended variant (mount flags, binval, suser, ve_mount).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches smount continuing at out1 and the sumount busy test with i_number = 0 (fremd.md 4.1 no. 3 and
- *           11).
+ * Source:   UNIX V7 usr/sys/sys/sys3.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           fstat, stat, stat1, dup, smount (out1), sumount (LRUI form: i_count busy test, i_number = 0), getmdev and exec
+ *           (V7/Hippe: sys1.c; here at its kernel address 4198, struct execa repeated) carry the text of the collection.
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 87% V7 / 61% System III PDP-11 (before the
  *           restoration), 7 of 8 functions above 50% against V7 (exec is the stub).  Same struct a layouts and strings.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys3.md.
- * Deviations: smount continues at out1 after a failed d_open (as in the Hippe collection and System III; V7: out); sumount refuses when an inode of
- *           the device is still referenced and clears i_number otherwise (the LRUI form of the Hippe collection; neither V7 nor System III); exec (4198) only
- *           clears the third argument and calls exece (sys1.c); struct stat and dinode come from stat.h/ino.h.
+ * Deviations: (daddr_t)SUPERB cast in smount (SUPERB is an int here, bread takes a long); stat1 argument (off_t)0.  Otherwise the text is the
+ *           collection's (diff -w).
  *
  * Data: mount[] = A07E..A09C (5 entries of 6 bytes), inode[] = 907A, nblkdev = 8DD0, bdevsw = 8766 (d_open +0, d_close +2). */
 #include "param.h"
@@ -186,7 +185,6 @@ smount()
 	if(mp == NULL)
 		goto out;
 	(*bdevsw[major(dev)].d_open)(dev, !uap->ronly);
-	/* MUTOS: out1 (as in the Hippe collection and System III); V7 jumps to out here */
 	if(u.u_error)
 		goto out1;
 	/* MUTOS: SUPERB is an int in this kernel, bread takes a long block number (V7: bread(dev, SUPERB)) */
@@ -241,13 +239,13 @@ sumount()
 
 found:
 	for(ip = &inode[0]; ip < &inode[NINODE]; ip++)
-		/* MUTOS: busy test on i_count and release of the entry (V7: if(ip->i_number != 0 && dev == ip->i_dev) { EBUSY; return; }) */
-		if(dev == ip->i_dev) {
-			if(ip->i_count) {
+		if(dev == ip->i_dev){
+			if(ip->i_count){
 				u.u_error = EBUSY;
 				return;
 			}
-			ip->i_number = 0;
+			else
+				ip->i_number = 0;
 		}
 	(*bdevsw[major(dev)].d_close)(dev, 0);
 	ip = mp->m_inodp;
@@ -283,10 +281,16 @@ getmdev()
 	return(dev);
 }
 
-/* MUTOS: stub (no V7 text): clears the third argument and calls exece (sys1.c) */
+/* Hippe/V7 sys1.c text; kept here because the kernel has exec between sumount's neighbours (4198) */
+struct execa {
+	char	*fname;
+	char	**argp;
+	char	**envp;
+};
+
 /* KERNEL 4198 */
 exec()
 {
-	u.u_ap[2] = 0;
+	((struct execa *)u.u_ap)->envp = NULL;
 	exece();
 }

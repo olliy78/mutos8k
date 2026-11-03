@@ -3,7 +3,7 @@
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/h/proc.h (struct proc, stat and flag codes, struct xproc).
  * Evidence: H2 file similarity 75% V7.  Measured (run/dump): all members up to p_wchan and p_link; 28 bytes per entry from
- *           A11C, end pointer proctop 8A8C; p_sig is ONE word at +06 (psignal), p_uid +08, p_pgrp +0A (newproc/wait) --
+ *           A11C, end pointer max_proc 8A8C (MAX_PROC); p_sig is ONE word at +06 (psignal), p_uid +08, p_pgrp +0A (newproc/wait) --
  *           this corrects kernel_namen.md.  p_textp (+16) and p_clktim (+1A): V7/WEGA order, assumed.
  * Deviations: struct xproc (V7 text) is not used by name in the kernel (sys1.c declares its own copy); the Zombie
  *           layout at +10 (exit status) and +12 (utime, long) fits it.  slpque[] is declared here (MUTOS places the
@@ -43,6 +43,10 @@ struct	proc {
 extern struct proc proc[];	/* the proc table itself */
 extern struct proc *runq;	/* head of linked list of running processes */
 extern struct proc *slpque[];	/* sleep queues (MUTOS: 64 hash chains, slp.c) */
+
+/* maintained by newproc/wait; MUTOS: initialised in the data module at 8A8C (H: struct proc *max_proc = &proc[2]; in slp.c) */
+extern struct proc *max_proc;
+#define	MAX_PROC	max_proc
 
 /* stat codes */
 #define	SSLEEP	1		/* awaiting an event */

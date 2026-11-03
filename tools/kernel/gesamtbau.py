@@ -928,7 +928,7 @@ def nat_namen(welt):
     for n, a in sorted(welt.symadr.items(), key=lambda x: x[1]):
         if n in ("csv", "cret", "_save", "_mchinit", "_backup") or n.startswith("L"):
             continue
-        if 0x875A <= a < BSS_VON and n not in ("_proctop", "_nlp", "_szicode", "_icode", "_regloc", "_conptr", "_cf_8c94"):
+        if 0x875A <= a < BSS_VON and n not in ("_max_pro", "_nlp", "_szicode", "_icode", "_regloc", "_conptr", "_cf_8c94"):
             continue
         if a < 0x0674 or 0x875A <= a < BSS_BIS or BSS_VON <= a < BSS_BIS:
             if a in gesehen and gesehen[a] != n:

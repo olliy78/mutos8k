@@ -23,3 +23,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/malloc.c` (= System III PDP-11 `
 * `mfree`: das eine Wort ist `cp r2,#15` (Objekt) gegen `cp r3,#15` (Kernel): der Kernel-`c2` verwendet nach `exts rr2 ; div rr2,#4 ; ld r2,r3` den Quotienten in `r3` weiter,
   der Gast-`c2` bleibt bei `r2`.  Gleiche Wirkung in `malloc` (`cp r3,#15`), dort kommt hinzu, dass der Kernel nach `m_size -= size` ein `test r2` ausfuehrt, das der Gast-`c2` als ueberfluessig streicht
   (Kernel 2 Woerter laenger, daher verschieben sich die Sprungziele).  Das ist das Muster (B) aus `doc/kernel/c_rueckbau.md` (K7b), kein Quellformproblem.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/malloc.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`malloc` und `mfree` tragen den Vorlagentext (`for(bp=mp;bp->m_size && ((bp-mp) < MAPSIZ);bp++)`, `if((bp-mp) > MAPSIZ) panic(...)`, `MAPSIZ = NPROC/2` in `param.h`; `CMAPSIZ/SMAPSIZ 50 (guessed)` entfallen).  Einzige Abweichung: die Zeichenkette heisst `"map overflow\n"` (Kernel 8AE4 hat das `\n`).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: **weiter 0 von 2 bytegleich, Wortzahlen unveraendert** (`malloc` 24 von 52, `mfree` 1 von 119): der Vorlagentext ist nicht schlechter.  Gruppe B, Probevarianten in einem Lauf (`malloc`: Bedingungen vertauscht 47/52, `m_size -= size` getrennt 24/52, `break` statt Schleifenbedingung 24/52; `mfree`: `bp-mp > MAPSIZ` 1/119, `>= MAPSIZ+1` 3/119, Cast `(int)` 1/119): **keine Variante bytegleich**.

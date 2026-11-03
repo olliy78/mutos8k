@@ -48,3 +48,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sys4.c`.  Alle Zahlen **gemessen
 
 * Die V7-Form der Funktionen mit `struct a *uap` (statt `register *uap` mit Indexzugriff in der alten Fassung, z.B. `setuid`, `nice`, `times`, `profil`, `alarm`, `umask`) ist bytegleich -- die alte Dekompilat-Form war also nicht zwingend.
 * Rueckfall: keiner.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/sys4.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`stime` mit `i_lrt` (neuer Alias in `inode.h`, Kommentar der Vorlage), `kill` mit `MAX_PROC`, `TIMEZONE (0)`/`DSTFLAG 0` aus `param.h` statt lokaler Defines.  Abweichung: `ftime` rechnet `(1000*(int)ms)/HZ`.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 23 von 24 bytegleich (wie vorher); `ssig` bleibt nahe (39 von 52 Woertern): der Kernel legt `uap` auf den Stapel und laedt es vor dem Zugriff erneut (zwei Woerter mehr); keine Probeform dafuer gefunden.

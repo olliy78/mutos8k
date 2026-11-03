@@ -47,3 +47,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/slp.c`.  Rundlauf wie in `rundla
 
 Keiner.  Jede Funktion hat den V7-Text mit MUTOS-Markierungen; es gibt keinen auskommentierten Zweitext.  Funktionen mit grosser V7-Abweichung (`swapin`, `newproc`, `expand`)
 wurden nicht als reiner V7-Text versucht (anderes Verhalten: Fuenf-Argument-`swap`, feste Bildgroesse, leerer Rumpf), das ist eine Annahme aus dem Textvergleich, kein Rundlauf.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/slp.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Vorlagenform eingesetzt: `MAX_PROC` (Makro aus `proc.h`) statt `proctop`, auskommentierte Pruefung `"Sleeping on wchan 0"` im Text, `setpri` mit `return(p)`, `newproc` mit `rpp->p_stat == NULL` und `if ((rpp = p)==NULL)`.  Rueckfall (Vorlage als Kommentar daneben): `register s` in `wakeup`, `register maxsize` in `sched`, `register x` in `swapin` -- mit der Vorlage `int` sind diese drei nicht mehr bytegleich (59/70, 185/212, 86/103 Woerter).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 11 von 11 bytegleich (wie vorher; die drei `int`-Versuche fielen im ersten Lauf durch und wurden zurueckgenommen).

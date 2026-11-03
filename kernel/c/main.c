@@ -155,7 +155,7 @@ binit()
 		bp = &buf[i];
 		bp->b_dev = NODEV;
 		bp->b_un.b_addr = buffers[i];
-		bp->b_error = 0;	/* MUTOS: not in V7 */
+		bp->b_xmem = 0;	/* MUTOS: not in V7 (kernel: clears the byte at +14) */
 		bp->b_back = &bfreelist;
 		bp->b_forw = bfreelist.b_forw;
 		bfreelist.b_forw->b_back = bp;

@@ -28,3 +28,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sys3.c`.  Alle Zahlen **gemessen
 | exec | 4198 | 29 % -> 29 % | eigen | Stumpf | **gleich** |
 
 * Rueckfall: keiner.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/sys3.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`smount` (`out1`) und `sumount` in der Vorlagenform (mit `else ip->i_number = 0;`, bisher ohne `else`); `exec` mit dem Vorlagentext `((struct execa *)u.u_ap)->envp = NULL;` (bisher `u.u_ap[2] = 0;`; `struct execa` steht dafuer auch hier, Vorlage: `sys1.c`).  Abweichungen: `(daddr_t)SUPERB`, `(off_t)0` in `stat1`.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 8 von 8 bytegleich (wie vorher; `sumount` mit `else` und `exec` in Vorlagenform bleiben gleich).

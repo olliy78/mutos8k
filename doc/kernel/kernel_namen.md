@@ -183,7 +183,7 @@ Modulnamen ohne Endung `.c`: `mch.s`, `clist.s` sind Assembler.  `dev/...` = Tre
 | 51D6 | 232 | `rdwr` | sys2.c | gemeinsam: getf, readi/writei, pipe-plock | wahrscheinlich |
 | 52BE | 52 | `open` | sys2.c | sysent 5 | sicher |
 | 52F2 | 82 | `creat` | sys2.c | sysent 8 | sicher |
-| 5344 | 186 | `copen` | sys2.c | gemeinsam open/creat: namei, maknode?, falloc, openi | wahrscheinlich |
+| 5344 | 186 | `open1` | sys2.c | gemeinsam open/creat: namei, maknode?, falloc, openi | wahrscheinlich |
 | 53FE | 46 | `close` | sys2.c | sysent 6 | sicher |
 | 542C | 126 | `seek` | sys2.c | sysent 19 | sicher |
 | 54AA | 172 | `link` | sys2.c | sysent 9 | sicher |
@@ -540,7 +540,7 @@ Siehe Stubs in Abschnitt 1: es gibt keine Texttabelle (`xlock` & Co. leer).  `p_
 | 8884 | `swplo` (long = 250) | K6a, Abzug-Wert 0x00FA |
 | 8888 | `nswap` (= 244) | K6a, Wert 0x00F4 |
 | 888A..88B5 | Adresstabelle (22 Zeiger, Form `proc`, `file`, ..): A11C(proc), 9EEE(file), A530, 8C94, A620, 8E9A(buf), A628(Pufferdaten), A518(bfreelist), CE28, CE40, 8DD6(runin), 8DD8(runout), FC00(u), 8DCA(lbolt), 8DCC(time), CE58, CE94, A464, 907A(inode), 887E(swapdev), 8884(swplo), CEAC | Zuordnung der Eintraege mit Namen ueber die Adressen im Code; die Tabelle selbst wirkt wie eine nlist-Ersatztabelle fuer `ps`/`pstat` (vermutet) |
-| 8A8C | `proctop` (Zeiger auf das Ende der benutzten `proc`-Eintraege) | Lauf (`wait`: Schleifengrenze, Abzug A154) |
+| 8A8C | `max_proc` (frueher `proctop`; Zeiger auf das Ende der benutzten `proc`-Eintraege) | Lauf (`wait`: Schleifengrenze, Abzug A154) |
 | 8DC0 | Basis/Segment des Nutzerzugriffs (`copyin`/`copyout`) | Lauf (`LD R4,L8DC0`) |
 | 8DC2 | Kopie der Ausgabe an Port 0080 (aktuelle Prioritaet `spl`) | Lauf (`spl*`: Maske `C0`) |
 | 8DC4 | `runrun` | Lauf (`setrun`: INCB bei besserer Prioritaet) |

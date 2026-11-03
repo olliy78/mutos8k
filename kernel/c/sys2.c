@@ -1,16 +1,18 @@
-/* sys2.c -- file system calls (kernel mutos_1216, 51B2..562C): read, write, rdwr, open, creat, copen (V7 open1), close,
+/* sys2.c -- file system calls (kernel mutos_1216, 51B2..562C): read, write, rdwr, open, creat, open1, close,
  * seek, link, mknod, saccess.  saccess sits directly before xswap (55AE) in the kernel but belongs to sys2.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/sys2.c (all 11 functions).  System III PDP-11 uts/os/sys2.c differs (copen(mode, arg),
- *           FIFOs, f_offset); only seek's "off < 0" test has a counterpart there (see Deviations).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches seek: off < 0 gives EINVAL and off = 0 (sys/sys2.c; doc/herkunft/fremd.md 4.1 no. 2).
+ * Source:   UNIX V7 usr/sys/sys/sys2.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative,
+ *           assembled 1995 from unknown sources; "Hippe" names the collection, not the author), standard configuration of
+ *           usr/sys/conf/m.h: all 11 functions with names, comments and text of the collection (open1, seek with off < 0 ->
+ *           EINVAL and off = 0; doc/herkunft/fremd.md 4.1 no. 2).  System III PDP-11 uts/os/sys2.c differs (copen(mode, arg),
+ *           FIFOs, f_offset).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 89% V7 / 68% System III PDP-11 (before the
- *           restoration), 11 of 11 functions above 50% against V7.  copen has the signature and calls of V7 open1.
+ *           restoration), 11 of 11 functions above 50% against V7.  open1 has the signature and calls of the Hippe/V7 text.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys2.md.
- * Deviations: open1 is named copen here (name from doc/kernel/kernel_namen.md; the address list of the full build uses
- *           it); seek rejects a negative offset with EINVAL and resets it to 0 (the text of the Hippe collection; neither V7 nor System III do exactly this).
+ * Deviations: none in the text (the 11 functions equal the collection up to white space, measured with diff -w against the
+ *           switch-resolved tree); the KERNEL address markers and the include list are MUTOS.  Before 2026-11-03 open1 was
+ *           called copen (kernel_namen.md).
  *
  * Data: f_flag bits FREAD 1, FWRITE 2, FPIPE 4, FMP 030 (no offset: device); rdwr calls readp/writep for FPIPE files
  * (K6b called them openp/closep; they call readi/writei). */
@@ -110,7 +112,7 @@ open()
 	ip = namei(uchar, 0);
 	if(ip == NULL)
 		return;
-	copen(ip, ++uap->rwmode, 0);
+	open1(ip, ++uap->rwmode, 0);
 }
 
 /*
@@ -133,9 +135,9 @@ creat()
 		ip = maknode(uap->fmode&07777&(~ISVTX));
 		if (ip==NULL)
 			return;
-		copen(ip, FWRITE, 2);
+		open1(ip, FWRITE, 2);
 	} else
-		copen(ip, FWRITE, 1);
+		open1(ip, FWRITE, 1);
 }
 
 /*
@@ -144,7 +146,7 @@ creat()
  * and call the device open routine if any.
  */
 /* KERNEL 5344 */
-copen(ip, mode, trf)
+open1(ip, mode, trf)
 register struct inode *ip;
 register mode;
 {
@@ -224,7 +226,6 @@ seek()
 		uap->off += fp->f_un.f_offset;
 	else if(uap->sbase == 2)
 		uap->off += fp->f_inode->i_size;
-	/* MUTOS: negative offsets are rejected (not in V7) */
 	if(uap->off < 0) {
 		u.u_error = EINVAL;
 		uap->off = 0;

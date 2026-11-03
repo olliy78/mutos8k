@@ -44,3 +44,17 @@ Klassen: **I** identisch, **F** Layout identisch, Form jetzt V7 (vorher flach), 
 * `tests/test_quelltext_regeln.py`: nur `/* */`, keine Verschachtelung, kein vorzeitiges `*/`, 7-Bit-ASCII ueber `kernel/{c,h,conf}` (ohne `c/varianten`).
   Der Test fand ein vorzeitiges `*/` in `systm.h` (`dk_*/tk_*` im Kommentar), das den Gast-`cc` abbrechen liess.
 * Offen: Header-Kommentare in `kernel/c` ausserhalb der vier H3-Module sind noch teils deutsch (H3); `c/varianten/*` nicht angepasst (Probedateien).
+
+
+## Nachzug H6d (2026-11-03): Header und Konfiguration auf die Namen der Hippe-Sammlung
+
+Vorlage `original/hippe-v7/usr/sys/{h,conf}` (Schalter laut `conf/m.h` aufgeloest).  **Layout aller Strukturen unveraendert** (`tests/test_header_layout.py`).
+
+* `param.h`: `MAPSIZ (NPROC/2)` statt `CMAPSIZ`/`SMAPSIZ 50 (guessed)`; `TIMEZONE (0)`, `DSTFLAG 0` (bisher lokal in `sys4.c`); `NBPW sizeof(int)` (bisher lokal in `rdwri.c`).  Signalnamen: die Vorlage kennt nur
+  `SIGINS`, `SIGTRC`, `SIGFPT`, `SIGKIL`, `SIGCLK`; die System-III-Aliase `SIGILL`, `SIGTRAP`, `SIGFPE`, `SIGKILL`, `SIGALRM`, `SIGUSR1`, `SIGUSR2` sind entfernt (`trap.c`, `sys1.c` angepasst).  Weiter MUTOS-Werte
+  (Messung am Kernel): `NBUF 20` (Vorlage 12), `NCALL 9` (10), `SUPERB` als int, `ctod`/Klickgroesse 256 Byte, `SSIZE 5`, `MAXMEM 64`.
+* `proc.h`: `extern struct proc *max_proc; #define MAX_PROC max_proc` wie die Vorlage (die Variable bei 8A8C hiess im Quelltext `proctop`; Quelltexte `slp.c`, `sys1.c`, `sig.c`, `sys4.c`, `clock.c` benutzen `MAX_PROC`/`max_proc`); `systm.h` ohne `proctop`.
+* `inode.h`: `#define i_lrt i_un.i_lastr` (Vorlage, LRUI).
+* `buf.h`, `user.h`, `conf/sysent.c`: Form war schon die der Vorlage; `sysent.c` jetzt mit den Kommentaren und der Deklarationsreihenfolge der Vorlage (`unused` statt "(nosys in MUTOS)"; die Spalte `nrarg` bleibt 0, gemessen am Kernel, Vorlage 1/2).
+  Nicht uebernommen (Vorlage-Bestandteile ohne Gegenstueck im Kernel): `buf.h` `B_PBUSY`/`B_PACK`, `inode.h` `struct group`/`NINDEX`, `proc.h` `SSIZE 20`, `USIZE`, `UBASE`, `ctos`/`stoc`.
+* Folgeaenderungen ausserhalb der Header: `gesamtbau.py` (Datenname `_proctop` -> `_max_pro`, 8 Zeichen), `doc/kernel/kernel_namen.md`, `doc/kernel/gesamtbau_adressen.txt` (`copen` -> `open1`).

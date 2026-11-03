@@ -43,3 +43,10 @@ Beleg der Klasse: Textvergleich mit `original/unix-v7/usr/sys/sys/alloc.c` (geme
 
 * `kernel/h/buf.h`/`inode.h` sind flach (kein `b_un`, kein `i_un`); die V7-Schreibweise (`bp->b_un.b_addr`) braucht eine Unionsform in den Headern -- erledigt in H4.
 * `fblk.h` ist neu (V7-Text, unveraendert); Layout `df_free` bei +2 stimmt mit dem alten `(int *)b_addr + 1` (gleicher Objektcode).
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/alloc.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Alle 7 Funktionen im Vorlagentext (`s_tfree`/`s_tinode` ohne "MUTOS"-Kommentare); einzige Abweichung `(daddr_t)SUPERB` in `update` (Vorlage: `SUPERB` ist `((daddr_t)1)`; hier `int`, sonst waechst `ialloc` um 2 Byte, gemessen).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 4 von 7 bytegleich (wie vorher); `alloc` 84/158, `ialloc` 169/220, `update` 85/119 unveraendert.

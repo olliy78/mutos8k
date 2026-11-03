@@ -31,3 +31,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sys1.c`.  Alle Zahlen **gemessen
 | sbreak | 4BD0 | 23 % | eigen (8) | **gleich** |
 
 Rueckfall: keiner (der bytegleiche Code blieb unveraendert, es kamen nur Kommentare dazu).  `exec` (4198, 15 Byte) liegt in `sys3.c`.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/sys1.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`exit` (eine Schleife, `wakeup(&proc[1])` einmal), `wait` (`while((--max_proc)->p_stat == NULL)`), `fork` (`if(p2 > max_proc)`), `rexit` (`struct a { int rval; }`) und `exece` (Zugriffstest mit `iput(ip); return;`, `ns`, `getxfile(ip, nc, ns)`, `NBPW`, `BMASK`, `NCARGS`, `(NCARGS+BSIZE-1)/BSIZE`, `struct execa`, `B_AGE`-Schleife wie die Vorlage) im Vorlagentext; `proctop` heisst `max_proc` (`MAX_PROC`).  Z8001-Abweichungen bleiben: `u_ar0[8]`, `fork`-Groesse, Kopfformate in `getxfile`, `setregs`.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: `exit`, `wait`, `fork`, `rexit`, `setregs`, `sbreak` bytegleich (wie vorher); `exece` 1 von 389 Woertern (wie vorher, jetzt auch mit der Vorlagenform `iput; return`), `getxfile` 177 von 401 (Z8001-Kopfformate, unveraendert).

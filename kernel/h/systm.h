@@ -4,11 +4,11 @@
  * Source:   UNIX V7 usr/sys/h/systm.h (declarations, comments, struct sysent).
  * Evidence: H2 file similarity 49% (V7 defines the variables here, MUTOS only declares them as extern; the definitions
  *           are distributed over the modules).  Measured addresses: rootdev 887C, swapdev 887E, pipedev 8880, swplo 8884 (long),
- *           nswap 8888, proctop 8A8C, user access segment/base 8DC0, lbolt 8DCA, time 8DCC (long), nblkdev 8DD0, nchrdev 8DD2,
+ *           nswap 8888, max_proc 8A8C, user access segment/base 8DC0, lbolt 8DCA, time 8DCC (long), nblkdev 8DD0, nchrdev 8DD2,
  *           mpid 8DD4, runin 8DD6, runout 8DD8, curpri 8DDA, runrun 8DC4, rablock 8DE4, slpque CEC6 (64 pointers).
  *           sy_nrarg: measured 0 in all 64 entries of sysent (8B58..8C57).
  * Deviations: not in MUTOS: canonb, cputype, maxmem, lks, msgbuf, regloc, icode/szicode (declared in the modules that use
- *           them), getmdev, dk_ and tk_ instrumentation variables.  Added: proctop, nodev/nulldev (V7 declares them in conf.c).
+ *           them), getmdev, dk_ and tk_ instrumentation variables.  Added: (max_proc is in proc.h), nodev/nulldev (V7 declares them in conf.c).
  */
 #ifndef SYSTM_H
 #define SYSTM_H
@@ -19,7 +19,6 @@
  * routine.
  */
 extern struct inode *rootdir;	/* pointer to inode of root directory */
-extern struct proc *proctop;	/* end of the process table (MUTOS) */
 extern int	lbolt;		/* time of day in 60th not in time */
 extern time_t	time;		/* time in sec from 1970 */
 

@@ -35,6 +35,8 @@
  * same process.
  */
 
+#define	EXCLOSE	01	/* close-on-exec flag in u_pofile (Hippe/V7 user.h) */
+
 struct	user
 {
 	label_t	u_rsav;			/* save info when exchanging stacks */	/* 000 assumed: 18 bytes */

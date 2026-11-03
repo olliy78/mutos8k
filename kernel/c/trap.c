@@ -91,24 +91,24 @@ register unsigned ident;
 	 */
 	case 1+USER: /* illegal instruction */
 		pc += 2;
-		if (fuword(pc-4) == 0xF009 && u.u_signal[SIGILL] == 0)
+		if (fuword(pc-4) == 0xF009 && u.u_signal[SIGINS] == 0)
 			goto out;
-		i = SIGILL;
+		i = SIGINS;
 		break;
 
 	case 2+USER: /* privileged instruction used as bpt, iot, emt (MUTOS: 7C04..06) */
 		if (ident == 0x7C06)
-			i = SIGTRAP;
+			i = SIGTRC;
 		else if (ident == 0x7C04)
 			i = SIGEMT;
 		else if (ident == 0x7C05)
 			i = SIGIOT;
 		else
-			i = SIGILL;
+			i = SIGINS;
 		break;
 
 	case 3+USER: /* trace (V7: bpt or trace) */
-		i = SIGTRAP;
+		i = SIGTRC;
 		ps &= ~0x0800;
 		break;
 

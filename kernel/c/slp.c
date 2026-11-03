@@ -2,21 +2,22 @@
  * swapin, qswtch, swtch, newproc, expand.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/slp.c (all 11 functions; expand() is an empty stub here).  System III pdp11
- *           uts/os/slp.c is less similar.
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches proctop (PROC_MAX) in sched / newproc (fremd.md 4.1 no. 9).
+ * Source:   UNIX V7 usr/sys/sys/slp.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           All 11 functions follow the collection (MAX_PROC loops, newproc with if ((rpp = p)==NULL), setpri returns p, the commented-out
+ *           "Sleeping on wchan 0" check); expand() is an empty stub here.
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 88% against V7 (11 of
  *           11 functions >= 50%), 58% against System III PDP-11 (sleep 96%, setrq/qswtch 100% against V7).  After it:
  *           file 88% V7 / 61% System III.  Same strings ("zero wchan", "proc on q\n", "Running a dead proc", "no procs").
  * Roundtrip: cc -O in the guest, per function against mutos_1216: 11 of 11 byte-identical.
  *           Details: doc/herkunft/slp.md
- * Deviations: Z8001 memory model (u area copy by segment units in newproc, swapin/xswap with fixed u size 0x104), proctop
- *           instead of &proc[NPROC], periodic update() request in sched (sflag1), setpri without return value, savu
- *           instead of save, no second "Sleeping on wchan 0" check, expand() is an empty stub; see doc/herkunft/slp.md.
+ * Deviations: Z8001 memory model (u area copy by segment units in newproc, swapin/xswap with fixed u size 0x104), update() request in sched
+ *           (sflag1), savu instead of save, savfp(u.u_fparea); "register" instead of "int" for s (wakeup), maxsize (sched) and x (swapin):
+ *           with int these three are not byte-identical (59/185/86 words differ).  See doc/herkunft/slp.md.
  *
  * Data: slpque = CEC6 (64 pointers, BSS); texts 8A8E "zero wchan", 8A99 "proc on q\n", 8AA4 "Running a dead proc",
- * 8AB8 "no procs"; runq 8DC8, runrun 8DC4, runin 8DD6, runout 8DD8, curpri 8DDA, mpid 8DD4, proctop 8A8C,
+ * 8AB8 "no procs"; runq 8DC8, runrun 8DC4, runin 8DD6, runout 8DD8, curpri 8DDA, mpid 8DD4, MAX_PROC 8A8C,
  * coremap A09C. */
 #include "param.h"
 #include "systm.h"
@@ -61,7 +62,10 @@ caddr_t chan;
 		panic("zero wchan");
 	rp->p_stat = SSLEEP;
 	rp->p_wchan = chan;
-	/* MUTOS: no second check "if (chan==0) panic("Sleeping on wchan 0");" (V7) */
+	/*
+	if (chan==0)
+		panic("Sleeping on wchan 0");
+	 */
 	rp->p_pri = pri;
 	h = HASH(chan);
 	rp->p_link = slpque[h];
@@ -109,7 +113,7 @@ register caddr_t chan;
 {
 	register struct proc *p, *q;
 	register i;
-	register s;	/* MUTOS: register (V7: int s) */
+	register s;	/* Hippe: int s; "register" is needed for the kernel object code (int s: 59 of 70 words differ) */
 
 	s = spl6();
 	i = HASH(chan);
@@ -208,7 +212,7 @@ register struct proc *pp;
 	if(p < curpri)
 		runrun++;
 	pp->p_pri = p;
-	/* MUTOS: no "return(p);" (V7) */
+	return(p);
 }
 
 /*
@@ -232,7 +236,7 @@ sched()
 {
 	register struct proc *rp, *p;
 	register outage, inage;
-	register maxsize;	/* MUTOS: register (V7: int maxsize) */
+	register maxsize;	/* Hippe: int maxsize; register needed (int: sched 185 of 212 words differ) */
 
 	/*
 	 * find user to swap in;
@@ -250,7 +254,7 @@ loop:
 	}
 	spl6();
 	outage = -20000;
-	for (rp = &proc[0]; rp <= proctop; rp++)	/* MUTOS: proctop (V7: rp < &proc[NPROC]) */
+	for (rp = &proc[0]; rp <= MAX_PROC; rp++)
 	if (rp->p_stat==SRUN && (rp->p_flag&SLOAD)==0 &&
 	    rp->p_time - (rp->p_nice-NZERO)*8 > outage) {
 		p = rp;
@@ -285,7 +289,7 @@ loop:
 	p = NULL;
 	maxsize = -1;
 	inage = -1;
-	for (rp = &proc[0]; rp <= proctop; rp++) {	/* MUTOS: proctop */
+	for (rp = &proc[0]; rp <= MAX_PROC; rp++) {
 		if (rp->p_stat==SZOMB
 		 || (rp->p_flag&(SSYS|SLOCK|SULOCK|SLOAD))!=SLOAD)
 			continue;
@@ -333,7 +337,7 @@ register struct proc *p;
 	register struct text *xp;
 	register int a;
 	register t;	/* MUTOS only */
-	register x;	/* MUTOS: register (V7: int x) */
+	register x;	/* Hippe: int x; register needed (int: swapin 86 of 103 words differ) */
 
 	if ((a = malloc(coremap, p->p_size)) == NULL)
 		return(0);
@@ -490,14 +494,13 @@ retry:
 		mpid = 0;
 		goto retry;
 	}
-	for(rpp = &proc[0]; rpp <= proctop; rpp++) {	/* MUTOS: proctop (V7: rpp < &proc[NPROC]) */
-		if(rpp->p_stat == 0 && p==NULL)
+	for(rpp = &proc[0]; rpp <= MAX_PROC; rpp++) {
+		if(rpp->p_stat == NULL && p==NULL)
 			p = rpp;
 		if (rpp->p_pid==mpid || rpp->p_pgrp==mpid)
 			goto retry;
 	}
-	rpp = p;
-	if (rpp == NULL)
+	if ((rpp = p)==NULL)
 		panic("no procs");
 
 	/*

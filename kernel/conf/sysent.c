@@ -34,7 +34,6 @@ int	exec();
 int	exece();
 int	fork();
 int	fstat();
-int	ftime();
 int	getgid();
 int	getpid();
 int	getuid();
@@ -63,6 +62,7 @@ int	ssig();
 int	stat();
 int	stime();
 int	sumount();
+int	ftime();
 int	sync();
 int	times();
 int	umask();
@@ -104,8 +104,8 @@ struct sysent sysent[64] =
 	2, 0, fstat,	/* 28 = fstat */
 	0, 0, pause,	/* 29 = pause */
 	2, 0, utime,	/* 30 = utime */
-	0, 0, nosys,	/* 31 = stty (nosys in MUTOS) */
-	0, 0, nosys,	/* 32 = gtty (nosys in MUTOS) */
+	0, 0, nosys,	/* 31 = unused */
+	0, 0, nosys,	/* 32 = unused */
 	2, 0, saccess,	/* 33 = access */
 	1, 0, nice,	/* 34 = nice */
 	1, 0, ftime,	/* 35 = ftime; formerly sleep */
@@ -124,12 +124,12 @@ struct sysent sysent[64] =
 	2, 0, ssig,	/* 48 = sig */
 	0, 0, nosys,	/* 49 = reserved for USG */
 	0, 0, nosys,	/* 50 = reserved for USG */
-	0, 0, nosys,	/* 51 = turn acct off/on (nosys in MUTOS) */
-	0, 0, nosys,	/* 52 = set user physical addresses (nosys in MUTOS) */
-	0, 0, nosys,	/* 53 = lock user in core (nosys in MUTOS) */
+	0, 0, nosys,	/* 51 = unused */
+	0, 0, nosys,	/* 52 = unused */
+	0, 0, nosys,	/* 53 = unused */
 	3, 0, ioctl,	/* 54 = ioctl */
 	0, 0, nosys,	/* 55 = readwrite (in abeyance) */
-	0, 0, nosys,	/* 56 = creat mpx comm channel (nosys in MUTOS) */
+	0, 0, nosys,
 	0, 0, nosys,	/* 57 = reserved for USG */
 	0, 0, nosys,	/* 58 = reserved for USG */
 	3, 0, exece,	/* 59 = exece */

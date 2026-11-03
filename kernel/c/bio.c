@@ -3,19 +3,17 @@
  * binit is at 07D2 in the kernel (main.c).
  *
  * Origin:   partial
- * Source:   UNIX V7 usr/sys/dev/bio.c: bread, breada, bwrite, bdwrite, bawrite, brelse, incore, getblk, geteblk, iowait,
- *           notavail, iodone, clrbuf, bflush, geterror (V7 text); swap and physio are V7 functions rewritten for the Z8001.
- *           mapalloc, mapstart have no counterpart (V7 mapalloc is the UNIBUS map): MUTOS own.
- *           System III PDP-11 uts/io/bio.c: iodone has the same text (without B_MAP); breada tests "bfreelist.b_bcount>1",
- *           MUTOS tests "bfreelist.av_forw != &bfreelist" (the form of the Hippe collection, below).
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches the breada read-ahead test on a free buffer and iodone without B_MAP / DISKMON (earlier read as
- *           System III features; fremd.md 4.1 no. 6 and 15).
+ * Source:   UNIX V7 usr/sys/dev/bio.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           bread .. geterror carry the text of the collection (breada read-ahead only with a free buffer, iodone without B_MAP);
+ *           swap and physio are the collection's functions rewritten for the Z8001; mapalloc and mapstart have no counterpart in this tree
+ *           (the collection's mapalloc is under UNIBMAP, off).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 77% V7 / 59% System III PDP-11 (before the
  *           restoration), 17 of 19 functions above 50% against V7, the two without counterpart are mapalloc and mapstart.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/bio.md.
- * Deviations: no DISKMON statistics (the V7 #ifdef blocks are kept, the #define is removed); casts on d_tab; B_MAP/mapfree
- *           removed from iodone; breada read-ahead test; swap, physio, mapalloc, mapstart see below and doc/herkunft/bio.md.
+ * Deviations: d_tab casts, (dev_t)NODEV; the #define DISKMON is removed (the collection has no DISKMON block in this configuration; the dead #ifdef
+ *           text is kept); swap/physio/mapalloc/mapstart see below and doc/herkunft/bio.md.
  *
  * Data: bdevsw 8766 (strategy +4 = 876A, d_tab +6 = 876C), buf[] 8E9A, bfreelist A518 (av_forw A51E, av_back A520),
  * nblkdev 8DD0, swapdev 887E, swplo 8884, swbuf1 CE28, swbuf2 CE40 (24 bytes each), swapmap A0DC, mapq D57C (4 words),
@@ -128,8 +126,8 @@ daddr_t blkno, rablkno;
 #endif
 		}
 	}
-	/* MUTOS: read-ahead only while a buffer is free; V7: "if (rablkno && !incore(dev, rablkno))" */
-	if (rablkno && !incore(dev, rablkno) && bfreelist.av_forw != &bfreelist) {
+	if (rablkno && !incore(dev, rablkno)
+		&& (bfreelist.av_forw != &bfreelist)) {
 		rabp = getblk(dev, rablkno);
 		if (rabp->b_flags & B_DONE)
 			brelse(rabp);

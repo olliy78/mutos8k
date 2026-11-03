@@ -1,20 +1,20 @@
 /* sys1.c -- process control (kernel mutos_1216, 41AC..4C14): exece, getxfile, setregs, rexit, exit, wait, fork, sbreak.
  *
- * Origin:   partial
- * Source:   UNIX V7 usr/sys/sys/sys1.c: structure and comments of all eight functions.  exec (4198) is in sys3.c.
- *           System III PDP-11 uts/os/sys1.c: no function text is taken over (exit/wait differ); see Deviations.
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches the exit loop with zombie count (EXIT), the exece argument block handling with B_AGE and
- *           getxfile(ip, nc, ns), and proctop (PROC_MAX) in wait / fork (fremd.md 4.1 no. 7-9).
+ * Origin:   complete
+ * Source:   UNIX V7 usr/sys/sys/sys1.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on; the other options off;
+ *           tools/herkunft/ifdef_resolve.py).
+ *           exece, rexit, exit (EXIT form: one loop, one wakeup(&proc[1])), wait and fork (MAX_PROC, max_proc) carry the text of the collection;
+ *           getxfile, setregs and sbreak are the collection's functions rewritten for the Z8001.  exec (4198) is in sys3.c.
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 64% V7 / 49% System III PDP-11 (before the
  *           restoration); exece 63%, getxfile 55%, setregs 61%, rexit 46%, exit 80%, wait 83%, fork 78%, sbreak 23% against V7.
  *           V7 text cannot be put in unchanged: the executable header, the argument frame, the process image layout and
  *           exit/wait differ (Z8001); every deviating line carries a "MUTOS:" comment, V7 comments are kept.
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/sys1.md.
- * Deviations: Z8000 executable headers (magic E807 plain, E707 large, 16 or 40 bytes, held in u.u_ex[]), no overlays and no
- *           separate-I/D support in practice, arguments kept in 10 swap blocks, the argument frame at the top of the
- *           64 KB data segment, no accounting, no ptrace flag SIGTRC; exit has a single child loop with a zombie count and
- *           wait shrinks proctop (a MUTOS variable table size); sbreak only clears; see doc/herkunft/sys1.md.
+ * Deviations: Z8000 executable headers (magic E807 plain, E707 large, 16 or 40 bytes, held in u.u_ex[]), no overlays and no separate-I/D support,
+ *           the argument frame at the top of the 64 KB data segment (u_ar0[8] instead of R6), fork sizes the swap space from the actual image,
+ *           no accounting, sbreak only clears; exece is not byte-identical (1 of 389 words, c2 pattern), getxfile not (177 of 401, Z8001 header
+ *           handling); see doc/herkunft/sys1.md.
  *
  * The argument frame is at the upper end of the process 64 KB segment (ucp = -nc - 2).  Magic E807 = non-segmented header
  * (16 bytes), E707 = large header (40 bytes, bit 8 set); u_ex[] is the header read in (V7: u.u_exdata).  The argument strings
@@ -36,7 +36,6 @@
 
 #define btoc(x)		((unsigned)((x)+255)>>8)
 #define ctod2(x)	(((unsigned)(x)+1)>>1)
-#define SIZE_OF_BLK	10
 
 extern char regloc[8];
 
@@ -44,34 +43,32 @@ extern char regloc[8];
 
 /*
  * exec system call, with and without environments.
- * MUTOS: no struct execa here (the local struct a is the same); exec itself is in sys3.c.
+ * MUTOS: exec itself is in sys3.c (kernel address order); the struct is declared there as well.
  */
+struct execa {
+	char	*fname;
+	char	**argp;
+	char	**envp;
+};
+
 /* KERNEL 41AC */
 exece()
 {
 	register nc;
 	register char *cp;
 	register struct buf *bp;
-	register struct a {
-		char	*fname;
-		char	**argp;
-		char	**envp;
-	} *uap;
-	int na;
-	int ne;
-	int ta;
-	int bno;
-	int ucp;
-	int ap;
-	int c;
+	register struct execa *uap;
+	int na, ne, ns, bno, ucp, ap, c;
 	struct inode *ip;
 
 	if ((ip = namei(uchar, 0)) == NULL)
 		return;
-	/* MUTOS: the access and mode tests come first and leave through bad2 (V7: bno = 0, bp = 0 first, then "goto bad") */
-	if (access(ip, IEXEC) || (ip->i_mode & IFMT) != IFREG || (ip->i_mode & 0111) == 0) {
+	if(access(ip,IEXEC)
+	 || ((ip->i_mode&IFMT) != IFREG)
+	 || ((ip->i_mode&(IEXEC|(IEXEC>>3)|(IEXEC>>6))) == 0)) {
 		u.u_error = EACCES;
-		goto bad2;
+		iput(ip);
+		return;
 	}
 	bno = 0;
 	bp = 0;
@@ -81,84 +78,82 @@ exece()
 	na = 0;
 	ne = 0;
 	nc = 0;
-	uap = (struct a *)u.u_ap;
-	/* MUTOS: 10 swap blocks (V7: (NCARGS+BSIZE-1)/BSIZE) */
-	bno = malloc(swapmap, SIZE_OF_BLK);
-	if (bno == 0)
+	uap = (struct execa *)u.u_ap;
+	if ((bno = malloc(swapmap,(NCARGS+BSIZE-1)/BSIZE)) == 0)
 		panic("Out of swap");
 	if (uap->argp) for (;;) {
-		ap = 0;
+		ap = NULL;
 		if (uap->argp) {
 			ap = fuword((caddr_t)uap->argp);
 			uap->argp++;
 		}
-		if (ap == 0 && uap->envp) {
-			uap->argp = 0;
-			if ((ap = fuword((caddr_t)uap->envp)) == 0)
+		if (ap==NULL && uap->envp) {
+			uap->argp = NULL;
+			if ((ap = fuword((caddr_t)uap->envp)) == NULL)
 				break;
 			uap->envp++;
 			ne++;
 		}
-		if (ap == 0)
+		if (ap==NULL)
 			break;
 		na++;
-		if (ap == -1)
+		if(ap == -1)
 			u.u_error = EFAULT;
 		do {
-			if (nc >= 0x13FF)	/* MUTOS: V7 NCARGS-1 */
+			if (nc >= NCARGS-1)
 				u.u_error = E2BIG;
 			if ((c = fubyte((caddr_t)ap++)) < 0)
 				u.u_error = EFAULT;
 			if (u.u_error)
 				goto bad;
-			if ((nc & 0777) == 0) {
+			if ((nc&BMASK) == 0) {
 				if (bp)
-					bdwrite(bp);	/* MUTOS: V7 bawrite */
-				bp = getblk(swapdev, (daddr_t)bno + (nc>>BSHIFT) + swplo);
+					bdwrite(bp);
+				bp = getblk(swapdev, swplo+bno+(nc>>BSHIFT));
 				cp = bp->b_un.b_addr;
 			}
 			nc++;
 			*cp++ = c;
-		} while (c > 0);
+		} while (c>0);
 	}
 	if (bp)
-		bdwrite(bp);	/* MUTOS: V7 bawrite */
+		bdwrite(bp);
 	bp = 0;
-	nc = (nc + 1) & ~1;	/* V7: (nc + NBPW-1) & ~(NBPW-1) */
-	ta = (na + 3) * 2;	/* MUTOS: V7 computes na*NBPW + 3*NBPW below; getxfile gets it as second argument */
-	if (getxfile(ip, nc, ta) || u.u_error)
+	nc = (nc + NBPW-1) & ~(NBPW-1);
+	ns = (na + 3) * NBPW;
+	if (getxfile(ip, nc, ns) || u.u_error)
 		goto bad;
 
 	/*
 	 * copy back arglist
 	 */
 
-	ucp = -nc - 2;
-	ap = ucp - ta;
-	u.u_ar0[8] = ap;	/* MUTOS: stack pointer of the Z8001 frame (V7 u_ar0[R6]) */
-	suword((caddr_t)ap, na - ne);
+	ucp = -nc - NBPW;
+	ap = ucp - ns;
+	u.u_ar0[8] = ap;	/* MUTOS (Z8001): stack pointer of the frame (V7 R6) */
+	suword((caddr_t)ap, na-ne);
 	nc = 0;
 	for (;;) {
-		ap += 2;
-		if (na == ne) {
+		ap += NBPW;
+		if (na==ne) {
 			suword((caddr_t)ap, 0);
-			ap += 2;
+			ap += NBPW;
 		}
 		if (--na < 0)
 			break;
 		suword((caddr_t)ap, ucp);
 		do {
-			if ((nc & 0777) == 0) {
+			if ((nc&BMASK) == 0) {
 				if (bp)
 					brelse(bp);
-				bp = bread(swapdev, (daddr_t)bno + (nc>>BSHIFT) + swplo);
-				bp->b_flags |= B_AGE;	/* MUTOS: not in V7: drop the argument block from the cache */
+				bp = bread(swapdev, swplo+bno+(nc>>BSHIFT));
+				bp->b_flags |= B_AGE;
 				bp->b_flags &= ~B_DELWRI;
 				cp = bp->b_un.b_addr;
 			}
 			subyte((caddr_t)ucp++, (c = *cp++));
 			nc++;
-		} while (c & 0377);
+		} while(c&0377);
 	}
 	suword((caddr_t)ap, 0);
 	suword((caddr_t)ucp, 0);
@@ -166,16 +161,15 @@ exece()
 bad:
 	if (bp)
 		brelse(bp);
-	/* MUTOS: on an error the argument blocks are invalidated in the cache; V7 only does the mfree below (and only if bno != 0) */
-	if (u.u_error)
-		for (nc = 0; nc < SIZE_OF_BLK; nc++) {
-			bp = getblk(swapdev, (daddr_t)bno + nc + swplo);
+	if(u.u_error) {
+		for(nc=0;nc < ((NCARGS+BSIZE-1)/BSIZE);nc++) {
+			bp = getblk(swapdev,swplo+bno+nc);
 			bp->b_flags |= B_AGE;
 			bp->b_flags &= ~B_DELWRI;
 			brelse(bp);
 		}
-	mfree(swapmap, SIZE_OF_BLK, bno);	/* V7: (NCARGS+BSIZE-1)/BSIZE blocks, only if bno != 0 */
-bad2:
+	}
+	mfree(swapmap, (NCARGS+BSIZE-1)/BSIZE, bno);
 	iput(ip);
 }
 
@@ -183,10 +177,10 @@ bad2:
  * Read in and set up memory for executed file.
  * Zero return is normal;
  * non-zero means only the text is being replaced
- * MUTOS: second argument ucount = size of the argument pointer array in bytes (V7 has only nargc).
+ * MUTOS: second argument ns = size of the argument pointer array in bytes (V7 has only nargc).
  */
 /* KERNEL 44B6 */
-getxfile(ip, nargc, ucount)
+getxfile(ip, nargc, ns)
 register struct inode *ip;
 {
 	register unsigned ds;
@@ -277,7 +271,7 @@ register struct inode *ip;
 		goto bad;
 	}
 	ds = btoc((unsigned)lsize);
-	ss = btoc(nargc + ucount) + 5;	/* MUTOS: V7 SSIZE + btoc(nargc), SSIZE is 5 */
+	ss = btoc(nargc + ns) + 5;	/* MUTOS: V7 SSIZE + btoc(nargc), SSIZE is 5 */
 	if (overlay) {
 		if ((u.u_sep == 0 && btoc(ts) != btoc(u.u_tsize)) || nargc) {
 			u.u_error = ENOMEM;
@@ -328,7 +322,7 @@ register struct inode *ip;
 		 * set SUID/SGID protections, if no tracing
 		 */
 		if (u.u_procp->p_flag & STRC)
-			psignal(u.u_procp, SIGTRAP);	/* MUTOS: SIGTRAP (V7 SIGTRC, same number) */
+			psignal(u.u_procp, SIGTRC);
 		else {
 			if (ip->i_mode & ISUID)
 				if (u.u_uid != 0) {
@@ -372,10 +366,10 @@ setregs()
 	for (rp = (int *)u.u_fparea; rp < (int *)&u.u_fparea[0x90]; )	/* MUTOS: V7 clears u_fps up to u_fpregs[6] */
 		*rp++ = 0;
 	for (i = 0; i < NOFILE; i++) {
-		if (u.u_pofile[i] & 1) {
+		if (u.u_pofile[i]&EXCLOSE) {
 			closef(u.u_ofile[i]);
 			u.u_ofile[i] = NULL;
-			u.u_pofile[i] &= ~1;
+			u.u_pofile[i] &= ~EXCLOSE;
 		}
 	}
 	/*
@@ -392,10 +386,12 @@ setregs()
 /* KERNEL 48A6 */
 rexit()
 {
-	register *uap;
+	register struct a {
+		int	rval;
+	} *uap;
 
-	uap = u.u_ap;
-	exit((uap[0] & 0377) << 8);
+	uap = (struct a *)u.u_ap;
+	exit((uap->rval & 0377) << 8);
 }
 
 /*
@@ -429,29 +425,25 @@ exit(rv)
 		iput(u.u_rdir);
 	}
 	xfree();
-	/* MUTOS: no acct() */
 	mfree(coremap, p->p_size, p->p_addr);
 	p->p_stat = SZOMB;
 	((struct xproc *)p)->xp_xstat = rv;
 	((struct xproc *)p)->xp_utime = u.u_cutime + u.u_utime;
 	((struct xproc *)p)->xp_stime = u.u_cstime + u.u_stime;
-	/*
-	 * MUTOS: one loop over the table (to proctop) instead of V7's two loops; i counts the zombie children handed to init,
-	 * which then are woken once through proc[1].  V7 wakes proc[1] for every child and calls swtch() from the parent loop.
-	 */
-	i = 0;
-	for (q = &proc[0]; q <= proctop; q++) {
-		if (q->p_ppid == p->p_pid) {
+	for(i = 0, q = &proc[0]; q <= MAX_PROC; q++){
+		if(q->p_ppid == p->p_pid){
 			q->p_ppid = 1;
-			if (q->p_stat == SZOMB)
+			if(q->p_stat == SZOMB)
 				i++;
-			else if (q->p_stat == SSTOP)
+			else if(q->p_stat == SSTOP)
 				setrun(q);
-		} else if (q->p_pid == p->p_ppid)
-			wakeup((caddr_t)q);
+		}
+		else if(q->p_pid == p->p_ppid){
+			wakeup(q);
+		}
 	}
-	if (i)
-		wakeup((caddr_t)&proc[1]);
+	if(i)
+		wakeup(&proc[1]);
 	swtch();
 }
 
@@ -470,7 +462,7 @@ wait()
 
 	f = 0;
 loop:
-	for (p = &proc[0]; p <= proctop; p++)
+	for (p = &proc[0]; p <= max_proc; p++)
 		if (u.u_procp->p_pid == p->p_ppid) {
 			f++;
 			if (p->p_stat == SZOMB) {
@@ -485,13 +477,10 @@ loop:
 				p->p_flag = 0;
 				p->p_wchan = 0;
 				p->p_stat = NULL;
-				/* MUTOS: shrink the table limit proctop when the last entry is freed (not in V7) */
-				if (p == proctop)
-					for (;;) {
-						proctop--;
-						if (proctop->p_stat != NULL)
-							break;
-					}
+				if(p == max_proc){
+					while((--max_proc)->p_stat == NULL)
+						;
+				}
 				return;
 			}
 			if (p->p_stat == SSTOP) {
@@ -553,8 +542,8 @@ fork()
 		u.u_error = EAGAIN;
 		goto out;
 	}
-	if (p2 > proctop)	/* MUTOS: proctop follows the highest used entry (not in V7) */
-		proctop = p2;
+	if(p2 > max_proc)
+		max_proc = p2;
 	p1 = u.u_procp;
 	if (newproc()) {
 		u.u_r.r_val1 = p1->p_pid;
@@ -568,7 +557,7 @@ fork()
 	}
 	u.u_r.r_val1 = p2->p_pid;
 out:
-	u.u_ar0[12] += 2;	/* MUTOS: V7 u_ar0[R7] += NBPW; PC is word 12 of the Z8001 frame, an instruction of 2 bytes follows */
+	u.u_ar0[12] += NBPW;	/* MUTOS (Z8001): V7 u_ar0[R7]; the PC is word 12 of the Z8001 frame */
 }
 
 /*

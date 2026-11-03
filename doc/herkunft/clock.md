@@ -16,3 +16,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/clock.c` (`clock`; `timeout` ste
 | Funktion | Kernel | Klasse | Rundlauf |
 |---|---|---|---|
 | clock | 2842 | veraendert | nahe (210/260, wie vorher) |
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/clock.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Nur Folgeaenderung: `proctop` -> `MAX_PROC`.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: `clock` weiter nahe (210 von 260 Woertern, unveraendert; Z8001-Parameterliste, Tickzaehlung).

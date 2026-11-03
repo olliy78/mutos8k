@@ -46,3 +46,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sig.c`.  Rundlauf wie in `rundla
 
 Keiner.  `core`, `procxmt`, `grow`, `ptrace` weichen inhaltlich von V7 ab (Z8001-Speichermodell und Registerkarte) und tragen deshalb MUTOS-Zeilen mit Kommentar;
 ein reiner V7-Text wurde dafuer nicht uebersetzt (anderes Verhalten, *angenommen*).
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/sys/sig.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+Nur Folgeaenderung: `proctop` -> `MAX_PROC`, MUTOS-Kommentare dazu entfallen.
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 10 von 10 bytegleich (wie vorher).

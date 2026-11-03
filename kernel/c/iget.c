@@ -1,17 +1,17 @@
 /* iget.c -- inode table (kernel mutos_1216, 1122..1723): iget, iexpand, iput, iupdat, itrunc, tloop, maknode, wdir.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/iget.c (all 8 functions).  System III pdp11 uts/os/iget.c is less similar.
- *           Closest known relative: TUHS collection Research/Torsten_Hippe_v7 (assembled 1995 from unknown sources; not the
- *           author) - matches the free-inode choice by age in iget / iput (LRUI, i_lastr = release time; fremd.md 4.1 no. 5).
+ * Source:   UNIX V7 usr/sys/sys/iget.c in the form of the TUHS collection Research/Torsten_Hippe_v7 (the closest known relative, assembled 1995 from unknown sources; "Hippe" names the
+ *           collection, not the author), standard configuration of usr/sys/conf/m.h (PROC_MAX, EXIT, LRUI on;
+ *           SYSACCT, SYSPHYS, SYSLOCK, DISKMON, INSTRM, MX, SGTTY, SEPID, UNIBMAP, XBUF off; tools/herkunft/ifdef_resolve.py).
+ *           All 8 functions carry the text of the collection (LRUI: i_lrt = i_un.i_lastr is the release time, iget picks the free entry with the smallest i_lrt).
  * Evidence: measured with tools/herkunft/herkunft.py (level abs).  H2, before the restoration: module 89% against V7 (8 of 8
  *           functions >= 50%), 65% against System III PDP-11.  After it: file 94% V7 / 65% System III.  Same strings
  *           ("no imt", "Inode table overflow", "iaddress > 2^24").
  * Roundtrip: cc -O in the guest, per function against mutos_1216: 6 of 8 byte-identical (iget, iexpand, iput, iupdat,
  *           maknode, wdir); itrunc and tloop differ only by the known older-c2 pattern (B).  Details: doc/herkunft/iget.md
- * Deviations: free-inode choice by age (i_lastr = release time, iget/iput) instead of "first free"/i_number = 0;
- *           block addresses expanded by hand (3 bytes, leading 0 byte first) in iexpand/iupdat;
- *           i_un.i_lastr is reused for that (V7 union member, read-ahead); see doc/herkunft/iget.md.
+ * Deviations: block addresses of iexpand/iupdat: the leading zero byte of each long is FIRST (big endian Z8001; PDP-11 has it second), see comments there.
+ *           Otherwise the text is the collection's (diff -w).
  *
  * Data: inode[] = 907A..9EEE (50 entries of 74 bytes), mount[] = A07E (5 of 6 bytes), rootdir 8DC6, time 8DCC,
  * texts 8A1C "no imt", 8A23 "Inode table overflow", 8A39 "iaddress > 2^24"; jump table of itrunc at 8A16.
@@ -73,15 +73,15 @@ loop:
 				}
 				panic("no imt");
 			}
-			/* MUTOS: i_lastr holds the release time; V7 has just "ip->i_count++;" */
 			if(ip->i_count++ == 0)
-				ip->i_un.i_lastr = 0;
+				ip->i_lrt = 0;
 			ip->i_flag |= ILOCK;
 			return(ip);
 		}
-		/* MUTOS: pick the free entry released longest ago; V7: "if(oip==NULL && ip->i_count==0)" */
-		if(ip->i_count==0 && (oip==NULL || oip->i_un.i_lastr > ip->i_un.i_lastr))
-			oip = ip;
+		if(ip->i_count == 0){
+			if((oip == NULL) || (oip->i_lrt > ip->i_lrt))
+				oip = ip;
+		}
 	}
 	ip = oip;
 	if(ip == NULL) {
@@ -93,7 +93,7 @@ loop:
 	ip->i_number = ino;
 	ip->i_flag = ILOCK;
 	ip->i_count++;
-	ip->i_un.i_lastr = 0;
+	ip->i_lrt = 0;
 	bp = bread(dev, itod(ino));
 	/*
 	 * Check I/O errors
@@ -159,7 +159,7 @@ register struct inode *ip;
 		iupdat(ip, &time, &time);
 		prele(ip);
 		ip->i_flag = 0;
-		ip->i_un.i_lastr = time;	/* MUTOS: release time for iget; V7 has "ip->i_number = 0;" */
+		ip->i_lrt = time;
 	}
 	ip->i_count--;
 	prele(ip);

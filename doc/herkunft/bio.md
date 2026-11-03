@@ -23,3 +23,10 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/dev/bio.c` (nicht `sys/`).  Alle Zah
 | swap, physio | 5D4A, 5F56 | veraendert (Z8001) | **gleich** |
 
 Rueckfall: keiner.
+
+
+## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung
+
+Vorlage: `original/hippe-v7/usr/sys/dev/bio.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
+`breada` in der Vorlagenform (`&& (bfreelist.av_forw != &bfreelist)` in Klammern, ohne MUTOS-Kommentar).  `swap`/`physio` bleiben Z8001-Fassungen, `mapalloc`/`mapstart` ohne Gegenstueck (in der Vorlage nur unter `UNIBMAP`, aus).
+Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 17 von 19 bytegleich (wie vorher); `mapalloc` 14/37, `mapstart` 28/44 unveraendert.
