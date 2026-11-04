@@ -305,6 +305,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
 
     def lauf(name, text):
         with sperre:
+            if isinstance(text, dict):           # multi-file program: {file.c: text}, link order = list order
+                return lauf_viele(name, text)
             ist_s = name.endswith("_s")          # assembler variant: cc assembles and links it
             q = {name + (".s" if ist_s else ".c"): text}
             q.update(kopfdateien)
@@ -322,6 +324,31 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
                          "dauer": aus.get("dauer", 0.0)}
             log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary",
                                              aus.get("dauer", 0)))
+    def lauf_viele(name, dateien):
+        """Several .c files (V7 style: each `cc -O -c`, then `cc -s -o NAME *.o` in the given order -- the V7 makefile links
+        `*.o`, i.e. alphabetical; the caller passes the files in link order).  Each .c also goes through `cc -S`
+        (only with asm) so that per-module .s files come back.  One command per step; every one ends in /mnt."""
+        q = dict(dateien)
+        q.update(kopfdateien)
+        cs = [f for f in dateien if f.endswith(".c")]
+        cfl = flags.replace("-s", "").strip()
+        befehle = []
+        rueck = [name, name + ".err"]
+        for f in cs:
+            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl, f, name))
+        befehle.append("cd /tmp;cc -s -o %s %s >>%s.err 2>&1;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), name))
+        if asm:
+            for f in cs:
+                befehle.append("cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name))
+                rueck.append(f[:-2] + ".s")
+            rueck.append(name + ".err2")
+        aus = {}
+        r = gast_as.gast_befehle(os.path.join(arbeit, name), q, befehle, rueck, frist=frist, ausgabe=aus)
+        erg[name] = {"bin": r.get(name), "err": (r.get(name + ".err") or b"").decode("latin-1"),
+                     "s": {f[:-2] + ".s": (r.get(f[:-2] + ".s") or b"").decode("latin-1") for f in cs} if asm else None,
+                     "dauer": aus.get("dauer", 0.0)}
+        log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary", aus.get("dauer", 0)))
+
     ts = [threading.Thread(target=lauf, args=(n, t)) for n, t in varianten.items()]
     for t in ts:
         t.start()

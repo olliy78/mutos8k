@@ -25,6 +25,8 @@ import uspace as U   # noqa: E402
 # `cc -I/mnt` searches first -- so never list a header here that /usr/include has (it would shadow the MUTOS one).
 V7INC = "original/unix-v7/usr/include/"
 PROGRAMME = {
+    # a directory as source = multi-file program: all *.c (alphabetical = V7 `cc *.o` link order), *.h travel along
+    "sh": ("root", "bin/sh", "userspace/sh", [V7INC + "setjmp.h", V7INC + "sys/dir.h"]),
     "init": ("root", "etc/init", "userspace/init/init.c", [V7INC + "utmp.h", V7INC + "setjmp.h"]),
 }
 
@@ -96,19 +98,35 @@ def cmd_karte(name, a):
     return an
 
 
+def quelle_lesen(p):
+    """FILE -> text; DIRECTORY -> {file.c: text} in alphabetical order; the *.h of the directory go to `koepfe` (second value)."""
+    p = os.path.join(U.REPO, p) if not os.path.isabs(p) else p
+    if not os.path.isdir(p):
+        return open(p, encoding="latin-1").read(), {}
+    dat, koepfe = {}, {}
+    for f in sorted(os.listdir(p)):
+        if f.endswith(".c"):
+            dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
+        elif f.endswith(".h"):
+            koepfe[f] = open(os.path.join(p, f), "rb").read()
+    return dat, koepfe
+
+
 def quellen_lesen(name, a):
     """--quelle V=FILE (repeatable); default: the program's own source as variant `neu`."""
     _pl, _pf, q, h = info(name)
     v = {}
+    koepfe = {}
     for s in (a.quelle or []):
         if "=" in s:
             n, p = s.split("=", 1)
         else:
             n, p = os.path.splitext(os.path.basename(s))[0], s
-        v[n] = open(os.path.join(U.REPO, p) if not os.path.isabs(p) else p, encoding="latin-1").read()
+        v[n], k = quelle_lesen(p)
+        koepfe.update(k)
     if not v:
-        v["neu"] = open(os.path.join(U.REPO, q), encoding="latin-1").read()
-    koepfe = {}
+        v["neu"], k = quelle_lesen(q)
+        koepfe.update(k)
     for hd in list(h) + (a.kopf or []):
         d = os.path.join(U.REPO, hd) if not os.path.isabs(hd) else hd
         koepfe[os.path.basename(d)] = open(d, "rb").read()
@@ -134,7 +152,12 @@ def cmd_bau(name, a):
                 f.write(r["bin"])
         with open(os.path.join(ar, "bau", n + ".err"), "w") as f:
             f.write(r["err"])
-        if r["s"]:
+        if isinstance(r["s"], dict):
+            os.makedirs(os.path.join(ar, "bau", n + "_s"), exist_ok=True)
+            for fn, t in r["s"].items():
+                with open(os.path.join(ar, "bau", n + "_s", fn), "w") as f:
+                    f.write(t)
+        elif r["s"]:
             with open(os.path.join(ar, "bau", n + ".s"), "w") as f:
                 f.write(r["s"])
         if r["err"].strip():
