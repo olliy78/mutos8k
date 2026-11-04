@@ -757,6 +757,24 @@ def pruefen_objekte(c, objs, log=print):
     return schlecht
 
 
+def _norm_s(t):
+    """instruction lines of an as source in a comparable form (numbers decimal, FP/SP = r14/r15, labels = L)"""
+    def num(m):
+        v = int(m.group(2), 16)
+        return str((-v) & 0xFFFF if m.group(1) == "-" else v)
+    erg = []
+    for z in t.split("\n"):
+        z = z.strip()
+        if not z or z[0] in "$~" or re.match(r"\S+:$", z) or re.match(r"(G|I|E|X|end)\b", z) or z.endswith(" module"):
+            continue
+        z = re.sub(r"(-?)%([0-9A-Fa-f]+)", num, z)
+        z = z.replace("FP", "r14").replace("SP", "r15").replace(",", " ").lower()
+        z = re.sub(r"\b[ldb][0-9][0-9a-f]*\b", "L", z)
+        z = re.sub(r"\bjr c\b", "jr ult", z)
+        erg.append(re.sub(r"\s+", " ", z))
+    return erg
+
+
 def c_quellen():
     d = os.path.join(LIBDIR, "c")
     return sorted(f[:-2] for f in os.listdir(d) if f.endswith(".c")) if os.path.isdir(d) else []
@@ -795,15 +813,15 @@ def c_bauen(name, nur=None):
     objs = gast_objekte(c, texte, arbeit="libc_alt_c2")
     schlecht = pruefen_objekte(c, objs)
     for n in texte:
-        a = os.path.join(c.dir, n + ".s")
-        b = os.path.join(c.arbeit, "c_%s.s2" % n)
-        norm = lambda t: [re.sub(r"\b[LDB]\d+\b", "L", re.sub(r"\s+", " ", z)).strip() for z in t.split("\n")
-                         if z.strip() and not z.startswith(("$", "~")) and not re.match(r"\S+:$", z)]
-        da = norm(open(a).read())
-        db = norm(b and open(b).read())
+        da = _norm_s(open(os.path.join(c.dir, n + ".s")).read())
+        db = _norm_s(open(os.path.join(c.arbeit, "c_%s.s2" % n)).read())
         sm = difflib.SequenceMatcher(None, da, db, autojunk=False)
         n_diff = sum(1 for t in sm.get_opcodes() if t[0] != "equal")
         print("%s: instruction lines original %d, built %d, difference blocks %d" % (n, len(da), len(db), n_diff))
+        with open(os.path.join(c.arbeit, "c_%s.diff" % n), "w") as f:
+            for t, i1, i2, j1, j2 in sm.get_opcodes():
+                if t != "equal":
+                    f.write("%s orig#%d: %s\n          built: %s\n" % (t, i1, " ; ".join(da[i1:i2][:10]), " ; ".join(db[j1:j2][:10])))
     return 1 if schlecht else 0
 
 

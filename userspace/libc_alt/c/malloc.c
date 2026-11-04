@@ -147,9 +147,8 @@ register union store *p;
 unsigned nbytes;
 {
 	register union store *q;
-	union store *s, *t;
-	register unsigned nw;
-	unsigned onw;
+	register unsigned nw, onw;
+	register union store *s, *t;
 
 	if(testbusy(p[-1].ptr))
 		free((char *)p);

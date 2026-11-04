@@ -10,9 +10,14 @@ _flsbuf(c, iop)
 	register char *base;
 	register n, rn;
 	char c1;
-	extern char _sobuf[];
+	extern char _sibuf[], _sobuf[];
 
 	if (iop->_flag & _IORW) {
+		if (iop->_flag & _IOREAD) {
+			fseek(iop, 0L, 1);
+			iop->_flag &= ~_IOREAD;
+			iop->_ptr = iop->_base;
+		}
 		iop->_flag |= _IOWRT;
 		iop->_flag &= ~_IOEOF;
 	}
@@ -25,6 +30,11 @@ tryagain:
 		iop->_cnt = 0;
 	} else {
 		if ((base = iop->_base) == NULL) {
+			if (iop == stdin) {
+				iop->_base = _sibuf;
+				iop->_ptr = _sibuf;
+				goto tryagain;
+			}
 			if (iop == stdout) {
 				if (isatty(fileno(stdout))) {
 					iop->_flag |= _IONBF;
@@ -101,8 +111,7 @@ fclose(iop)
 			r = EOF;
 		if (iop->_flag & _IOMYBUF)
 			free(iop->_base);
-		if (iop->_flag & (_IOMYBUF|_IONBF))
-			iop->_base = NULL;
+		iop->_base = NULL;
 	}
 	iop->_flag &=
 		~(_IOREAD|_IOWRT|_IONBF|_IOMYBUF|_IOERR|_IOEOF|_IOSTRG|_IORW);
