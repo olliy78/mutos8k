@@ -216,6 +216,7 @@ class Welt:
                     continue
                 if not ok:
                     f.status = "RELOC"
+                    f.reloc_fehler = (off, name if r.art == O.R_EXT else "Daten %04X" % w, kw)
                     break
 
     def datenstueck(self, c, w):
@@ -264,6 +265,7 @@ class CFunc:
         self.text = b""
         self.relocs = []
         self.nahe = None
+        self.reloc_fehler = None        # (Offset, Name, Kernelwort) der ersten falschen Relokation (Status RELOC)
 
 
 def istext(daten, d):
@@ -739,6 +741,42 @@ def natuerlich(welt, arbeit, a):
     return 0
 
 
+def status(welt):
+    """Status je Funktion und Abgleich mit doc/herkunft/daten/rundlauf_soll.txt (Zeilen `modul funktion GLEICH|NAHE`).
+    Beide Zaehlungen muessen zusammenpassen: GLEICH im Soll heisst Status GLEICH des Gesamtbaus (ohne falsche Relokation).
+    dev0 steht im Soll nicht (ohne -O uebersetzt, nur vom Gesamtbau gemessen) und wird nicht abgeglichen.  Exit 1 bei Abweichung."""
+    soll = {}
+    for z in open(os.path.join(WURZEL, "doc", "herkunft", "daten", "rundlauf_soll.txt")):
+        q = z.split()
+        if len(q) == 3 and not z.startswith("#"):
+            soll[(q[0], q[1])] = q[2]
+    zaehl = {}
+    for f in sorted(welt.funcs, key=lambda x: x.addr):
+        zaehl[f.status] = zaehl.get(f.status, 0) + 1
+        extra = ""
+        if f.reloc_fehler:
+            extra = "  falsche Relokation bei +%04X: %s (Kernelwort %04X)" % f.reloc_fehler
+        if f.status != "GLEICH" or extra:
+            print("%04X %-10s %-8s %s%s" % (f.addr, f.name, f.cdatei, f.status, extra))
+    print("Gesamt: %d Funktionen, %s" % (len(welt.funcs), ", ".join("%d %s" % (n, k) for k, n in sorted(zaehl.items()))))
+    bad = 0
+    for f in welt.funcs:
+        sv = soll.get((f.cdatei, f.name))
+        if sv is None:
+            if f.cdatei != "dev0":
+                print("Soll fehlt: %s %s (Status %s)" % (f.cdatei, f.name, f.status))
+                bad += 1
+            continue
+        if (sv == "GLEICH") != (f.status == "GLEICH"):
+            print("Zaehlung weicht ab: %s %s Soll %s, Gesamtbau %s" % (f.cdatei, f.name, sv, f.status))
+            bad += 1
+    gk = {(f.cdatei, f.name) for f in welt.funcs}
+    for k in sorted(set(soll) - gk):
+        print("Soll ohne Funktion: %s %s" % k)
+        bad += 1
+    return 1 if bad else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--arbeit", required=True)
@@ -750,6 +788,8 @@ def main(argv=None):
     ap.add_argument("--nur-plan", action="store_true")
     ap.add_argument("--frist", type=int, default=20_000_000_000)
     ap.add_argument("--natuerlich", action="store_true", help="make im Gast: alle 29 C-Dateien mit cc, dazu low/bss/shim/abs")
+    ap.add_argument("--status", action="store_true",
+                    help="Status je Funktion (GLEICH/ABW/LAENGE/RELOC, falsche Relokationen) und Abgleich mit rundlauf_soll.txt; baut nichts")
     ap.add_argument("--boot", action="store_true", help="den gebundenen Kernel auf eine Ladediskette und booten + Arbeitstests")
     a = ap.parse_args(argv)
     sys.path.insert(0, HIER)
@@ -762,6 +802,8 @@ def main(argv=None):
     objdir = a.objekte or os.path.join(arbeit, "obj")
     kernel = rundlauf_gast.kernel_holen()
     welt = Welt(kernel, objdir)
+    if a.status:
+        return status(welt)
     if a.natuerlich:
         return natuerlich(welt, arbeit, a)
     erlaubt = {"GLEICH"} if a.stufe == 1 else {"GLEICH", "RELOC", "ABW", "LAENGE"}

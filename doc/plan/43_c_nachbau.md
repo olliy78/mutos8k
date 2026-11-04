@@ -96,4 +96,5 @@ Für Funktionen, deren Abweichung als Compilerunterschied nachgewiesen ist:
   im Kernel ohne Aufrufer, `cdevsw[5].d_sgtty` ist `nodev`) als eigene Funktionen, in `funktionen.txt` eingetragen; `core` ruft `namei(schar, 1)`; `setregs` kopiert `u_dbuf` nach `u_exname`.
 * Rundlauf (`nami rdwri lp sig sys1`): `schar`, `max`, `lpsgtty` GLEICH, `core`, `setregs` weiter GLEICH; `rundlauf_soll.txt` ergaenzt.
 * Gesamtbau `--stufe 1 --boot`: **199 von 230 C-Funktionen** verwendet (230 = 227 + 3 neue), `Gesamt: BYTEGLEICH`, 36 352 Byte, Boot und alle 11 Arbeitstests ok.
-* **Offen aus Punkt 4:** `gesamtbau.py --status` und der Abgleich von README §5 mit `gesamtbau.Welt` (Liste der verbleibenden Funktionen) -- nicht umgesetzt.
+* Punkt 4 erledigt: `gesamtbau.py --arbeit DIR --status` (baut nichts, braucht die Objekte in `DIR/obj`) zeigt je Funktion Status und erste falsche Relokation und gleicht mit `rundlauf_soll.txt` ab.
+  Messung: 230 Funktionen, 199 GLEICH, 24 LAENGE, 7 ABW, keine RELOC; Soll und Gesamtbau stimmen ueberein (Exit 0).  Verbleibend 31 = 25 NAHE + 6 `dev0` (`fdopen`, `fdclose`, `fdstart`, `fdintr`, `fdphys`, `fdioctl`); die "36" aus §1/§2 sind damit ueberholt.
