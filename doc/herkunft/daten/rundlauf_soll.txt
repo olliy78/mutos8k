@@ -113,8 +113,10 @@ pipe getc GLEICH
 pipe putc GLEICH
 # AP H3, Gruppe nami rdwri bio main sys1 clock text (2026-10-31); NAHE-Staende: readi 108/206, mapalloc 14/37, mapstart 28/44, binit 1/84, exece 1/389, getxfile 177/401, clock 210/260 Woerter
 nami namei GLEICH
+nami schar GLEICH
 rdwri readi NAHE
 rdwri writei GLEICH
+rdwri max GLEICH
 rdwri min GLEICH
 rdwri iomove GLEICH
 bio bread GLEICH
@@ -189,6 +191,7 @@ lp lpcanon NAHE
 lp lpoutput GLEICH
 lp lpintr NAHE
 lp lpxfer GLEICH
+lp lpsgtty GLEICH
 tty tcopen GLEICH
 tty tcclose GLEICH
 tty tcread GLEICH

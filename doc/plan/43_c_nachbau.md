@@ -4,7 +4,7 @@ Stand 2026-11-04.  Status: **geplant**, Bearbeitung in einer eigenen Sitzung.  V
 
 ## 1. Ausgangslage (gemessen)
 
-* Gesamtbau Stufe 1: **191 von 227** Funktionen bytegleich aus C, Abbild 36 352 Byte BYTEGLEICH (`doc/herkunft/README.md` Abschnitt 5).
+* Gesamtbau Stufe 1: **191 von 227** (vor Arbeitspaket 0; danach 199 von 230) Funktionen bytegleich aus C, Abbild 36 352 Byte BYTEGLEICH (`doc/herkunft/README.md` Abschnitt 5).
   Die übrigen 36 kommen in Stufe 1 aus der Referenz-Disassemblierung (`kernel/asm/ref`).
 * Alle 36 **liegen bereits als C vor** und waren im Original C (Rahmen `call csv` / `jp cret`, Text folgt V7 bzw. der Hippe-Sammlung).
   Echter Handassembler sind nur die 26 Funktionen von `low` (V7 `mch.s`-Art) – die zählen nicht zu den 227 und bleiben Assembler.
@@ -89,3 +89,11 @@ Für Funktionen, deren Abweichung als Compilerunterschied nachgewiesen ist:
 2. `doc/herkunft/<modul>.md`: Form, die getroffen hat, und Lauf.  `c_rueckbau.md`: Eintrag als `[UEBERHOLT]` markieren.
 3. Gesamtbau `--stufe 1 --boot`: BYTEGLEICH, neue Zahl „n von 227 aus C“ in `doc/herkunft/README.md` §5, `README.md`, `42_unix_herkunft.md` §4a.
 4. `pytest -q` grün, Commit je Modul.
+
+## 7. Stand Arbeitspaket 0 (2026-11-04, gemessen)
+
+* Punkte 1-3 erledigt: `schar` (39A0, `nami.c`), `max` (274C, `rdwri.c`), `lpsgtty` (695A, `lp.c`; V7-/Hippe-Name, Quelle `original/hippe-v7/usr/sys/dev/lp.c`,
+  im Kernel ohne Aufrufer, `cdevsw[5].d_sgtty` ist `nodev`) als eigene Funktionen, in `funktionen.txt` eingetragen; `core` ruft `namei(schar, 1)`; `setregs` kopiert `u_dbuf` nach `u_exname`.
+* Rundlauf (`nami rdwri lp sig sys1`): `schar`, `max`, `lpsgtty` GLEICH, `core`, `setregs` weiter GLEICH; `rundlauf_soll.txt` ergaenzt.
+* Gesamtbau `--stufe 1 --boot`: **199 von 230 C-Funktionen** verwendet (230 = 227 + 3 neue), `Gesamt: BYTEGLEICH`, 36 352 Byte, Boot und alle 11 Arbeitstests ok.
+* **Offen aus Punkt 4:** `gesamtbau.py --status` und der Abgleich von README §5 mit `gesamtbau.Welt` (Liste der verbleibenden Funktionen) -- nicht umgesetzt.

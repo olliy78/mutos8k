@@ -1,7 +1,7 @@
-/* rdwri.c -- read and write inodes (kernel mutos_1216, 2460..2842): readi, writei, min, iomove.
+/* rdwri.c -- read and write inodes (kernel mutos_1216, 2460..2842): readi, writei, max, min, iomove.
  *
  * Origin:   complete
- * Source:   UNIX V7 usr/sys/sys/rdwri.c (readi, writei, min, iomove).  V7 max() is not in the kernel (no caller).
+ * Source:   UNIX V7 usr/sys/sys/rdwri.c (readi, writei, max, min, iomove).  max (274C) has no caller in the kernel.
  *           System III PDP-11 uts/os/rdwri.c is changed (FIFO, readahead); not used.
  * Evidence: measured with tools/herkunft/herkunft.py (level abs): file 81% V7 / 38% System III PDP-11 (before the
  *           restoration), 4 of 4 functions above 50% against V7.
@@ -141,6 +141,20 @@ register struct inode *ip;
 			ip->i_size = u.u_offset;
 		ip->i_flag |= IUPD|ICHG;
 	} while(u.u_error==0 && u.u_count!=0);
+}
+
+/*
+ * Return the logical maximum
+ * of the 2 arguments.
+ */
+/* KERNEL 274C */
+max(a, b)
+unsigned a, b;
+{
+
+	if(a > b)
+		return(a);
+	return(b);
 }
 
 /*

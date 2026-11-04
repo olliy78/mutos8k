@@ -92,7 +92,7 @@ Passend waere ein PDP-11-V7-Derivat in der Naehe der Sammlung als Zwischenstufe.
 
 ## 5. Stand der Quellen: Rundlauf und Gesamtbau (gemessen, 2026-11-03)
 
-Gesamtbau `--uebersetzen --stufe 1 --boot`: **191 von 227 Funktionen bytegleich aus C**, `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
+Gesamtbau `--uebersetzen --stufe 1 --boot`: **199 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
 Die restlichen 36 sind 25 "nahe" Funktionen (unten) und die 11 Funktionen von `dev0.c`, das im Original ohne `-O` uebersetzt wurde und nur vom Gesamtbau abgedeckt wird.
 "Origin" ist der Wert aus dem Dateikopf; "bytegleich" zaehlt die Funktionen mit `GLEICH` in `daten/rundlauf_soll.txt` (Rundlauf je Funktion).
 

@@ -1,4 +1,4 @@
-/* lp.c -- line printer (cdevsw[7]; kernel mutos_1216, 6444..6970): lpopen, lpclose, lpwrite, lpcanon, lpoutput, lpintr, lpxfer.
+/* lp.c -- line printer (cdevsw[7]; kernel mutos_1216, 6444..6970): lpopen, lpclose, lpwrite, lpcanon, lpoutput, lpintr, lpxfer, lpsgtty.
  *
  * Origin:   partial
  * Source:   Closest template for the line preparation (lpopen / lpwrite / lpcanon, flag bits OPEN / CAP / NOCR / ASLP, columns
@@ -317,4 +317,29 @@ lpxfer(dev)
 	mp->mb_cnt = lp->l_ocnt;
 	mp->mb_dir = 1;
 	mapalloc(mp, 2);
+}
+
+/*
+ * Get (v != 0) or set (v == 0, from u_arg) the printer modes:
+ * flags and indent (one word), lines and columns per page.  Nothing in the kernel calls it
+ * (cdevsw[5].d_sgtty is nodev).  The byte access follows the Z8000 byte order (first byte = high byte).
+ */
+/* KERNEL 695A */
+lpsgtty(dev, v)
+register char *v;
+{
+	register struct lp *lp;
+
+	lp = &lpt[dev & 07];
+	if (v) {
+		v[0] = lp->l_flag;
+		v[1] = lp->l_ind;
+		((int *)v)[1] = lp->l_mlc;
+		((int *)v)[2] = lp->l_mcc;
+	} else {
+		lp->l_flag = (((char *)&u.u_arg[0])[0] & 077) | 010;
+		lp->l_ind = ((char *)&u.u_arg[0])[1] & 017;
+		lp->l_mlc = u.u_arg[1];
+		lp->l_mcc = u.u_arg[2];
+	}
 }

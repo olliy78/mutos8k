@@ -374,9 +374,9 @@ setregs()
 	}
 	/*
 	 * Remember file name for accounting.
-	 * MUTOS: no accounting; the name goes from u_exname to u_dbuf (V7: bcopy(u_dbuf, u_comm))
+	 * MUTOS: no accounting; the name is kept in u_exname (V7: u_comm), used by ps
 	 */
-	bcopy((caddr_t)u.u_exname, (caddr_t)u.u_dbuf, DIRSIZ);
+	bcopy((caddr_t)u.u_dbuf, (caddr_t)u.u_exname, DIRSIZ);
 }
 
 /*

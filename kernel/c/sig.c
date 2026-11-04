@@ -224,11 +224,11 @@ core()
 {
 	register struct inode *ip;
 	register s;	/* MUTOS: int (V7: unsigned) */
-	/* MUTOS: no schar(); namei() is given uchar() (pipe.c), V7: "extern schar();" */
+	extern schar();
 
 	u.u_error = 0;
 	u.u_dirp = "core";
-	ip = namei(uchar, 1);
+	ip = namei(schar, 1);
 	if(ip == NULL) {
 		if(u.u_error)
 			return(0);

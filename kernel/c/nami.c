@@ -1,5 +1,5 @@
-/* nami.c -- path name lookup (kernel mutos_1216, 36A0..39B9): namei.  uchar sits behind namei in the kernel (39BA) and
- * is in pipe.c; MUTOS has no schar.
+/* nami.c -- path name lookup (kernel mutos_1216, 36A0..39B9): namei, schar.  uchar sits behind schar in the kernel (39BA) and
+ * is in pipe.c.
  *
  * Origin:   complete
  * Source:   UNIX V7 usr/sys/sys/nami.c (namei).  System III PDP-11 uts/os/nami.c is the same text with multiplexed-file
@@ -26,7 +26,7 @@ extern struct inode *rootdir;
  *
  * func = function called to get next char of name
  *	&uchar if name is in user space
- *	(V7 also has &schar for the system space; MUTOS has no schar)
+ *	&schar if name is in system space
  * flag = 0 if name is sought
  *	1 if name is to be created
  *	2 if name is to be deleted
@@ -206,4 +206,15 @@ eloop:
 out:
 	iput(dp);
 	return(NULL);
+}
+
+/*
+ * Return the next character from the
+ * kernel string pointed at by dirp.
+ */
+/* KERNEL 39A0 */
+schar()
+{
+
+	return(*u.u_dirp++ & 0377);
 }
