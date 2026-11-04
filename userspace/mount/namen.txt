@@ -1,0 +1,3 @@
+# hand names for /etc/mount (ADDR name)
+0030 _main
+08D2 _perror

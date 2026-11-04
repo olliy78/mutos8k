@@ -1,0 +1,40 @@
+0C2A /etc/mtab
+0C3F umount
+0C46 /etc/mtab
+0CAC null
+0D53 RUnknown error
+0DAF #Error 0
+0DB8 Not owner
+0DC2 No such file or directory
+0DDC No such process
+0DEC Interrupted system call
+0E04 I/O error
+0E0E No such device or address
+0E28 Arg list too long
+0E3A Exec format error
+0E4C Bad file number
+0E5C No children
+0E68 No more processes
+0E7A Not enough core
+0E8A Permission denied
+0E9C Bad address
+0EA8 Block device required
+0EBE Mount device busy
+0ED0 File exists
+0EDC Cross-device link
+0EEE No such device
+0EFD Not a directory
+0F0D Is a directory
+0F1C Invalid argument
+0F2D File table overflow
+0F41 Too many open files
+0F55 Not a typewriter
+0F66 Text file busy
+0F75 File too large
+0F84 No space left on device
+0F9C Illegal seek
+0FA9 Read-only file system
+0FBF Too many links
+0FCE Broken pipe
+0FDA Argument too large
+0FED Result too large

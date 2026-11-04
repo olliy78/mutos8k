@@ -338,11 +338,21 @@ def c2_emu_s(s):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
       R2  `xorb rhN,rhN ; ldb mem,rlN` (mem not a register)  ->  XORB dropped
       R3  `xorb rhN,rhN ; cp .. ; jr cc L ; jr M`  ->  `xorb rhN,rhN` inserted before the final `jr M`
+      R4  `cp MEM,#k` (MEM not a register, not @reg) -> `ld r0,MEM ; cp r0,#k`; a following `cp MEM,#k2` directly
+          behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)   (cat/date/ls, login/getty/mount/umount)
+      R5  `ld rA,rB ; test rB` -> `test rA`;  `ld rA,rB ; ld DST,rB` -> `ld DST,rA` (no copy propagation)
+      R6  `ld rA,M ; testb @rA ; jr cc ; ld rB,rA` -> `ld rB,M`
+      R7  `ldb rlN,mem ; cp rN,..` -> `xorb rhN,rhN` inserted between
+      R8  `ldb rlA,MEM ; xorb rhA,rhA ; ldb rlB,rlA`  ->  `... ; ldb rlB,MEM`  (no register copy for a reloaded byte)
+      R9  `and rX,#k ; or rA,rX` (X=A+2)  ->  `and ; ld rA+1,rX ; or rA,rA+1`
+    (R4..R9 were found independently on two branches and merged; numbering of doc/userspace/system_befehle.md
+    R5/R6 = R8 / R5+R9 here.)
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0}
     i = 0
+    r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
         a = z[i]
         b = z[i + 1] if i + 1 < len(z) else ""
@@ -370,6 +380,67 @@ def c2_emu_s(s):
                 n["R3"] += 1
                 i += 4
                 continue
+        # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
+        l7 = re.match(r"ldb\trl(\d),[^r]", a)
+        if l7 and re.match(r"cp\tr%s," % l7.group(1), b):
+            out += [a, "xorb\trh%s,rh%s" % (l7.group(1), l7.group(1))]
+            n["R7"] += 1
+            i += 1
+            continue
+        # R6  `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `ld rB,M` (the original does not forward the loaded value)
+        l6 = re.match(r"ld\t(r\d+),([^r@][^,]*)$", a)
+        if l6 and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
+                and re.match(r"ld\t(r\d+),%s$" % l6.group(1), z[i + 3]):
+            out += z[i:i + 3]
+            out.append("ld\t%s,%s" % (re.match(r"ld\t(r\d+),", z[i + 3]).group(1), l6.group(2)))
+            n["R6"] += 1
+            i += 4
+            continue
+        # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
+        #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
+        c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
+        if c4 and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
+            if r0mem == c4.group(1):
+                out.append("cp\tr0," + c4.group(2))
+            else:
+                out += ["ld\tr0," + c4.group(1), "cp\tr0," + c4.group(2)]
+                r0mem = c4.group(1)
+            n["R4"] += 1
+            i += 1
+            continue
+        if not re.match(r"jr\t", a):
+            r0mem = None
+        # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
+        t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        t6 = re.match(r"test\t(r\d+)$", b)
+        if t5 and t6 and t6.group(1) == t5.group(2):
+            out += [a, "test\t" + t5.group(1)]
+            n["R5"] += 1
+            i += 2
+            continue
+        t7 = re.match(r"ld\t([^,]+),(r\d+)$", b)      # `ld rA,rB ; ld DST,rB` -> `ld DST,rA`
+        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1):
+            out += [a, "ld\t%s,%s" % (t7.group(1), t5.group(1))]
+            n["R5"] += 1
+            i += 2
+            continue
+        m5 = re.match(r"ldb\t(rl\d),([^,]+)$", a)
+        if m5 and not re.match(r"r[hl]\d+$", m5.group(2)):
+            c = z[i + 1] if i + 1 < len(z) else ""
+            d = re.match(r"ldb\t(rl\d),(rl\d)$", z[i + 2]) if i + 2 < len(z) else None
+            if c == "xorb\trh%s,rh%s" % (m5.group(1)[2:], m5.group(1)[2:]) and d and d.group(2) == m5.group(1):
+                out += [a, c, "ldb\t%s,%s" % (d.group(1), m5.group(2))]
+                n["R8"] += 1
+                i += 3
+                continue
+        m7 = re.match(r"and\t(r\d+),#", a)
+        m7b = re.match(r"or\t(r\d+),(r\d+)$", b)
+        if m7 and m7b and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
+            t = "r%d" % (int(m7b.group(1)[1:]) + 1)
+            out += [a, "ld\t%s,%s" % (t, m7b.group(2)), "or\t%s,%s" % (m7b.group(1), t)]
+            n["R9"] += 1
+            i += 2
+            continue
         out.append(a)
         i += 1
     return "\n".join(out), n
@@ -402,6 +473,7 @@ def c2_kanon(zeilen):
         more than one argument word, the original c2 only after a one-word call)
     R2  `XORB RHn,RHn ; LDB mem,RLn` (mem not a register): the original c2 drops the XORB, the usr c2 keeps it.
     R3  `XORB RHn,RHn ; CP .. ; JR cc,.. ; XORB RHn,RHn`: the original c2 keeps the repeated XORB, the usr c2 drops it.
+    R4  `LD R0,mem ; CP R0,#k` (original) <-> `CP mem,#k` (usr c2); brought into the second form.
     Both sides are brought into the same form (R1 towards the original, R2: XORB dropped)."""
     erg, i = [], 0
     while i < len(zeilen):
@@ -422,6 +494,12 @@ def c2_kanon(zeilen):
         x = re.match(r"XORB (RH\d),RH\d$", z)
         if x and re.match(r"LDB (?!R[HL]\d,)\S+,R[HL]\d$", n) and not n.startswith("LDB R"):
             i += 1
+            continue
+        # R4: the original c2 never emits `CP mem,#k`: it loads R0 first
+        m4 = re.match(r"LD R0,(?!R\d+$|#)(\S+)$", z)
+        if m4 and re.match(r"CP R0,#", n):
+            erg.append("CP %s,%s" % (m4.group(1), n[len("CP R0,"):]))
+            i += 2
             continue
         erg.append(z)
         i += 1

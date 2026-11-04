@@ -1,0 +1,14 @@
+1E12 /etc/passwd
+1E1E /etc/group
+1E3B %5u 
+1E40 %4D 
+1E45 %2d 
+1E4A %-6.6s
+1E51 %-6d
+1E56 %3d,%3d
+1E5E %7ld
+1E63  %-7.7s %-4.4s 
+1E73  %-12.12s 
+1F14 null
+1FF6 SunMonTueWedThuFriSat
+200C JanFebMarAprMayJunJulAugSepOctNovDec

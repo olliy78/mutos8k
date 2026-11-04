@@ -1,0 +1,3 @@
+# hand names for /etc/umount (ADDR name)
+0030 _main
+080C _perror
