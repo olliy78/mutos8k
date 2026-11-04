@@ -104,7 +104,7 @@ H1 und H2 zuerst; H3 beginnt mit den Modulen, die durch `kernel_namen.md` bereit
 | H8a | erledigt (zusaetzlich) | Z8001-Prozessorkontext, WEGA-`libc`-ABI: `z8001_kontext.md` |
 | H8b | erledigt (zusaetzlich) | Mailbox-Treiber, U880-Seite, `fd*` als umgebauter Bandtreiber: `mailbox_treiber.md` |
 
-Stand der Quellen: 210 von 230 Kernelfunktionen bytegleich aus C, Gesamtbau BYTEGLEICH 36 352 Byte (`doc/herkunft/README.md` Abschnitt 5).
+Stand der Quellen: 216 von 230 Kernelfunktionen bytegleich aus C, Gesamtbau BYTEGLEICH 36 352 Byte (`doc/herkunft/README.md` Abschnitt 5).
 
 ## 4b. Beschluesse des Projektinhabers (Festhaltung)
 
