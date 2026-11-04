@@ -162,7 +162,7 @@ def gast_assemblieren(arbeit, teile, ausgabe=None, kommando=">asm.out;as %s.s >/
     return erg
 
 
-def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False):
+def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=()):
     """Allgemeiner Gastlauf (AP K5): `quellen` {name: bytes|str} kommen auf die Quelldiskette D (im Gast /mnt = Arbeitsordner),
     `befehle` laufen nacheinander in der Shell (Rueckmeldung je Befehl ueber eine Marke), danach werden die Dateien
     `rueck` aus /tmp (eigene leere Diskette A) geholt.  Rueckgabe {name: bytes oder None}.
@@ -201,6 +201,8 @@ def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dat
         rc, o = _lauf([disktool(), "put", os.path.join(arbeit, "quelle.hfe")] + dateien[i:i + 20])
         if rc:
             raise RuntimeError("put: " + o)
+    for n in ausfuehrbar:       # host files come without the execute bit; mtime 1987 as in the guest
+        _lauf([disktool(), "attr", os.path.join(arbeit, "quelle.hfe"), n, "--mode", "0755", "--mtime", "536457600"])
     skript = os.path.join(arbeit, "lauf.dbg")
     with open(skript, "w") as f:
         f.write(dbg_skript(arbeit, befehle, "%s", frist, schirm))

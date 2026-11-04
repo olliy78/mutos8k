@@ -7,12 +7,13 @@ bindet ihn mit dem Gast-`ld`, legt ihn auf eine Ladediskette (`mutos_1216` erset
 ## Ergebnis
 | Bau | Funktionen aus C | Ergebnis |
 |---|---|---|
-| **Stufe 1** (`--stufe 1`) | 177 von 227 (die bytegleichen) | **36 352 von 36 352 Byte bytegleich** zum Original, Boot bis `#` + Arbeitstests wie das Original |
-| **Stufe 2** (`--stufe 2`) | **227 von 227** (nur `low` = 26 Assemblerfunktionen bleiben) | funktionsgleich, nicht bytegleich: Text 34 376 B (Original 34 650), bootet bis `#`; ls, cat, Pipes, `cc -c`, `cc t2.c; a.out`, `cc -O -c prf.c` laufen |
+| **Stufe 1** (`--stufe 1`) | 191 von 227 (die bytegleichen; Stand 2026-11-04) | **36 352 von 36 352 Byte bytegleich** zum Original, Boot bis `#` + alle 11 Arbeitstests wie das Original (auch `ps`, `lp`) |
+| **Stufe 2** (`--stufe 2`) | **227 von 227** (nur `low` = 26 Assemblerfunktionen bleiben) | funktionsgleich, nicht bytegleich; Neumessung 2026-11-04 mit heutigem Quelltext: Text 34 424 B (Original 34 650), Daten 1 660 B, bootet bis `#`, alle 11 Arbeitstests laufen durch (`ps` mit falschen Spalten, siehe unten) |
 | **Natürlich** (`--natuerlich`) | alle 29 C-Dateien mit `cc` im Gast, `make` im Gast | siehe unten |
 
 Arbeitstests (`BOOTTEST` im Skript, Ausgabe des Gasts, Stufe 2 und Original gleich): `ls -l /`, `ls /etc | cat`, `cat t.c | cat | cat`,
-`cc -c t.c`, `date`, `cat t.c >/tmp/e1; cat /tmp/e1`, `cc t2.c; a.out; a.out | cat` -> `summe = 5050` zweimal, `cc -O -c prf.c` -> `prf.o` 1600 B.
+`cc -c t.c`, `date`, `cat t.c >/tmp/e1; cat /tmp/e1`, `cc t2.c; a.out; a.out | cat` -> `summe = 5050` zweimal, `cc -O -c prf.c` -> `prf.o` 1600 B;
+seit 2026-11-04 zusaetzlich `ps` (von der cmd-Diskette auf die Arbeitsdiskette kopiert) und Ausgabe nach `/dev/lp` (`cdevsw[5]`; der Emulator zeigt kein Papier, geprueft wird: Rueckkehr ohne Fehler und ohne Haenger).
 Bildschirm nach dem Boot: `mem = 196608`, `single user login: root`.
 
 ## Verfahren (Mischbau je FUNKTION, Stufe 1/2)
@@ -43,9 +44,14 @@ Bildschirm nach dem Boot: `mem = 196608`, `single user login: root`.
 * **Text** 34 376 B statt 34 650 (-274); die erste Funktion, die abweicht, steht bei 0249 (`low` ist bytegleich); danach verschieben sich alle Funktionen
   um 0..-122 B (`gesamtbau_adressen.txt`: Name, alt, neu, Abstand; 227 Zeilen).  Data: 1676 B statt 1638 (+162 mitgebundene Tabellen, -124 Waisen).
 * **BSS unverändert** (8DC0..D256, durch `pad`); Postfach D532, Konsolenpuffer, `u` bei FC00 unverändert.  Alle Daten- und Textadressen sonst anders;
-  die Zeigertabelle für ps/pstat (88B8..) zeigt auf BSS-Adressen und stimmt weiter, auf Text-/Datenadressen nicht (nur Stufe 2, `ps` ungeprüft).
-* Gleichwertig aber nicht bytegleich (aus K7): 14 "nahe" und 28 "offen" Funktionen (anderer Blockaufbau des Kernel-`c2`, Konstantenvergleich über R2 ...).
-  **Nicht erprobt**: Floppy-Treiber `fd*` (im Kernel nie erreicht), Drucker `lp*`, Swap unter Last, `exec` großer Programme.
+  die Zeigertabelle für ps/pstat (88B8..) zeigt auf BSS-Adressen und stimmt weiter, auf Text-/Datenadressen nicht.  **Gemessen 2026-11-04:** `ps` liefert auf Stufe 2
+  eine unbrauchbare Tabelle (eine Kopfzeile mit Unsinn, dann viele Zeilen `0 ... system scheduler`), auf Stufe 1 die richtige (scheduler, init, sh, ps).
+* **Sprungtabellen bytegleicher, nur verschobener C-Funktionen** (`ttyoutput`, 8D46): wurden in Stufe 2 genullt (`tote_marken`), seit `ttyoutput` aus C kommt
+  (2026-11-03) sprang der Kernel bei Steuerzeichen nach 0 (Meldung `parity during waiting - segment = 0 offset = 0`, Fall 11 von `trap`), die Shell hing.
+  Behoben 2026-11-04: `tote_marken` setzt in Stufe 2 Funktionsname + Abstand ein (`_ttyoutput+%xx`).  Eingrenzung: Stufe-2-Bau mit allen nicht
+  bytegleichen Funktionen aus Assembler unterschied sich vom bytegleichen Stufe-1-Abbild nur in diesen 12 Byte.
+* Gleichwertig aber nicht bytegleich (Stand 2026-11-04, `gesamtbau.Welt`): 36 Funktionen = 27 LAENGE, 7 ABW, 2 RELOC (`core`, `setregs`); Liste und Plan in
+  `doc/plan/43_c_nachbau.md`.  **Nicht erprobt**: Floppy-Treiber `fd*` (im Kernel nie erreicht), Swap unter Last, `exec` großer Programme.
 
 ## Natürlicher Bau mit `make` im Gast (`--natuerlich`)
 Ziel: ohne Host-Umbau der Objekte.  Alle 29 C-Dateien (+`conf.c`, `sysent.c`) unverändert mit `cc -O -I/mnt -c` (`dev0.c` ohne `-O`), dazu

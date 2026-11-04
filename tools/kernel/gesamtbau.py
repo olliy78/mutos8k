@@ -572,17 +572,27 @@ def linkkarte_neu(segs, dstuecke):
     return "\n".join(z + m) + "\n"
 
 
-def tote_marken(text, segs, definiert, fest=False):
+def tote_marken(text, segs, definiert, fest=False, adrname=None):
     """In Datenmodulen zeigen Sprungtabellen des ALTEN Codes auf Marken, die es im neuen nicht mehr gibt: null setzen.
     fest (Stufe 1, Layout unveraendert): Die Marke liegt in einer bytegleichen C-Funktion an derselben Adresse wie im Kernel
-    (Sprungtabelle von ttyoutput, 8D46); sie wird als Zahl eingesetzt statt genullt."""
+    (Sprungtabelle von ttyoutput, 8D46); sie wird als Zahl eingesetzt statt genullt.
+    Stufe 2 (adrname gegeben): liegt die Marke in einer bytegleichen C-Funktion, die nur verschoben ist, wird sie als
+    Funktionsname + Abstand eingesetzt (die Funktion hat dieselben Bytes, also denselben Abstand).  Genullt wurde
+    hier frueher auch die Tabelle von ttyoutput -> Sprung nach 0 bei Steuerzeichen, Kernel haengt (gemessen 2026-11-04)."""
     cb = [(s[2], s[3]) for s in segs if s[1] == "c"]
+    gleich = [f for s in segs if s[1] == "c" for f in s[4] if f.status == "GLEICH"]
 
     def ers(m):
         a = int(m.group(1), 16)
         if m.group(0) in definiert or not any(v <= a < b for v, b in cb):
             return m.group(0)
-        return ("%%%04X" % a) if fest else "%0000"
+        if fest:
+            return "%%%04X" % a
+        if adrname:
+            for f in gleich:
+                if f.addr <= a < f.addr + len(f.text):
+                    return "%s+%%%X" % (adrname(f.addr), a - f.addr)
+        return "%0000"
     return re.sub(r"(?<![A-Za-z0-9_])L([0-9A-F]{4})(?![A-Za-z0-9_:])", ers, text)
 
 
@@ -646,6 +656,10 @@ BOOTTEST = [
     ("b7", "(cat t.c >/tmp/e1; cat /tmp/e1; ls -l /tmp/e1) >/tmp/b7 2>&1"),
     ("b8", "(cc t2.c; a.out; a.out | cat) >/tmp/b8 2>&1"),
     ("b9", "(cc -O -c prf.c; ls -l prf.o) >/tmp/b9 2>&1"),
+    # ps reads the kernel pointer table (88B8..) through /dev/mem: wrong columns expected where the table points to text/data
+    ("b10", "ps >/tmp/b10 2>&1"),
+    # printer = cdevsw[5]; the emulator shows no paper, so the test is: the open/write/close path returns, no error, no hang
+    ("b11", "(ls -l /dev/lp; cat t.c >/dev/lp && ls -l t.c; cat t.c t.c t.c t.c >/dev/lp && ls -l t.c) >/tmp/b11 2>&1"),
 ]
 
 
@@ -660,9 +674,18 @@ def boot_pruefen(arbeit, kernel_bytes, frist=20_000_000_000):
     for h in sorted(os.listdir(HQUELLEN)):
         if h.endswith(".h"):
             quellen[h] = open(os.path.join(HQUELLEN, h), "rb").read()
+    # ps is not on the root disk: take it from the cmd disk (copy only, written to the work disk of the run)
+    ps_dir = os.path.join(arbeit, "ps")
+    os.makedirs(ps_dir, exist_ok=True)
+    r = subprocess.run([gast_as.disktool(), "get", gast_as.disk("a5120_mutos8000_cmd_mfm.hfe"), "bin/ps", "--to", ps_dir],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    pf = os.path.join(ps_dir, "bin", "ps")
+    if r.returncode or not os.path.exists(pf):
+        raise Fehler("disktool get ps: " + r.stdout.decode("latin-1"))
+    quellen["ps"] = open(pf, "rb").read()
     aus = {}
     erg = gast_as.gast_befehle(os.path.join(arbeit, "boot"), quellen, [b for _, b in BOOTTEST], [n for n, _ in BOOTTEST],
-                               frist=frist, ausgabe=aus, boot_hfe=lade, schirm=True)
+                               frist=frist, ausgabe=aus, boot_hfe=lade, schirm=True, ausfuehrbar=["ps"])
     print("Boot-Test Laufzeit (Wanduhr): %.0f s, Protokoll %s" % (aus["dauer"], aus["log"]))
     ok = True
     for n, b in BOOTTEST:
@@ -787,7 +810,7 @@ def main(argv=None):
             namen.append((name, "c"))
     for i in range(len(dst)):
         n = "da%02d" % i
-        quellen[n + ".s"] = tote_marken(zdis(n), segs, definiert, a.stufe == 1)
+        quellen[n + ".s"] = tote_marken(zdis(n), segs, definiert, a.stufe == 1, welt.adrname)
         namen.append((n, "a"))
     # Auffuellen, damit die BSS-Variablen (8DC0..D256) an ihren Original-Adressen bleiben (Postfach ab D256 ist fest)
     tt = sum(bis - von for n, k, von, bis, *r in segs if k == "a")
