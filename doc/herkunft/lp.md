@@ -22,3 +22,7 @@ Stand 2026-10-31.  Vergleich gegen V7, System III PDP-11 `uts/pdp11/io/lp.c` und
 | lpoutput | 680E | eigen | gleich |
 | lpintr | 6874 | eigen | nahe |
 | lpxfer | 690A | eigen | gleich |
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`lpwrite` ist bytegleich in drei Quellformen (Hippe-Struktur `while (u.u_count) {..}` mit `break`; Sprungmarken `goto done`; `for (;;)` mit `break`); im Quelltext steht die Hippe-Struktur.  Die frueheren Schwierigkeiten kamen vom `if (c >= 0) {..; goto loop;}` vor dem Fehlerzweig.  **`lpintr`** (21 von 75) bleibt: der Kernel legt das gemeinsame Endstueck `inc r15,#2` hinter den *letzten* Aufruf (`wakeup`), unser `c2` hinter den *ersten* (`lpxfer`); keine Quellform kann das umkehren (**`c2`-Eigenheit**, aus dem Aufbau geschlossen, nicht durch Varianten belegt).  **`lpcanon`** (104 von 212) noch offen (Blockanordnung).

@@ -47,3 +47,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/iget.c`.  Rundlauf wie in `rundl
 Vorlage: `original/hippe-v7/usr/sys/sys/iget.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
 `iget`/`iput` in der Vorlagenform: `i_lrt` statt `i_un.i_lastr`, verschachtelte Abfrage `if(ip->i_count == 0){ if((oip == NULL) || (oip->i_lrt > ip->i_lrt)) oip = ip; }`.  `itrunc`/`tloop` standen schon im Vorlagentext (Gruppe B: nichts zu aendern).
 Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 6 von 8 bytegleich (wie vorher); `itrunc` 61 von 93, `tloop` 42 von 79 unveraendert.
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`tloop` ist bytegleich: `daddr_t nb = bap[i];` in einem inneren Block der Schleife.  Der Kernel testet `nb` danach aus dem Stapelplatz (`testl %FFF0(r14)`); eine getrennte Zuweisung `nb = bap[i];` laesst den Test auf `rr4` (gemessen: 5 Vergleichsformen `== (daddr_t)0`, `== 0`, `!nb`, `== 0L`, `(nb = ..) == 0` aendern daran nichts).  `itrunc` bleibt 61 von 93 (noch nicht untersucht).

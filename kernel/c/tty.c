@@ -193,10 +193,9 @@ register c;
 	hp = &ttyhw[0];
 	bp = ttyobuf[0];
 	t = 10000;
-	do {
-		if (hp->mb_stat)
-			break;
-	} while (--t != 0);
+	/* one condition instead of do { if () break; } while (--t): only this form gets the DJNZ of the kernel */
+	while (hp->mb_stat == 0 && --t != 0)
+		;
 	if (c == 0)
 		return;
 	s = splx(7);

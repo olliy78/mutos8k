@@ -30,3 +30,7 @@ Rueckfall: keiner.
 Vorlage: `original/hippe-v7/usr/sys/dev/bio.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
 `breada` in der Vorlagenform (`&& (bfreelist.av_forw != &bfreelist)` in Klammern, ohne MUTOS-Kommentar).  `swap`/`physio` bleiben Z8001-Fassungen, `mapalloc`/`mapstart` ohne Gegenstueck (in der Vorlage nur unter `UNIBMAP`, aus).
 Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 17 von 19 bytegleich (wie vorher); `mapalloc` 14/37, `mapstart` 28/44 unveraendert.
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`mapalloc` und `mapstart` sind bytegleich (bio 19 von 19).  Die Wahrheitsprobe ist die explizite Form: `while (mapq[n >> 1] != 0)`, `if (mapq[i] != 0)`, `while (*(int *)06 != 0)` geben `test @r2`; die Kurzform `while (mapq[n >> 1])` gibt `ld r3,@r2 ; test r3`.  Gleiche Erscheinung in `namei` (`m_bufp != NULL`).

@@ -321,9 +321,8 @@ ssig()
 	struct a {
 		int	signo;
 		int	fun;
-	} *uap;
+	} *uap = (struct a *)u.u_ap;	/* initializer: the kernel reloads uap from its stack slot (a separate assignment does not) */
 
-	uap = (struct a *)u.u_ap;
 	a = uap->signo;
 	if(a<=0 || a>=NSIG || a==SIGKIL) {
 		u.u_error = EINVAL;

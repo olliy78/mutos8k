@@ -55,3 +55,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/sys4.c`.  Alle Zahlen **gemessen
 Vorlage: `original/hippe-v7/usr/sys/sys/sys4.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
 `stime` mit `i_lrt` (neuer Alias in `inode.h`, Kommentar der Vorlage), `kill` mit `MAX_PROC`, `TIMEZONE (0)`/`DSTFLAG 0` aus `param.h` statt lokaler Defines.  Abweichung: `ftime` rechnet `(1000*(int)ms)/HZ`.
 Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: 23 von 24 bytegleich (wie vorher); `ssig` bleibt nahe (39 von 52 Woertern): der Kernel legt `uap` auf den Stapel und laedt es vor dem Zugriff erneut (zwei Woerter mehr); keine Probeform dafuer gefunden.
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`ssig` ist bytegleich (sys4 24 von 24): `struct a {...} *uap = (struct a *)u.u_ap;` (Initialisierung bei der Deklaration).  Nur sie laedt `uap` danach noch einmal aus dem Stapel (`ld r2,%FFF2(r14)`), wie der Kernel; eine getrennte Zuweisung `uap = ...;` laesst den Wert in r2.  Gemessen an 8 Formen (`(uap = ..)->signo`, `(*uap).signo`, `, `-Ausdruck u. a.); im ganzen -O-Kernel kommt das Muster nur in `ssig` vor.

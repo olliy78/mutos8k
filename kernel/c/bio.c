@@ -449,7 +449,7 @@ struct buf *bp;
 mapalloc(bp, n)
 register bp, n;
 {
-	while (mapq[n >> 1])
+	while (mapq[n >> 1] != 0)
 		if (!mapbusy)
 			mapstart();
 	mapq[n >> 1] = bp;
@@ -466,9 +466,9 @@ mapstart()
 again:
 	bp = 0;
 	for (i = 0; i < 4; i++)
-		if (mapq[i]) {
+		if (mapq[i] != 0) {
 			bp = mapq[i];
-			while (*(int *)06)
+			while (*(int *)06 != 0)
 				;
 			*(int *)06 = bp;
 			mapaddr();

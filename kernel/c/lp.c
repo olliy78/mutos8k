@@ -106,38 +106,34 @@ dev_t dev;
 
 	d = dev & 3;
 	lp = &lpt[d];
-loop:
-	if (u.u_count == 0)
-		goto done;
-	spl4();
-	goto chk;
-start:
-	lp->l_flag |= 0x80;
-	lpoutput(d);
-chk:
-	if (lp->l_outq.c_cc > 0x82) {
-		if ((lp->l_flag & 0x80) == 0)
-			goto start;
-		lp->l_flag |= 0x40;
-		sleep(lp, PRILP);
-		if (u.u_error == 0)
-			goto chk;
-		u.u_count += lp->l_outq.c_cc + lp->l_ocnt;
-		while (getc(lp) >= 0)
-			;
-		return;
-	}
-	spl0();
-	c = fubyte(u.u_base++);
-	if (c >= 0) {
+	while (u.u_count) {
+		spl4();
+		while (lp->l_outq.c_cc > 0x82) {
+			if ((lp->l_flag & 0x80) == 0) {
+				lp->l_flag |= 0x80;
+				lpoutput(d);
+				continue;
+			}
+			lp->l_flag |= 0x40;
+			sleep(lp, PRILP);
+			if (u.u_error) {
+				u.u_count += lp->l_outq.c_cc + lp->l_ocnt;
+				while (getc(lp) >= 0)
+					;
+				return;
+			}
+		}
+		spl0();
+		c = fubyte(u.u_base++);
+		if (c < 0) {
+			u.u_error = EFAULT;
+			break;
+		}
 		u.u_count--;
 		spl4();
 		lpcanon(d, c);
 		spl0();
-		goto loop;
 	}
-	u.u_error = EFAULT;
-done:
 	spl4();
 	if ((lp->l_flag & 0x80) == 0x80) {
 		lp->l_flag |= 0x40;

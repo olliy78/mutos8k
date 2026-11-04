@@ -275,7 +275,6 @@ daddr_t bn;
 	register i;
 	register struct buf *bp;
 	register daddr_t *bap;
-	daddr_t nb;
 
 	bp = NULL;
 	for(i=NINDIR-1; i>=0; i--) {
@@ -287,7 +286,9 @@ daddr_t bn;
 			}
 			bap = bp->b_un.b_daddr;
 		}
-		nb = bap[i];
+		{
+		daddr_t nb = bap[i];
+		/* block-scope initializer: the kernel tests nb from its stack slot (a separate assignment keeps rr4) */
 		if(nb == (daddr_t)0)
 			continue;
 		if(f1) {
@@ -296,6 +297,7 @@ daddr_t bn;
 			tloop(dev, nb, f2, 0);
 		} else
 			free(dev, nb);
+		}
 	}
 	if(bp != NULL)
 		brelse(bp);

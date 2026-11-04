@@ -25,3 +25,7 @@ Stand 2026-10-31.  Vergleich gegen V7 `dev/kl.c`, `dc.c`, `tty.c`, System III `k
 
 **Nachtrag 2026-10-31 (AP H6c):** Namen und Membernamen der Huellen folgen der Zeilendisziplin (`tty2.md`): `ttstart` (6274) -> `tcstart`, `ttinit` -> `ttychars`, `ttkick` -> `ttstart`, `ttioctl` -> `ttioccomm`, `t_obuf` -> `t_addr`, `t_lstate` -> `t_xstate`.
 Rundlauf unveraendert 10 von 11 (`putchar` 54 von 88 Woertern).
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`putchar` ist bytegleich (tty 11 von 11).  Die Warteschleife als **eine Bedingung** `while (hp->mb_stat == 0 && --t != 0) ;` (auch `!hp->mb_stat && --t` und `for (t = 10000; hp->mb_stat == 0 && --t; )`) gibt das `DJNZ` des Kernels; `do { if (..) break; } while (--t)` (4 Formen) gibt `DEC ; JR NZ`.  Das beantwortet die offene DJNZ-Frage aus `c_rueckbau.md` fuer diese Schleife.

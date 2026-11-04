@@ -20,3 +20,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/machdep.c` (nur Gerippe).  Alle 
 
 Handassembler (`mch.s`: `csv/cret`, `savu/resume`, `spl*`, `fuword/...`, `copyin/copyout`, Trap-Eintritt) ist nicht Teil der C-Quellen.
 Bei V7 liegen `mapalloc` (UNIBUS) und `dump` ebenfalls in `machdep.c`; MUTOS hat `mapalloc` in `bio.c` (eigener Mailbox-Zugriff).
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe B)
+
+`startup` ist bytegleich (machdep 4 von 4), mit zwei Quellformen: `(int)c << 8` (vorzeichenbehaftete Verschiebung `SLA` statt `SLL` fuer `unsigned c`) und `register char t` (der Kernel laedt `t` vor dem Vergleich mit dem `fubyte()`-Ergebnis nach r3).  Die Form `char t` ist nur als Quellform belegt, nicht als Originaltext.  Gemessen an 12 Varianten (Reihenfolge des Vergleichs, `(int)t`, `unsigned t`, `c * 256`, `^`-Form).

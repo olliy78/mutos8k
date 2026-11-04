@@ -41,7 +41,7 @@ extern int maxmem;
 startup()
 {
 	register unsigned c;
-	register t;
+	register char t;	/* char: the kernel loads t into r3 before the compare with the fubyte() result */
 
 	mchinit();
 	c = 0xFCFF;
@@ -50,8 +50,8 @@ startup()
 	t = 0x55;
 	for (; c < 0x400; c++) {
 		usegm = c & 0x7F00;
-		subyte(c << 8, t);
-		if (fubyte(c << 8) != t)
+		subyte((int)c << 8, t);	/* (int): signed shift SLA, not SLL */
+		if (fubyte((int)c << 8) != t)
 			break;
 		clearseg(c);
 		maxmem++;

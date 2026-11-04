@@ -13,7 +13,7 @@ iget iexpand GLEICH
 iget iput GLEICH
 iget iupdat GLEICH
 iget itrunc NAHE
-iget tloop NAHE
+iget tloop GLEICH
 iget maknode GLEICH
 iget wdir GLEICH
 slp sleep GLEICH
@@ -73,7 +73,7 @@ sys4 chroot GLEICH
 sys4 chdirec GLEICH
 sys4 chmod GLEICH
 sys4 chown GLEICH
-sys4 ssig NAHE
+sys4 ssig GLEICH
 sys4 kill GLEICH
 sys4 times GLEICH
 sys4 profil GLEICH
@@ -132,8 +132,8 @@ bio iowait GLEICH
 bio notavail GLEICH
 bio iodone GLEICH
 bio clrbuf GLEICH
-bio mapalloc NAHE
-bio mapstart NAHE
+bio mapalloc GLEICH
+bio mapstart GLEICH
 bio swap GLEICH
 bio bflush GLEICH
 bio physio GLEICH
@@ -164,7 +164,7 @@ text xstub2 GLEICH
 trap trap GLEICH
 trap nosys GLEICH
 trap nullsys GLEICH
-machdep startup NAHE
+machdep startup GLEICH
 machdep kstub GLEICH
 machdep sendsig GLEICH
 machdep sigret GLEICH
@@ -186,7 +186,7 @@ rk sywrite GLEICH
 rk syioctl GLEICH
 lp lpopen GLEICH
 lp lpclose GLEICH
-lp lpwrite NAHE
+lp lpwrite GLEICH
 lp lpcanon NAHE
 lp lpoutput GLEICH
 lp lpintr NAHE
@@ -201,7 +201,7 @@ tty tcrint GLEICH
 tty tcioctl GLEICH
 tty tcstart GLEICH
 tty ttxfer GLEICH
-tty putchar NAHE
+tty putchar GLEICH
 tty ttyinit GLEICH
 # tty2 (AP H6c, 2026-10-31): Text der Hippe-Sammlung; NAHE = Eigenheit des Kernel-c2 (doc/herkunft/tty2.md)
 tty2 ttyopen GLEICH
