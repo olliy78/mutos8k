@@ -145,3 +145,10 @@ Offen ohne Befund: `lpcanon` (Anordnung des `default`-Zweiges), `getxfile` (Verz
 Die Annahme in §2/§4 (alter `c1` mit `LD R2,R13 ; CP R2,#1`) stimmte: der Original-`c1` laedt jeden Ganzzahloperanden vor dem Vergleich mit einer Konstanten nach r2.  Der Gast-`c1` tut das nicht; die einzige gefundene Quellform ist das Kommaglied (Makro `R2`, siehe `doc/herkunft/dev0.md`).
 
 Fuer die verbleibenden Funktionen: die `c2`-Eigenheiten aus §10 (1-5) sind weiter ungeklaert, aber dieselbe Methode (Kommaglied, Zuweisungswert im Vergleich, Initialisierer) hat bei `dev0` 6 weitere Funktionen geloest.  Noch nicht angewandt auf `cp r3,#..` (§8) und `test` nach `sub` (§10 Nr. 2): z. B. `((x), (x))` auf `bp - mp` in `mfree`, `((diff = ..), diff) <= 0` in `readi`.
+
+## 12. Nachprobe der c2-Muster mit den Methoden aus Gruppe D (2026-11-04, gemessen)
+
+* `cp r3,#..` (mfree, malloc, ttyretype, ttread, exece): 11 weitere Formen (Kommaglied `(0, bp-mp)`, `(t = bp-mp, t)`, `&& 1`, `|| 0`, `(int)..+0`, Zuweisung an Globale; Byte-Vergleich mit `(c = ubyte(*cp++), c)`, `(0, ubyte(*cp++))`, Kommaglied vor dem Vergleich) -- alle `cp r2`/`cp r12`, nie `cp r3`.  Zusammen mit §8 und `malloc.md`: 32 Formen, **`c2`-Eigenheit belegt**; Status bleibt `NAHE`.
+* `test r2`/`testl` nach `sub`/`subl` (malloc, readi): 13 Formen (`((diff = ..), diff) <= 0`, `diff = .., diff <= 0`, Cast, lokale Variable, `-diff >= 0`; `m_size` als Zuweisungswert, getrennt, `x = ..; m_size = x`, Kommaglied) -- keine behaelt den Test (nur `test @r13` auf den Speicher bei einer Kommaform, andere Befehlsfolge).  **`c2`-Eigenheit belegt**.
+* Damit sind `mfree`, `exece`, `ttyretype`, `ttread` (je 1 Wort), `malloc`, `readi` abgeschlossen: nicht erreichbar mit unserem `c2`.
+* Offen mit Aussicht auf Quellform: `lpcanon`, `getxfile`, `ttyinput`.  Nicht mit Quellform erreichbar (c2): `alloc`, `ialloc`, `bmap` (§10 Nr. 3), `lpintr` (Nr. 4), `ttioccomm` (Nr. 5).
