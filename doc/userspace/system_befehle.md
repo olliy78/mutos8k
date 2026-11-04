@@ -21,7 +21,7 @@ tchars `^C`/`^Z` (`getty.c.old`; `gettyok.c` hat DEL/`^D`), `ERASE` DEL, `KILL` 
 `"\n\rlogin: "`; Eintrag 0 ist Rueckfall bei unbekanntem Namen.  Die Baudratentabelle der Vorlagen (V7: 300/1200/150/110 ...) ist im MUTOS **nicht** vorhanden.
 Daher passt `getty.c.old` (nicht `gettyok.c`, nicht V7) -- Belege: Tabelle 0x03AC.. im Listing, Datenstrings `login: `, `/bin/login`, `login`.
 Die Zeichenketten `"login: "` liegen zweimal (zwei Tabelleneintraege), `"/bin/login"`, `"login"` danach: Datenlage 210 B stimmt.
-c2-Regeln fuer getty: R1 3x, R2 2x, R4 1x, R5 1x, R6 1x (siehe unten).
+c2-Regeln fuer getty: R1 3x, R2 2x, R4 1x, R8 1x, R9 1x (siehe unten; Nummern nach dem Merge mit us-klein).
 
 ## login
 Strukturgleich mit V7; Abweichungen D1-D3 im Quellkopf: Loeschzeichen DEL und `^U` (V7 `#`, `@`), Deklarationsreihenfolge (Datenlage), `"password:"`
@@ -36,13 +36,14 @@ Funktionsanfang abstrahiert (Artefakt der Abstraktion, Konstante `NMOUNT*2*NAMSI
 
 ## Neue c2-Regeln (Original-`c2` gegen Disketten-`c2`), Stellenzahl
 * **R4** `LD R0,mem ; CP R0,#k` statt `CP mem,#k`: login 3, getty 1, mount 3, umount 1 (Stolperstein 2 hatte sie nur in libc-Gliedern gesehen; hier im Eigencode).
-* **R5** `LDB RLa,mem ; XORB RHa,RHa ; LDB RLb,RLa` -> Original laedt erneut aus `mem` (`LDB RLb,mem`): getty 1 (`putchr`).
-* **R6** keine Weitergabe von Registerkopien: `LD rA,rB ; LD dst,rB` -> `LD dst,rA` (login 2, getty 1); `AND rX,#k ; OR rA,rX` mit X=A+2 -> `AND ; LD rA+1,rX ; OR rA,rA+1` (getty 1).
+* **R8** (vor dem Merge R5) `LDB RLa,mem ; XORB RHa,RHa ; LDB RLb,RLa` -> Original laedt erneut aus `mem` (`LDB RLb,mem`): getty 1 (`putchr`).
+* **R5** (vor dem Merge R6, Teil 1; deckt sich mit R5 aus `kleine_befehle.md`) keine Weitergabe von Registerkopien: `LD rA,rB ; LD dst,rB` -> `LD dst,rA` (login 2, getty 1).
+* **R9** (vor dem Merge R6, Teil 2) `AND rX,#k ; OR rA,rX` mit X=A+2 -> `AND ; LD rA+1,rX ; OR rA,rA+1` (getty 1).
 Modell: `c2_emu_s` (Umschreibung der `cc -S`-Ausgabe), `c2_kanon` kennt R4.  Test: `tests/test_userspace_pipeline.py`.
 
 ## Pipeline-Erweiterungen
 * `PROGRAMME`: login (+V7 `utmp.h`), getty, mount, umount.  Gast-Befehl wie bisher.
-* `c2_emu_s`: R4-R6.  Handnamen je Programm (`namen.txt`), damit Aufrufe in `getpass`/`perror` usw. gleiche Marken bekommen.
+* `c2_emu_s`: R4-R9 (gemeinsame Liste in `tools/userspace/uspace.py`).  Handnamen je Programm (`namen.txt`), damit Aufrufe in `getpass`/`perror` usw. gleiche Marken bekommen.
 * Stolperstein: das MUTOS-`sgtty.h` weicht vom V7-Header ab (nicht auf `/mnt` legen!); V7-Quellen mit `NL1`/`CR1` bauen nicht.
 
 ## Offen
