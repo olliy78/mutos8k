@@ -1,0 +1,21 @@
+# addr length name [weak]  (libc signature matches, tools/userspace/uspace.py)
+018C   48 printf
+02E2    2 fakcu  weak
+0392    2 fakcu  weak
+039C    2 fakcu  weak
+07FE   14 cuexit
+0A92   38 isatty
+0AB8   52 stty
+0AEC   32 strlen
+0B0C   20 close
+0B20   22 creat
+0B36   22 ioctl
+0B4C   22 lseek
+0B62   22 open
+0B78   22 read
+0B8E   60 sbrk
+0BCA   10 sync  weak
+0BD4   20 umount
+0BE8   22 write
+0BFE   14 cerror
+0C0C   28 csv
