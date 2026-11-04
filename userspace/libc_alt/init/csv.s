@@ -1,4 +1,4 @@
-csv module
+csv_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -34,4 +34,4 @@ cret:
 	inc	r15,#2
 	ret
 end cret
-end csv
+end csv_

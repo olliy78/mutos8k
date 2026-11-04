@@ -1,4 +1,4 @@
-malloc module
+malloc_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -249,4 +249,4 @@ $REL	$+%2
 B1C58:
 $REL	$+%2
 $SDEFAULT
-end malloc
+end malloc_

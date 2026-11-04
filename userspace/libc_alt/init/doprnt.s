@@ -1,4 +1,4 @@
-doprnt module
+doprnt_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -282,4 +282,4 @@ WV L077C
 BV %0;BV %55;BV %0;BV %0;BV %0;BV %0
 D12B8:
 BV %6E;BV %75;BV %6C;BV %6C;BV %0;BV %0
-end doprnt
+end doprnt_

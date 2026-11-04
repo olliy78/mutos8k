@@ -1,4 +1,4 @@
-access module
+access_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _access:
 	pop	r14,@r15
 	ret
 end _access
-end access
+end access_

@@ -1,4 +1,4 @@
-chmod module
+chmod_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _chmod:
 	pop	r14,@r15
 	ret
 end _chmod
-end chmod
+end chmod_

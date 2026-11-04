@@ -1,4 +1,4 @@
-data module
+data_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -51,4 +51,4 @@ G
 __lastbu	L
 __lastbu:
 WV __lastbu
-end data
+end data_

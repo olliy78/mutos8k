@@ -1,4 +1,4 @@
-dup module
+dup_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -36,4 +36,4 @@ L1004:
 	pop	r14,@r15
 	ret
 end _dup
-end dup
+end dup_

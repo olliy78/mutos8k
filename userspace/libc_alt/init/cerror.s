@@ -1,4 +1,4 @@
-cerror module
+cerror_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -33,4 +33,4 @@ _errno:
 I
 $REL	$+%2
 $SDEFAULT
-end cerror
+end cerror_

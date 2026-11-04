@@ -1,4 +1,4 @@
-flsbuf module
+flsbuf_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -348,4 +348,4 @@ L0CBE:
 	ld	r2,#%FFFF
 	jr	L0C48
 end _fseek
-end flsbuf
+end flsbuf_

@@ -1,4 +1,4 @@
-signal module
+signal_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -82,4 +82,4 @@ I
 B1C5C:
 $REL	$+%28
 $SDEFAULT
-end signal
+end signal_

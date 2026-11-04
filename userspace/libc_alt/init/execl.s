@@ -1,4 +1,4 @@
-execl module
+execl_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _execl:
 	sc	#%3B
 	jp	cerror
 end _execl
-end execl
+end execl_

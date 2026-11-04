@@ -1,4 +1,4 @@
-kill module
+kill_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _kill:
 	pop	r14,@r15
 	ret
 end _kill
-end kill
+end kill_

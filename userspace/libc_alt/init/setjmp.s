@@ -1,4 +1,4 @@
-setjmp module
+setjmp_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -50,4 +50,4 @@ L0F42:
 	ld	%0002(r14),r0
 	jp	cret
 end _longjmp
-end setjmp
+end setjmp_

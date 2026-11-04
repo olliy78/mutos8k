@@ -1,4 +1,4 @@
-printf module
+printf_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -37,4 +37,4 @@ L068A:
 	xor	r2,r2
 	jr	L0686
 end _printf
-end printf
+end printf_

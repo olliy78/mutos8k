@@ -1,4 +1,4 @@
-cuexit module
+cuexit_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -24,4 +24,4 @@ _exit:
 	ld	r0,%0004(r14)
 	sc	#%01
 end _exit
-end cuexit
+end cuexit_

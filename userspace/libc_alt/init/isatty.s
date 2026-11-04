@@ -1,4 +1,4 @@
-isatty module
+isatty_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -35,4 +35,4 @@ L0F0A:
 	ldk	r2,#1
 	jr	L0F06
 end _isatty
-end isatty
+end isatty_

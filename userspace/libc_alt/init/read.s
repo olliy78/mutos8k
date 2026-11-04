@@ -1,4 +1,4 @@
-read module
+read_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _read:
 	pop	r14,@r15
 	ret
 end _read
-end read
+end read_

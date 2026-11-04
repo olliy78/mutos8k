@@ -1,4 +1,4 @@
-write module
+write_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _write:
 	pop	r14,@r15
 	ret
 end _write
-end write
+end write_

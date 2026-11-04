@@ -1,4 +1,4 @@
-wait module
+wait_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -31,4 +31,4 @@ L11BE:
 	pop	r14,@r15
 	ret
 end _wait
-end wait
+end wait_

@@ -1,4 +1,4 @@
-creat module
+creat_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _creat:
 	pop	r14,@r15
 	ret
 end _creat
-end creat
+end creat_

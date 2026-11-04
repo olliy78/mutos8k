@@ -1,4 +1,4 @@
-stty module
+stty_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -37,4 +37,4 @@ _gtty:
 	inc	r15,#6
 	jp	cret
 end _gtty
-end stty
+end stty_

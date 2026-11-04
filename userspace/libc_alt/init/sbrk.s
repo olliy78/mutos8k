@@ -1,4 +1,4 @@
-sbrk module
+sbrk_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -49,4 +49,4 @@ end _brk
 I
 D1360:
 WV _end
-end sbrk
+end sbrk_

@@ -1,4 +1,4 @@
-ffltpr module
+ffltpr_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -31,4 +31,4 @@ pscien:
 	inc	r10,#1
 	ret
 end pscien
-end ffltpr
+end ffltpr_

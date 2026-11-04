@@ -1,4 +1,4 @@
-time module
+time_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -40,4 +40,4 @@ _ftime:
 	pop	r14,@r15
 	ret
 end _ftime
-end time
+end time_

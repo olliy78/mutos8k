@@ -1,4 +1,4 @@
-ioctl module
+ioctl_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _ioctl:
 	pop	r14,@r15
 	ret
 end _ioctl
-end ioctl
+end ioctl_

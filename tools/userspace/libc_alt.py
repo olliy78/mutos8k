@@ -528,13 +528,14 @@ def erzeugen(self):
         if sorted(p[0] for p in procs) != sorted(s for _a, s in exports):
             raise Fehler("%s: export labels %s do not match the code labels %s" %
                          (m.name, [s for _a, s in exports], [p[0] for p in procs]))
-    t = ["%s module" % m.name, ASM_KOPF.rstrip("\n")]
+    mod = m.name + "_"            # module name must differ from every procedure name (else the symbol is lost: csv)
+    t = ["%s module" % mod, ASM_KOPF.rstrip("\n")]
     for nm, zl in procs:
         t += ["G\t%s\tPR" % nm, "E", "%s:" % nm] + zl + ["end %s" % nm]
     t += self.bss_ausgeben()
     if m.data and m.data[1] > m.data[0]:
         t += self.daten_ausgeben(ptr)
-    t.append("end %s" % m.name)
+    t.append("end %s" % mod)
     return "\n".join(t) + "\n"
 
 
@@ -728,7 +729,11 @@ def pruefen_objekte(c, objs, log=print):
         for sn, _ad, sz, ow in c.com:      # commons: undefined external symbols whose value is the size
             if ow == m.name:
                 gb = gb and any(x.name.decode("latin-1") == sn and x.typ == 0x20 and x.wert == sz for x in o.syms)
-        if not (gt and gd and gb):
+        defd = {x.name.decode("latin-1") for x in o.syms if x.ext and x.basistyp != O.N_UNDF}
+        fehlend = sorted(set(m.sym) - defd)       # an export the object does not define (e.g. module name = procedure name)
+        if fehlend:
+            log("   exports missing in the object: %s" % ", ".join(fehlend))
+        if not (gt and gd and gb) or fehlend:
             schlecht += 1
         hinweis = ""
         dm = c.dobj.get(m.name)

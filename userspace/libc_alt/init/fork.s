@@ -1,4 +1,4 @@
-fork module
+fork_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -42,4 +42,4 @@ _par_uid:
 I
 $REL	$+%2
 $SDEFAULT
-end fork
+end fork_

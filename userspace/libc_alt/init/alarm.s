@@ -1,4 +1,4 @@
-alarm module
+alarm_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -25,4 +25,4 @@ _alarm:
 	pop	r14,@r15
 	ret
 end _alarm
-end alarm
+end alarm_

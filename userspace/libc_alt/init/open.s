@@ -1,4 +1,4 @@
-open module
+open_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _open:
 	pop	r14,@r15
 	ret
 end _open
-end open
+end open_

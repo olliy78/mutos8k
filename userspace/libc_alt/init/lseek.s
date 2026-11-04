@@ -1,4 +1,4 @@
-lseek module
+lseek_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _lseek:
 	pop	r14,@r15
 	ret
 end _lseek
-end lseek
+end lseek_

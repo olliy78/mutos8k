@@ -1,4 +1,4 @@
-strout module
+strout_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -146,4 +146,4 @@ L098E:
 	jr	ne,L095C
 	jp	cret
 end __strout
-end strout
+end strout_

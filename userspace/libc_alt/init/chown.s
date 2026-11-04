@@ -1,4 +1,4 @@
-chown module
+chown_ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -27,4 +27,4 @@ _chown:
 	pop	r14,@r15
 	ret
 end _chown
-end chown
+end chown_
