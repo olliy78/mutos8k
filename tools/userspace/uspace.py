@@ -370,12 +370,14 @@ def c2_emu_s(s):
       R7  `ldb rlN,mem ; cp rN,..` -> `xorb rhN,rhN` inserted between
       R8  `ldb rlA,MEM ; xorb rhA,rhA ; ldb rlB,rlA`  ->  `... ; ldb rlB,MEM`  (no register copy for a reloaded byte)
       R9  `and rX,#k ; or rA,rX` (X=A+2)  ->  `and ; ld rA+1,rX ; or rA,rA+1`
+      R10 `xorb rhN,rhN ; cp rN,.. ; jr cc L ; add rN,..`  ->  `xorb rhN,rhN` inserted behind the `jr cc` (stty prmodes, 2x;
+          generalises R3: the original re-zeroes RHn before the first full-register use behind a conditional jump)
     (R4..R9 were found independently on two branches and merged; numbering of doc/userspace/system_befehle.md
     R5/R6 = R8 / R5+R9 here.)
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0}
     i = 0
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
@@ -404,6 +406,13 @@ def c2_emu_s(s):
                 out += [a, c, j, a, k]
                 n["R3"] += 1
                 i += 4
+                continue
+            # R10  `xorb rhN ; cp rN,.. ; jr cc L ; add rN,..` -> the original zeroes rhN again before the add
+            if (re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
+                    and re.match(r"add\tr%s," % x.group(1)[2:], k)):
+                out += [a, c, j, a]
+                n["R10"] += 1
+                i += 3
                 continue
         # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
         l7 = re.match(r"ldb\trl(\d),[^r]", a)
