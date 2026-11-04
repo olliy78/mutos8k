@@ -1,0 +1,18 @@
+# hand names for the map of /etc/init (ADDR name); own functions from the V7 init.c structure (measured order), doprnt part
+# by signature neighbours (libc doprnt of an older libc, without the float code, see doc/userspace/init.md)
+0030 _main
+0084 _shutdown
+011C _single
+01BA _runcom
+0218 _multipl
+025C _term
+0288 _rline
+031A _maktty
+035C _get
+0398 _merge
+04A6 _dfork
+0554 _rmut
+0648 _reset
+068E __doprnt
+0866 _nofloat
+0870 __strout
