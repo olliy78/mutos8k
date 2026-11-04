@@ -1,0 +1,112 @@
+L0000:
+0000  21F6                  LD R6,@R15
+0002  A1F7                  LD R7,R15
+0004  A971                  INC R7,#2
+0006  2172                  LD R2,@R7
+0008  4D28 FFFE             CLR %FFFE(R2)
+000C  91F6                  PUSHL @R15,RR6
+000E  9200                  SUBL RR0,RR0
+0010  BB74 0106             CPIR R0,@R7,R1,Z
+0014  8B27                  CP R7,R2
+0016  EE01                  JR NZ,L001A
+0018  AB71                  DEC R7,#2
+L001A:
+001A  6FF7 0004             LD %0004(R15),R7
+001E  6F07 1C4C             LD %1C4C,R7
+0022  5F00 0030             CALL L0030
+0026  A9F3                  INC R15,#4
+0028  2FF2                  LD @R15,R2
+002A  5F00 0CD0             CALL L0CD0
+002E  7F01                  SC #%01
+L0030:
+0030  5F00 11E6             CALL L11E6
+0034  0DF9 1846             PUSH @R15,#%1846
+0038  5F00 0F0E             CALL L0F0E
+003C  0DF5 0648             LD @R15,#%0648
+0040  0DF9 0001             PUSH @R15,#%0001
+0044  5F00 10F6             CALL L10F6
+0048  A9F3                  INC R15,#4
+004A  0DF9 0398             PUSH @R15,#%0398
+004E  0DF9 000F             PUSH @R15,#%000F
+0052  5F00 10F6             CALL L10F6
+0056  A9F3                  INC R15,#4
+L0058:
+0058  5F00 0084             CALL L0084
+005C  5F00 011C             CALL L011C
+0060  5F00 01BA             CALL L01BA
+0064  0DF9 01A4             PUSH @R15,#%01A4
+0068  0DF9 122C             PUSH @R15,#%122C
+006C  5F00 0FE6             CALL L0FE6
+0070  A9F3                  INC R15,#4
+0072  93F2                  PUSH @R15,R2
+0074  5F00 0FD2             CALL L0FD2
+0078  A9F1                  INC R15,#2
+007A  5F00 0398             CALL L0398
+007E  5F00 0218             CALL L0218
+0082  E8EA                  JR L0058
+L0084:
+0084  5F00 11E6             CALL L11E6
+0088  0DF9 0001             PUSH @R15,#%0001
+008C  0DF9 0002             PUSH @R15,#%0002
+0090  5F00 10F6             CALL L10F6
+0094  A9F3                  INC R15,#4
+0096  210C 1380             LD R12,#%1380
+009A  E805                  JR L00A6
+L009C:
+009C  93FC                  PUSH @R15,R12
+009E  5F00 025C             CALL L025C
+00A2  A9F1                  INC R15,#2
+00A4  A9CB                  INC R12,#12
+L00A6:
+00A6  0B0C 1830             CP R12,#%1830
+00AA  E7F8                  JR C,L009C
+00AC  0DF9 0648             PUSH @R15,#%0648
+00B0  0DF9 000E             PUSH @R15,#%000E
+00B4  5F00 10F6             CALL L10F6
+00B8  A9F3                  INC R15,#4
+00BA  0DF9 003C             PUSH @R15,#%003C
+00BE  5F00 0F98             CALL L0F98
+00C2  A9F1                  INC R15,#2
+00C4  89DD                  XOR R13,R13
+00C6  E808                  JR L00D8
+L00C8:
+00C8  0DF9 0009             PUSH @R15,#%0009
+00CC  0DF9 FFFF             PUSH @R15,#%FFFF
+00D0  5F00 1062             CALL L1062
+00D4  A9F3                  INC R15,#4
+00D6  A9D0                  INC R13,#1
+L00D8:
+00D8  0B0D 0005             CP R13,#%0005
+00DC  E1F5                  JR LT,L00C8
+L00DE:
+00DE  0DF9 0000             PUSH @R15,#%0000
+00E2  5F00 11A8             CALL L11A8
+00E6  A9F1                  INC R15,#2
+00E8  0B02 FFFF             CP R2,#%FFFF
+00EC  EEF8                  JR NZ,L00DE
+00EE  0DF9 0000             PUSH @R15,#%0000
+00F2  5F00 0F98             CALL L0F98
+00F6  0DF5 0000             LD @R15,#%0000
+00FA  0DF9 000E             PUSH @R15,#%000E
+00FE  5F00 10F6             CALL L10F6
+0102  A9F3                  INC R15,#4
+0104  89DD                  XOR R13,R13
+0106  E805                  JR L0112
+L0108:
+0108  93FD                  PUSH @R15,R13
+010A  5F00 0FD2             CALL L0FD2
+010E  A9F1                  INC R15,#2
+0110  A9D0                  INC R13,#1
+L0112:
+0112  0B0D 000A             CP R13,#%000A
+0116  E1F8                  JR LT,L0108
+0118  5E08 11F4             JP L11F4
+L011C:
+011C  5F00 11E6             CALL L11E6
+0120  5F00 1032             CALL L1032
+0124  A12D                  LD R13,R2
+0126  8DD4                  TEST R13
+0128  EE3F                  JR NZ,L01A8
+012A  0DF9 0000             PUSH @R15,#%0000
+012E  0DF9 0001             PUSH @R15,#%0001
+0132  5F00 10F6             CALL 

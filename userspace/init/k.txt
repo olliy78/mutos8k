@@ -1,0 +1,15 @@
+seg 0 0 1362
+code 0
+code 0648
+code 072E
+code 0752
+code 075A
+code 0764
+code 077C
+code 077E
+code 07C2
+code 07DA
+code 07EC
+code 0866
+code 0F1E
+code 1136
