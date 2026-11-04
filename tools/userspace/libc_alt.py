@@ -680,21 +680,26 @@ def tabelle(alt_archiv, log=print):
     return ROOT_PROGRAMME, zeilen
 
 
-def gast_objekte(c, frist=20_000_000_000, log=print):
-    """Assemble every member source in the guest with `as -u`; returns {member: (messages, object bytes|None)}."""
+def gast_objekte(c, texte=None, frist=20_000_000_000, log=print, arbeit="libc_alt_gast"):
+    """Assemble member sources in the guest with `as -u`; returns {member: (messages, object bytes|None)}.
+    texte = {member: source text}; default: the generated userspace/libc_alt/NAME/MEMBER.s of all members."""
     pruefe_gast()
     import gast_as
     emu.build()
     quellen, befehle, rueck = {}, [], []
     for m in c.ms:
-        quellen[m.name + ".s"] = open(os.path.join(c.dir, m.name + ".s"), "rb").read()
+        if texte is not None and m.name not in texte:
+            continue
+        quellen[m.name + ".s"] = (texte[m.name].encode("latin-1") if texte is not None
+                                  else open(os.path.join(c.dir, m.name + ".s"), "rb").read())
         # every command ends in /mnt (the runner appends `cat fertigN`, a file on /mnt)
         befehle.append("cd /tmp;>asm.out;as -u /mnt/%s.s >%s.err 2>&1;cat asm.out >%s.o;cd /mnt" % (m.name, m.name, m.name))
         rueck += [m.name + ".o", m.name + ".err"]
     aus = {}
-    r = gast_as.gast_befehle(os.path.join(c.arbeit, "libc_alt_gast"), quellen, befehle, rueck, frist=frist, ausgabe=aus)
+    r = gast_as.gast_befehle(os.path.join(c.arbeit, arbeit), quellen, befehle, rueck, frist=frist, ausgabe=aus)
     log("guest run: %.0f s wall clock" % aus.get("dauer", 0))
-    return {m.name: ((r.get(m.name + ".err") or b"").decode("latin-1"), r.get(m.name + ".o") or None) for m in c.ms}
+    return {m.name: ((r.get(m.name + ".err") or b"").decode("latin-1"), r.get(m.name + ".o") or None)
+            for m in c.ms if texte is None or m.name in texte}
 
 
 def pruefe_gast():
@@ -709,6 +714,8 @@ def pruefen_objekte(c, objs, log=print):
     """Guard: relocate every object like ld and compare with the image (text and data).  Returns the number of bad members."""
     schlecht = 0
     for m in c.ms:
+        if m.name not in objs:
+            continue
         err, ob = objs[m.name]
         if not ob:
             log("%-8s NO OBJECT  %s" % (m.name, err.strip()[:200]))
@@ -750,6 +757,56 @@ def pruefen_objekte(c, objs, log=print):
     return schlecht
 
 
+def c_quellen():
+    d = os.path.join(LIBDIR, "c")
+    return sorted(f[:-2] for f in os.listdir(d) if f.endswith(".c")) if os.path.isdir(d) else []
+
+
+def c_bauen(name, nur=None):
+    """C sources userspace/libc_alt/c/MEMBER.c -> guest `cc -O -S` -> c2 model (R1..) -> guest `as -u` -> guard.
+    Writes work/c_MEMBER.s (cc output) and work/c_MEMBER.s2 (rewritten), prints a diff against the disassembled original."""
+    import gast_as
+    c = Kontext(name)
+    namen = [n for n in c_quellen() if (not nur or n in nur) and any(m.name == n for m in c.ms)]
+    pruefe_gast()
+    emu.build()
+    quellen, befehle, rueck = {}, [], []
+    for n in namen:
+        quellen[n + ".c"] = open(os.path.join(LIBDIR, "c", n + ".c"), "rb").read()
+        befehle.append("cd /tmp;cc -O -S /mnt/%s.c >%s.err 2>&1;cd /mnt" % (n, n))
+        rueck += [n + ".s", n + ".err"]
+    r = gast_as.gast_befehle(os.path.join(c.arbeit, "libc_alt_c1"), quellen, befehle, rueck, frist=20_000_000_000)
+    texte, zaehler = {}, {}
+    for n in namen:
+        err = (r.get(n + ".err") or b"").decode("latin-1").strip()
+        s = (r.get(n + ".s") or b"").decode("latin-1")
+        if err:
+            print("%s: cc messages: %s" % (n, err[:300]))
+        if not s:
+            print("%s: NO .s" % n)
+            continue
+        open(os.path.join(c.arbeit, "c_%s.s" % n), "w").write(s)
+        s2, cnt = U.c2_emu_s(s)
+        s2 = re.sub(r"^\w+ module", n + "_ module", s2, count=1, flags=re.M) if False else s2
+        open(os.path.join(c.arbeit, "c_%s.s2" % n), "w").write(s2)
+        texte[n] = s2
+        zaehler[n] = {k: v for k, v in cnt.items() if v}
+        print("%s: c2 model rewrote %s" % (n, zaehler[n]))
+    objs = gast_objekte(c, texte, arbeit="libc_alt_c2")
+    schlecht = pruefen_objekte(c, objs)
+    for n in texte:
+        a = os.path.join(c.dir, n + ".s")
+        b = os.path.join(c.arbeit, "c_%s.s2" % n)
+        norm = lambda t: [re.sub(r"\b[LDB]\d+\b", "L", re.sub(r"\s+", " ", z)).strip() for z in t.split("\n")
+                         if z.strip() and not z.startswith(("$", "~")) and not re.match(r"\S+:$", z)]
+        da = norm(open(a).read())
+        db = norm(b and open(b).read())
+        sm = difflib.SequenceMatcher(None, da, db, autojunk=False)
+        n_diff = sum(1 for t in sm.get_opcodes() if t[0] != "equal")
+        print("%s: instruction lines original %d, built %d, difference blocks %d" % (n, len(da), len(db), n_diff))
+    return 1 if schlecht else 0
+
+
 def bauen(name):
     c, erg = quellen_erzeugen(name)
     objs = gast_objekte(c)
@@ -769,7 +826,7 @@ def bauen(name):
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    if len(argv) < 2 or argv[0] not in ("quelle", "bau", "pruefen", "tabelle"):
+    if len(argv) < 2 or argv[0] not in ("quelle", "bau", "pruefen", "tabelle", "cbau"):
         print(__doc__)
         return 2
     try:
@@ -778,6 +835,8 @@ def main(argv=None):
             print("%d members -> %s" % (len(erg), c.dir))
         elif argv[0] == "bau":
             return bauen(argv[1])
+        elif argv[0] == "cbau":
+            return c_bauen(argv[1], argv[2:])
         elif argv[0] == "pruefen":
             c = Kontext(argv[1])
             objs = {}

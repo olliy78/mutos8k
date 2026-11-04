@@ -118,11 +118,14 @@ def quellen_lesen(name, a):
     if not v:
         v["neu"] = open(os.path.join(U.REPO, q), encoding="latin-1").read()
     koepfe = {}
-    if a.libc == "alt":         # rebuilt libc of the original program (userspace/libc_alt), searched before -lc
-        lp = os.path.join(U.REPO, "userspace", "libc_alt", name, "libc_alt.a")
-        if not os.path.isfile(lp):
-            raise SystemExit("no %s (python3 -I tools/userspace/libc_alt.py bau %s)" % (lp, name))
-        koepfe["libc_alt.a"] = open(lp, "rb").read()
+    if a.libc == "alt":         # rebuilt libc of the original programs (userspace/libc_alt), searched before -lc:
+        # the program's own archive first (its older members), then the one rebuilt from init (printf/stdio core)
+        for i, n in enumerate(dict.fromkeys([name, "init"])):
+            lp = os.path.join(U.REPO, "userspace", "libc_alt", n, "libc_alt.a")
+            if os.path.isfile(lp):
+                koepfe["libc_alt%d.a" % i] = open(lp, "rb").read()
+        if not koepfe:
+            raise SystemExit("no libc_alt archive (python3 -I tools/userspace/libc_alt.py bau init)")
     for hd in list(h) + (a.kopf or []):
         d = os.path.join(U.REPO, hd) if not os.path.isabs(hd) else hd
         koepfe[os.path.basename(d)] = open(d, "rb").read()
@@ -132,7 +135,7 @@ def quellen_lesen(name, a):
 def cmd_bau(name, a):
     ar = arbeit_von(name, a)
     v, koepfe = quellen_lesen(name, a)
-    libs = ["libc_alt.a"] if a.libc == "alt" else []
+    libs = sorted(k for k in koepfe if k.startswith("libc_alt")) if a.libc == "alt" else []
     erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs)
     os.makedirs(os.path.join(ar, "bau"), exist_ok=True)
     if a.c2emu:     # second round: assemble the rewritten .s (original-c2 model) and link it
