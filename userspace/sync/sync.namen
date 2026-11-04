@@ -1,0 +1,5 @@
+# addr length name [weak]  (libc signature matches, tools/userspace/uspace.py)
+003C   14 cuexit
+004A    2 fakcu  weak
+004C   10 sync  weak
+0056   28 csv
