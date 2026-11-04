@@ -336,11 +336,16 @@ def c2_emu_s(s):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
       R2  `xorb rhN,rhN ; ldb mem,rlN` (mem not a register)  ->  XORB dropped
       R3  `xorb rhN,rhN ; cp .. ; jr cc L ; jr M`  ->  `xorb rhN,rhN` inserted before the final `jr M`
+      R4  `cp mem,#k` -> `ld r0,mem ; cp r0,#k` (further `cp mem,..` directly behind a `jr cc` reuse r0)
+      R6  `ld rA,M ; testb @rA ; jr cc ; ld rB,rA` -> `ld rB,M`
+      R7  `ldb rlN,mem ; cp rN,..` -> `xorb rhN,rhN` inserted between
+      R5  `ld rA,rB ; test rB` -> `test rA`;  `ld rA,rB ; ld rC,rB` -> `ld rC,rA` (no copy propagation)
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0}
     i = 0
+    r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
         a = z[i]
         b = z[i + 1] if i + 1 < len(z) else ""
@@ -368,6 +373,50 @@ def c2_emu_s(s):
                 n["R3"] += 1
                 i += 4
                 continue
+        # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
+        l7 = re.match(r"ldb\trl(\d),[^r]", a)
+        if l7 and re.match(r"cp\tr%s," % l7.group(1), b):
+            out += [a, "xorb\trh%s,rh%s" % (l7.group(1), l7.group(1))]
+            n["R7"] += 1
+            i += 1
+            continue
+        # R6  `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `ld rB,M` (the original does not forward the loaded value)
+        l6 = re.match(r"ld\t(r\d+),([^r@][^,]*)$", a)
+        if l6 and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
+                and re.match(r"ld\t(r\d+),%s$" % l6.group(1), z[i + 3]):
+            out += z[i:i + 3]
+            out.append("ld\t%s,%s" % (re.match(r"ld\t(r\d+),", z[i + 3]).group(1), l6.group(2)))
+            n["R6"] += 1
+            i += 4
+            continue
+        # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
+        #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
+        c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
+        if c4 and not re.match(r"r\d+$", c4.group(1)) and not c4.group(1).startswith("@") and ("FP" in c4.group(1) or re.match(r"[-%\w+]*_?\w+$", c4.group(1))):
+            if r0mem == c4.group(1):
+                out.append("cp\tr0," + c4.group(2))
+            else:
+                out += ["ld\tr0," + c4.group(1), "cp\tr0," + c4.group(2)]
+                r0mem = c4.group(1)
+            n["R4"] += 1
+            i += 1
+            continue
+        if not re.match(r"jr\t", a):
+            r0mem = None
+        # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
+        t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        t6 = re.match(r"test\t(r\d+)$", b)
+        if t5 and t6 and t6.group(1) == t5.group(2):
+            out += [a, "test\t" + t5.group(1)]
+            n["R5"] += 1
+            i += 2
+            continue
+        t7 = re.match(r"ld\t(r\d+),(r\d+)$", b)      # `ld rA,rB ; ld rC,rB` -> `ld rC,rA`
+        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1):
+            out += [a, "ld\t%s,%s" % (t7.group(1), t5.group(1))]
+            n["R5"] += 1
+            i += 2
+            continue
         out.append(a)
         i += 1
     return "\n".join(out), n
