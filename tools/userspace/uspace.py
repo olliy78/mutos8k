@@ -336,10 +336,14 @@ def c2_emu_s(s):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
       R2  `xorb rhN,rhN ; ldb mem,rlN` (mem not a register)  ->  XORB dropped
       R3  `xorb rhN,rhN ; cp .. ; jr cc L ; jr M`  ->  `xorb rhN,rhN` inserted before the final `jr M`
+      R4  `cp MEM,#k` (MEM not a register)  ->  `ld r0,MEM ; cp r0,#k`   (login/getty/mount/umount, doc/userspace/system_befehle.md)
+      R5  `ldb rlA,MEM ; xorb rhA,rhA ; ldb rlB,rlA`  ->  `... ; ldb rlB,MEM`  (no register copy for a reloaded byte)
+      R6  `ld rA,rB ; ld DST,rB`  ->  `ld DST,rA`;  `and rX,#k ; or rA,rX` (X=A+2)  ->  `and ; ld rA+1,rX ; or rA,rA+1`
+          (the original c2 does not propagate register copies)
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0}
     i = 0
     while i < len(z):
         a = z[i]
@@ -368,6 +372,37 @@ def c2_emu_s(s):
                 n["R3"] += 1
                 i += 4
                 continue
+        m4 = re.match(r"cp\t([^,]+),(#.*)$", a)
+        if m4 and not re.match(r"(r[hlqr]?\d+|sp|fp)$", m4.group(1), re.I):
+            out.append("ld\tr0," + m4.group(1))
+            out.append("cp\tr0," + m4.group(2))
+            n["R4"] += 1
+            i += 1
+            continue
+        m5 = re.match(r"ldb\t(rl\d),([^,]+)$", a)
+        if m5 and not re.match(r"r[hl]\d+$", m5.group(2)):
+            c = z[i + 1] if i + 1 < len(z) else ""
+            d = re.match(r"ldb\t(rl\d),(rl\d)$", z[i + 2]) if i + 2 < len(z) else None
+            if c == "xorb\trh%s,rh%s" % (m5.group(1)[2:], m5.group(1)[2:]) and d and d.group(2) == m5.group(1):
+                out += [a, c, "ldb\t%s,%s" % (d.group(1), m5.group(2))]
+                n["R5"] += 1
+                i += 3
+                continue
+        m6 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        m6b = re.match(r"ld\t([^,]+),(r\d+)$", b)
+        if m6 and m6b and m6b.group(2) == m6.group(2) and m6b.group(1) != m6.group(1):
+            out += [a, "ld\t%s,%s" % (m6b.group(1), m6.group(1))]
+            n["R6"] += 1
+            i += 2
+            continue
+        m7 = re.match(r"and\t(r\d+),#", a)
+        m7b = re.match(r"or\t(r\d+),(r\d+)$", b)
+        if m7 and m7b and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
+            t = "r%d" % (int(m7b.group(1)[1:]) + 1)
+            out += [a, "ld\t%s,%s" % (t, m7b.group(2)), "or\t%s,%s" % (m7b.group(1), t)]
+            n["R6"] += 1
+            i += 2
+            continue
         out.append(a)
         i += 1
     return "\n".join(out), n
@@ -400,6 +435,7 @@ def c2_kanon(zeilen):
         more than one argument word, the original c2 only after a one-word call)
     R2  `XORB RHn,RHn ; LDB mem,RLn` (mem not a register): the original c2 drops the XORB, the usr c2 keeps it.
     R3  `XORB RHn,RHn ; CP .. ; JR cc,.. ; XORB RHn,RHn`: the original c2 keeps the repeated XORB, the usr c2 drops it.
+    R4  `LD R0,mem ; CP R0,#k` (original) <-> `CP mem,#k` (usr c2); brought into the second form.
     Both sides are brought into the same form (R1 towards the original, R2: XORB dropped)."""
     erg, i = [], 0
     while i < len(zeilen):
@@ -420,6 +456,12 @@ def c2_kanon(zeilen):
         x = re.match(r"XORB (RH\d),RH\d$", z)
         if x and re.match(r"LDB (?!R[HL]\d,)\S+,R[HL]\d$", n) and not n.startswith("LDB R"):
             i += 1
+            continue
+        # R4: the original c2 never emits `CP mem,#k`: it loads R0 first
+        m4 = re.match(r"LD R0,(?!R\d+$|#)(\S+)$", z)
+        if m4 and re.match(r"CP R0,#", n):
+            erg.append("CP %s,%s" % (m4.group(1), n[len("CP R0,"):]))
+            i += 2
             continue
         erg.append(z)
         i += 1

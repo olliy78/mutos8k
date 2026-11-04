@@ -26,6 +26,10 @@ import uspace as U   # noqa: E402
 V7INC = "original/unix-v7/usr/include/"
 PROGRAMME = {
     "init": ("root", "etc/init", "userspace/init/init.c", [V7INC + "utmp.h", V7INC + "setjmp.h"]),
+    "login": ("root", "bin/login", "userspace/login/login.c", [V7INC + "utmp.h"]),
+    "getty": ("root", "etc/getty", "userspace/getty/getty.c", []),
+    "mount": ("root", "etc/mount", "userspace/mount/mount.c", []),
+    "umount": ("root", "etc/umount", "userspace/umount/umount.c", []),
 }
 
 
