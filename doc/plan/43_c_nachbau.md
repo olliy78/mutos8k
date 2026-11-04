@@ -4,7 +4,7 @@ Stand 2026-11-04.  Status: **geplant**, Bearbeitung in einer eigenen Sitzung.  V
 
 ## 1. Ausgangslage (gemessen)
 
-* Gesamtbau Stufe 1: **191 von 227** (vor Arbeitspaket 0; danach 207 von 230) Funktionen bytegleich aus C, Abbild 36 352 Byte BYTEGLEICH (`doc/herkunft/README.md` Abschnitt 5).
+* Gesamtbau Stufe 1: **191 von 227** (vor Arbeitspaket 0; danach 210 von 230) Funktionen bytegleich aus C, Abbild 36 352 Byte BYTEGLEICH (`doc/herkunft/README.md` Abschnitt 5).
   Die übrigen 36 kommen in Stufe 1 aus der Referenz-Disassemblierung (`kernel/asm/ref`).
 * Alle 36 **liegen bereits als C vor** und waren im Original C (Rahmen `call csv` / `jp cret`, Text folgt V7 bzw. der Hippe-Sammlung).
   Echter Handassembler sind nur die 26 Funktionen von `low` (V7 `mch.s`-Art) – die zählen nicht zu den 227 und bleiben Assembler.
@@ -95,7 +95,7 @@ Für Funktionen, deren Abweichung als Compilerunterschied nachgewiesen ist:
 * Punkte 1-3 erledigt: `schar` (39A0, `nami.c`), `max` (274C, `rdwri.c`), `lpsgtty` (695A, `lp.c`; V7-/Hippe-Name, Quelle `original/hippe-v7/usr/sys/dev/lp.c`,
   im Kernel ohne Aufrufer, `cdevsw[5].d_sgtty` ist `nodev`) als eigene Funktionen, in `funktionen.txt` eingetragen; `core` ruft `namei(schar, 1)`; `setregs` kopiert `u_dbuf` nach `u_exname`.
 * Rundlauf (`nami rdwri lp sig sys1`): `schar`, `max`, `lpsgtty` GLEICH, `core`, `setregs` weiter GLEICH; `rundlauf_soll.txt` ergaenzt.
-* Gesamtbau `--stufe 1 --boot`: **207 von 230 C-Funktionen** verwendet (230 = 227 + 3 neue), `Gesamt: BYTEGLEICH`, 36 352 Byte, Boot und alle 11 Arbeitstests ok.
+* Gesamtbau `--stufe 1 --boot`: **210 von 230 C-Funktionen** verwendet (230 = 227 + 3 neue), `Gesamt: BYTEGLEICH`, 36 352 Byte, Boot und alle 11 Arbeitstests ok.
 * Punkt 4 erledigt: `gesamtbau.py --arbeit DIR --status` (baut nichts, braucht die Objekte in `DIR/obj`) zeigt je Funktion Status und erste falsche Relokation und gleicht mit `rundlauf_soll.txt` ab.
   Messung: 230 Funktionen, 199 GLEICH, 24 LAENGE, 7 ABW, keine RELOC; Soll und Gesamtbau stimmen ueberein (Exit 0).  Verbleibend 31 = 25 NAHE + 6 `dev0` (`fdopen`, `fdclose`, `fdstart`, `fdintr`, `fdphys`, `fdioctl`); die "36" aus §1/§2 sind damit ueberholt.
 
@@ -109,7 +109,7 @@ Für Funktionen, deren Abweichung als Compilerunterschied nachgewiesen ist:
 
 ## 9. Stand Gruppe B (2026-11-04, gemessen)
 
-Bytegleich geworden (Gesamtbau Stufe 1 `--boot`: **207 von 230**, BYTEGLEICH, Boot und 11 Arbeitstests ok): `mapalloc`, `mapstart`, `ssig`, `tloop`, `putchar`, `startup`, `lpwrite`.  Die Formen, die getroffen haben:
+Bytegleich geworden (Gesamtbau Stufe 1 `--boot`: **210 von 230**, BYTEGLEICH, Boot und 11 Arbeitstests ok): `mapalloc`, `mapstart`, `ssig`, `tloop`, `putchar`, `startup`, `lpwrite`.  Die Formen, die getroffen haben:
 
 * **Explizit vergleichen** (`!= 0` statt Wahrheitswert) gibt `test @r2` statt `ld r3,@r2 ; test r3` (`mapalloc`, `mapstart`).
 * **Initialisierung bei der Deklaration** gibt das erneute Laden der Lokalen aus dem Stapel: `uap = ...` im Kopf (`ssig`), `daddr_t nb = bap[i]` im inneren Block (`tloop`).  Das ist das Muster (B) "Wert erneut laden" -- es war Quellform, keine `c2`-Eigenheit.
@@ -122,4 +122,19 @@ Offen aus Gruppe B: `lpintr` -- Endstueckzusammenlegung hinter dem letzten statt
 Fehlerquelle der Sitzung: `gesamtbau.py --uebersetzen` ohne `K1520EMU_NOBUILD=1` stoesst `dev.sh` an; laeuft im Emulatorprojekt gleichzeitig ein Build, scheitern alle sechs Gastlaeufe still (leere `g*.log`, `FileNotFoundError ... confO.o`).  Immer mit `K1520EMU_NOBUILD=1` starten.
 
 Weiter mit Gruppe C: Muster (B) und (D) sind geklaert; `itrunc`, `lpcanon`, `alloc`, `update`, `readi`, `ialloc` zuerst mit diesen Formen, danach `getxfile`, `bmap`, `clock`, dann die Sprungtabellen (`ttioccomm`, `ttyinput`).
+
+## 10. Stand Gruppe C (2026-11-04, gemessen)
+
+Bytegleich geworden (Gesamtbau Stufe 1 `--boot`: **210 von 230**, BYTEGLEICH, Boot und 11 Arbeitstests ok): `itrunc`, `update`, `clock`.  Verbleibend 20 = 14 "nahe" (`bmap`, `readi`, `malloc`, `mfree`, `alloc`, `ialloc`, `exece`, `getxfile`, `lpcanon`, `lpintr`, `ttioccomm`, `ttyinput`, `ttyretype`, `ttread`) + 6 `dev0`.
+
+Formen, die getroffen haben: Deklaration mit Initialisierung im Block (`itrunc`: `daddr_t bn`, `update`: `struct filsys *fp`), `display();` am Anfang von `clock` (V7), `(lbolt = lbolt + t) >= HZ`.
+
+**`c2`-Eigenheiten, gemessen (Quellform ohne Wirkung):**
+1. `ld r2,r3 ; cp r3,#..` im Kernel gegen `cp r2,#..` bei uns (6 Stellen im Kernel, nie `cp r2`): `mfree`, `exece`, `ttyretype`, `ttread`, `malloc` (§8).
+2. Kernel behaelt das `test`/`testl` nach `sub`/`subl` und Speichern, unser `c2` streicht es: `malloc`, `readi` (§8, `rdwri.md`).
+3. Kernel tests/pusht den Stapelplatz nach dem Speichern, unser `c2` das Register: `alloc`, `ialloc`, `bmap` -- umgehbar nur mit Initialisierer oder `for`-Kopf, nicht fuer Variablen auf Funktionsebene (`alloc.md`).
+4. Endstueckzusammenlegung hinter dem letzten statt ersten Aufruf: `lpintr`.
+5. Sprungweite: Kernel `jr` bei -254 Byte, Werkzeug `jp`: `ttioccomm` (`tty2.md`).
+
+Offen ohne Befund: `lpcanon` (Anordnung des `default`-Zweiges), `getxfile` (Verzweigungsstruktur im Kopfteil: Kernel prueft `bit 8` einmal vor dem gemeinsamen Teil, wir pro Zweig), `ttyinput` (ein Wort weniger im Kernel).  Dann `dev0` (Gruppe D, ohne `-O`).
 

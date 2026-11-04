@@ -22,3 +22,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/rdwri.c`.  Alle Zahlen **gemesse
 | writei | 25FE | identisch | **gleich** |
 | min | 2766 | identisch | **gleich** |
 | iomove | 2780 | veraendert (kein copyiin) | **gleich** (vorher nahe, 49/102) |
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe C)
+
+`readi` bleibt (108 von 206): der Kernel behaelt `testl rr2` nach `diff = ip->i_size - u.u_offset` (`ldl %FFE4(r14),rr2 ; testl rr2`), unser `c2` streicht das `testl` (Flags von `subl`).  Gemessen: `diff` als Initialisierer im Block (gibt `testl` vom Stapelplatz) und `if ((diff = ..) <= 0)` (kein `testl`) treffen es nicht.  Gleiches Verhalten wie `malloc` (`test r2` nach `m_size -= size`): `c2`-Eigenheit.
