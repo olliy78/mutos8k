@@ -28,7 +28,7 @@ PROGRAMME = {
     "init": ("root", "etc/init", "userspace/init/init.c", [V7INC + "utmp.h", V7INC + "setjmp.h"]),
     "sync": ("root", "bin/sync", "userspace/sync/sync.c", []),
     "cat": ("root", "bin/cat", "userspace/cat/cat.c", []),
-    "stty": ("root", "bin/stty", "userspace/stty/stty.c", []),
+    "stty": ("root", "bin/stty", "userspace/stty/stty.c", []),   # source still to be reconstructed (not V7, doc/userspace/kleine_befehle.md),
     "date": ("root", "bin/date", "userspace/date/date.c", [V7INC + "sys/timeb.h", V7INC + "utmp.h"]),
     "ls": ("root", "bin/ls", "userspace/ls/ls.c", [V7INC + "sys/param.h", V7INC + "sys/dir.h"]),
 }

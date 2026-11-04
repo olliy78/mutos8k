@@ -1,4 +1,4 @@
-# Kleine Wurzel-Befehle: sync, cat, date, ls, stty (Branch us-klein)
+# Kleine Wurzel-Befehle: sync, cat, date, ls (rekonstruiert), stty (offen) (Branch us-klein)
 
 Alles *gemessen* (`pipeline.py alles NAME --c2emu`), soweit nicht als *Annahme* markiert.  Quellen `userspace/NAME/NAME.c`,
 Karte/Listing daneben.  Vergleichsreferenz: Hippe-Sammlung (TUHS) `original/hippe-v7/usr/src/cmd` (nur `cat.c`, `sync.c` vorhanden).
@@ -35,3 +35,18 @@ Regression: `init` bleibt bei 0 Abweichungsbloecken (536/536) mit R1-R7.
 * `c2_emu_s`: R4-R7.
 * Stolperstein: `/usr/include` hat nur `a.out ar ctype execargs grp math pwd sgtty signal stdio symbol time sys/{stat,types}`; V7 `sys/param.h`, `sys/dir.h`,
   `sys/timeb.h`, `utmp.h` muessen lokal als `"x.h"` eingebunden werden (Dateiname ohne Verzeichnis, `-I/mnt`).
+
+## stty -- NICHT V7: Quelle offen (Befund)
+`bin/stty` (Text 4652, Daten 1162, BSS 1054) ist eine erweiterte Fassung; die V7-`stty.c` als Quelle genuegt nicht (V7-Bau wuerde ausserdem nicht uebersetzen:
+das MUTOS-`sgtty.h` hat `short sg_flags` plus Bytefelder `sg_nldly sg_crdly sg_htdly sg_vtdly sg_width sg_length`, Modi `SCOPE 0400 INDCTL 01000 XTABS 02000`,
+aber **keine** `NLDELAY/CR0../ALLDELAY`-Makros; Probebau mit V7-Text: ~40 "undefined"-Meldungen und kein Binary).
+Aus den Daten des Originals gelesen (`userspace/stty/stty.strings`, Tabellen bei Datenadresse 0x1232 ff.):
+* Geschwindigkeitstabelle wie V7 (`0 50 75 ... 9600 exta extb`, `134.5`), Modustabelle (Name, set, reset) nur: `even odd raw cooked crmod echo LCASE lcase tabs cbreak scope indctl tandem`
+  und die `-`-Formen (`crmod` statt V7 `nl`; `-tabs` setzt `XTABS` 02000).
+* Weitere Woerter: `ek erase kill gspeed hup nl0..nl3 cr0..cr3 tab0..tab2 ff0 ff1 bs0 bs1 width length nl cr ht vt dac ban tek sat tty33 tty37 vt05 tn300 ti700`
+  -- Verzoegerungen und Terminaltypen als Namen, nicht als Makrotabelle; Meldung `"%s - no effect\n"`.
+* Ausgabe: `input speed `/`output speed `/`speed `, `erase = ...`, Flags `even odd raw crmod echo lcase -tabs cbreak scope indctl tandem`, Zeile `nldly crdly htdly vtdly`
+  (Feld-Werte `"%s\t%d\n"`), `width`, `length`; Anwendungsstrings in `fprintf`-Aufrufen (21 Aufrufstellen).
+*Annahme:* Quelle ist ein Derivat (PWB/Berkeley-nah), nicht V7; Rueckbau braucht eigene Dekompilierung (Eigencode ab 0x30; Karte `userspace/stty/k.txt`).
+Hippe-Sammlung (TUHS) hat kein `stty.c` zum Vergleich; `original/sys3/cmd/stty.c` (termio) passt nicht zum `sgttyb`-Aufbau.
+Die V7-Quelle kann als Ausgangsbasis dienen: `original/unix-v7/usr/src/cmd/stty.c`.
