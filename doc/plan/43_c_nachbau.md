@@ -138,3 +138,10 @@ Formen, die getroffen haben: Deklaration mit Initialisierung im Block (`itrunc`:
 
 Offen ohne Befund: `lpcanon` (Anordnung des `default`-Zweiges), `getxfile` (Verzweigungsstruktur im Kopfteil: Kernel prueft `bit 8` einmal vor dem gemeinsamen Teil, wir pro Zweig), `ttyinput` (ein Wort weniger im Kernel).  Dann `dev0` (Gruppe D, ohne `-O`).
 
+## 11. Stand Gruppe D (2026-11-04, gemessen)
+
+`dev0.c` **11 von 11 bytegleich** (E1 umgesetzt: `OHNE_O=1` in `rundlauf.sh`, Sollwerte `rundlauf_soll_dev0.txt`).  Gesamtbau Stufe 1 `--boot`: **216 von 230**, BYTEGLEICH, Boot und 11 Arbeitstests ok.  Verbleibend 14, alle "nahe": `bmap`, `readi`, `malloc`, `mfree`, `alloc`, `ialloc`, `exece`, `getxfile`, `lpcanon`, `lpintr`, `ttioccomm`, `ttyinput`, `ttyretype`, `ttread`.
+
+Die Annahme in §2/§4 (alter `c1` mit `LD R2,R13 ; CP R2,#1`) stimmte: der Original-`c1` laedt jeden Ganzzahloperanden vor dem Vergleich mit einer Konstanten nach r2.  Der Gast-`c1` tut das nicht; die einzige gefundene Quellform ist das Kommaglied (Makro `R2`, siehe `doc/herkunft/dev0.md`).
+
+Fuer die verbleibenden Funktionen: die `c2`-Eigenheiten aus §10 (1-5) sind weiter ungeklaert, aber dieselbe Methode (Kommaglied, Zuweisungswert im Vergleich, Initialisierer) hat bei `dev0` 6 weitere Funktionen geloest.  Noch nicht angewandt auf `cp r3,#..` (§8) und `test` nach `sub` (§10 Nr. 2): z. B. `((x), (x))` auf `bp - mp` in `mfree`, `((diff = ..), diff) <= 0` in `readi`.

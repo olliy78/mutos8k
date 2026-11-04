@@ -93,7 +93,7 @@ Passend waere ein PDP-11-V7-Derivat in der Naehe der Sammlung als Zwischenstufe.
 ## 5. Stand der Quellen: Rundlauf und Gesamtbau (gemessen, 2026-11-03)
 
 Gesamtbau `--uebersetzen --stufe 1 --boot`: **216 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
-Die restlichen 20 sind 14 "nahe" Funktionen (unten) und 6 Funktionen von `dev0.c` (`fdopen`, `fdclose`, `fdstart`, `fdintr`, `fdphys`, `fdioctl`; `dev0.c` wurde im Original ohne `-O` uebersetzt und ist nur vom Gesamtbau abgedeckt, die uebrigen 5 `fd*` sind gleich).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
+Die restlichen 14 sind "nahe" Funktionen (unten); `dev0.c` ist seit 2026-11-04 vollstaendig bytegleich (Rundlauf ohne `-O`: `OHNE_O=1 SOLL=doc/herkunft/daten/rundlauf_soll_dev0.txt tools/herkunft/rundlauf.sh WORKDIR dev0`).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
 "Origin" ist der Wert aus dem Dateikopf; "bytegleich" zaehlt die Funktionen mit `GLEICH` in `daten/rundlauf_soll.txt` (Rundlauf je Funktion).
 
 | Modul | Origin | bytegleich | | Modul | Origin | bytegleich |
