@@ -1,0 +1,5 @@
+# hand names for /etc/getty (ADDR name): V7 order
+0030 _main
+0172 _getname
+02B0 _puts
+02D0 _putchr

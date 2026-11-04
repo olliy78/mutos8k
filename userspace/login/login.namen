@@ -1,0 +1,50 @@
+# addr length name [weak]  (libc signature matches, tools/userspace/uspace.py)
+0614   44 getpwnam
+0640  318 getpwent
+07F0   86 rew
+0846   28 fopen
+0862   52 fprintf
+0896   48 printf
+08C6  244 filbuf
+0B2A    2 fakcu  weak
+0BDA    2 fakcu  weak
+0BE4    2 fakcu  weak
+116C   40 findiop
+1194   14 cuexit
+132C  112 getenv
+1426  220 ttyslot
+1502  222 ttyname
+1C80   38 isatty
+1CA6   64 setjmp
+1CE6   52 stty
+1D1A   38 index
+1D40   38 rindex
+1D66   52 strcat
+1D9A   66 strncat
+1DDC   54 strcmp
+1E12   38 strcpy
+1E38   68 strncpy
+1E7C   22 access
+1E92   14 alarm
+1EA0   20 chdir
+1EB4   22 chown
+1ECA   20 close
+1EDE   22 creat
+1EF4   20 execv
+1F08   22 fstat
+1F1E   22 ioctl
+1F34   22 lseek
+1F4A   20 nice
+1F5E   22 open
+1F74   10 pause  weak
+1F7E   22 read
+1F94   60 sbrk
+1FD0   20 setgid
+1FE4   20 setuid
+1FF8  142 signal
+2086   22 stat
+209C   36 time
+20C0   20 umask
+20D4   22 write
+20EA   14 cerror
+20F8   28 csv
