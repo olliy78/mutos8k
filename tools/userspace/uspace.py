@@ -291,10 +291,11 @@ def kartenzeilen_namen(namen, libc=None):
 
 # ---------------------------------------------------------------- step (d): guest build
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
-               log=print):
+               log=print, libs=()):
     """varianten: {name: source text (str/bytes)}.  Each variant = its own emulator session (copies of the disks,
     drive A empty /tmp, D = source disk = /mnt) -- sessions run in parallel threads.  Headers in kopfdateien
-    ({name: bytes}) are put next to the sources and found with -I/mnt.
+    ({name: bytes}) are put next to the sources and found with -I/mnt.  `libs` = names of kopfdateien that are archives:
+    they are named on the cc command line behind the source, i.e. searched BEFORE -lc (libc_alt, doc/userspace/libc_alt.md).
     Result {name: {"bin": bytes|None, "err": str, "s": str|None, "dauer": sec}}."""
     pruefe()
     sys.path.insert(0, os.path.join(TOOLS, "kernel"))
@@ -310,7 +311,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             q.update(kopfdateien)
             # the guest runner appends `cat fertigN` (a file on /mnt): every command must end in /mnt
             fl = "-s" if ist_s else flags
-            befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", name))]
+            lib = "".join(" /mnt/" + l for l in libs)
+            befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
