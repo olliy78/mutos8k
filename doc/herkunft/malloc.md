@@ -23,6 +23,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/malloc.c` (= System III PDP-11 `
 * `mfree`: das eine Wort ist `cp r2,#15` (Objekt) gegen `cp r3,#15` (Kernel): der Kernel-`c2` verwendet nach `exts rr2 ; div rr2,#4 ; ld r2,r3` den Quotienten in `r3` weiter,
   der Gast-`c2` bleibt bei `r2`.  Gleiche Wirkung in `malloc` (`cp r3,#15`), dort kommt hinzu, dass der Kernel nach `m_size -= size` ein `test r2` ausfuehrt, das der Gast-`c2` als ueberfluessig streicht
   (Kernel 2 Woerter laenger, daher verschieben sich die Sprungziele).  Das ist das Muster (B) aus `doc/kernel/c_rueckbau.md` (K7b), kein Quellformproblem.
+  **Nachgemessen 2026-11-04 (Plan 43 Gruppe A):** 9 Formen des Vergleichs `(bp-mp) > MAPSIZ` (Konstante links, `>= MAPSIZ+1`, `(int)`/`(unsigned)`-Umwandlung, Differenz `- MAPSIZ > 0`, `!(<=)`, Zwischenvariable ohne/mit `register`) ergeben alle `cp r2,#15` (oder Speicher/Register der Zwischenvariable), nie `cp r3`; 4 Formen von `m_size -= size` (im `if`, getrennte Anweisung, `!(...)`, `!= 0` mit `goto`) ergeben alle ohne `test r2`.  Im ganzen Kernel steht hinter `ld r2,r3` sechsmal `cp r3,#..` (`malloc`, `mfree`, 3 in `tty2`, 1 in `exece`) und nie `cp r2,#..`: eine `c2`-Eigenheit, nicht ueber den Quelltext erreichbar.
 
 
 ## Nachzug H6d (2026-11-03): Text der Hippe-Sammlung

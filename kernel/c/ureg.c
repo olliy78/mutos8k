@@ -105,9 +105,10 @@ sureg()
 estabur(nt, nd, ns, sep, xrw)
 unsigned nt, nd, ns;
 {
-	if (nt + nd + ns > 256) {
-		u.u_error = ENOMEM;
-		return(-1);
-	}
-	return(0);
+	if (nt + nd + ns <= 256)
+		return(0);
+	/* The doubled assignment is deliberate: only a used assignment value makes the MUTOS cc load the constant into r2
+	 * first ("ldk r2,#12 ; ldb u_error,rl2") as the kernel does; a plain "u.u_error = ENOMEM" is "ldb u_error,#12". */
+	u.u_error = u.u_error = ENOMEM;
+	return(-1);
 }

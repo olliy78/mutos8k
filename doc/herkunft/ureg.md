@@ -10,11 +10,14 @@ Stand 2026-10-31.  Quellen: UNIX V7 `usr/sys/sys/prim.c` (`cinit`) und `usr/sys/
   Vorher 85 % gegen V7, jetzt textgleich bis auf diese Konstanten.
 * `sureg` und `estabur`: das V7-Original von `sureg` steht als Kommentar vor dem Stumpf; von `estabur` steht nur der Fehlerausgang als Kommentar (V7-Text ~90 Zeilen PDP-11-Register, wuerde nur Platz kosten).
   Die Werkzeugwerte 100 % (`sureg`) und 55 % (`estabur`) sind Rauschen (leere/kurze Funktion).
-* Rundlauf: **2 von 3 bytegleich, wie vorher** (`cinit`, `sureg` gleich; `estabur` 8 von 20 Woertern: LDK-Form fuer `ENOMEM`, `c_rueckbau.md` K7c).
+* Rundlauf: **3 von 3 bytegleich (2026-11-04)**.  `estabur` war 8 von 20 Woertern; zwei Quellformen waren noetig (gemessen, Probe Plan 43 Gruppe A, 7+10 Varianten):
+  (1) Blockanordnung: `if (nt + nd + ns <= 256) return(0);` zuerst, dann der Fehlerzweig (die Form `if (> 256) { ...; return(-1); } return(0);` legt den Fehlerzweig vor `xor r2,r2`);
+  (2) `LDK`-Form: nur ein *verwendeter* Zuweisungswert laedt die Konstante nach r2 (`ldk r2,#12 ; ldb u_error,rl2`), also `u.u_error = u.u_error = ENOMEM;`.  Die einfache Zuweisung gibt `ldb u_error,#12` (so im ganzen uebrigen Kernel).
+  Die Doppelzuweisung ist die einzige gefundene Form, kein Beleg fuer den Originaltext; sie ist im Quelltext kommentiert.
 * System III hat in `ureg.c` zusaetzlich `checkur`; kein SysIII-Zug in MUTOS.
 
 | Funktion | Kernel | V7 abs | Klasse | Rundlauf |
 |---|---|---|---|---|
 | cinit | 3D04 | 85 % -> V7-Text | identisch (Konstanten MUTOS) | gleich |
 | sureg | 3D40 | -- | eigen (leer) | gleich |
-| estabur | 3D42 | -- | eigen (Z8001) | nahe (8/20) |
+| estabur | 3D42 | -- | eigen (Z8001) | gleich (2026-11-04) |

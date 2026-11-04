@@ -170,7 +170,7 @@ machdep sendsig GLEICH
 machdep sigret GLEICH
 ureg cinit GLEICH
 ureg sureg GLEICH
-ureg estabur NAHE
+ureg estabur GLEICH
 rk mmread GLEICH
 rk mmwrite GLEICH
 rk rkopen GLEICH

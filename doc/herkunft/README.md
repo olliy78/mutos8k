@@ -92,8 +92,8 @@ Passend waere ein PDP-11-V7-Derivat in der Naehe der Sammlung als Zwischenstufe.
 
 ## 5. Stand der Quellen: Rundlauf und Gesamtbau (gemessen, 2026-11-03)
 
-Gesamtbau `--uebersetzen --stufe 1 --boot`: **199 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
-Die restlichen 31 sind 25 "nahe" Funktionen (unten) und 6 Funktionen von `dev0.c` (`fdopen`, `fdclose`, `fdstart`, `fdintr`, `fdphys`, `fdioctl`; `dev0.c` wurde im Original ohne `-O` uebersetzt und ist nur vom Gesamtbau abgedeckt, die uebrigen 5 `fd*` sind gleich).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
+Gesamtbau `--uebersetzen --stufe 1 --boot`: **200 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
+Die restlichen 30 sind 24 "nahe" Funktionen (unten) und 6 Funktionen von `dev0.c` (`fdopen`, `fdclose`, `fdstart`, `fdintr`, `fdphys`, `fdioctl`; `dev0.c` wurde im Original ohne `-O` uebersetzt und ist nur vom Gesamtbau abgedeckt, die uebrigen 5 `fd*` sind gleich).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
 "Origin" ist der Wert aus dem Dateikopf; "bytegleich" zaehlt die Funktionen mit `GLEICH` in `daten/rundlauf_soll.txt` (Rundlauf je Funktion).
 
 | Modul | Origin | bytegleich | | Modul | Origin | bytegleich |
@@ -114,7 +114,7 @@ Die restlichen 31 sind 25 "nahe" Funktionen (unten) und 6 Funktionen von `dev0.c
 | rdwri | complete | 3/4 | | | | |
 
 Verbleibende "nahe" Funktionen (25, Wortzahlen = abweichende Woerter, `rundlauf_soll.txt` und Modulprotokolle): `alloc` 84/158, `ialloc` 169/220, `update` 85/119, `itrunc` 61/93, `tloop` 42/79, `ssig` 39/52,
-`bmap` 263/308, `malloc` 24/52, `mfree` 1/119, `readi` 108/206, `mapalloc` 14/37, `mapstart` 28/44, `exece` 1/389, `getxfile` 177/401, `clock` 210/260, `startup` 45/90, `estabur` 8/20, `lpwrite` 42/124,
+`bmap` 263/308, `malloc` 24/52, `mfree` 1/119, `readi` 108/206, `mapalloc` 14/37, `mapstart` 28/44, `exece` 1/389, `getxfile` 177/401, `clock` 210/260, `startup` 45/90, ``lpwrite` 42/124,
 `lpcanon` 104/212, `lpintr` 21/75, `putchar` 54/88, `ttioccomm` 181/371, `ttyinput` 281/458, `ttyretype` 1/116, `ttread` 1/139.  Ihre Ursachen sind teils Eigenheiten des Kernel-`c2` (Blockanordnung, Registerladen),
 teils offene Quellformen; das alte Bild "alle Abweichungen sind `c2`" gilt nicht mehr (`doc/kernel/c_rueckbau.md`, Hinweise dort).  Die Funktionen, deren Abweichung sich als reine Quellform erwies,
 sind jetzt bytegleich (u. a. `bcopy`, `iomove`, `iupdat`, `swtch`, `newproc`, `core`, `procxmt`, `rdwr`, `chdirec`, `binit`, `trap`, 16 Funktionen von `tty2`).

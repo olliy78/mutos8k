@@ -182,7 +182,7 @@ Header `h/user.h` (ab 104h aufgeloest), `h/param.h` (NPROC 30, MAXUPRC 15).  Sta
 * `trap.c` 2/3: nosys, nullsys gleich; `trap` 087A 37 von 343 Woertern (Rahmen, Fallverteilung ueber 10..31 stimmen; Rest: Layout der Faelle 10/11/15).
   > **[UEBERHOLT, Stand 2026-11-03]** `trap` ist bytegleich (Fall 15 mit `return` statt `goto out`, Fall 10 mit `break` statt Marke `sigbus:`; `trap.md`, `z8001_kontext.md`); trap.c 3/3.
 * `machdep.c` 3/4: kstub 35AC, sendsig, sigret gleich; `startup` 34F6 noch 45 Woerter (Konstante 0xFCFF).
-* `ureg.c` 2/3: cinit, sureg gleich; `estabur` 3D42 (LDK-Form fuer ENOMEM nicht getroffen, Varianten in var7c.c).
+* `ureg.c` 2/3: cinit, sureg gleich; `estabur` 3D42 (LDK-Form fuer ENOMEM nicht getroffen, Varianten in var7c.c).  **[UEBERHOLT, Stand 2026-11-04]** `estabur` ist bytegleich: `if (<= 256) return(0);` zuerst und `u.u_error = u.u_error = ENOMEM;` (`doc/herkunft/ureg.md`).
 * `malloc.c` 0/2: `mfree` bis auf 1 Wort; `malloc` 24 Woerter (der Kernel hat nach `m_size -= size` ein `test r2`).
 
 ## Befunde
