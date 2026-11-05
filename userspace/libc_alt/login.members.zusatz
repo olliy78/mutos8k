@@ -1,0 +1,5 @@
+# Hand-made additions for login.members (read by `libc_alt.py members login`, see zusatz_anwenden).
+# getpass (V7 stdio/getpass.c, compiled with the old cc) lies in front of the first strong libc match, so members_auto
+# counts it as own code.  Measured: own code 504 -> 406 instructions after moving it, whole file byte-identical
+# (doc/userspace/libc_alt.md).  data = 3 literals, bss = static pbuf[9].
++ getpass 04FA 0614 data=2228:2236 bss=2AD6:A exp=_getpass@04FA src=G
