@@ -770,9 +770,89 @@ def _norm_s(t):
         z = re.sub(r"(-?)%([0-9A-Fa-f]+)", num, z)
         z = z.replace("FP", "r14").replace("SP", "r15").replace(",", " ").lower()
         z = re.sub(r"\b[ldb][0-9][0-9a-f]*\b", "L", z)
+        z = re.sub(r"^jr c\b", "jr ult", z)
         z = re.sub(r"\bjr c\b", "jr ult", z)
         erg.append(re.sub(r"\s+", " ", z))
     return erg
+
+
+def libc_regeln(s):
+    """c2/c1 differences of the ORIGINAL library compiler that only show in libc members (numbered from R20; R1..R10
+    belong to uspace.c2_emu_s, R11..R19 to another branch).  Applied after uspace.c2_emu_s.
+      R20  `sub rN,rM ; ld rA,rN ; jr mi`        ->  `sub ; ld r2,rN ; ld rA,r2 ; test rA ; jr mi`   (x = y = expr goes through r2)
+      R21  `ld rA,r2 ; ld DST,r2 ; test rA`      ->  `ld rA,r2 ; ld r2,rA ; ld DST,r2 ; test r2`    (value of an assignment is reloaded)
+      R22  `test MEM` after `ld r0,MEM` (no write to r0 in between) -> `test r0`
+      R23  `ldl M,rr2 ; test.. ; jr cc ; push @SP,r2 ; push @SP,r3` -> `ldl rr2,M` re-inserted behind the jr
+      R24  `ld rB,rX ; add rB,#2^n ; exts rrA ; div rrA,#2^n ; ld rA,rB` (A=B-1) -> `ld rA,rX ; add rA,#2^n ; ld rB,#-n ; sda rA,rB`
+           (the old c1 turns a signed division by a power of two into an arithmetic shift)
+      R25  `ld r2,MEM ; ld r3,r2` (MEM not a register) -> `ld r2,MEM ; ld r3,MEM`
+    Returns (new text, {rule: count})."""
+    z = s.split("\n")
+    out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0}
+    r0mem = None
+    i = 0
+    reg = r"(r\d+|rr\d+|rq\d+|rl\d+|rh\d+|SP|FP)$"
+    while i < len(z):
+        a = z[i]
+        b = z[i + 1] if i + 1 < len(z) else ""
+        c = z[i + 2] if i + 2 < len(z) else ""
+        d = z[i + 3] if i + 3 < len(z) else ""
+        e = z[i + 4] if i + 4 < len(z) else ""
+        m = re.match(r"sub\t(r\d+),(r\d+)$", a)
+        mb = re.match(r"ld\t(r\d+),(r\d+)$", b)
+        if m and mb and mb.group(2) == m.group(1) and re.match(r"jr\tmi\t", c):
+            out += [a, "ld\tr2,%s" % m.group(1), "ld\t%s,r2" % mb.group(1), "test\t%s" % mb.group(1)]
+            n["R20"] += 1
+            i += 2
+            continue
+        m = re.match(r"ld\t(r\d+),r2$", a)
+        mb = re.match(r"ld\t([^,]+),r2$", b)
+        if m and mb and c == "test\t" + m.group(1) and m.group(1) != "r2":
+            out += [a, "ld\tr2,%s" % m.group(1), b, "test\tr2"]
+            n["R21"] += 1
+            i += 3
+            continue
+        m = re.match(r"ld\tr(\d+),(\d+)$", a) if False else None
+        mt = re.match(r"test\t([^,]+)$", a)
+        if mt and r0mem == mt.group(1) and not re.match(reg, mt.group(1)):
+            out.append("test\tr0")
+            n["R22"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr0,([^,]+)$", a)
+        if m and not re.match(reg, m.group(1)):
+            r0mem = m.group(1)
+        elif re.match(r"(call|jp|\w+:|ld\tr0,|ldb\trl0,|ldl\trr0,|pop\tr0,|clr\tr0)", a) or a.endswith(":") or re.match(r"[a-z]+\t(r0|rr0|rq0|rl0|rh0)[,]", a) and not a.startswith(("cp", "test", "push", "bit")):
+            r0mem = None
+        ml = re.match(r"ldl\t([^,]+),rr2$", a)
+        if ml and not re.match(reg, ml.group(1)) and re.match(r"(test|cp)\t", b) and re.match(r"jr\t\w+\t\w+$", c) \
+                and d == "push\t@SP,r2" and e == "push\t@SP,r3":
+            out += [a, b, c, "ldl\trr2,%s" % ml.group(1)]
+            n["R23"] += 1
+            i += 3
+            continue
+        m = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        ma = re.match(r"add\t(r\d+),#%([0-9A-F]+)$", b)
+        if m and ma and ma.group(1) == m.group(1):
+            k = int(ma.group(2), 16)
+            rb = int(m.group(1)[1:])
+            if k > 1 and k & (k - 1) == 0 and c == "exts\trr%d" % (rb - 1) and d == "div\trr%d,#%%%X" % (rb - 1, k) \
+                    and e == "ld\tr%d,r%d" % (rb - 1, rb):
+                nb = k.bit_length() - 1
+                out += ["ld\tr%d,%s" % (rb - 1, m.group(2)), "add\tr%d,#%%%X" % (rb - 1, k), "ld\tr%d,#-%%%X" % (rb, nb),
+                        "sda\tr%d,r%d" % (rb - 1, rb)]
+                n["R24"] += 1
+                i += 5
+                continue
+        m = re.match(r"ld\tr2,([^,]+)$", a)
+        if m and not re.match(reg, m.group(1)) and b == "ld\tr3,r2":
+            out += [a, "ld\tr3,%s" % m.group(1)]
+            n["R25"] += 1
+            i += 2
+            continue
+        out.append(a)
+        i += 1
+    return "\n".join(out), n
 
 
 def c_quellen():
@@ -805,6 +885,8 @@ def c_bauen(name, nur=None):
             continue
         open(os.path.join(c.arbeit, "c_%s.s" % n), "w").write(s)
         s2, cnt = U.c2_emu_s(s)
+        s2, cnt2 = libc_regeln(s2)
+        cnt.update(cnt2)
         s2 = re.sub(r"^\w+ module", n + "_ module", s2, count=1, flags=re.M) if False else s2
         open(os.path.join(c.arbeit, "c_%s.s2" % n), "w").write(s2)
         texte[n] = s2

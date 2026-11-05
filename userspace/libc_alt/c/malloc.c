@@ -14,7 +14,7 @@ char *s;
 #ifdef pdp11
 #define GRANULE 64
 #else
-#define GRANULE 0
+#define GRANULE 256
 #endif
 /*	C storage allocator
  *	circular first-fit strategy
