@@ -407,7 +407,7 @@ def c2_emu_s(s, aus=()):
         b = z[i + 1] if i + 1 < len(z) else ""
         m1 = re.match(r"inc\tSP,#%([0-9A-F]+)$", a)
         m2 = re.match(r"ld\t@SP,(.*)$", b)
-        if m1 and m2:
+        if m1 and m2 and "R1" not in aus:
             out.append("inc\tSP,#%%%X" % (int(m1.group(1), 16) + 2))
             out.append("push\t@SP," + m2.group(1))
             n["R1"] += 1
@@ -416,7 +416,7 @@ def c2_emu_s(s, aus=()):
         x = re.match(r"xorb\t(rh\d),(rh\d)$", a)
         if x and x.group(1) == x.group(2):
             y = re.match(r"ldb\t([^,]+),r([hl]\d)$", b)
-            if y and not re.match(r"r[hl]\d$", y.group(1)) and y.group(2) == "l" + x.group(1)[2:]:
+            if y and not re.match(r"r[hl]\d$", y.group(1)) and y.group(2) == "l" + x.group(1)[2:] and "R2" not in aus:
                 # R30  exception to R2: the stored byte is tested right away (value of `(*p++ = *q++) == 0`) -> XORB stays
                 if re.match(r"testb\trl%s$" % x.group(1)[2:], z[i + 2] if i + 2 < len(z) else ""):
                     n["R30"] += 1
@@ -429,14 +429,14 @@ def c2_emu_s(s, aus=()):
             c = z[i + 1] if i + 1 < len(z) else ""
             j = z[i + 2] if i + 2 < len(z) else ""
             k = z[i + 3] if i + 3 < len(z) else ""
-            if (re.match(r"cp\t", c) and re.match(r"jr\t\w+\tL\d+$", j) and re.match(r"jr\tL\d+$", k)
+            if ("R3" not in aus and re.match(r"cp\t", c) and re.match(r"jr\t\w+\tL\d+$", j) and re.match(r"jr\tL\d+$", k)
                     and (i + 4 >= len(z) or not z[i + 4].startswith("xorb"))):
                 out += [a, c, j, a, k]
                 n["R3"] += 1
                 i += 4
                 continue
             # R10  `xorb rhN ; cp rN,.. ; jr cc L ; add rN,..` -> the original zeroes rhN again before the add
-            if (re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
+            if ("R10" not in aus and re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
                     and re.match(r"add\tr%s," % x.group(1)[2:], k)):
                 out += [a, c, j, a]
                 n["R10"] += 1
@@ -444,14 +444,14 @@ def c2_emu_s(s, aus=()):
                 continue
         # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
         l7 = re.match(r"ldb\trl(\d),[^r]", a)
-        if l7 and re.match(r"cp\tr%s," % l7.group(1), b):
+        if l7 and "R7" not in aus and re.match(r"cp\tr%s," % l7.group(1), b):
             out += [a, "xorb\trh%s,rh%s" % (l7.group(1), l7.group(1))]
             n["R7"] += 1
             i += 1
             continue
         # R6  `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `ld rB,M` (the original does not forward the loaded value)
         l6 = re.match(r"ld\t(r\d+),([^r@][^,]*)$", a)
-        if l6 and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
+        if l6 and "R6" not in aus and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
                 and re.match(r"ld\t(r\d+),%s$" % l6.group(1), z[i + 3]):
             out += z[i:i + 3]
             out.append("ld\t%s,%s" % (re.match(r"ld\t(r\d+),", z[i + 3]).group(1), l6.group(2)))
@@ -461,7 +461,7 @@ def c2_emu_s(s, aus=()):
         # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
         #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
         c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
-        if c4 and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
+        if c4 and "R4" not in aus and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
             if r0mem == c4.group(1):
                 out.append("cp\tr0," + c4.group(2))
             else:
@@ -537,7 +537,7 @@ def c2_emu_s(s, aus=()):
             i += 2
             continue
         m5 = re.match(r"ldb\t(rl\d),([^,]+)$", a)
-        if m5 and not re.match(r"r[hl]\d+$", m5.group(2)):
+        if m5 and "R8" not in aus and not re.match(r"r[hl]\d+$", m5.group(2)):
             c = z[i + 1] if i + 1 < len(z) else ""
             d = re.match(r"ldb\t(rl\d),(rl\d)$", z[i + 2]) if i + 2 < len(z) else None
             if c == "xorb\trh%s,rh%s" % (m5.group(1)[2:], m5.group(1)[2:]) and d and d.group(2) == m5.group(1):
@@ -547,7 +547,7 @@ def c2_emu_s(s, aus=()):
                 continue
         m7 = re.match(r"and\t(r\d+),#", a)
         m7b = re.match(r"or\t(r\d+),(r\d+)$", b)
-        if m7 and m7b and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
+        if m7 and m7b and "R9" not in aus and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
             t = "r%d" % (int(m7b.group(1)[1:]) + 1)
             out += [a, "ld\t%s,%s" % (t, m7b.group(2)), "or\t%s,%s" % (m7b.group(1), t)]
             n["R9"] += 1

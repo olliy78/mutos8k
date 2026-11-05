@@ -40,9 +40,10 @@ PROGRAMME = {
 }
 
 
-# c2 rules that do NOT apply to a program (its original was built by a c2 that already behaves like the usr c2 there):
-# sh keeps `ld rA,rB ; test rB` and `ld rA,rB ; ld MEM,rB` as the usr c2 emits them (measured, doc/userspace/sh.md)
-C2_AUS = {"sh": {"R5"}}
+# c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
+# 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
+# (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
+C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31"}}
 
 
 def pfad(name, *teile):
