@@ -381,7 +381,7 @@ def c2_emu_s(s, aus=()):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R11": 0, "R12": 0, "R13": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0}
     i = 0
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
@@ -462,6 +462,14 @@ def c2_emu_s(s, aus=()):
             out.append(b.replace("cpb\t" + c12.group(1) + ",", "cpb\trl0,", 1))
             n["R12"] += 1
             i += 2
+            continue
+        # R14  `ldb MEM,rlN ; and rN,#k` (usr c2 keeps the byte in rlN, rhN already zero) -> the original reloads the byte:
+        #      `ldb MEM,rlN ; ldb rlN,MEM ; xorb rhN,rhN ; and rN,#k` (sh stoi `digit(c)`)
+        m14 = re.match(r"ldb\t(-?%[0-9A-F]+\(FP\)),rl(\d)$", a)
+        if m14 and re.match(r"and\tr%s,#" % m14.group(2), b):
+            out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1)), "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))]
+            n["R14"] += 1
+            i += 1
             continue
         # R13  `ld MEM,rN ; cp MEM,#k` -> `ld MEM,rN ; cp rN,#k` (the original compares the register just stored)
         m13 = re.match(r"ld\t([^,]+),(r\d+)$", a)
