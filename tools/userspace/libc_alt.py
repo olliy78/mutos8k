@@ -42,6 +42,7 @@ class Mitglied:
         self.code = []           # extra code entries
         self.neu = False
         self.sym = {}            # resolved exports {sym: (addr, kind)}  kind T text, D data, B bss
+        self.src = None          # A init archive, S shipped, G gap (only G members go into the program's archive)
         self.nodptr = set()      # data word addresses that are NOT pointers (nodptr=ADDR,...)
 
 
@@ -77,6 +78,8 @@ def parse(pfad):
                     m.exp[s] = int(a, 16)
             elif o.startswith("nodptr="):
                 m.nodptr = {int(x, 16) for x in o[7:].split(",")}
+            elif o.startswith("src="):
+                m.src = o[4:]
             elif o.startswith("code="):
                 m.code = [int(x, 16) for x in o[5:].split(",")]
             else:
@@ -320,7 +323,7 @@ class Quelle:
                         return s
                 return "D%04X" % a
         else:
-            cand = []
+            cand = [(ad, s) for s, (ad, k) in w.sym.items() if k == "B" and ad <= a]
             if eigen:
                 self.labels_bss.add(a)
                 for s, (ad, k) in w.sym.items():
@@ -680,6 +683,162 @@ def tabelle(alt_archiv, log=print):
     return ROOT_PROGRAMME, zeilen
 
 
+# ---------------------------------------------------------------- members file generator for any program
+def teile_zerlegen(name, libc, alt_archiv, log=print):
+    """Segment the libc part of program NAME into members -> text of NAME.members, plus a list of gap members.
+    Exact pieces come from the init archive (A) and the shipped libc.a (S); uncovered gaps are cut at `call csv` function
+    starts and named after the most similar shipped member (G).  Sizes of data/bss of a member are taken from its template
+    object (ASSUMPTION, checked by the final byte comparison)."""
+    ar = os.path.join(REPO, "userspace", name, "work")
+    b = open(os.path.join(ar, name + ".orig"), "rb").read()
+    k, raw = U.roh_von(b)
+    pw = worte(raw[:k[1]])
+    ship = {m.name.decode()[:-2]: m.objekt() for m in O.Archiv.lesen(libc).mitglieder}
+    alt = {m.name.decode()[:-2]: m.objekt() for m in O.Archiv.lesen(alt_archiv).mitglieder}
+
+    def finde(o):
+        mw = masken_worte(o)
+        return [st * 2 for st in range(0, len(pw) - len(mw) + 1)
+                if all(a is None or a == pw[st + i] for i, a in enumerate(mw))]
+    cov = {}
+    for tag, d in (("A", alt), ("S", ship)):
+        for n, o in d.items():
+            if len(o.text) >= 14:
+                for p in finde(o):
+                    if p >= 0x30 and p not in cov:
+                        cov[p] = (len(o.text), n, tag, o)
+    # csv address: the member csv is exact in every program
+    csvs = finde(alt["csv"])
+    if not csvs:
+        raise Fehler("%s: csv not found" % name)
+    csv_a = csvs[0]
+    starts = [i * 2 for i in range(len(pw) - 1) if pw[i] == 0x5F00 and pw[i + 1] == csv_a and i * 2 >= 0x30]
+    # a compiled function starts with `call csv`; so do not trust matches before the first library member
+    pieces, pos = [], min(cov)
+    end = len(pw) * 2
+    for p in sorted(cov):
+        if p < pos:
+            continue
+        if p > pos:
+            pieces.append(("G", pos, p, None, None))
+        ln, n, tag, o = cov[p]
+        pieces.append((tag, p, p + ln, n, o))
+        pos = p + ln
+    if pos < end:
+        pieces.append(("G", pos, end, None, None))
+    # cut gaps
+    out = []
+    for tag, a, bnd, n, o in pieces:
+        if tag != "G":
+            out.append((tag, a, bnd, n, o))
+            continue
+        if bnd - a < 14:
+            seg = pw[a // 2:bnd // 2]
+            hit = None
+            for tag2, d in (("A", alt), ("S", ship)):
+                for n2, o2 in sorted(d.items()):
+                    mw = masken_worte(o2)
+                    if len(o2.text) == bnd - a and mw and all(x is None or x == y for x, y in zip(mw, seg)):
+                        hit = hit or (tag2, a, bnd, n2, o2)
+            if hit:
+                out.append(hit)
+            else:
+                log("%s: small gap %04X-%04X (%d B) not identified" % (name, a, bnd, bnd - a))
+                out.append(("X", a, bnd, None, None))
+            continue
+        cuts = sorted({a} | {x for x in starts if a <= x < bnd} | {bnd})
+        cur = a
+        while cur < bnd:
+            best = None
+            for n2, o2 in ship.items():
+                if len(o2.text) < 14 or cur + 2 * 8 > bnd:
+                    continue
+                mw = [w for w in masken_worte(o2) if w is not None]
+                win = pw[cur // 2:min(bnd, cur + len(o2.text) + 24) // 2]
+                sm = difflib.SequenceMatcher(None, [w for w in masken_worte(o2)], win, autojunk=False)
+                # wildcards (None) never match: count only the fixed words
+                ok = sum(bl.size for bl in sm.get_matching_blocks())
+                r = ok / max(len(mw), 1)
+                if best is None or r > best[0]:
+                    best = (r, n2, o2)
+            if best is None or best[0] < 0.6:
+                nxt = min((c for c in cuts if c > cur), default=bnd)
+                out.append(("X", cur, nxt, None, None))
+                cur = nxt
+                continue
+            r, n2, o2 = best
+            e0 = cur + len(o2.text)
+            e = min((c for c in cuts if c > cur and c >= e0 - 12), key=lambda c: abs(c - e0), default=bnd)
+            e = min(max(e, cur + 2), bnd)
+            out.append(("G", cur, e, n2, o2))
+            log("%s: gap member %04X-%04X = %s (%d%% of the fixed words, shipped %d B, here %d B)" %
+                (name, cur, e, n2, round(100 * r), len(o2.text), e - cur))
+            cur = e
+    # data-only members (text 0) follow the archive order of the shipped libc.a: data.o when flsbuf is linked,
+    # errlst.o when perror is (sys_errlist)
+    order = [m.name.decode()[:-2] for m in O.Archiv.lesen(libc).mitglieder]
+    names = {x[3] for x in out}
+    for dn, need in (("data", "flsbuf"), ("errlst", "perror"), ("ctype_", "atof")):
+        if need in names:
+            o = alt.get(dn) or ship[dn]
+            pos = next((i for i, x in enumerate(out) if x[3] in order and order.index(x[3]) > order.index(dn)), len(out))
+            ref = out[pos - 1][2] if pos else 0
+            out.insert(pos, ("A" if dn in alt else "S", ref, ref, dn, o))
+    # placement of data/bss
+    mem = [x for x in out if x[0] != "X"]
+    for x in out:
+        if x[0] == "X":
+            log("%s: UNRESOLVED %04X-%04X (%d B)" % (name, x[1], x[2], x[2] - x[1]))
+    dsum = sum(len(x[4].data) for x in mem)
+    bsum = sum(x[4].bss for x in mem)
+    dstart = k[1] + k[2] - dsum
+    bend = k[1] + k[2] + k[3]
+    bstart = bend - bsum
+    com_a = None
+    if any(x[3] == "data" for x in mem):
+        com_a = bstart - 2 - 0x400
+    initcode = {}
+    ims, _c, _e = parse(os.path.join(LIBDIR, "init.members"))
+    for m0 in ims:
+        if m0.code:
+            initcode[m0.name] = [c0 - m0.t0 for c0 in m0.code]
+    lines = ["# generated by libc_alt.py members_auto: A = init archive, S = shipped libc.a, G = gap cut at `call csv` starts"]
+    dpos, bpos = dstart, bstart
+    for tag, a, bnd, n, o in mem:
+        t = [n, "%04X" % a, "%04X" % bnd]
+        exp = []
+        te = sorted((x.wert, x.name.decode("latin-1")) for x in o.syms if x.ext and x.basistyp == O.N_TEXT)
+        fs = [x for x in starts if a <= x < bnd]
+        for i, (w, sn) in enumerate(te):
+            if bnd - a == len(o.text):
+                exp.append("%s@%04X" % (sn, a + w))
+            else:       # length differs from the template: k-th export = k-th function start
+                exp.append("%s@%04X" % (sn, fs[min(i, len(fs) - 1)] if fs else a))
+        for x in o.syms:
+            if x.ext and x.basistyp == O.N_DATA:
+                exp.append("%s@%04X" % (x.name.decode("latin-1"), dpos + x.wert - len(o.text)))
+            elif x.ext and x.basistyp == O.N_BSS:
+                exp.append("%s@%04X" % (x.name.decode("latin-1"), bpos + x.wert - len(o.text) - len(o.data)))
+        if len(o.data):
+            t.append("data=%04X:%04X" % (dpos, dpos + len(o.data)))
+        if o.bss:
+            t.append("bss=%04X:%X" % (bpos, o.bss))
+        if exp:
+            t.append("exp=" + ",".join(exp))
+        if n in initcode and bnd > a:
+            t.append("code=" + ",".join("%04X" % (a + off) for off in initcode[n]))
+        t.append("src=" + tag)
+        lines.append(" ".join(t))
+        dpos += len(o.data)
+        bpos += o.bss
+    if com_a is not None:
+        lines.append("common __sibuf %04X 200 data" % com_a)
+        lines.append("common __sobuf %04X 200 data" % (com_a + 0x200))
+    lines.append("extern _environ %04X 2" % (bstart - 2))
+    lines.append("extern _end %04X 0" % bend)
+    return "\n".join(lines) + "\n", [x for x in out if x[0] == "G"], out
+
+
 def gast_objekte(c, texte=None, frist=20_000_000_000, log=print, arbeit="libc_alt_gast"):
     """Assemble member sources in the guest with `as -u`; returns {member: (messages, object bytes|None)}.
     texte = {member: source text}; default: the generated userspace/libc_alt/NAME/MEMBER.s of all members."""
@@ -788,7 +947,7 @@ def libc_regeln(s):
       R25  `ld r2,MEM ; ld r3,r2` (MEM not a register) -> `ld r2,MEM ; ld r3,MEM`
     Returns (new text, {rule: count})."""
     z = s.split("\n")
-    out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0}
+    out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0, "R26": 0}
     r0mem = None
     i = 0
     reg = r"(r\d+|rr\d+|rq\d+|rl\d+|rh\d+|SP|FP)$"
@@ -798,19 +957,27 @@ def libc_regeln(s):
         c = z[i + 2] if i + 2 < len(z) else ""
         d = z[i + 3] if i + 3 < len(z) else ""
         e = z[i + 4] if i + 4 < len(z) else ""
-        m = re.match(r"sub\t(r\d+),(r\d+)$", a)
-        mb = re.match(r"ld\t(r\d+),(r\d+)$", b)
-        if m and mb and mb.group(2) == m.group(1) and re.match(r"jr\tmi\t", c):
-            out += [a, "ld\tr2,%s" % m.group(1), "ld\t%s,r2" % mb.group(1), "test\t%s" % mb.group(1)]
+        m = re.match(r"ld\tr2,(r\d+)$", a)
+        mb = re.match(r"ld\t(r\d+),r2$", b)
+        if m and mb and c.startswith("jr\tmi\t") and out and re.match(r"sub\t%s," % m.group(1), out[-1]):
+            out += [a, b, "test\t%s" % mb.group(1)]
             n["R20"] += 1
             i += 2
             continue
         m = re.match(r"ld\t(r\d+),r2$", a)
-        mb = re.match(r"ld\t([^,]+),r2$", b)
-        if m and mb and c == "test\t" + m.group(1) and m.group(1) != "r2":
-            out += [a, "ld\tr2,%s" % m.group(1), b, "test\tr2"]
+        mb = re.match(r"ld\tr2,%s$" % (m.group(1) if m else "x"), b)
+        mc = re.match(r"ld\t([^,]+),r2$", c)
+        if m and mb and mc and d == "test\t" + m.group(1):
+            out += [a, b, c, "test\tr2"]
             n["R21"] += 1
-            i += 3
+            i += 4
+            continue
+        m = re.match(r"div\trr2,", a)
+        mb = re.match(r"ld\t(r\d+),r3$", b)
+        if m and mb and mb.group(1) != "r2":
+            out += [a, "ld\tr2,r3", "ld\t%s,r2" % mb.group(1)]
+            n["R26"] += 1
+            i += 2
             continue
         m = re.match(r"ld\tr(\d+),(\d+)$", a) if False else None
         mt = re.match(r"test\t([^,]+)$", a)
@@ -886,7 +1053,8 @@ def c_bauen(name, nur=None):
         open(os.path.join(c.arbeit, "c_%s.s" % n), "w").write(s)
         s2, cnt = U.c2_emu_s(s)
         s2, cnt2 = libc_regeln(s2)
-        cnt.update(cnt2)
+        s2, cnt3 = libc_regeln(s2)          # second pass: R22 behind a line group that R23 swallowed
+        cnt.update({k: cnt2[k] + cnt3[k] for k in cnt2})
         s2 = re.sub(r"^\w+ module", n + "_ module", s2, count=1, flags=re.M) if False else s2
         open(os.path.join(c.arbeit, "c_%s.s2" % n), "w").write(s2)
         texte[n] = s2
@@ -908,31 +1076,58 @@ def c_bauen(name, nur=None):
 
 
 def bauen(name):
+    """Assemble the members the program's own archive needs (src=G; every member for `init`), guard them, write the archive."""
     c, erg = quellen_erzeugen(name)
-    objs = gast_objekte(c)
-    for m in c.ms:
+    sel = [m for m in c.ms if name == "init" or m.src == "G"]
+    texte = {m.name: erg[m.name] for m in sel}
+    objs = gast_objekte(c, texte) if texte else {}
+    for m in sel:
         err, ob = objs[m.name]
         if ob:
             with open(os.path.join(c.arbeit, m.name + ".o"), "wb") as f:
                 f.write(ob)
     schlecht = pruefen_objekte(c, objs)
-    arch = archiv_bauen([(m.name, objs[m.name][1]) for m in c.ms if objs[m.name][1]])
+    # one archive in the order of the program's libc part (the old libc.a had one order; ld pulls members in archive order):
+    # G members assembled here, A members from the init archive, S members from the shipped libc.a
+    altobj = {}
+    ap = os.path.join(LIBDIR, "init", "libc_alt.a")
+    if os.path.isfile(ap):
+        altobj = {mm.name.decode()[:-2]: mm.daten for mm in O.Archiv.lesen(open(ap, "rb").read()).mitglieder}
+    shipobj = {mm.name.decode()[:-2]: mm.daten for mm in O.Archiv.lesen(c.libc).mitglieder}
+    glieder = []
+    for m in c.ms:
+        if name == "init" or m.src == "G":
+            b = objs[m.name][1]
+        elif m.src == "A":
+            b = altobj.get(m.name)
+        else:
+            b = shipobj.get(m.name)
+        if b:
+            glieder.append((m.name, b))
+    arch = archiv_bauen(glieder)
     ziel = os.path.join(c.dir, "libc_alt.a")
     with open(ziel, "wb") as f:
         f.write(arch)
-    print("%s: %d B, %d members; %d members differ" % (ziel, len(arch), len(c.ms), schlecht))
+    print("%s: %d B, %d members; %d members differ" % (ziel, len(arch), len(sel), schlecht))
     return 1 if schlecht else 0
 
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    if len(argv) < 2 or argv[0] not in ("quelle", "bau", "pruefen", "tabelle", "cbau"):
+    if len(argv) < 2 or argv[0] not in ("quelle", "bau", "pruefen", "tabelle", "cbau", "members"):
         print(__doc__)
         return 2
     try:
         if argv[0] == "quelle":
             c, erg = quellen_erzeugen(argv[1])
             print("%d members -> %s" % (len(erg), c.dir))
+        elif argv[0] == "members":
+            ar = os.path.join(REPO, "userspace", argv[1], "work")
+            U.pruefe()
+            txt, gaps, out = teile_zerlegen(argv[1], U.libc_archiv(ar),
+                                            open(os.path.join(LIBDIR, "init", "libc_alt.a"), "rb").read())
+            open(os.path.join(LIBDIR, argv[1] + ".members"), "w").write(txt)
+            print(txt)
         elif argv[0] == "bau":
             return bauen(argv[1])
         elif argv[0] == "cbau":
