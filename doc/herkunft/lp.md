@@ -30,3 +30,7 @@ Stand 2026-10-31.  Vergleich gegen V7, System III PDP-11 `uts/pdp11/io/lp.c` und
 ## Nachtrag 2 2026-11-04 (Plan 43 Gruppe C)
 
 `lpcanon` bleibt (104 von 212).  Aufbau gleich bis auf die Anordnung des `default`-Zweiges: im Kernel liegt sein Anfang (`ccc < col`, dann `flag & 0x20` -> `ccc++; return`) hinter der Vergleichskette der `switch`-Faelle und teilt das Endstueck `ccc++` mit `case ' '`.  3 Quellformen (NOCR-Zweig umgekehrt; `default` an den Anfang; beides) liefern 418, 428 und 422 Byte statt 424.  Offen.
+
+## Nachtrag 3 2026-11-04 (Plan 43 Gruppe C, lpcanon)
+
+`lpcanon` ist bytegleich (lp 7 von 8, nur `lpintr` bleibt).  Die Form: im `switch (c)` steht `default:` **zuerst** (`if (ccc >= col) goto rest; if ((flag & 0x20) == 0) goto cr;`), es faellt in `case ' ': sp: ccc++; return;`; hinter dem `switch` stehen die Marken `cr:` (`putc('\r'); col = 0;`) und `rest:` (Ausgabe der Spalte/des Zeichens), das mit `goto sp;` endet.  Damit liegt der Kopf des default-Zweigs vor `case ' '` und das `ccc++` wird gemeinsam benutzt (`jr L674C`).  Gemessen an 6 Varianten: nur die Formen mit `if (!(flag & 0x20)) goto cr;` bzw. `if (flag & 0x20) goto sp; goto cr;` treffen; `goto rest` ohne `sp`-Marke (426 B), Vergleich `col <= ccc` (428 B) nicht.  Die Struktur ist eine Quellform, kein Beleg fuer den Originaltext.

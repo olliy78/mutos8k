@@ -152,3 +152,7 @@ Fuer die verbleibenden Funktionen: die `c2`-Eigenheiten aus §10 (1-5) sind weit
 * `test r2`/`testl` nach `sub`/`subl` (malloc, readi): 13 Formen (`((diff = ..), diff) <= 0`, `diff = .., diff <= 0`, Cast, lokale Variable, `-diff >= 0`; `m_size` als Zuweisungswert, getrennt, `x = ..; m_size = x`, Kommaglied) -- keine behaelt den Test (nur `test @r13` auf den Speicher bei einer Kommaform, andere Befehlsfolge).  **`c2`-Eigenheit belegt**.
 * Damit sind `mfree`, `exece`, `ttyretype`, `ttread` (je 1 Wort), `malloc`, `readi` abgeschlossen: nicht erreichbar mit unserem `c2`.
 * Offen mit Aussicht auf Quellform: `lpcanon`, `getxfile`, `ttyinput`.  Nicht mit Quellform erreichbar (c2): `alloc`, `ialloc`, `bmap` (§10 Nr. 3), `lpintr` (Nr. 4), `ttioccomm` (Nr. 5).
+
+## 13. Stand `lpcanon` (2026-11-05, gemessen)
+
+`lpcanon` bytegleich: `default:` steht zuerst im `switch` und faellt in `case ' '` (Marke `sp:`), der Rest liegt hinter dem `switch` (`cr:`, `rest:`, `goto sp`); Einzelheiten `doc/herkunft/lp.md`.  Die Form ist logisch gleichwertig zur alten (alle uebrigen Faelle enden mit `return`).  Gesamtbau Stufe 1 `--boot`: **217 von 230**, BYTEGLEICH, 11 Arbeitstests ok.

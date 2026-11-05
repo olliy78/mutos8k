@@ -187,7 +187,7 @@ rk syioctl GLEICH
 lp lpopen GLEICH
 lp lpclose GLEICH
 lp lpwrite GLEICH
-lp lpcanon NAHE
+lp lpcanon GLEICH
 lp lpoutput GLEICH
 lp lpintr NAHE
 lp lpxfer GLEICH
