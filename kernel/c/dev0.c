@@ -41,6 +41,11 @@ extern struct fdu fdu[1];		/* D566 */
 extern struct rkmbx fdmbx[1];		/* D558 */
 extern struct buf fdbuf, rfdbuf, fdtab;	/* D540, CEAC, 8E6A */
 
+/* R2(x): the original c1 (no optimiser) loads an int operand into r2 before comparing it with a constant: "ld r2,x ; cp r2,#c".  The guest c1
+ * compares the register or memory operand directly ("cp x,#c").  A comma expression with a side-effect free left operand gives the original form
+ * (measured: 27 other source forms, doc/herkunft/dev0.md); the macro marks every place where this was needed. */
+#define R2(x)	((x), (x))
+
 /* KERNEL 7E16 */
 fdopen(dev, flag)
 dev_t dev;
@@ -50,7 +55,7 @@ dev_t dev;
 	register struct fdu *fp;
 
 	d = dev & 7;
-	if (d >= 1 || (fp = &fdu[d])->fu_flag) {
+	if (R2(d) >= 1 || (fp = &fdu[d])->fu_flag) {
 		u.u_error = ENXIO;
 		return;
 	}
@@ -73,7 +78,7 @@ register dev, flag;
 	register struct fdu *fp;
 
 	fp = &fdu[dev & 7];
-	if (flag == 2 || ((flag & 2) && fp->fu_x1))
+	if (R2(flag) == 2 || ((flag & 2) && fp->fu_x1))
 		fdsub(dev, 0x61, 1);
 	if ((dev & 0x80) == 0)
 		fdsub(dev, 0x51, 0);
@@ -144,24 +149,24 @@ fdstart()
 		fp->fu_xa = mp->mb_dir;
 		fp->fu_xc = mp->mb_cnt;
 		fp->fu_x1 = 0;
-		if (mp->mb_stat == 0xF5 && fdtab.b_bcount == 2) {
+		if (R2(mp->mb_stat) == 0xF5 && R2(fdtab.b_bcount) == 2) {
 			bp->b_resid = 0x25;
 			mp->mb_cnt = 1;
 			fdtab.b_bcount = 1;
 			goto issue;
 		}
-		if (fp->fu_flag == -1 || fp->fu_x8 == 0) {
+		if (R2(fp->fu_flag) == -1 || fp->fu_x8 == 0) {
 			bp->b_flags |= B_ERROR;
 			goto done;
 		}
 		if (bp == &fdbuf) {
-			if (bp->b_resid == 6)
+			if (R2(bp->b_resid) == 6)
 				goto done;
-			if (bp->b_resid == 0x51)
+			if (R2(bp->b_resid) == 0x51)
 				fdtab.b_bcount = 4;
 			else
 				fdtab.b_bcount = 3;
-			if (bp->b_resid == 0x25 || bp->b_resid == 0x27)
+			if (R2(bp->b_resid) == 0x25 || R2(bp->b_resid) == 0x27)
 				mp->mb_cnt = bp->b_bcount;
 			goto issue;
 		}
@@ -177,8 +182,7 @@ fdstart()
 		}
 		if ((bp->b_flags & B_READ) == 0)
 			fp->fu_x6 = (int)bp->b_blkno + 1;
-		lb = fp->fu_blk;
-		if (lb == bp->b_blkno) {
+		if ((lb = fp->fu_blk) == bp->b_blkno) {
 			if ((bp->b_flags & B_READ) == 0) {
 				if (fdtab.b_resid)
 					x = 1;
@@ -229,7 +233,7 @@ fdintr()
 	d = bp->b_dev & 7;
 	fp = &fdu[d];
 	mp = &fdmbx[d];
-	if (fdtab.b_bcount == 4) {
+	if (R2(fdtab.b_bcount) == 4) {
 		fdtab.b_bcount = 3;
 		if (mp->mb_stat == 0)
 			return;
@@ -241,24 +245,23 @@ fdintr()
 		fp->fu_x1 = 1;
 	s = fdtab.b_bcount;
 	fdtab.b_bcount = 0;
-	if (mp->mb_stat == 1)
+	if (R2(mp->mb_stat) == 1)
 		goto ok;
-	if (mp->mb_stat == 0xF5) {
+	if (R2(mp->mb_stat) == 0xF5) {
 		fdadj(bp);
-		if (s == 2) {
+		if (R2(s) == 2) {
 			fdtab.b_bcount = s;
 			fdstart();
 			return;
 		}
 		s = 3;
-		fp->fu_xc = 0;
-		mp->mb_cnt = 0;
+		mp->mb_cnt = fp->fu_xc = 0;	/* chained: one XOR R2,R2, two stores (fu_xc first) */
 		goto fin;
 	}
-	if (bp == &rfdbuf && (bp->b_flags & B_READ) && mp->mb_stat == 0xF6)
+	if (bp == &rfdbuf && (bp->b_flags & B_READ) && R2(mp->mb_stat) == 0xF6)
 		goto ok;
-	if (!(mp->mb_stat == 0xC1 && mp->mb_stat == 0xF3) && s == 2) {
-		if (++fdtab.b_resid < 7) {
+	if (!(R2(mp->mb_stat) == 0xC1 && R2(mp->mb_stat) == 0xF3) && R2(s) == 2) {
+		if ((++fdtab.b_resid, fdtab.b_resid) < 7) {
 			fp->fu_blk++;
 			goto start;
 		}
@@ -297,6 +300,7 @@ ok:
 	default:
 		printf("tmintr\n");
 		bp->b_flags |= B_ERROR;
+		break;
 	}
 fin:
 	fdtab.b_resid = 0;
@@ -360,7 +364,7 @@ dev_t dev;
 	long lb;
 
 	d = dev & 7;
-	if (d >= 1) {
+	if (R2(d) >= 1) {
 		u.u_error = ENXIO;
 		return;
 	}
@@ -426,7 +430,7 @@ caddr_t arg;
 		}
 		while (--n >= 0) {
 			fdsub(dev, fdcmd[lv[0]], x);
-			if ((lv[0] == 3 || lv[0] == 4) && bp->b_resid) {
+			if ((R2(lv[0]) == 3 || R2(lv[0]) == 4) && bp->b_resid) {
 				u.u_error = EIO;
 				break;
 			}

@@ -186,7 +186,13 @@ register dev, c;
 		return;
 	}
 	switch (c) {
+	default:	/* head of the default branch comes first: the kernel has it before case ' ' and the tail (cr/rest) behind the switch */
+		if (lp->l_ccc >= lp->l_col)
+			goto rest;
+		if (!(lp->l_flag & 0x20))
+			goto cr;
 	case ' ':
+	sp:
 		lp->l_ccc++;
 		return;
 	case '\t':
@@ -211,26 +217,20 @@ register dev, c;
 		if (lp->l_ccc > lp->l_ind)
 			lp->l_ccc--;
 		return;
-	default:
-		if (lp->l_ccc < lp->l_col) {
-			if ((lp->l_flag & 0x20) == 0) {
-				putc('\r', lp);
-				lp->l_col = 0;
-			} else {
-				lp->l_ccc++;
-				return;
-			}
-		}
-		if (lp->l_ccc < lp->l_mcc) {
-			while (lp->l_ccc > lp->l_col) {
-				putc(' ', lp);
-				lp->l_col++;
-			}
-			putc(c, lp);
+	}
+cr:
+	putc('\r', lp);
+	lp->l_col = 0;
+rest:
+	if (lp->l_ccc < lp->l_mcc) {
+		while (lp->l_ccc > lp->l_col) {
+			putc(' ', lp);
 			lp->l_col++;
 		}
-		lp->l_ccc++;
+		putc(c, lp);
+		lp->l_col++;
 	}
+	goto sp;
 }
 
 /* KERNEL 680E */

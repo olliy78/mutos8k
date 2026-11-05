@@ -4,6 +4,7 @@
 # One guest run for ALL given modules (fixed cost: boot + mounts, ~2 min; each file adds ~20-60 s).
 # Usage:   tools/herkunft/rundlauf.sh WORKDIR MODULE [MODULE ...]        (MODULE = alloc, iget, ... without .c)
 #          SOLL=file  expected results, lines "module function GLEICH|NAHE"; default doc/herkunft/daten/rundlauf_soll.txt
+#          OHNE_O=1   compile WITHOUT the optimiser and compare <m>.o instead of <m>O.o (for dev0, which the original built without -O)
 # Exit:    0 = every function expected GLEICH is bytegleich and no module failed to compile,
 #          1 = regression / compile error, 77 = emulator or original kernel image missing.
 # Notes:   gast_lauf.sh itself always exits 0 and vergleich.py exits 0 on mismatches -> this wrapper checks objects and
@@ -24,15 +25,16 @@ PY
 FILES=""
 for m in "$@"; do FILES="$FILES $REPO/kernel/c/$m.c"; done
 t0=$(date +%s)
-K1520EMU_NOBUILD=${K1520EMU_NOBUILD:-1} NUR_O=1 KEIN_S=1 bash "$REPO/tools/kernel/gast_lauf.sh" "$W/g" $FILES > "$W/lauf.log" 2>&1
+if [ -n "${OHNE_O:-}" ]; then SUF=""; NUR=""; else SUF="O"; NUR=1; fi
+K1520EMU_NOBUILD=${K1520EMU_NOBUILD:-1} NUR_O=$NUR KEIN_S=1 bash "$REPO/tools/kernel/gast_lauf.sh" "$W/g" $FILES > "$W/lauf.log" 2>&1
 rc=$?
 [ $rc -eq 77 ] && exit 77
 echo "guest run: $(( $(date +%s) - t0 )) s (log $W/lauf.log)"
 bad=0
 for m in "$@"; do
-  o="$W/g/out/${m}O.o"
-  if [ ! -f "$o" ]; then echo "== $m: NO OBJECT (compile error?)"; cat "$W/g/out/err_c_${m}O" 2>/dev/null | head -20; bad=1; continue; fi
-  [ -s "$W/g/out/err_c_${m}O" ] && { echo "== $m: cc messages:"; head -20 "$W/g/out/err_c_${m}O"; }
+  o="$W/g/out/${m}$SUF.o"
+  if [ ! -f "$o" ]; then echo "== $m: NO OBJECT (compile error?)"; cat "$W/g/out/err_c_${m}$SUF" 2>/dev/null | head -20; bad=1; continue; fi
+  [ -s "$W/g/out/err_c_${m}$SUF" ] && { echo "== $m: cc messages:"; head -20 "$W/g/out/err_c_${m}$SUF"; }
   echo "== $m"
   python3 -I "$REPO/tools/kernel/vergleich.py" "$W/mutos_1216" "$o" "$REPO/kernel/c/$m.c" | tee "$W/$m.txt"
   if [ -f "$SOLL" ]; then

@@ -27,3 +27,7 @@ Alle Zahlen **gemessen**, sofern nicht als *angenommen* markiert.
 
 * `passc`/`cpass` rufen `subyte` (0508) und `fubyte` (04CC); K6b nannte sie `suword`/`fuword`.
 * Rueckfall: keiner.
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe C)
+
+`bmap` (263 von 308): Aufbau gleich Wort fuer Wort ausser `testl %FFE8(r14)` (Kernel) gegen `testl rr4` (unser `c2`) an den Stellen `nb = ..; if (nb == 0)`; `nb` steht auf Funktionsebene, kein Initialisierer moeglich (siehe `alloc.md`).  Die Verschiebung kommt aus den kuerzeren `testl rr4`.
