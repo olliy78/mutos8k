@@ -982,7 +982,7 @@ def libc_regeln(s):
     """MODEL of c2/c1 differences of the ORIGINAL library compiler, derived from the shipped listing -- NOT a run of the old c2.
     Only in libc members (R20.. ; R1..R10 belong to uspace.c2_emu_s, R11..R19 to another branch).  Applied after c2_emu_s.
     Each rule is evidenced at exactly the places counted in doc/userspace/libc_alt.md (last run: flsbuf R20 1, R21 1, R22 1, R23 1;
-    malloc R24 1, R25 1, R26 1).
+    malloc R24 1, R25 1, R26 1, R31 1).
       R20  `sub rN,.. ; ld r2,rN ; ld rA,r2 ; jr mi`  ->  `test rA` inserted before the jr (value of `x = a - b` tested)
       R21  `ld rA,r2 ; ld r2,rA ; ld DST,r2 ; test rA` -> `.. ; test r2` (value of an assignment tested in r2)
       R22  `test MEM` after `ld r0,MEM` (no write to r0 in between) -> `test r0`
@@ -991,9 +991,10 @@ def libc_regeln(s):
            (the old c1 turns a signed division by a power of two into an arithmetic shift)
       R25  `ld r2,MEM ; ld r3,r2` (MEM not a register) -> `ld r2,MEM ; ld r3,MEM`
       R26  `div rr2,.. ; ld rB,r3` (B != 2) -> `.. ; ld r2,r3 ; ld rB,r2` (quotient/remainder goes through r2)
+      R31  `ld @rX,r2 ; ld MEM,r2 ; ld r3,.. ; set r3,#n ; ld @r2,r3` -> `ld r2,MEM` inserted behind the store (malloc, 1x)
     Returns (new text, {rule: count})."""
     z = s.split("\n")
-    out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0, "R26": 0}
+    out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0, "R26": 0, "R31": 0}
     r0mem = None
     i = 0
     reg = r"(r\d+|rr\d+|rq\d+|rl\d+|rh\d+|SP|FP)$"
@@ -1057,6 +1058,14 @@ def libc_regeln(s):
                 n["R24"] += 1
                 i += 5
                 continue
+        # R31  `ld @rX,r2 ; ld MEM,r2 ; ld r3,.. ; set r3,#n ; ld @r2,r3` -> `ld r2,MEM` re-inserted after the store to MEM
+        #      (chained assignment `alloct = q->ptr = ..; alloct->ptr = ..`: the old c1 reloads the stored global)
+        if re.match(r"ld\t@r\d+,r2$", a) and re.match(r"ld\t[A-Za-z_]\w*,r2$", b) and re.match(r"ld\tr3,", c) \
+                and re.match(r"set\tr3,", d) and e == "ld\t@r2,r3":
+            out += [a, b, "ld\tr2,%s" % b.split("\t")[1].split(",")[0]]
+            n["R31"] += 1
+            i += 2
+            continue
         m = re.match(r"ld\tr2,([^,]+)$", a)
         if m and not re.match(reg, m.group(1)) and b == "ld\tr3,r2":
             out += [a, "ld\tr3,%s" % m.group(1)]
