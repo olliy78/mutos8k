@@ -339,7 +339,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         for f in cs:
             befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl if f.endswith(".c") else "", f, name))
         lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
-        befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
+        # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
+        befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
         if asm:
             for f in [x for x in cs if x.endswith(".c")]:
                 befehle.append("cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name))
