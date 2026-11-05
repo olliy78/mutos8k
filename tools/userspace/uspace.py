@@ -361,7 +361,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
     return erg
 
 
-def c2_emu_s(s):
+def c2_emu_s(s, aus=()):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -381,8 +381,9 @@ def c2_emu_s(s):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R11": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R11": 0, "R12": 0, "R13": 0}
     i = 0
+    bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
         a = z[i]
@@ -448,29 +449,58 @@ def c2_emu_s(s):
             continue
         if not re.match(r"jr\t", a):
             r0mem = None
-        # R11 switch on a copied value: `ld rA,rB ; test rB ; jr cc L ; cp rA,#k ; jr cc L ...` -> the original compares the
-        #     source register: `cp rB,#k` for the whole chain of `cp rA,#k ; jr cc` (sh gmatch/getch; not R5's test rA)
-        t11 = re.match(r"ld\t(r\d+),(r\d+)$", a)
-        if (t11 and i + 3 < len(z) and z[i + 1] == "test\t" + t11.group(2) and z[i + 2].startswith("jr\t")
-                and z[i + 3] == "cp\t%s,#%s" % (t11.group(1), z[i + 3].split("#")[-1]) and re.match(r"cp\t%s,#" % t11.group(1), z[i + 3])):
-            out += z[i:i + 3]
-            i += 3
-            while i + 1 < len(z) and re.match(r"cp\t%s,#" % t11.group(1), z[i]) and z[i + 1].startswith("jr\t"):
-                out.append(z[i].replace("cp\t" + t11.group(1) + ",", "cp\t" + t11.group(2) + ",", 1))
-                out.append(z[i + 1])
-                i += 2
-            n["R11"] += 1
+        # label / call / jump target = new basic block for R12's byte memory
+        if re.match(r"L\d+:$", a) or a.startswith("call"):
+            bytemem = {}
+        l12 = re.match(r"ldb\t([^r@][^,]*|-?%[0-9A-F]+\(FP\)),(rl\d)$", a)
+        if l12:
+            bytemem[l12.group(2)] = l12.group(1)
+        # R12  `ldb rl0,rlN ; cpb rlN,X` where rlN was stored to MEM earlier (`ldb MEM,rlN`) -> the original reloads: `ldb rl0,MEM ; cpb rl0,X`
+        c12 = re.match(r"ldb\trl0,(rl\d)$", a)
+        if c12 and c12.group(1) in bytemem and re.match(r"cpb\t%s," % c12.group(1), b):
+            out.append("ldb\trl0," + bytemem[c12.group(1)])
+            out.append(b.replace("cpb\t" + c12.group(1) + ",", "cpb\trl0,", 1))
+            n["R12"] += 1
+            i += 2
             continue
+        # R13  `ld MEM,rN ; cp MEM,#k` -> `ld MEM,rN ; cp rN,#k` (the original compares the register just stored)
+        m13 = re.match(r"ld\t([^,]+),(r\d+)$", a)
+        c13 = re.match(r"cp\t([^,]+),(#.*)$", b)
+        if m13 and c13 and c13.group(1) == m13.group(1) and not re.match(r"(r\d+|@.*)$", m13.group(1)):
+            out += [a, "cp\t%s,%s" % (m13.group(2), c13.group(2))]
+            n["R13"] += 1
+            i += 2
+            continue
+        # R11 compare against the copy: `ld rA,rB ; ...(test rB | ld MEM,rB | jr cc L)... ; cp rA,#k` -> `cp rB,#k` (every cp rA,#k of
+        #     the chain; the original c2 does not forward the copy into the compare, the usr c2 does) -- sh gmatch, getch, ...
+        t11 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        if t11 and t11.group(1) != t11.group(2) and "R11" not in aus:
+            ra, rb = t11.groups()
+            j = i + 1
+            chain = []
+            while j < len(z):
+                zz = z[j]
+                if re.match(r"cp\t%s,#" % ra, zz):
+                    chain.append(j)
+                elif not (zz == "test\t" + rb or zz.startswith("jr\t") or re.match(r"ld\t[^,]+,%s$" % rb, zz)):
+                    break
+                j += 1
+            if chain:
+                for k in range(i, j):
+                    out.append(z[k].replace("cp\t" + ra + ",", "cp\t" + rb + ",", 1) if k in chain else z[k])
+                n["R11"] += 1
+                i = j
+                continue
         # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
         t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
         t6 = re.match(r"test\t(r\d+)$", b)
-        if t5 and t6 and t6.group(1) == t5.group(2):
+        if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus:
             out += [a, "test\t" + t5.group(1)]
             n["R5"] += 1
             i += 2
             continue
         t7 = re.match(r"ld\t([^,]+),(r\d+)$", b)      # `ld rA,rB ; ld DST,rB` -> `ld DST,rA`
-        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1):
+        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1) and "R5" not in aus:
             out += [a, "ld\t%s,%s" % (t7.group(1), t5.group(1))]
             n["R5"] += 1
             i += 2

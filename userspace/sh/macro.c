@@ -151,7 +151,7 @@ STRING	macro(as)
 	/* Strip "" and do $ substitution
 	 * Leaves result on top of stack
 	 */
-	BOOL	savqu =quoted; /* V7: REG; the original binary keeps this char on the stack */
+	REG BOOL	savqu =quoted;
 	CHAR	savq = quote; /* V7: REG; the original binary keeps this char on the stack */
 	FILEHDR		fb;
 

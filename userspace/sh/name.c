@@ -211,7 +211,7 @@ LOCAL BOOL	chkid(nam)
 		   FI
 		OD
 	FI
-	return(TRUE);
+	return(0377);	/* V7: return(TRUE); the original returns the char value 255, our c1 would give -1 */
 }
 
 LOCAL VOID (*namfn)();

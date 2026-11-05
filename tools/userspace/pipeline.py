@@ -40,6 +40,11 @@ PROGRAMME = {
 }
 
 
+# c2 rules that do NOT apply to a program (its original was built by a c2 that already behaves like the usr c2 there):
+# sh keeps `ld rA,rB ; test rB` and `ld rA,rB ; ld MEM,rB` as the usr c2 emits them (measured, doc/userspace/sh.md)
+C2_AUS = {"sh": {"R5"}}
+
+
 def pfad(name, *teile):
     return os.path.join(U.REPO, "userspace", name, *teile)
 
@@ -162,12 +167,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t)
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, C2_AUS.get(name, ()))
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"])
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], C2_AUS.get(name, ()))
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
