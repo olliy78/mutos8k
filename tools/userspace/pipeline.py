@@ -137,8 +137,8 @@ def quellen_lesen(name, a):
         v["neu"], k = quelle_lesen(q)
         koepfe.update(k)
     if a.libc == "alt":         # rebuilt libc of the original programs (userspace/libc_alt), searched before -lc:
-        # the program's own archive first (its older members), then the one rebuilt from init (printf/stdio core)
-        for i, n in enumerate(dict.fromkeys([name, "init"])):
+        # the program's own archive (all members of its libc part in the original order; `libc_alt.py bau NAME`)
+        for i, n in enumerate([name]):
             lp = os.path.join(U.REPO, "userspace", "libc_alt", n, "libc_alt.a")
             if os.path.isfile(lp):
                 koepfe["libc_alt%d.a" % i] = open(lp, "rb").read()
