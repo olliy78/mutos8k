@@ -16,9 +16,9 @@ LOCAL CHAR	quoted;	/* used locally */
 
 
 LOCAL STRING	copyto(endch)
-	REG CHAR	endch;
+	CHAR	endch; /* V7: REG; the original binary keeps this char on the stack */
 {
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 
 	WHILE (c=getch(endch))!=endch ANDF c
 	DO pushstak(c|quote) OD
@@ -27,10 +27,10 @@ LOCAL STRING	copyto(endch)
 }
 
 LOCAL	skipto(endch)
-	REG CHAR	endch;
+	CHAR	endch; /* V7: REG; the original binary keeps this char on the stack */
 {
 	/* skip chars up to } */
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 	WHILE (c=readc()) ANDF c!=endch
 	DO	SWITCH c IN
 
@@ -49,7 +49,7 @@ LOCAL	skipto(endch)
 LOCAL	getch(endch)
 	CHAR		endch;
 {
-	REG CHAR	d;
+	CHAR	d; /* V7: REG; the original binary keeps this char on the stack */
 
 retry:
 	d=readc();
@@ -151,8 +151,8 @@ STRING	macro(as)
 	/* Strip "" and do $ substitution
 	 * Leaves result on top of stack
 	 */
-	REG BOOL	savqu =quoted;
-	REG CHAR	savq = quote;
+	BOOL	savqu =quoted; /* V7: REG; the original binary keeps this char on the stack */
+	CHAR	savq = quote; /* V7: REG; the original binary keeps this char on the stack */
 	FILEHDR		fb;
 
 	push(&fb); estabf(as);
@@ -169,7 +169,7 @@ LOCAL	comsubst()
 {
 	/* command substn */
 	FILEBLK		cb;
-	REG CHAR	d;
+	CHAR	d; /* V7: REG; the original binary keeps this char on the stack */
 	REG STKPTR	savptr = fixstak();
 
 	usestak();
@@ -209,7 +209,7 @@ LOCAL	comsubst()
 subst(in,ot)
 	INT		in, ot;
 {
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 	FILEBLK		fb;
 	REG INT		count=CPYSIZ;
 

@@ -16,7 +16,7 @@
 
 word()
 {
-	REG CHAR	c, d;
+	CHAR	c, d; /* V7: REG; the original binary keeps this char on the stack */
 	REG CHAR	*argp=locstak()+BYTESPERWORD;
 	INT		alpha=1;
 
@@ -70,7 +70,7 @@ word()
 nextc(quote)
 	CHAR		quote;
 {
-	REG CHAR	c, d;
+	CHAR	c, d; /* V7: REG; the original binary keeps this char on the stack */
 	IF (d=readc())==ESCAPE
 	THEN	IF (c=readc())==NL
 		THEN	chkpr(NL); d=nextc(quote);
@@ -84,7 +84,7 @@ nextc(quote)
 
 readc()
 {
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 	REG INT		len;
 	REG FILE	f;
 

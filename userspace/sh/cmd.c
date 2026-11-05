@@ -316,7 +316,7 @@ LOCAL IOPTR	inout(lastio)
 {
 	REG INT		iof;
 	REG IOPTR	iop;
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 
 	iof=wdnum;
 

@@ -44,7 +44,7 @@ INT	expand(as,rflg)
 
 	/* check for meta chars */
 	BEGIN
-	   REG BOOL slash; slash=0;
+	   BOOL slash; slash=0; /* V7: REG; the original binary keeps this char on the stack */
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
 		THEN	IF rflg ANDF slash THEN break; ELSE return(0) FI
@@ -103,7 +103,7 @@ INT	expand(as,rflg)
 	FI
 
 	BEGIN
-	   REG CHAR	c;
+	   CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 	   s=as;
 	   WHILE c = *s
 	   DO	*s++=(c&STRIP?c:'/') OD

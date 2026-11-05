@@ -21,10 +21,10 @@ STRING	movstr(a,b)
 }
 
 INT	any(c,s)
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 	STRING		s;
 {
-	REG CHAR d;
+	CHAR d; /* V7: REG; the original binary keeps this char on the stack */
 
 	WHILE d = *s++
 	DO	IF d==c

@@ -29,7 +29,7 @@ syslook(w,syswds)
 	STRING		w;
 	SYSTAB		syswds;
 {
-	REG CHAR	first;
+	CHAR	first; /* V7: REG; the original binary keeps this char on the stack */
 	REG STRING	s;
 	REG SYSPTR	syscan;
 

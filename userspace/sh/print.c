@@ -85,7 +85,7 @@ STRING	icp;
 {
 	REG CHAR	*cp = icp;
 	REG INT		r = 0;
-	REG CHAR	c;
+	CHAR	c; /* V7: REG; the original binary keeps this char on the stack */
 
 	WHILE (c = *cp, digit(c)) ANDF c ANDF r>=0
 	DO r = r*10 + c - '0'; cp++ OD
