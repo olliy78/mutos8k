@@ -15,7 +15,7 @@ endopen 120A 1330 exp=__endope@120A src=G
 findiop 1330 1358 exp=__findio@1330 src=S
 data 1358 1358 data=1F1A:1FBC exp=__iob@1F1A,__lastbu@1FBA src=A
 cuexit 1358 1366 exp=_exit@1358 src=A
-ctime 1366 17EC data=1FBC:2032 bss=2EF6:2C exp=_ctime@1366,_localti@137E,_gmtime@1470,_asctime@14BA,_dysize@165A src=G
+ctime 1366 17EC data=1FBC:2032 bss=2EF6:2C exp=_ctime@1366,_localti@137E,_gmtime@14BA,_asctime@165A,_dysize@177A src=G
 malloc 17EC 19F6 bss=2F22:C exp=_malloc@17EC,_free@193A,_realloc@1954 src=A
 isatty 19F6 1A1C exp=_isatty@19F6 src=A
 qsort 1A1C 1BD2 bss=2F2E:4 exp=_qsort@1A1C src=G

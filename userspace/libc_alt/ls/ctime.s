@@ -22,7 +22,7 @@ _ctime:
 	push	@r15,%0004(r14)
 	call	_localti
 	ld	@r15,r2
-	call	_dysize
+	call	_asctime
 	inc	r15,#2
 	jp	cret
 end _ctime
@@ -54,7 +54,7 @@ _localti:
 	ld	r2,r14
 	dec	r2,#16
 	push	@r15,r2
-	call	_asctime
+	call	_gmtime
 	inc	r15,#2
 	ld	r12,r2
 	ld	r13,%000E(r12)
@@ -78,12 +78,12 @@ L13EA:
 L1406:
 	push	@r15,r11
 	push	@r15,r12
-	call	_gmtime
+	call	L1470
 	inc	r15,#4
 	ld	r11,r2
 	push	@r15,r10
 	push	@r15,r12
-	call	_gmtime
+	call	L1470
 	inc	r15,#4
 	ld	r10,r2
 	test	%FFEE(r14)
@@ -112,17 +112,14 @@ L1448:
 	ld	r2,r14
 	dec	r2,#16
 	push	@r15,r2
-	call	_asctime
+	call	_gmtime
 	inc	r15,#2
 	ld	r12,r2
 	inc	%0010(r12),#1
 L146A:
 	ld	r2,r12
 	jp	cret
-end _localti
-G	_gmtime	PR
-E
-_gmtime:
+L1470:
 	call	csv
 	ld	r13,%0004(r14)
 	ld	r12,%0006(r14)
@@ -131,7 +128,7 @@ _gmtime:
 	ld	r2,r12
 	push	@r15,r2
 	push	@r15,%000A(r13)
-	call	L177A
+	call	_dysize
 	inc	r15,#2
 	ld	r3,r2
 	pop	r2,@r15
@@ -149,10 +146,10 @@ L149C:
 	ld	r3,r4
 	sub	r2,r3
 	jp	cret
-end _gmtime
-G	_asctime	PR
+end _localti
+G	_gmtime	PR
 E
-_asctime:
+_gmtime:
 	call	csv
 	dec	r15,#8
 	ld	r2,%0004(r14)
@@ -228,7 +225,7 @@ L150A:
 L1586:
 	push	@r15,r2
 	push	@r15,r12
-	call	L177A
+	call	_dysize
 	inc	r15,#2
 	ld	r3,r2
 	pop	r2,@r15
@@ -240,7 +237,7 @@ L1586:
 	push	@r15,r3
 	push	@r15,r4
 	push	@r15,r12
-	call	L177A
+	call	_dysize
 	inc	r15,#2
 	ld	r5,r2
 	pop	r4,@r15
@@ -262,7 +259,7 @@ L15C8:
 	ld	r2,r12
 	dec	r2,#1
 	push	@r15,r2
-	call	L177A
+	call	_dysize
 	inc	r15,#2
 	ld	r5,r2
 	pop	r4,@r15
@@ -280,7 +277,7 @@ L15F6:
 	ld	r13,%FFEE(r14)
 	ld	B2F1E,r13
 	push	@r15,r12
-	call	L177A
+	call	_dysize
 	inc	r15,#2
 	cp	r2,#%016E
 	jr	ne,L1616
@@ -313,10 +310,10 @@ L1628:
 	clr	B2F20
 	ld	r2,#B2F10
 	jp	cret
-end _asctime
-G	_dysize	PR
+end _gmtime
+G	_asctime	PR
 E
-_dysize:
+_asctime:
 	call	csv
 	ld	r13,#B2EF6
 	ld	r12,#D1FDC
@@ -435,7 +432,10 @@ L1758:
 	ld	r13,r2
 	ld	r2,#B2EF6
 	jp	cret
-L177A:
+end _asctime
+G	_dysize	PR
+E
+_dysize:
 	call	csv
 	ld	r2,%0004(r14)
 	and	r2,#%0003
@@ -505,11 +505,9 @@ BV %0;BV %1F;BV %0;BV %1E;BV %0;BV %1F;BV %0;BV %5
 BV %1;BV %4D;BV %0;BV %3A;BV %1;BV %2F
 D1FDC:
 BV %44;BV %61;BV %79;BV %20;BV %4D;BV %6F;BV %6E;BV %20
-BV %30;BV %30
-WV D2030
-BV %30;BV %3A;BV %30;BV %30;BV %3A;BV %30;BV %30;BV %20
-BV %31;BV %39;BV %30;BV %30
-WV %6E+_fwrite
+BV %30;BV %30;BV %20;BV %30;BV %30;BV %3A;BV %30;BV %30
+BV %3A;BV %30;BV %30;BV %20;BV %31;BV %39;BV %30;BV %30
+BV %A;BV %0
 D1FF6:
 BV %53;BV %75;BV %6E;BV %4D;BV %6F;BV %6E;BV %54;BV %75
 BV %65;BV %57;BV %65;BV %64;BV %54;BV %68;BV %75;BV %46
@@ -519,7 +517,5 @@ BV %4A;BV %61;BV %6E;BV %46;BV %65;BV %62;BV %4D;BV %61
 BV %72;BV %41;BV %70;BV %72;BV %4D;BV %61;BV %79;BV %4A
 BV %75;BV %6E;BV %4A;BV %75;BV %6C;BV %41;BV %75;BV %67
 BV %53;BV %65;BV %70;BV %4F;BV %63;BV %74;BV %4E;BV %6F
-BV %76;BV %44;BV %65;BV %63
-D2030:
-BV %0;BV %0
+BV %76;BV %44;BV %65;BV %63;BV %0;BV %0
 end ctime_

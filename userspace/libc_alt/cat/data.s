@@ -28,7 +28,7 @@ BV %0;BV %0
 WV __sibuf
 BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %2;BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
-WV %70+__strout
+BV %6;BV %2;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
@@ -45,7 +45,7 @@ BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
-BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
+BV %0;BV %0
 D0FE4:
 G
 __lastbu	L

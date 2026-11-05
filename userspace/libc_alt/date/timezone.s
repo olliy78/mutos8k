@@ -19,7 +19,7 @@ G	_timezon	PR
 E
 _timezon:
 	call	csv
-	ld	r13,#D14A4
+	ld	r13,#_zonetab
 	jr	L04E6
 L04B6:
 	ld	r0,@r13
@@ -79,6 +79,9 @@ $REL	$+%A
 $SDEFAULT
 I
 D14A4:
+G
+_zonetab	L
+_zonetab:
 BV %0;BV %F0
 WV D14D4
 WV D14D8

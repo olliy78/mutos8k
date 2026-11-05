@@ -43,6 +43,7 @@ class Mitglied:
         self.neu = False
         self.sym = {}            # resolved exports {sym: (addr, kind)}  kind T text, D data, B bss
         self.src = None          # A init archive, S shipped, G gap (only G members go into the program's archive)
+        self.noimm = set()       # instruction addresses whose immediate only looks like an address (noimm=ADDR,...)
         self.nodptr = set()      # data word addresses that are NOT pointers (nodptr=ADDR,...)
 
 
@@ -76,6 +77,8 @@ def parse(pfad):
                 for e in o[4:].split(","):
                     s, a = e.split("@")
                     m.exp[s] = int(a, 16)
+            elif o.startswith("noimm="):
+                m.noimm = {int(x, 16) for x in o[6:].split(",")}
             elif o.startswith("nodptr="):
                 m.nodptr = {int(x, 16) for x in o[7:].split(",")}
             elif o.startswith("src="):
@@ -302,6 +305,10 @@ class Quelle:
             raise Fehler("%s: address %04X outside every member (context: %s)" % (self.m.name, a, kontext))
         art, w = b
         eigen = (w is self.m)
+        if not eigen:           # `block - 1` style address one byte before the member's own data/bss start
+            b1 = self.im_bereich(a + 1)
+            if b1 is not None and b1[1] is self.m and b1[0] in "DB" and not (self.m.t0 <= a + 1 < self.m.t1):
+                return self.ausdruck(a + 1, kontext) + "-%1"
         if art in "CE":
             ad = [x for x in (self.c.com if art == "C" else self.c.ext) if x[0] == w][0][1]
             return w if a == ad else "%%%X+%s" % (a - ad, w)
@@ -362,7 +369,10 @@ def code_umschreiben(self):
     for sn, (ad, k) in m.sym.items():           # own export labels also denote their address
         if k == "T":
             konst.setdefault(sn, ad)
-    daten_im_code = [z for z in body if re.match(r"\t(WV|BV|LV)\b", z)]
+    # z8kdis marks a jr whose target lies at the very edge of the range (-254 bytes) as `! jr L !` + data word, and the old
+    # `as` rejects that jr as well: keep the comment and the word (WV %E881 assembles to exactly the original jr)
+    erlaubt = {i for i in range(1, len(body)) if re.match(r"\t! jr\s+\S+ !$", body[i - 1])}
+    daten_im_code = [z for i, z in enumerate(body) if re.match(r"\t(WV|BV|LV)\b", z) and i not in erlaubt]
     if daten_im_code:
         raise Fehler("%s: z8kdis left data words in the code (add code= entries): %s" % (m.name, daten_im_code[:2]))
     adr = [a for a, mn in c.befehle if m.t0 <= a < m.t1]
@@ -379,7 +389,7 @@ def code_umschreiben(self):
                 continue
             if art == "X" and (re.search(r"\(r14\)", z, re.I) or v < 0x100 or v >= 0xFF00):
                 continue
-            if art == "IMW" and self.im_bereich(v) is None:
+            if art == "IMW" and (self.im_bereich(v) is None or a in m.noimm):
                 continue
             if art == "IMW" and m.t0 <= v < m.t1 and False:
                 continue
@@ -416,6 +426,10 @@ def daten_zeilen(self):
     ptr = {}
     for a in range(d0, d1 - 1, 2):
         v = struct.unpack(">H", raw[a:a + 2])[0]
+        tm = c.dobj.get(m.name)         # same-size shipped member: a data word is a pointer only where it has a relocation
+        if tm is not None and len(tm.data) == m.data[1] - m.data[0] and m.src in ("S", "A", "G"):
+            if (a - m.data[0]) not in {off for off, _r in tm.relocs("data")}:
+                continue
         if self.im_bereich(v) is not None and v >= 0x30 and a not in m.nodptr:
             ptr[a] = self.ausdruck(v, "data word at %04X" % a)
     return ptr
@@ -684,6 +698,28 @@ def tabelle(alt_archiv, log=print):
 
 
 # ---------------------------------------------------------------- members file generator for any program
+def zusatz_anwenden(txt, pfad):
+    """Hand-made corrections that must survive a regeneration: file NAME.members.zusatz, one line `MEMBER key=value ...`;
+    each key replaces the same option of that member line (or is appended)."""
+    if not os.path.isfile(pfad):
+        return txt
+    zus = {}
+    for z in open(pfad).read().split("\n"):
+        if z.strip() and not z.startswith("#"):
+            t = z.split()
+            zus[t[0]] = dict(x.split("=", 1) for x in t[1:])
+    out = []
+    for z in txt.split("\n"):
+        t = z.split()
+        if t and t[0] in zus and len(t) > 2 and not t[0] in ("common", "extern"):
+            opt = [x.split("=", 1) for x in t[3:]]
+            keys = {k for k, _v in opt}
+            neu = [(k, zus[t[0]].get(k, v)) for k, v in opt] + [(k, v) for k, v in zus[t[0]].items() if k not in keys]
+            z = " ".join(t[:3] + ["%s=%s" % kv for kv in neu])
+        out.append(z)
+    return "\n".join(out)
+
+
 def teile_zerlegen(name, libc, alt_archiv, log=print):
     """Segment the libc part of program NAME into members -> text of NAME.members, plus a list of gap members.
     Exact pieces come from the init archive (A) and the shipped libc.a (S); uncovered gaps are cut at `call csv` function
@@ -812,8 +848,15 @@ def teile_zerlegen(name, libc, alt_archiv, log=print):
         for i, (w, sn) in enumerate(te):
             if bnd - a == len(o.text):
                 exp.append("%s@%04X" % (sn, a + w))
-            else:       # length differs from the template: k-th export = k-th function start
-                exp.append("%s@%04X" % (sn, fs[min(i, len(fs) - 1)] if fs else a))
+            else:       # length differs from the template: the export is the same-numbered `call csv` function start
+                csvi = [k for k, x in enumerate(o.syms) if x.name == b"csv"]
+                tf = [off - 2 for off, r in o.relocs("text") if csvi and r.art == O.R_EXT and r.sym == csvi[0]
+                      and off >= 2 and o.text[off - 2:off] == b"\x5f\x00"]
+                k = max([j for j, t in enumerate(tf) if t <= w], default=0)
+                if len(tf) != len(fs):
+                    log("%s: member %s: %d function starts in the template, %d in the image (exports are guesses)" %
+                        (name, n, len(tf), len(fs)))
+                exp.append("%s@%04X" % (sn, fs[min(k, len(fs) - 1)] if fs else a))
         for x in o.syms:
             if x.ext and x.basistyp == O.N_DATA:
                 exp.append("%s@%04X" % (x.name.decode("latin-1"), dpos + x.wert - len(o.text)))
@@ -936,15 +979,18 @@ def _norm_s(t):
 
 
 def libc_regeln(s):
-    """c2/c1 differences of the ORIGINAL library compiler that only show in libc members (numbered from R20; R1..R10
-    belong to uspace.c2_emu_s, R11..R19 to another branch).  Applied after uspace.c2_emu_s.
-      R20  `sub rN,rM ; ld rA,rN ; jr mi`        ->  `sub ; ld r2,rN ; ld rA,r2 ; test rA ; jr mi`   (x = y = expr goes through r2)
-      R21  `ld rA,r2 ; ld DST,r2 ; test rA`      ->  `ld rA,r2 ; ld r2,rA ; ld DST,r2 ; test r2`    (value of an assignment is reloaded)
+    """MODEL of c2/c1 differences of the ORIGINAL library compiler, derived from the shipped listing -- NOT a run of the old c2.
+    Only in libc members (R20.. ; R1..R10 belong to uspace.c2_emu_s, R11..R19 to another branch).  Applied after c2_emu_s.
+    Each rule is evidenced at exactly the places counted in doc/userspace/libc_alt.md (last run: flsbuf R20 1, R21 1, R22 1, R23 1;
+    malloc R24 1, R25 1, R26 1).
+      R20  `sub rN,.. ; ld r2,rN ; ld rA,r2 ; jr mi`  ->  `test rA` inserted before the jr (value of `x = a - b` tested)
+      R21  `ld rA,r2 ; ld r2,rA ; ld DST,r2 ; test rA` -> `.. ; test r2` (value of an assignment tested in r2)
       R22  `test MEM` after `ld r0,MEM` (no write to r0 in between) -> `test r0`
       R23  `ldl M,rr2 ; test.. ; jr cc ; push @SP,r2 ; push @SP,r3` -> `ldl rr2,M` re-inserted behind the jr
       R24  `ld rB,rX ; add rB,#2^n ; exts rrA ; div rrA,#2^n ; ld rA,rB` (A=B-1) -> `ld rA,rX ; add rA,#2^n ; ld rB,#-n ; sda rA,rB`
            (the old c1 turns a signed division by a power of two into an arithmetic shift)
       R25  `ld r2,MEM ; ld r3,r2` (MEM not a register) -> `ld r2,MEM ; ld r3,MEM`
+      R26  `div rr2,.. ; ld rB,r3` (B != 2) -> `.. ; ld r2,r3 ; ld rB,r2` (quotient/remainder goes through r2)
     Returns (new text, {rule: count})."""
     z = s.split("\n")
     out, n = [], {"R20": 0, "R21": 0, "R22": 0, "R23": 0, "R24": 0, "R25": 0, "R26": 0}
@@ -1126,6 +1172,7 @@ def main(argv=None):
             U.pruefe()
             txt, gaps, out = teile_zerlegen(argv[1], U.libc_archiv(ar),
                                             open(os.path.join(LIBDIR, "init", "libc_alt.a"), "rb").read())
+            txt = zusatz_anwenden(txt, os.path.join(LIBDIR, argv[1] + ".members.zusatz"))
             open(os.path.join(LIBDIR, argv[1] + ".members"), "w").write(txt)
             print(txt)
         elif argv[0] == "bau":
