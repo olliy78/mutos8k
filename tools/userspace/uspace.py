@@ -342,7 +342,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
         befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
         if asm:
-            for f in [x for x in cs if x.endswith(".c")]:
+            for f in sorted((x for x in cs if x.endswith(".c")), key=lambda x: -len(dateien[x])):   # biggest first: /tmp fills up
                 befehle.append("cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name))
                 rueck.append(f[:-2] + ".s")
             rueck.append(name + ".err2")
