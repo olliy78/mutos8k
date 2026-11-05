@@ -139,7 +139,7 @@ def quellen_lesen(name, a):
         v[n], k = quelle_lesen(p)
         koepfe.update(k)
     if not v:
-        v["neu"], k = quelle_lesen(q)
+        v[a.variante], k = quelle_lesen(q)
         koepfe.update(k)
     if a.libc == "alt":         # rebuilt libc of the original programs (userspace/libc_alt), searched before -lc:
         # the program's own archive (all members of its libc part in the original order; `libc_alt.py bau NAME`)
@@ -273,6 +273,7 @@ def main(argv=None):
                     help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--ist", help="variant to compare")
+    ap.add_argument("--variante", default="neu", help="name of the default build variant (work/bau/NAME.*); use a speaking name per source state")
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
     ap.add_argument("--voll", action="store_true", help="print the full report")
     a = ap.parse_args(argv)

@@ -341,16 +341,31 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
         # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
         befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
-        if asm:
-            for f in sorted((x for x in cs if x.endswith(".c")), key=lambda x: -len(dateien[x])):   # biggest first: /tmp fills up
-                befehle.append("cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name))
-                rueck.append(f[:-2] + ".s")
-            rueck.append(name + ".err2")
         aus = {}
         r = gast_as.gast_befehle(os.path.join(arbeit, name), q, befehle, rueck, frist=frist, ausgabe=aus)
+        sdict = None
+        if asm:
+            # `cc -S` of all modules does not fit on the /tmp disk next to cc's temporaries: separate short sessions,
+            # each with sources of at most 40 KB (the .s is ca. 1.3x the source)
+            sdict, gruppen, akt, gr = {}, [], [], 0
+            for f in sorted((x for x in cs if x.endswith(".c")), key=lambda x: -len(dateien[x])):
+                if akt and gr + len(dateien[f]) > 40_000:
+                    gruppen.append(akt)
+                    akt, gr = [], 0
+                akt.append(f)
+                gr += len(dateien[f])
+            if akt:
+                gruppen.append(akt)
+            for gi, grp in enumerate(gruppen):
+                qs = {f: dateien[f] for f in dateien}
+                qs.update(kopfdateien)
+                bs = ["cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name) for f in grp]
+                rs = [f[:-2] + ".s" for f in grp] + [name + ".err2"]
+                rr = gast_as.gast_befehle(os.path.join(arbeit, "%s_s%d" % (name, gi)), qs, bs, rs, frist=frist, ausgabe={})
+                for f in grp:
+                    sdict[f[:-2] + ".s"] = (rr.get(f[:-2] + ".s") or b"").decode("latin-1")
         erg[name] = {"bin": r.get(name), "err": (r.get(name + ".err") or b"").decode("latin-1"),
-                     "s": {f[:-2] + ".s": (r.get(f[:-2] + ".s") or b"").decode("latin-1") for f in cs if f.endswith(".c")} if asm else None,
-                     "dauer": aus.get("dauer", 0.0)}
+                     "s": sdict, "dauer": aus.get("dauer", 0.0)}
         log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary", aus.get("dauer", 0)))
 
     ts = [threading.Thread(target=lauf, args=(n, t)) for n, t in varianten.items()]
