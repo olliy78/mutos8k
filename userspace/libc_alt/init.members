@@ -1,0 +1,42 @@
+# Members of the libc part of the ORIGINAL /etc/init (4978 B), in link order (= archive order of the old libc.a).
+# Measured addresses of the image (text base 0, data directly behind the text, bss behind the data).
+#   NAME TEXT_FROM TEXT_TO [data=FROM:TO] [bss=ADDR:SIZE] [exp=SYM@ADDR,...] [new]
+# Without exp= the exported symbols are taken from the member of the same name in the shipped lib/libc.a (offsets
+# relative to TEXT_FROM); `new` = no such member in the shipped libc.a (exp= is then mandatory).
+# `common SYM ADDR SIZE` = undefined-with-size symbol (C common) that ld allocated.
+printf  065E 068E
+doprnt  068E 0866 data=1274:12BE exp=__doprnt@068E code=07B6,07BC,07D2
+ffltpr  0866 0870 exp=pfloat@0866,pscien@0866,pgen@0866 new
+strout  0870 0998 exp=__strout@0870
+flsbuf  0998 0CD0 exp=__flsbuf@0998,_fflush@0AAA,__cleanu@0B00,_fclose@0B1E,_fseek@0B8E
+data    0CD0 0CD0 data=12BE:1360 exp=__iob@12BE,__lastbu@135E
+cuexit  0CD0 0CDE
+malloc  0CDE 0EE8 bss=1C4E:C exp=_malloc@0CDE,_free@0E2C,_realloc@0E46
+isatty  0EE8 0F0E
+setjmp  0F0E 0F4E
+stty    0F4E 0F82
+access  0F82 0F98
+alarm   0F98 0FA6
+chmod   0FA6 0FBC
+chown   0FBC 0FD2
+close   0FD2 0FE6
+creat   0FE6 0FFC
+dup     0FFC 101C
+execl   101C 1032
+fork    1032 104C bss=1C5A:2 code=103A
+ioctl   104C 1062
+kill    1062 1078
+lseek   1078 108E
+open    108E 10A4
+read    10A4 10BA
+sbrk    10BA 10F6 data=1360:1362
+signal  10F6 1184 bss=1C5C:28 code=1134
+time    1184 11A8
+wait    11A8 11C2
+write   11C2 11D8
+cerror  11D8 11E6 bss=1C84:2
+csv     11E6 1202
+common  __sibuf 184C 200 data
+common  __sobuf 1A4C 200 data
+extern  _environ 1C4C 2
+extern  _end 1C86 0

@@ -291,10 +291,11 @@ def kartenzeilen_namen(namen, libc=None):
 
 # ---------------------------------------------------------------- step (d): guest build
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
-               log=print):
+               log=print, libs=()):
     """varianten: {name: source text (str/bytes)}.  Each variant = its own emulator session (copies of the disks,
     drive A empty /tmp, D = source disk = /mnt) -- sessions run in parallel threads.  Headers in kopfdateien
-    ({name: bytes}) are put next to the sources and found with -I/mnt.
+    ({name: bytes}) are put next to the sources and found with -I/mnt.  `libs` = names of kopfdateien that are archives:
+    they are named on the cc command line behind the source, i.e. searched BEFORE -lc (libc_alt, doc/userspace/libc_alt.md).
     Result {name: {"bin": bytes|None, "err": str, "s": str|None, "dauer": sec}}."""
     pruefe()
     sys.path.insert(0, os.path.join(TOOLS, "kernel"))
@@ -312,7 +313,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             q.update(kopfdateien)
             # the guest runner appends `cat fertigN` (a file on /mnt): every command must end in /mnt
             fl = "-s" if ist_s else flags
-            befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", name))]
+            lib = "".join(" /mnt/" + l for l in libs)
+            befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
@@ -330,22 +332,23 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         (only with asm) so that per-module .s files come back.  One command per step; every one ends in /mnt."""
         q = dict(dateien)
         q.update(kopfdateien)
-        cs = [f for f in dateien if f.endswith(".c")]
+        cs = [f for f in dateien if f.endswith((".c", ".s"))]     # .s = rewritten assembler (c2 model): cc assembles it
         cfl = flags.replace("-s", "").strip()
         befehle = []
         rueck = [name, name + ".err"]
         for f in cs:
-            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl, f, name))
-        befehle.append("cd /tmp;cc -s -o %s %s >>%s.err 2>&1;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), name))
+            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl if f.endswith(".c") else "", f, name))
+        lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
+        befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
         if asm:
-            for f in cs:
+            for f in [x for x in cs if x.endswith(".c")]:
                 befehle.append("cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name))
                 rueck.append(f[:-2] + ".s")
             rueck.append(name + ".err2")
         aus = {}
         r = gast_as.gast_befehle(os.path.join(arbeit, name), q, befehle, rueck, frist=frist, ausgabe=aus)
         erg[name] = {"bin": r.get(name), "err": (r.get(name + ".err") or b"").decode("latin-1"),
-                     "s": {f[:-2] + ".s": (r.get(f[:-2] + ".s") or b"").decode("latin-1") for f in cs} if asm else None,
+                     "s": {f[:-2] + ".s": (r.get(f[:-2] + ".s") or b"").decode("latin-1") for f in cs if f.endswith(".c")} if asm else None,
                      "dauer": aus.get("dauer", 0.0)}
         log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary", aus.get("dauer", 0)))
 
@@ -377,7 +380,7 @@ def c2_emu_s(s):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R11": 0}
     i = 0
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
@@ -444,6 +447,19 @@ def c2_emu_s(s):
             continue
         if not re.match(r"jr\t", a):
             r0mem = None
+        # R11 switch on a copied value: `ld rA,rB ; test rB ; jr cc L ; cp rA,#k ; jr cc L ...` -> the original compares the
+        #     source register: `cp rB,#k` for the whole chain of `cp rA,#k ; jr cc` (sh gmatch/getch; not R5's test rA)
+        t11 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        if (t11 and i + 3 < len(z) and z[i + 1] == "test\t" + t11.group(2) and z[i + 2].startswith("jr\t")
+                and z[i + 3] == "cp\t%s,#%s" % (t11.group(1), z[i + 3].split("#")[-1]) and re.match(r"cp\t%s,#" % t11.group(1), z[i + 3])):
+            out += z[i:i + 3]
+            i += 3
+            while i + 1 < len(z) and re.match(r"cp\t%s,#" % t11.group(1), z[i]) and z[i + 1].startswith("jr\t"):
+                out.append(z[i].replace("cp\t" + t11.group(1) + ",", "cp\t" + t11.group(2) + ",", 1))
+                out.append(z[i + 1])
+                i += 2
+            n["R11"] += 1
+            continue
         # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
         t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
         t6 = re.match(r"test\t(r\d+)$", b)

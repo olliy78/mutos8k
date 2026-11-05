@@ -2,7 +2,7 @@
 
   python3 -I tools/userspace/pipeline.py holen   NAME [--platte root --pfad etc/init]
   python3 -I tools/userspace/pipeline.py karte   NAME [--ablegen]          # map + listing + libc names + strings
-  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm]   (guest, minutes)
+  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm] [--c2emu] [--libc alt]   (guest, minutes)
   python3 -I tools/userspace/pipeline.py vergleich NAME [--ist VARIANTE]   # report against the original
   python3 -I tools/userspace/pipeline.py alles   NAME [--quelle V=FILE]... # holen, karte, bau, vergleich
   python3 -I tools/userspace/pipeline.py --check [NAME]                    # host-side self test (no guest run)
@@ -136,6 +136,14 @@ def quellen_lesen(name, a):
     if not v:
         v["neu"], k = quelle_lesen(q)
         koepfe.update(k)
+    if a.libc == "alt":         # rebuilt libc of the original programs (userspace/libc_alt), searched before -lc:
+        # the program's own archive first (its older members), then the one rebuilt from init (printf/stdio core)
+        for i, n in enumerate(dict.fromkeys([name, "init"])):
+            lp = os.path.join(U.REPO, "userspace", "libc_alt", n, "libc_alt.a")
+            if os.path.isfile(lp):
+                koepfe["libc_alt%d.a" % i] = open(lp, "rb").read()
+        if not koepfe:
+            raise SystemExit("no libc_alt archive (python3 -I tools/userspace/libc_alt.py bau init)")
     for hd in list(h) + (a.kopf or []):
         d = os.path.join(U.REPO, hd) if not os.path.isabs(hd) else hd
         koepfe[os.path.basename(d)] = open(d, "rb").read()
@@ -145,15 +153,23 @@ def quellen_lesen(name, a):
 def cmd_bau(name, a):
     ar = arbeit_von(name, a)
     v, koepfe = quellen_lesen(name, a)
-    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel)
+    libs = sorted(k for k in koepfe if k.startswith("libc_alt")) if a.libc == "alt" else []
+    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs)
     os.makedirs(os.path.join(ar, "bau"), exist_ok=True)
     if a.c2emu:     # second round: assemble the rewritten .s (original-c2 model) and link it
         zwei = {}
         for n, r in erg.items():
-            if r["s"]:
+            if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
+                zwei[n + "_c2"], tot = {}, {}
+                for fn, t in sorted(r["s"].items()):
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t)
+                    for k2, v2 in cnt.items():
+                        tot[k2] = tot.get(k2, 0) + v2
+                print("%s: c2 model rewrote %s" % (n, tot))
+            elif r["s"]:
                 zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"])
                 print("%s: c2 model rewrote %s" % (n, cnt))
-        erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel)
+        erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
     for n, r in erg.items():
         if r["bin"]:
@@ -248,6 +264,8 @@ def main(argv=None):
     ap.add_argument("--flags", default="-O -s")
     ap.add_argument("--asm", action="store_true", help="also cc -S (assembler source of the variant)")
     ap.add_argument("--c2emu", action="store_true", help="also assemble the .s rewritten to the original c2's form (R1-R3)")
+    ap.add_argument("--libc", choices=["disk", "alt"], default="disk",
+                    help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--ist", help="variant to compare")
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
