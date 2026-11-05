@@ -1,0 +1,81 @@
+416C xnvtsierku
+4192 newline
+42A0 /tmp/sh-
+42E2 bad option(s)
+4300 no space
+430A syntax error
+4318 bad number
+4324 parameter not set
+4336 bad substitution
+4348 cannot create
+4356 illegal io
+4362 restricted
+436E cannot make pipe
+4380 cannot open
+438C  - core dumped
+439C arg list too long
+43AE text busy
+43B8 too big
+43C0 cannot execute
+43D0 not found
+43DA bad file number
+43EA cannot shift
+43F8 bad directory
+4406 bad trap
+4410 is read only
+441E is not an identifier
+4434 PATH
+443A HOME
+4440 MAIL
+4446 FILEMATCH
+4450 IFS
+4454 PS1
+4458 PS2
+4462 :/bin:/usr/bin
+4478 end of file
+4484  unexpected
+4490  at line 
+449A /dev/null
+44B4 .profile
+4514 F)F6
+451A FFFQF\export
+4528 readonly
+4589 esac
+458E case
+4593 for
+4597 done
+459F while
+45A8 then
+45AD else
+45B2 elif
+45BA until
+45C4 Hangup
+45CB Quit
+45D0 Illegal instruction
+45E4 Trace/BPT trap
+45F3 IOT trap
+45FC EMT trap
+4605 Floating exception
+4618 Killed
+461F Bus error
+4629 Memory fault
+4636 Bad system call
+4646 Alarm call
+4651 Terminated
+465C Signal 16
+4669 read
+466E set
+4674 trap
+4679 login
+467F wait
+4684 eval
+468B newgrp
+4692 chdir
+4698 break
+469E continue
+46A7 shift
+46AD exit
+46B2 exec
+46B7 times
+46BD umask
+471C ptrace: 
