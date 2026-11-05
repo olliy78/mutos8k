@@ -8,8 +8,8 @@ Vergleichsreferenz ("grosse Uebereinstimmung"), nie als Urheber.
 | Programm | Vorlage | Ergebnis |
 |----------|---------|----------|
 | `/etc/getty` | **nicht V7-`getty.c`**, sondern Hippe `getty.c.old` (Tabelle gekuerzt) | **Ganzdatei bytegleich** (1150 B, `neu_c2_s`) |
-| `/bin/login` | V7-`login.c`-Struktur = Hippe `login.c.old` (Stand mit `'\177'`/`'\25'`, `"password:"`) | Eigencode 0030-04FA befehlsgleich (399 von 406 Befehlen; Rest = Adressoperanden/libc-Ziele); Datei nicht bytegleich (libc, Stolperstein 1) |
-| `/etc/mount` | V7-`mount.c` unveraendert | Eigencode 192/192 befehlsgleich bis auf Datenadresse und `perror`-Ziel |
+| `/bin/login` | V7-`login.c`-Struktur = Hippe `login.c.old` (Stand mit `'\177'`/`'\25'`, `"password:"`) | Eigencode 0030-04FA befehlsgleich; mit `getpass` als libc-Glied (G, siehe `libc_alt.md`) **Ganzdatei bytegleich** (9904 B, `--c2emu --libc alt`) |
+| `/etc/mount` | V7-`mount.c` unveraendert | **Ganzdatei bytegleich** (4272 B, `--c2emu --libc alt`; Regel R30 in `libc_alt.md`) |
 | `/etc/umount` | V7-`umount.c` unveraendert | Eigencode 144/144 ebenso |
 
 ## getty: welche Vorlage passt (wichtigster Befund)
@@ -26,7 +26,7 @@ c2-Regeln fuer getty: R1 3x, R2 2x, R4 1x, R8 1x, R9 1x (siehe unten; Nummern na
 ## login
 Strukturgleich mit V7; Abweichungen D1-D3 im Quellkopf: Loeschzeichen DEL und `^U` (V7 `#`, `@`), Deklarationsreihenfolge (Datenlage), `"password:"`
 statt `"Password:"` und keine Meldung `Login incorrect`.  Das Programm bindet `getpass`, `crypt`, `execlp`, `fopen` ... aus einer alten `libc.a`;
-die Funktion `getpass` (04FA) liegt vor dem ersten starken Treffer und zaehlt daher im Bericht zum "Eigencode" (1 Block "delete" ist sie, kein Fehler).
+die Funktion `getpass` (04FA, V7 `stdio/getpass.c`) liegt vor dem ersten starken Treffer; sie zaehlte frueher zum "Eigencode" (deshalb 406 statt 504 Befehle) und ist inzwischen als libc-Glied gefuehrt.
 Handnamen in `userspace/login/namen.txt` (*Annahme* der Namen, Adressen gemessen).  V7-`login.c` im Gast: 23 Bloecke (`'#'`/`'@'`, `Login incorrect`, Datenreihenfolge).
 
 ## mount / umount
@@ -47,5 +47,5 @@ Modell: `c2_emu_s` (Umschreibung der `cc -S`-Ausgabe), `c2_kanon` kennt R4.  Tes
 * Stolperstein: das MUTOS-`sgtty.h` weicht vom V7-Header ab (nicht auf `/mnt` legen!); V7-Quellen mit `NL1`/`CR1` bauen nicht.
 
 ## Offen
-* Ganzdatei-Gleichheit login/mount/umount braucht die alte `libc.a` (in Arbeit, nicht hier).
+* Ganzdatei-Gleichheit login/mount/umount: erreicht mit `libc_alt` (Stand: `libc_alt.md`).
 * `sys_errlist`-Texte mount/umount: nur indirekt aus `perror` belegt.
