@@ -330,6 +330,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         """Several .c files (V7 style: each `cc -O -c`, then `cc -s -o NAME *.o` in the given order -- the V7 makefile links
         `*.o`, i.e. alphabetical; the caller passes the files in link order).  Each .c also goes through `cc -S`
         (only with asm) so that per-module .s files come back.  One command per step; every one ends in /mnt."""
+        if len(name) + 5 > 14:      # guest file names are cut at 14 characters: NAME.err2 would collide / get lost
+            raise ValueError("variant name %r too long: at most 9 characters (NAME.err2 must fit 14)" % name)
         q = dict(dateien)
         q.update(kopfdateien)
         cs = [f for f in dateien if f.endswith((".c", ".s"))]     # .s = rewritten assembler (c2 model): cc assembles it
@@ -498,11 +500,11 @@ def c2_emu_s(s, aus=()):
             i += 1
             continue
         # R16  `jp ne,L ; ldb ; xorb ; add ; bitb ; jp eq,L` (same target L, backward distance exactly 256 B): the original c2/as range
-        #      check lets the first jump be a short `jr` (disp -128 words), the usr c2 keeps `jp` (sh word(), 1 site)
+        #      check lets the first jump be a short `jr` (disp -128 words; the guest `as` rejects exactly that, hence `wval`), the usr c2 keeps `jp` (sh word(), 1 site)
         m16 = re.match(r"jp\tne\t(L\d+)$", a)
-        if (m16 and i + 5 < len(z) and z[i + 5] == "jp\teq\t" + m16.group(1) and z[i + 4].startswith("bitb\t")
+        if ("R16" not in aus and m16 and i + 5 < len(z) and z[i + 5] == "jp\teq\t" + m16.group(1) and z[i + 4].startswith("bitb\t")
                 and i > 0 and z[i - 1].startswith("and\tr2,#%80")):
-            out.append("jr\tne\t" + m16.group(1))
+            out.append("wval\t-%1180")        # `jr ne,L` (disp -128): the guest `as` rejects it (ILLEGAL VALUE), so the word is emitted as data
             n["R16"] += 1
             i += 1
             continue
