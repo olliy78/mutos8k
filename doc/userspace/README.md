@@ -11,8 +11,52 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `kleine_befehle.md` | `/bin/sync` (ganzdatei-bytegleich), `cat`, `date`, `ls` (Eigencode befehlsgleich); c2-Regeln R4-R9 |
 | `stty.md` | `/bin/stty` (kein V7: erweitertes `stty`, gleiche Zeichenketten wie Hippe-Sammlung; Eigencode wortgleich bis auf Adressen); c2-Regel R10 |
 | `sh.md` | `/bin/sh` (V7-Bourne-Shell, 20 Module, Mehrdatei-Bau; **ganzdatei-bytegleich**, 18296 B; anderer c2-Stand als `init`, c2-Regeln R11-R14/R16) |
+| `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
 | `../plan/42_unix_herkunft.md`, `../plan/43_c_nachbau.md` | Plaene (H7 = Userspace) |
+
+## Stand und Aussagekraft der Bytegleichheit (gemessen 2026-11-09, Stand `userspace-herkunft`)
+
+Alle elf Programme der Wurzeldiskette werden **ganzdatei bytegleich** gebaut: `sync` 116, `getty` 1150, `cat` 4072, `umount` 4096,
+`mount` 4272, `init` 4962, `date` 5758, `stty` 5814, `ls` 8244, `login` 9904, `sh` 18296 Byte
+(`pipeline.py alles NAME --c2emu [--libc alt] --ist neu_c2_s`; `sh`: `bau sh --c2emu --variante v7fix`, dann `cmp`).
+Was das belegt und was nicht:
+
+**1. Der c2 wird nicht ersetzt und nicht gepatcht, sondern nachgebildet.**  Der Bau laeuft so:
+`cc -O -S` im Gast (c0/c1/**ausgelieferter** c2 der Diskette, unveraendert) -> `.s` -> auf dem Host schreibt
+`uspace.c2_emu_s` (Programme) bzw. `libc_alt.libc_regeln` (libc-Glieder) den Assemblertext mit Musterregeln um ->
+Original-`as`/`ld` im Gast -> Bytevergleich.  Die Regeln (R1-R16, R20-R26, R30, R31) sind aus den Unterschieden
+"Bau ohne Umschreibung gegen Original" abgeleitet, die sich durch keine Quelltextvariante erklaeren liessen.  Sie beschreiben,
+**worin sich die Ausgabe des (verlorenen) alten c2 von der des ausgelieferten unterscheidet** -- sie sind ein Modell,
+**kein Lauf des alten c2**.  Bewiesen ist damit: *C-Quelle + ausgelieferter Compiler + diese Regeln = Originalbytes*;
+nicht bewiesen ist, dass der alte c2 genau diese Regeln hatte.
+
+**2. Die Regeln sind schwach belegt und programmabhaengig.**  Viele greifen an 1 bis 4 Stellen (R12, R14, R16, R20-R26, R31
+an genau einer).  `sh` wurde mit einem anderen c2-Stand uebersetzt als die uebrigen Programme: dort sind R1-R10/R30/R31 aus
+(`pipeline.py: C2_AUS`), nur R11-R14/R16 an (`C2_NUR_SH`); die sh-Regeln auf `cat`/`login` angewandt zerstoeren deren
+Bytegleichheit (gemessen, Waechter `test_sh_rules_are_off_for_other_programs`).  Jede neue Regel braucht eine Stellenzahl;
+eine Regel mit einer Stelle ist kaum mehr als ein beschriebener Unterschied.
+
+**3. Ohne Regeln** ist das Ergebnis "befehlsgleich bis auf die Regelstellen": `init` 29 Stellen (R1 20, R2 8, R3 1),
+`sh` laengengleich mit 5249 von 5281 Befehlszeilen gleich.  Die Quellform (V7-Text bzw. belegte Abweichung) haengt nicht
+an den Regeln: sie bestimmen nur Codeformen, die keine Quelle beeinflussen kann.
+
+**4. R16 ist ein Assembler-Behelf**, kein c2-Verhalten: das Original enthaelt einen kurzen Sprung mit genau -256 Byte, den der
+Gast-`as` ablehnt (`ILLEGAL VALUE`); die Regel schreibt das Befehlswort als `wval`.  Dasselbe macht `libc_alt` fuer
+`! jr L !` + `WV %E881` (qsort in `ls`).
+
+**5. Der libc-Teil belegt keine Herkunft.**  Die meisten libc-Glieder (`userspace/libc_alt/*/*.s`) sind **aus dem
+Original-Abbild gewonnen**; ihre Gleichheit gilt per Konstruktion.  Unabhaengig (aus C gebaut) sind nur `printf`, `strout`,
+`isatty`, `stty`, `data`, `flsbuf`, `malloc` (diese mit R20-R26/R31).  `doprnt` ist handgeschriebener Assembler.  `sh` bindet
+die ausgelieferte `libc.a` unveraendert.
+
+**6. Herkunft des Eigencodes** (das, was der Nachbau tatsaechlich belegt): V7-Text unveraendert `sync`, `cat`, `mount`,
+`umount`, `date`, `ls`; V7 mit belegten Abweichungen `init` (5), `login` (3, wie Hippe-Sammlung `login.c.old`), `sh` (3);
+nicht V7 `getty` (Struktur wie Hippe-Sammlung `getty.c.old`) und `stty` (gleiches Programm wie das Binary der Hippe-Sammlung,
+Quelle rekonstruiert).  Die Hippe-Sammlung (TUHS) ist Vergleichsreferenz, keine Urheberangabe.
+
+Der Kernel (Plan 43) nutzt dieses Regelmodell nicht: `gesamtbau.py --stufe 1` nimmt nur Funktionen aus C, die ohne
+Umschreibung bytegleich sind (2026-11-09: 218 von 230, Kernel 36352 von 36352 Byte gleich, Boot und Arbeitstests ok).
 
 Quellen: `userspace/NAME/NAME.c`; Karte/Listing/Namen daneben (`k.txt`, `NAME.lst`, `NAME.namen`, `NAME.strings`, `namen.txt`, optional
 `karte_extra.txt`); Arbeitsdateien in `userspace/NAME/work/` (git-ignoriert).  Test: `tests/test_userspace_pipeline.py`
