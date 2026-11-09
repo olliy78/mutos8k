@@ -1,0 +1,2 @@
+# ctime reads the string/zone table of timezone (add r2,#%52+_zonetab): timezone is rebuilt (G) and exports its data label
+timezone exp=_timezon@04AC,_zonetab@14A4 src=G

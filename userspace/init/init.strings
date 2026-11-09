@@ -1,0 +1,11 @@
+1204 /bin/sh
+120C /etc/getty
+121A /etc/rc
+1222 /etc/ttys
+122C /etc/utmp
+1236 /usr/adm/wtmp
+1244 /dev/console
+1252 /dev/
+1258 /bin/login
+1264 single user 
+12B8 null

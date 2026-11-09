@@ -1,0 +1,9 @@
+# hand names for /bin/login (ADDR name): own functions in V7 order, libc members of the original libc.a
+0030 _main
+0424 _catch
+043E _showmot
+04FA _getpass
+0D0E __flsbuf
+0E94 _fclose
+11A2 _execlp
+18DE _crypt
