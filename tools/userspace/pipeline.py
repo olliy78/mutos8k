@@ -25,6 +25,8 @@ import uspace as U   # noqa: E402
 # `cc -I/mnt` searches first -- so never list a header here that /usr/include has (it would shadow the MUTOS one).
 V7INC = "original/unix-v7/usr/include/"
 PROGRAMME = {
+    # a directory as source = multi-file program: all *.c (alphabetical = V7 `cc *.o` link order), *.h travel along
+    "sh": ("root", "bin/sh", "userspace/sh", [V7INC + "setjmp.h", V7INC + "sys/dir.h"]),
     "init": ("root", "etc/init", "userspace/init/init.c", [V7INC + "utmp.h", V7INC + "setjmp.h"]),
     "login": ("root", "bin/login", "userspace/login/login.c", [V7INC + "utmp.h"]),
     "getty": ("root", "etc/getty", "userspace/getty/getty.c", []),
@@ -36,6 +38,12 @@ PROGRAMME = {
     "date": ("root", "bin/date", "userspace/date/date.c", [V7INC + "sys/timeb.h", V7INC + "utmp.h"]),
     "ls": ("root", "bin/ls", "userspace/ls/ls.c", [V7INC + "sys/param.h", V7INC + "sys/dir.h"]),
 }
+
+
+# c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
+# 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
+# (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
+C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31"}}
 
 
 def pfad(name, *teile):
@@ -105,19 +113,35 @@ def cmd_karte(name, a):
     return an
 
 
+def quelle_lesen(p):
+    """FILE -> text; DIRECTORY -> {file.c: text} in alphabetical order; the *.h of the directory go to `koepfe` (second value)."""
+    p = os.path.join(U.REPO, p) if not os.path.isabs(p) else p
+    if not os.path.isdir(p):
+        return open(p, encoding="latin-1").read(), {}
+    dat, koepfe = {}, {}
+    for f in sorted(os.listdir(p)):
+        if f.endswith(".c"):
+            dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
+        elif f.endswith(".h"):
+            koepfe[f] = open(os.path.join(p, f), "rb").read()
+    return dat, koepfe
+
+
 def quellen_lesen(name, a):
     """--quelle V=FILE (repeatable); default: the program's own source as variant `neu`."""
     _pl, _pf, q, h = info(name)
     v = {}
+    koepfe = {}
     for s in (a.quelle or []):
         if "=" in s:
             n, p = s.split("=", 1)
         else:
             n, p = os.path.splitext(os.path.basename(s))[0], s
-        v[n] = open(os.path.join(U.REPO, p) if not os.path.isabs(p) else p, encoding="latin-1").read()
+        v[n], k = quelle_lesen(p)
+        koepfe.update(k)
     if not v:
-        v["neu"] = open(os.path.join(U.REPO, q), encoding="latin-1").read()
-    koepfe = {}
+        v[a.variante], k = quelle_lesen(q)
+        koepfe.update(k)
     if a.libc == "alt":         # rebuilt libc of the original programs (userspace/libc_alt), searched before -lc:
         # the program's own archive (all members of its libc part in the original order; `libc_alt.py bau NAME`)
         for i, n in enumerate([name]):
@@ -141,8 +165,15 @@ def cmd_bau(name, a):
     if a.c2emu:     # second round: assemble the rewritten .s (original-c2 model) and link it
         zwei = {}
         for n, r in erg.items():
-            if r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"])
+            if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
+                zwei[n + "_c2"], tot = {}, {}
+                for fn, t in sorted(r["s"].items()):
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, C2_AUS.get(name, ()))
+                    for k2, v2 in cnt.items():
+                        tot[k2] = tot.get(k2, 0) + v2
+                print("%s: c2 model rewrote %s" % (n, tot))
+            elif r["s"]:
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], C2_AUS.get(name, ()))
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
@@ -152,7 +183,12 @@ def cmd_bau(name, a):
                 f.write(r["bin"])
         with open(os.path.join(ar, "bau", n + ".err"), "w") as f:
             f.write(r["err"])
-        if r["s"]:
+        if isinstance(r["s"], dict):
+            os.makedirs(os.path.join(ar, "bau", n + "_s"), exist_ok=True)
+            for fn, t in r["s"].items():
+                with open(os.path.join(ar, "bau", n + "_s", fn), "w") as f:
+                    f.write(t)
+        elif r["s"]:
             with open(os.path.join(ar, "bau", n + ".s"), "w") as f:
                 f.write(r["s"])
         if r["err"].strip():
@@ -173,7 +209,8 @@ def cmd_vergleich(name, a):
     for v in ist:
         b = open(os.path.join(bd, v + ".bin"), "rb").read()
         ki, ri = U.roh_von(b)
-        ai = U.analysieren(os.path.join(bd, v + "_a"), v, ri, ki, libc, None, log=lambda *x: None)
+        ai = U.analysieren(os.path.join(bd, v + "_a"), v, ri, ki, libc, None, log=lambda *x: None,
+                           extra=extra_karte(name) if a.karte_extra_beide else ())
         zeilen, z = U.vergleichen(raw, ko, ri, ki, soll.lst, ai.lst, soll.funk, namen,
                                   U.eigen_ende(soll.namen), U.eigen_ende(ai.namen), c2=not a.ohne_c2,
                                   zeiger_soll=soll.zeiger, zeiger_ist=ai.zeiger)
@@ -238,6 +275,8 @@ def main(argv=None):
                     help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--ist", help="variant to compare")
+    ap.add_argument("--karte-extra-beide", action="store_true", help="apply karte_extra.txt (ohne/code lines) to the built image too (same layout only)")
+    ap.add_argument("--variante", default="neu", help="name of the default build variant (work/bau/NAME.*); use a speaking name per source state")
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
     ap.add_argument("--voll", action="store_true", help="print the full report")
     a = ap.parse_args(argv)

@@ -1,0 +1,18 @@
+# wrong entries of --vorschlaege (target inside an instruction / in data); measured by the "Marke mitten im Befehl" notes of sh.lst
+ohne 0200
+ohne 0202
+ohne 0240
+ohne 0CC4
+ohne 2062
+ohne 206E
+ohne 2072
+ohne 20DA
+ohne 21AA
+ohne 2420
+ohne 1000
+ohne 393A
+# code reached only by pointer / after unconditional jumps (not found by --vorschlaege)
+code 245C
+code 3820
+code 39FE
+code 3CC8

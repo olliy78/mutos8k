@@ -56,3 +56,10 @@ Gemessen wird dreifach: Kopf (text/data/bss), Bytes gleich an gleichem Offset, u
 derselben Karte-Prozedur disassembliert, Adressen **abstrahiert** (Sprung-/Aufrufziele `L`, Datenadressen `D+off`, BSS `B+off`,
 bekannte Funktionsanfaenge `F`, Konstanten bleiben exakt) und mit `difflib` verglichen; Unterschiede stehen je Funktion des
 Originals.  So bleibt der Bericht lesbar, auch wenn ein Groessenunterschied alle folgenden Adressen verschiebt.
+
+## Erweiterungen durch `sh` (Mehrdatei-Programme)
+* Quelle in `PROGRAMME` darf ein **Verzeichnis** sein (alle `*.c` alphabetisch einzeln `cc -O -c`, dann `cc -s -o NAME *.o`; `*.h` des Verzeichnisses auf `/mnt`).
+* `bau --variante NAME` (Standard `neu`): sprechender Name je Quellfassung; **hoechstens 9 Zeichen** (Gastnamen 14 Zeichen, `NAME.err2`), mit `--c2emu` entsteht `NAME_c2`.
+* `--asm` bei Mehrdatei-Programmen: `.s` je Modul in Sitzungen zu <= 40 KB, ausgegeben als `work/bau/NAME_s/*.s`; `--c2emu` schreibt jedes Modul um und baut `NAME_c2`.
+* `C2_AUS` (pipeline.py): je Programm abgeschaltete c2-Regeln (`sh`: R1-R10, R30, R31).  `karte_extra.txt`: `ohne ADDR` / `code ADDR` (siehe `sh.md`).
+* `vergleich --karte-extra-beide`: `karte_extra.txt` auch fuer das gebaute Abbild.

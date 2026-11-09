@@ -107,7 +107,7 @@ def z8kdis(args):
     return o, e
 
 
-def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10):
+def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10, ohne=()):
     """Iterative map: `seg` + `code 0` + entries from --vorschlaege until nothing new comes.  Returns (kartentext, runden).
     `vorab` = extra map lines (name/kom/db ...) that are kept verbatim."""
     zeilen = ["seg 0 0 %X" % laenge, "code 0"]
@@ -120,7 +120,7 @@ def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10):
             f.write("\n".join(zeilen + list(vorab)) + "\n")
         o, _ = z8kdis(["--karte", kp, "--vorschlaege", rawpfad])
         neu = [int(m.group(1), 16) for m in re.finditer(r"^code ([0-9A-Fa-f]+)", o, re.M)]
-        neu = [a for a in neu if a not in codes]
+        neu = [a for a in neu if a not in codes and a not in ohne]     # `ohne`: suggestions known to be wrong (data / mid-instruction)
         if not neu:
             break
         for a in neu:
@@ -306,6 +306,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
 
     def lauf(name, text):
         with sperre:
+            if isinstance(text, dict):           # multi-file program: {file.c: text}, link order = list order
+                return lauf_viele(name, text)
             ist_s = name.endswith("_s")          # assembler variant: cc assembles and links it
             q = {name + (".s" if ist_s else ".c"): text}
             q.update(kopfdateien)
@@ -324,6 +326,50 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
                          "dauer": aus.get("dauer", 0.0)}
             log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary",
                                              aus.get("dauer", 0)))
+    def lauf_viele(name, dateien):
+        """Several .c files (V7 style: each `cc -O -c`, then `cc -s -o NAME *.o` in the given order -- the V7 makefile links
+        `*.o`, i.e. alphabetical; the caller passes the files in link order).  Each .c also goes through `cc -S`
+        (only with asm) so that per-module .s files come back.  One command per step; every one ends in /mnt."""
+        if len(name) + 5 > 14:      # guest file names are cut at 14 characters: NAME.err2 would collide / get lost
+            raise ValueError("variant name %r too long: at most 9 characters (NAME.err2 must fit 14)" % name)
+        q = dict(dateien)
+        q.update(kopfdateien)
+        cs = [f for f in dateien if f.endswith((".c", ".s"))]     # .s = rewritten assembler (c2 model): cc assembles it
+        cfl = flags.replace("-s", "").strip()
+        befehle = []
+        rueck = [name, name + ".err"]
+        for f in cs:
+            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl if f.endswith(".c") else "", f, name))
+        lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
+        # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
+        befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
+        aus = {}
+        r = gast_as.gast_befehle(os.path.join(arbeit, name), q, befehle, rueck, frist=frist, ausgabe=aus)
+        sdict = None
+        if asm:
+            # `cc -S` of all modules does not fit on the /tmp disk next to cc's temporaries: separate short sessions,
+            # each with sources of at most 40 KB (the .s is ca. 1.3x the source)
+            sdict, gruppen, akt, gr = {}, [], [], 0
+            for f in sorted((x for x in cs if x.endswith(".c")), key=lambda x: -len(dateien[x])):
+                if akt and gr + len(dateien[f]) > 40_000:
+                    gruppen.append(akt)
+                    akt, gr = [], 0
+                akt.append(f)
+                gr += len(dateien[f])
+            if akt:
+                gruppen.append(akt)
+            for gi, grp in enumerate(gruppen):
+                qs = {f: dateien[f] for f in dateien}
+                qs.update(kopfdateien)
+                bs = ["cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name) for f in grp]
+                rs = [f[:-2] + ".s" for f in grp] + [name + ".err2"]
+                rr = gast_as.gast_befehle(os.path.join(arbeit, "%s_s%d" % (name, gi)), qs, bs, rs, frist=frist, ausgabe={})
+                for f in grp:
+                    sdict[f[:-2] + ".s"] = (rr.get(f[:-2] + ".s") or b"").decode("latin-1")
+        erg[name] = {"bin": r.get(name), "err": (r.get(name + ".err") or b"").decode("latin-1"),
+                     "s": sdict, "dauer": aus.get("dauer", 0.0)}
+        log("%s: %s, %d s wall clock" % (name, "binary %d B" % len(r[name]) if r.get(name) else "NO binary", aus.get("dauer", 0)))
+
     ts = [threading.Thread(target=lauf, args=(n, t)) for n, t in varianten.items()]
     for t in ts:
         t.start()
@@ -332,7 +378,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
     return erg
 
 
-def c2_emu_s(s):
+def c2_emu_s(s, aus=()):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -354,15 +400,16 @@ def c2_emu_s(s):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0}
     i = 0
+    bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
         a = z[i]
         b = z[i + 1] if i + 1 < len(z) else ""
         m1 = re.match(r"inc\tSP,#%([0-9A-F]+)$", a)
         m2 = re.match(r"ld\t@SP,(.*)$", b)
-        if m1 and m2:
+        if m1 and m2 and "R1" not in aus:
             out.append("inc\tSP,#%%%X" % (int(m1.group(1), 16) + 2))
             out.append("push\t@SP," + m2.group(1))
             n["R1"] += 1
@@ -371,7 +418,7 @@ def c2_emu_s(s):
         x = re.match(r"xorb\t(rh\d),(rh\d)$", a)
         if x and x.group(1) == x.group(2):
             y = re.match(r"ldb\t([^,]+),r([hl]\d)$", b)
-            if y and not re.match(r"r[hl]\d$", y.group(1)) and y.group(2) == "l" + x.group(1)[2:]:
+            if y and not re.match(r"r[hl]\d$", y.group(1)) and y.group(2) == "l" + x.group(1)[2:] and "R2" not in aus:
                 # R30  exception to R2: the stored byte is tested right away (value of `(*p++ = *q++) == 0`) -> XORB stays
                 if re.match(r"testb\trl%s$" % x.group(1)[2:], z[i + 2] if i + 2 < len(z) else ""):
                     n["R30"] += 1
@@ -384,14 +431,14 @@ def c2_emu_s(s):
             c = z[i + 1] if i + 1 < len(z) else ""
             j = z[i + 2] if i + 2 < len(z) else ""
             k = z[i + 3] if i + 3 < len(z) else ""
-            if (re.match(r"cp\t", c) and re.match(r"jr\t\w+\tL\d+$", j) and re.match(r"jr\tL\d+$", k)
+            if ("R3" not in aus and re.match(r"cp\t", c) and re.match(r"jr\t\w+\tL\d+$", j) and re.match(r"jr\tL\d+$", k)
                     and (i + 4 >= len(z) or not z[i + 4].startswith("xorb"))):
                 out += [a, c, j, a, k]
                 n["R3"] += 1
                 i += 4
                 continue
             # R10  `xorb rhN ; cp rN,.. ; jr cc L ; add rN,..` -> the original zeroes rhN again before the add
-            if (re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
+            if ("R10" not in aus and re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
                     and re.match(r"add\tr%s," % x.group(1)[2:], k)):
                 out += [a, c, j, a]
                 n["R10"] += 1
@@ -399,14 +446,14 @@ def c2_emu_s(s):
                 continue
         # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
         l7 = re.match(r"ldb\trl(\d),[^r]", a)
-        if l7 and re.match(r"cp\tr%s," % l7.group(1), b):
+        if l7 and "R7" not in aus and re.match(r"cp\tr%s," % l7.group(1), b):
             out += [a, "xorb\trh%s,rh%s" % (l7.group(1), l7.group(1))]
             n["R7"] += 1
             i += 1
             continue
         # R6  `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `ld rB,M` (the original does not forward the loaded value)
         l6 = re.match(r"ld\t(r\d+),([^r@][^,]*)$", a)
-        if l6 and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
+        if l6 and "R6" not in aus and i + 3 < len(z) and z[i + 1] == "testb\t@" + l6.group(1) and z[i + 2].startswith("jr\t") \
                 and re.match(r"ld\t(r\d+),%s$" % l6.group(1), z[i + 3]):
             out += z[i:i + 3]
             out.append("ld\t%s,%s" % (re.match(r"ld\t(r\d+),", z[i + 3]).group(1), l6.group(2)))
@@ -416,7 +463,7 @@ def c2_emu_s(s):
         # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
         #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
         c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
-        if c4 and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
+        if c4 and "R4" not in aus and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
             if r0mem == c4.group(1):
                 out.append("cp\tr0," + c4.group(2))
             else:
@@ -427,22 +474,84 @@ def c2_emu_s(s):
             continue
         if not re.match(r"jr\t", a):
             r0mem = None
+        # label / call / jump target = new basic block for R12's byte memory
+        if re.match(r"L\d+:$", a) or a.startswith("call"):
+            bytemem = {}
+        l12 = re.match(r"ldb\t([^r@][^,]*|-?%[0-9A-F]+\(FP\)),(rl\d)$", a)
+        if l12 and i > 0 and z[i - 1] == "xorb\trh%s,rh%s" % (l12.group(2)[2:], l12.group(2)[2:]):
+            # only a byte that was LOADED from memory (xorb right before the store), not a call result (macro skipto: no reload)
+            bytemem[l12.group(2)] = l12.group(1)
+        # R12  `ldb rl0,rlN ; cpb rlN,X` where rlN was stored to MEM earlier (`ldb MEM,rlN`) -> the original reloads: `ldb rl0,MEM ; cpb rl0,X`
+        c12 = re.match(r"ldb\trl0,(rl\d)$", a)
+        if c12 and c12.group(1) in bytemem and re.match(r"cpb\t%s," % c12.group(1), b):
+            out.append("ldb\trl0," + bytemem[c12.group(1)])
+            out.append(b.replace("cpb\t" + c12.group(1) + ",", "cpb\trl0,", 1))
+            n["R12"] += 1
+            i += 2
+            continue
+        # R14  `ldb rlN,@rM ; xorb rhN,rhN ; ldb MEM,rlN ; and rN,#k` -> the original reloads the stored byte right behind the store:
+        #      `... ldb MEM,rlN ; ldb rlN,MEM ; and rN,#k` (sh stoi `WHILE (c = *cp, digit(c))`; 1 site -- the same shape with an
+        #      offset operand `ldb rlN,off(rM)` in word.c is NOT reloaded)
+        m14 = re.match(r"ldb\t(-?%[0-9A-F]+\(FP\)),rl(\d)$", a)
+        if (m14 and re.match(r"and\tr%s,#" % m14.group(2), b) and out and out[-1] == "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))
+                and len(out) > 1 and out[-2] == "ldb\trl%s,@%s" % (m14.group(2), out[-2].split("@")[-1]) and "@" in out[-2]):
+            out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1))]
+            n["R14"] += 1
+            i += 1
+            continue
+        # R16  `jp ne,L ; ldb ; xorb ; add ; bitb ; jp eq,L` (same target L, backward distance exactly 256 B): the original c2/as range
+        #      check lets the first jump be a short `jr` (disp -128 words; the guest `as` rejects exactly that, hence `wval`), the usr c2 keeps `jp` (sh word(), 1 site)
+        m16 = re.match(r"jp\tne\t(L\d+)$", a)
+        if ("R16" not in aus and m16 and i + 5 < len(z) and z[i + 5] == "jp\teq\t" + m16.group(1) and z[i + 4].startswith("bitb\t")
+                and i > 0 and z[i - 1].startswith("and\tr2,#%80")):
+            out.append("wval\t-%1180")        # `jr ne,L` (disp -128): the guest `as` rejects it (ILLEGAL VALUE), so the word is emitted as data
+            n["R16"] += 1
+            i += 1
+            continue
+        # R13  `ld MEM,rN ; cp MEM,#k` -> `ld MEM,rN ; cp rN,#k` (the original compares the register just stored)
+        m13 = re.match(r"ld\t([^,]+),(r\d+)$", a)
+        c13 = re.match(r"cp\t([^,]+),(#.*)$", b)
+        if m13 and c13 and c13.group(1) == m13.group(1) and not re.match(r"(r\d+|@.*)$", m13.group(1)):
+            out += [a, "cp\t%s,%s" % (m13.group(2), c13.group(2))]
+            n["R13"] += 1
+            i += 2
+            continue
+        # R11 compare against the copy: `ld rA,rB ; ...(test rB | ld MEM,rB | jr cc L)... ; cp rA,#k` -> `cp rB,#k` (every cp rA,#k of
+        #     the chain; the original c2 does not forward the copy into the compare, the usr c2 does) -- sh gmatch, getch, ...
+        t11 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        if t11 and t11.group(1) != t11.group(2) and int(t11.group(1)[1:]) < 6 and "R11" not in aus:   # scratch copy, not a register variable
+            ra, rb = t11.groups()
+            j = i + 1
+            chain = []
+            while j < len(z):
+                zz = z[j]
+                if re.match(r"cp\t%s,#" % ra, zz):
+                    chain.append(j)
+                elif not (zz == "test\t" + rb or zz.startswith("jr\t") or re.match(r"ld\t[^,]+,%s$" % rb, zz)):
+                    break
+                j += 1
+            if chain:
+                for k in range(i, j):
+                    out.append(z[k].replace("cp\t" + ra + ",", "cp\t" + rb + ",", 1) if k in chain else z[k])
+                n["R11"] += 1
+                i = j
+                continue
         # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
         t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
         t6 = re.match(r"test\t(r\d+)$", b)
-        if t5 and t6 and t6.group(1) == t5.group(2):
+        if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus:
             out += [a, "test\t" + t5.group(1)]
             n["R5"] += 1
             i += 2
             continue
         t7 = re.match(r"ld\t([^,]+),(r\d+)$", b)      # `ld rA,rB ; ld DST,rB` -> `ld DST,rA`
-        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1):
+        if t5 and t7 and t7.group(2) == t5.group(2) and t7.group(1) != t5.group(1) and "R5" not in aus:
             out += [a, "ld\t%s,%s" % (t7.group(1), t5.group(1))]
             n["R5"] += 1
             i += 2
             continue
         m5 = re.match(r"ldb\t(rl\d),([^,]+)$", a)
-        if m5 and not re.match(r"r[hl]\d+$", m5.group(2)):
+        if m5 and "R8" not in aus and not re.match(r"r[hl]\d+$", m5.group(2)):
             c = z[i + 1] if i + 1 < len(z) else ""
             d = re.match(r"ldb\t(rl\d),(rl\d)$", z[i + 2]) if i + 2 < len(z) else None
             if c == "xorb\trh%s,rh%s" % (m5.group(1)[2:], m5.group(1)[2:]) and d and d.group(2) == m5.group(1):
@@ -452,7 +561,7 @@ def c2_emu_s(s):
                 continue
         m7 = re.match(r"and\t(r\d+),#", a)
         m7b = re.match(r"or\t(r\d+),(r\d+)$", b)
-        if m7 and m7b and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
+        if m7 and m7b and "R9" not in aus and m7b.group(2) == m7.group(1) and int(m7b.group(2)[1:]) == int(m7b.group(1)[1:]) + 2:
             t = "r%d" % (int(m7b.group(1)[1:]) + 1)
             out += [a, "ld\t%s,%s" % (t, m7b.group(2)), "or\t%s,%s" % (m7b.group(1), t)]
             n["R9"] += 1
@@ -633,8 +742,10 @@ def analysieren(arbeit, name, raw, kopf, libc=None, handnamen=None, log=print, e
     vorab = kartenzeilen_namen(namen, libc)
     if handnamen:
         vorab += ["name %04X %s" % (a, n) for a, n in sorted(handnamen.items())]
-    vorab += list(extra)        # verbatim map lines (db/dw/dwc/txt for jump tables and strings, kom ...)
-    karte, runden, zeiger = karte_bauen(rp, len(raw), vorab=vorab)
+    # extra map lines: verbatim (db/dw/dwc/txt for jump tables and strings, kom ...); `ohne ADDR` = drop that --vorschlaege entry
+    ohne = {int(z.split()[1], 16) for z in extra if z.startswith("ohne ")}
+    vorab += [z for z in extra if not z.startswith("ohne ")]
+    karte, runden, zeiger = karte_bauen(rp, len(raw), vorab=vorab, ohne=ohne)
     texte = texte_finden(raw, text)
     kp = os.path.join(arbeit, name + ".k")
     with open(kp, "w") as f:

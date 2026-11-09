@@ -52,7 +52,7 @@ def test_c2_model_rewrites_and_canonicalises():
                    "ldb\trl3,@r2", "xorb\trh3,rh3", "ldb\t_tty(r13),rl3",
                    "xorb\trh2,rh2", "cp\tr2,#%A", "jr\teq\tL9020", "jr\tL82"])
     t, n = U.c2_emu_s(s)
-    assert n == {"R1": 1, "R2": 1, "R3": 1, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0}
+    assert n == {"R1": 1, "R2": 1, "R3": 1, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0}
     assert "inc\tSP,#%6\npush\t@SP,#%3C" in t and t.count("xorb") == 2
     # the canonical form of the listing lines equalises both compilers' output
     orig = ["INC R15,#6", "PUSH @R15,#%003C", "LDB RL3,@R2", "LDB %1832(R13),RL3"]
@@ -98,3 +98,14 @@ def test_init_guest_build_matches_original(tmp_path):
     # the whole file is not (older libc in the original) -> exit 1 is the expected result, 0 would be byte identity
     assert r.returncode in (0, 1), r.stdout + r.stderr
     assert "own code: instruction streams identical" in r.stdout, r.stdout
+
+
+def test_c2_model_sh_rules_r11_r16():
+    """R11-R16 (sh): each rule on a minimal snippet; rules switched off via the second argument."""
+    s = "\n".join(["ld\tr2,r3", "test\tr3", "jr\teq\tL1", "cp\tr2,#%2A", "jr\teq\tL2",
+                   "and\tr2,#%80", "jp\tne\tL7", "ldb\trl2,-%D(FP)", "xorb\trh2,rh2", "add\tr2,#_t", "bitb\t@r2,#%6", "jp\teq\tL7"])
+    t, n = U.c2_emu_s(s, {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30"})
+    assert n["R11"] == 1 and n["R16"] == 1
+    assert "cp\tr3,#%2A" in t and "wval\t-%1180" in t and "jp\tne" not in t
+    t2, n2 = U.c2_emu_s(s, {"R11", "R16"})
+    assert n2["R11"] == 0 and n2["R16"] == 0 and "cp\tr2,#%2A" in t2
