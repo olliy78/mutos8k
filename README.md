@@ -7,7 +7,7 @@ Konsole und Drucker bedient.
 Dieses Projekt sammelt alles, um das System zu verstehen und aus Quellen wieder zu bauen:
 
 * **Kernel** `mutos_1216`: vollständig disassembliert, in Module zerlegt und mit den Original-Werkzeugen
-  bytegleich neu gebunden; 218 von 230 Funktionen (95 %) bytegleich aus C zurückgewonnen, der Rest funktional gleich.
+  bytegleich neu gebunden; 218 von 230 Funktionen (95 %) bytegleich aus C zurückgewonnen, mit dem c2-Modell (`gesamtbau.py --c2modell`, Regeln K1-K6) alle 230.
   **MUTOS baut seinen Kernel selbst** (`make`, `cc`, `as`, `ld` im Gast) und bootet ihn.
 * **`mutos_io`** (U880-Seite): rekonstruierte, kommentierte Quelle, die bytegleich zur Originaldatei baut.
 * **Werkzeugkette** (`cc`/`as`/`ld`, a.out- und Archivformat, ein eigenes `make`).
@@ -18,7 +18,7 @@ Dieses Projekt sammelt alles, um das System zu verstehen und aus Quellen wieder 
 
 Der Kernel ist ein Derivat von **UNIX V7** (nicht von System III).  Naechster bekannter Verwandter ist die TUHS-Sammlung `Torsten_Hippe_v7` (eine stark veraenderte V7-Variante; der Sammler ist nicht Urheber);
 ob MUTOS direkt davon abstammt oder von einer gemeinsamen unbekannten Vorlage, ist nicht entscheidbar.  Eigenanteil sind die Anpassung an die A5120.16 (Speicher ohne MMU, Z8001-Kontext, Mailbox-Treiber, U880-Seite).
-Mit dem Quelltext der Vorlagen sind inzwischen 218 von 230 Kernelfunktionen bytegleich aus C erzeugbar.  Gesamtbericht: [`doc/herkunft/README.md`](doc/herkunft/README.md).  Lizenzlage der Fremdquellen: [`LICENSE`](LICENSE).
+Mit dem Quelltext der Vorlagen sind inzwischen 218 von 230 Kernelfunktionen bytegleich aus C erzeugbar, mit dem Modell des älteren Kernel-`c2` alle 230 (Plan 43 §15).  Gesamtbericht: [`doc/herkunft/README.md`](doc/herkunft/README.md).  Lizenzlage der Fremdquellen: [`LICENSE`](LICENSE).
 
 ## Voraussetzung: der Emulator daneben
 

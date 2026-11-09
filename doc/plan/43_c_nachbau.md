@@ -163,3 +163,29 @@ Fuer die verbleibenden Funktionen: die `c2`-Eigenheiten aus §10 (1-5) sind weit
 * `ttyinput` bleibt: der Original-`c2` streicht vor `t_xstate ^= XPAGE` ein noetiges Laden (Fehler im Original, `doc/herkunft/tty2.md`).
 * Gesamtbau Stufe 1 `--boot`: **218 von 230**, BYTEGLEICH, 11 Arbeitstests ok.  Die 12 verbleibenden Funktionen haben alle eine gemessene `c2`-Ursache; mit Quellformen ist hier nach heutigem Stand nichts mehr zu holen.
 * Offen ist nur noch die Entscheidung aus §5 (empfohlen: Status `NAHE` belassen).
+
+## 15. c2-Modell fuer den Kernel: 230 von 230 (2026-11-09, gemessen)
+
+Methode aus dem Userspace (`doc/userspace/README.md`, `uspace.c2_emu_s`): der Gast-`cc -O -S` (c0/c1/c2 unveraendert) liefert die `.s`,
+`tools/kernel/c2_modell.py` schreibt sie mit Musterregeln um, der Original-`as -u` im Gast assembliert.  Jede Regel ist an die Funktionen
+gebunden, an denen sie gemessen wurde, und zaehlt ihre Stellen; die 218 Funktionen, die ohne Modell bytegleich sind, werden nicht beruehrt.
+
+| Regel | Unterschied des aelteren Kernel-`c2` | Funktionen (Stellen) |
+|---|---|---|
+| K1 | vergleicht das Original-, nicht das Kopieregister (`ld r2,r3 ; cp r3,#k`) | mfree, malloc, exece, ttyretype, ttread, ttioccomm (je 1) |
+| K2 | behaelt `test`/`testl` nach `sub`/`subl` und Speichern | malloc, readi (je 1) |
+| K3 | testet bzw. pusht den Stapelplatz statt des gerade gespeicherten Registers | alloc 1, ialloc 1, bmap 3 |
+| K4 | legt das gemeinsame Endstueck hinter den letzten Aufruf | lpintr 1 |
+| K5 | kurze Spruenge an der Weitengrenze (`jr ne` bei -254 Byte als `wval %EE81`, weil der Gast-`as` ablehnt; dazu ein `jr`) | ttioccomm 2 |
+| K6 | streicht ein noetiges Laden vor `xor` (Fehler des Originals, `doc/herkunft/tty2.md`) | ttyinput 1 |
+
+Ausserdem eine Quellform ohne Modell: `ialloc` `for(adr = (daddr_t)SUPERB+1; ...)` (gibt `ldl rr2,#2` wie der Kernel; `SUPERB+1` gibt `ldk ; exts`).
+
+**Ergebnis:** `gesamtbau.py --uebersetzen --c2modell --stufe 1 --boot`: **230 von 230 C-Funktionen**, `Gesamt: BYTEGLEICH`, 36 352 Byte, 11 Arbeitstests ok.
+Ohne `--c2modell` bleibt es bei 218 von 230 (`rundlauf_soll.txt` beschreibt diesen Bau).
+
+**Aussagekraft** (wie Userspace): belegt ist *C-Quelle + ausgelieferter Compiler + Regeln K1-K6 = Originalbytes*; nicht belegt ist, dass der
+alte `c2` genau diese Regeln hatte.  Die Regeln greifen an 1 bis 6 Stellen (zusammen 19) und sind kernelspezifisch; K5 ist ein
+Assembler-Behelf wie Userspace R16.  K6 baut den Fehler des Originals bewusst nach: ein Kernel aus diesem Weg hat ihn auch.
+Damit ist die Entscheidung aus §5 praktisch als Mischung aus (a) und (c) gefallen: Status `NAHE` fuer den reinen Bau bleibt,
+das Modell ist ein dritter, dokumentierter Bauweg.  Test: `tests/test_kernel_c2_modell.py` (Regeln auf dem Host).

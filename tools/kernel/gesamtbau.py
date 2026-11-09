@@ -788,6 +788,8 @@ def main(argv=None):
     ap.add_argument("--nur-plan", action="store_true")
     ap.add_argument("--frist", type=int, default=20_000_000_000)
     ap.add_argument("--natuerlich", action="store_true", help="make im Gast: alle 29 C-Dateien mit cc, dazu low/bss/shim/abs")
+    ap.add_argument("--c2modell", action="store_true",
+                    help="nach dem Uebersetzen die Module mit Regeln von c2_modell.py neu bauen (Modell des aelteren Kernel-c2, Plan 43 section 15)")
     ap.add_argument("--status", action="store_true",
                     help="Status je Funktion (GLEICH/ABW/LAENGE/RELOC, falsche Relokationen) und Abgleich mit rundlauf_soll.txt; baut nichts")
     ap.add_argument("--boot", action="store_true", help="den gebundenen Kernel auf eine Ladediskette und booten + Arbeitstests")
@@ -800,6 +802,10 @@ def main(argv=None):
     if a.uebersetzen:
         uebersetzen(arbeit)
     objdir = a.objekte or os.path.join(arbeit, "obj")
+    if a.c2modell:
+        import c2_modell
+        print("c2-Modell (Regeln K1-K6, tools/kernel/c2_modell.py):")
+        c2_modell.objekte_ersetzen(arbeit, objdir)
     kernel = rundlauf_gast.kernel_holen()
     welt = Welt(kernel, objdir)
     if a.status:

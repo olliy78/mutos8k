@@ -213,7 +213,7 @@ loop:
 	}
 	fp->s_ilock++;
 	ino = 1;
-	for(adr = SUPERB+1; adr < fp->s_isize; adr++) {
+	for(adr = (daddr_t)SUPERB+1; adr < fp->s_isize; adr++) {
 		bp = bread(dev, adr);
 		if (bp->b_flags & B_ERROR) {
 			brelse(bp);

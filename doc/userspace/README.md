@@ -55,8 +55,8 @@ die ausgelieferte `libc.a` unveraendert.
 nicht V7 `getty` (Struktur wie Hippe-Sammlung `getty.c.old`) und `stty` (gleiches Programm wie das Binary der Hippe-Sammlung,
 Quelle rekonstruiert).  Die Hippe-Sammlung (TUHS) ist Vergleichsreferenz, keine Urheberangabe.
 
-Der Kernel (Plan 43) nutzt dieses Regelmodell nicht: `gesamtbau.py --stufe 1` nimmt nur Funktionen aus C, die ohne
-Umschreibung bytegleich sind (2026-11-09: 218 von 230, Kernel 36352 von 36352 Byte gleich, Boot und Arbeitstests ok).
+Der Kernel (Plan 43 §15) nutzt dieselbe Methode mit eigenen Regeln K1-K6 (`tools/kernel/c2_modell.py`, `gesamtbau.py --c2modell`):
+230 von 230 Funktionen bytegleich aus C; ohne Modell 218 von 230 (2026-11-09, Kernel 36352 von 36352 Byte gleich, Boot und Arbeitstests ok).
 
 Quellen: `userspace/NAME/NAME.c`; Karte/Listing/Namen daneben (`k.txt`, `NAME.lst`, `NAME.namen`, `NAME.strings`, `namen.txt`, optional
 `karte_extra.txt`); Arbeitsdateien in `userspace/NAME/work/` (git-ignoriert).  Test: `tests/test_userspace_pipeline.py`
