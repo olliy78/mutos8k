@@ -209,7 +209,8 @@ def cmd_vergleich(name, a):
     for v in ist:
         b = open(os.path.join(bd, v + ".bin"), "rb").read()
         ki, ri = U.roh_von(b)
-        ai = U.analysieren(os.path.join(bd, v + "_a"), v, ri, ki, libc, None, log=lambda *x: None)
+        ai = U.analysieren(os.path.join(bd, v + "_a"), v, ri, ki, libc, None, log=lambda *x: None,
+                           extra=extra_karte(name) if a.karte_extra_beide else ())
         zeilen, z = U.vergleichen(raw, ko, ri, ki, soll.lst, ai.lst, soll.funk, namen,
                                   U.eigen_ende(soll.namen), U.eigen_ende(ai.namen), c2=not a.ohne_c2,
                                   zeiger_soll=soll.zeiger, zeiger_ist=ai.zeiger)
@@ -274,6 +275,7 @@ def main(argv=None):
                     help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--ist", help="variant to compare")
+    ap.add_argument("--karte-extra-beide", action="store_true", help="apply karte_extra.txt (ohne/code lines) to the built image too (same layout only)")
     ap.add_argument("--variante", default="neu", help="name of the default build variant (work/bau/NAME.*); use a speaking name per source state")
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
     ap.add_argument("--voll", action="store_true", help="print the full report")

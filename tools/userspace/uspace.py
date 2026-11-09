@@ -107,7 +107,7 @@ def z8kdis(args):
     return o, e
 
 
-def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10):
+def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10, ohne=()):
     """Iterative map: `seg` + `code 0` + entries from --vorschlaege until nothing new comes.  Returns (kartentext, runden).
     `vorab` = extra map lines (name/kom/db ...) that are kept verbatim."""
     zeilen = ["seg 0 0 %X" % laenge, "code 0"]
@@ -120,7 +120,7 @@ def karte_bauen(rawpfad, laenge, vorab=(), max_runden=10):
             f.write("\n".join(zeilen + list(vorab)) + "\n")
         o, _ = z8kdis(["--karte", kp, "--vorschlaege", rawpfad])
         neu = [int(m.group(1), 16) for m in re.finditer(r"^code ([0-9A-Fa-f]+)", o, re.M)]
-        neu = [a for a in neu if a not in codes]
+        neu = [a for a in neu if a not in codes and a not in ohne]     # `ohne`: suggestions known to be wrong (data / mid-instruction)
         if not neu:
             break
         for a in neu:
@@ -486,11 +486,13 @@ def c2_emu_s(s, aus=()):
             n["R12"] += 1
             i += 2
             continue
-        # R14  `ldb MEM,rlN ; and rN,#k` (usr c2 keeps the byte in rlN, rhN already zero) -> the original reloads the byte:
-        #      `ldb MEM,rlN ; ldb rlN,MEM ; xorb rhN,rhN ; and rN,#k` (sh stoi `digit(c)`)
+        # R14  `ldb rlN,@rM ; xorb rhN,rhN ; ldb MEM,rlN ; and rN,#k` -> the original reloads the stored byte right behind the store:
+        #      `... ldb MEM,rlN ; ldb rlN,MEM ; and rN,#k` (sh stoi `WHILE (c = *cp, digit(c))`; 1 site -- the same shape with an
+        #      offset operand `ldb rlN,off(rM)` in word.c is NOT reloaded)
         m14 = re.match(r"ldb\t(-?%[0-9A-F]+\(FP\)),rl(\d)$", a)
-        if m14 and re.match(r"and\tr%s,#" % m14.group(2), b):
-            out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1)), "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))]
+        if (m14 and re.match(r"and\tr%s,#" % m14.group(2), b) and out and out[-1] == "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))
+                and len(out) > 1 and out[-2] == "ldb\trl%s,@%s" % (m14.group(2), out[-2].split("@")[-1]) and "@" in out[-2]):
+            out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1))]
             n["R14"] += 1
             i += 1
             continue
@@ -728,8 +730,10 @@ def analysieren(arbeit, name, raw, kopf, libc=None, handnamen=None, log=print, e
     vorab = kartenzeilen_namen(namen, libc)
     if handnamen:
         vorab += ["name %04X %s" % (a, n) for a, n in sorted(handnamen.items())]
-    vorab += list(extra)        # verbatim map lines (db/dw/dwc/txt for jump tables and strings, kom ...)
-    karte, runden, zeiger = karte_bauen(rp, len(raw), vorab=vorab)
+    # extra map lines: verbatim (db/dw/dwc/txt for jump tables and strings, kom ...); `ohne ADDR` = drop that --vorschlaege entry
+    ohne = {int(z.split()[1], 16) for z in extra if z.startswith("ohne ")}
+    vorab += [z for z in extra if not z.startswith("ohne ")]
+    karte, runden, zeiger = karte_bauen(rp, len(raw), vorab=vorab, ohne=ohne)
     texte = texte_finden(raw, text)
     kp = os.path.join(arbeit, name + ".k")
     with open(kp, "w") as f:

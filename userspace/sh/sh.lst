@@ -1,10 +1,3 @@
-; Marke mitten im Befehl: L0240 EQU %240
-; Marke mitten im Befehl: L0CC4 EQU %CC4
-; Marke mitten im Befehl: L2062 EQU %2062
-; Marke mitten im Befehl: L206E EQU %206E
-; Marke mitten im Befehl: L2072 EQU %2072
-; Marke mitten im Befehl: L20DA EQU %20DA
-; Marke mitten im Befehl: L2420 EQU %2420
 L0000:
 0000  21F6                  LD R6,@R15
 0002  A1F7                  LD R7,R15
@@ -208,12 +201,8 @@ L01E2:
 01F8  2F23                  LD @R2,R3
 L01FA:
 01FA  61E2 0006             LD R2,%0006(R14)
-01FE  6BE0                  DW %6BE0
-; nicht kanonisch kodiert: ADDB RH6,#%24
-L0200:
-0200  0006                  DW %0006
-L0202:
-0202  8D24                  DW %8D24
+01FE  6BE0 0006             DEC %0006(R14),#1
+0202  8D24                  TEST R2
 0204  EEEE                  JR NZ,L01E2
 0206  A1D2                  LD R2,R13
 0208  A9D1                  INC R13,#2
@@ -1285,7 +1274,6 @@ L0D18:
 L0D24:
 0D24  EE9D                  JR NZ,L0C60
 0D26  0CC8                  CLRB @R12
-L0D28:
 0D28  8BCD                  CP R13,R12
 0D2A  EE9E                  JR NZ,L0C68
 0D2C  210D 429A             LD R13,#%429A
@@ -1598,9 +1586,8 @@ L0FF8:
 L0FFA:
 0FFA  A132                  LD R2,R3
 0FFC  A13C                  LD R12,R3
-0FFE  600A                  DW %600A
-L1000:
-1000  47B2 8822             AND R2,%8822(R11)
+0FFE  600A 47B2             LDB RL2,%47B2
+1002  8822                  XORB RH2,RH2
 1004  85C2                  OR R2,R12
 1006  6E0A 47B2             LDB %47B2,RL2
 100A  60DA 47D6             LDB RL2,%47D6(R13)
@@ -3016,7 +3003,6 @@ L1EFE:
 1F18  21DD                  LD R13,@R13
 1F1A  670B 47A4             BIT %47A4,#11
 1F1E  E60B                  JR Z,L1F36
-L1F20:
 1F20  93FC                  PUSH @R15,R12
 1F22  5F00 2528             CALL L2528
 1F26  A9F1                  INC R15,#2
@@ -3268,11 +3254,8 @@ L2198:
 21A0  43D3 0008             SUB R3,%0008(R13)
 21A4  B12A                  EXTS RR2
 21A6  91F2                  PUSHL @R15,RR2
-21A8  0DF9                  DW %0DF9
-; nicht kanonisch kodiert: ADDB RH0,#%00
-L21AA:
-21AA  0000 5F00             DW %0000,%5F00
-21AE  3F98                  OUT @R9,R8
+21A8  0DF9 0000             PUSH @R15,#%0000
+21AC  5F00 3F98             CALL _lseek
 21B0  A9F7                  INC R15,#8
 21B2  5F00 1216             CALL L1216
 21B6  A1B2                  LD R2,R11
@@ -3532,8 +3515,10 @@ L2454:
 2454  0DD4                  TEST @R13
 2456  EEF6                  JR NZ,L2444
 2458  5E08 415C             JP cret
-245C  5F00 414E 6900 4852   DW %5F00,%414E,%6900,%4852
-2464  5E08 415C             DW %5E08,%415C
+L245C:
+245C  5F00 414E             CALL csv
+2460  6900 4852             INC %4852,#1
+2464  5E08 415C             JP cret
 L2468:
 2468  5F00 414E             CALL csv
 246C  61E2 0004             LD R2,%0004(R14)
@@ -4679,7 +4664,6 @@ L2FA6:
 2FAA  69E0 0006             INC %0006(R14),#1
 2FAE  202B                  LDB RL3,@R2
 2FB0  8833                  XORB RH3,RH3
-L2FB2:
 2FB2  6EEB FFF3             LDB %FFF3(R14),RL3
 2FB6  8CB4                  TESTB RL3
 2FB8  E609                  JR Z,L2FCC
@@ -5483,8 +5467,10 @@ L3810:
 3814  0DF9 4796             PUSH @R15,#%4796
 3818  5F00 21BC             CALL L21BC
 381C  5E08 35F6             JP L35F6
-3820  0DF9 FFFF 5F00 2AB8   DW %0DF9,%FFFF,%5F00,%2AB8
-3828  E819                  DW %E819
+L3820:
+3820  0DF9 FFFF             PUSH @R15,#%FFFF
+3824  5F00 2AB8             CALL L2AB8
+3828  E819                  JR L385C
 L382A:
 382A  93FB                  PUSH @R15,R11
 382C  53FE FFEA             PUSH @R15,%FFEA(R14)
@@ -5586,11 +5572,9 @@ L392E:
 3932  5F00 40E8             CALL _umask
 3936  E892                  JR L385C
 L3938:
-3938  0DF9                  DW %0DF9
-; nicht kanonisch kodiert: ADDB RH0,#%00
-L393A:
-393A  0000 5F00             DW %0000,%5F00
-393E  40E8 A9F1             ADDB RL0,%A9F1(R14)
+3938  0DF9 0000             PUSH @R15,#%0000
+393C  5F00 40E8             CALL _umask
+3940  A9F1                  INC R15,#2
 3942  6FE2 FFE2             LD %FFE2(R14),R2
 3946  93F2                  PUSH @R15,R2
 3948  5F00 40E8             CALL _umask
@@ -5661,9 +5645,8 @@ L39DE:
 39FA  A9F1                  INC R15,#2
 L39FC:
 39FC  A1C2                  LD R2,R12
-39FE  0702                  DW %0702
-L3A00:
-3A00  0240                  SUBB RH0,@R4
+L39FE:
+39FE  0702 0240             AND R2,#%0240
 3A02  EE1D                  JR NZ,L3A3E
 3A04  53F0 4884             PUSH @R15,%4884
 3A08  5F00 2AB8             CALL L2AB8
@@ -5676,13 +5659,11 @@ L3A16:
 3A1A  EECC                  JR NZ,L39B4
 L3A1C:
 3A1C  5F00 3F44             CALL _fork
-L3A20:
 3A20  6F02 4884             LD %4884,R2
 3A24  0B02 FFFF             CP R2,#%FFFF
 3A28  EECB                  JR NZ,L39C0
 3A2A  5F00 0AFE             CALL L0AFE
 3A2E  0DF9 000A             PUSH @R15,#%000A
-L3A32:
 3A32  5F00 3EC8             CALL _alarm
 3A36  A9F1                  INC R15,#2
 3A38  5F00 3FC4             CALL L3FC4
@@ -5778,7 +5759,6 @@ L3B1C:
 3B34  A9F1                  INC R15,#2
 L3B36:
 3B36  5F00 0BA0             CALL L0BA0
-L3B3A:
 3B3A  53F0 429C             PUSH @R15,L429C
 3B3E  0DF9 0002             PUSH @R15,#%0002
 3B42  5F00 3F1A             CALL _dup
@@ -5790,7 +5770,6 @@ L3B3A:
 3B56  5F00 34A4             CALL L34A4
 3B5A  A9F3                  INC R15,#4
 3B5C  5F00 0BA0             CALL L0BA0
-L3B60:
 3B60  A1E2                  LD R2,R14
 3B62  0102 FFEA             ADD R2,#%FFEA
 3B66  93F2                  PUSH @R15,R2
@@ -5913,8 +5892,10 @@ L3CAA:
 3CBE  A9F1                  INC R15,#2
 3CC0  6F02 4772             LD %4772,R2
 3CC4  5E08 3DC8             JP L3DC8
-3CC8  4DE8 FFEC 6900 47F2   DW %4DE8,%FFEC,%6900,%47F2
-3CD0  E81E                  DW %E81E
+L3CC8:
+3CC8  4DE8 FFEC             CLR %FFEC(R14)
+3CCC  6900 47F2             INC %47F2,#1
+3CD0  E81E                  JR L3D0E
 L3CD2:
 3CD2  0DF9 0000             PUSH @R15,#%0000
 3CD6  53FD 0002             PUSH @R15,%0002(R13)
@@ -5937,11 +5918,11 @@ L3CF8:
 3CF8  8B32                  CP R2,R3
 3CFA  EE0C                  JR NZ,L3D14
 3CFC  0DF9 0000             PUSH @R15,#%0000
-L3D00:
 3D00  53FD 0004             PUSH @R15,%0004(R13)
 3D04  5F00 34A4             CALL L34A4
 3D08  A9F3                  INC R15,#4
 3D0A  6FE2 FFEC             LD %FFEC(R14),R2
+L3D0E:
 3D0E  4C04 47F0             TESTB %47F0
 3D12  E6DF                  JR Z,L3CD2
 L3D14:
