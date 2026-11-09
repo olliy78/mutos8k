@@ -476,7 +476,8 @@ def c2_emu_s(s, aus=()):
         if re.match(r"L\d+:$", a) or a.startswith("call"):
             bytemem = {}
         l12 = re.match(r"ldb\t([^r@][^,]*|-?%[0-9A-F]+\(FP\)),(rl\d)$", a)
-        if l12:
+        if l12 and i > 0 and z[i - 1] == "xorb\trh%s,rh%s" % (l12.group(2)[2:], l12.group(2)[2:]):
+            # only a byte that was LOADED from memory (xorb right before the store), not a call result (macro skipto: no reload)
             bytemem[l12.group(2)] = l12.group(1)
         # R12  `ldb rl0,rlN ; cpb rlN,X` where rlN was stored to MEM earlier (`ldb MEM,rlN`) -> the original reloads: `ldb rl0,MEM ; cpb rl0,X`
         c12 = re.match(r"ldb\trl0,(rl\d)$", a)
@@ -507,7 +508,7 @@ def c2_emu_s(s, aus=()):
         # R11 compare against the copy: `ld rA,rB ; ...(test rB | ld MEM,rB | jr cc L)... ; cp rA,#k` -> `cp rB,#k` (every cp rA,#k of
         #     the chain; the original c2 does not forward the copy into the compare, the usr c2 does) -- sh gmatch, getch, ...
         t11 = re.match(r"ld\t(r\d+),(r\d+)$", a)
-        if t11 and t11.group(1) != t11.group(2) and "R11" not in aus:
+        if t11 and t11.group(1) != t11.group(2) and int(t11.group(1)[1:]) < 6 and "R11" not in aus:   # scratch copy, not a register variable
             ra, rb = t11.groups()
             j = i + 1
             chain = []
