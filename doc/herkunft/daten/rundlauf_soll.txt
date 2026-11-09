@@ -7,12 +7,12 @@ alloc badblock GLEICH
 alloc ialloc NAHE
 alloc ifree GLEICH
 alloc getfs GLEICH
-alloc update NAHE
+alloc update GLEICH
 iget iget GLEICH
 iget iexpand GLEICH
 iget iput GLEICH
 iget iupdat GLEICH
-iget itrunc NAHE
+iget itrunc GLEICH
 iget tloop GLEICH
 iget maknode GLEICH
 iget wdir GLEICH
@@ -149,7 +149,7 @@ sys1 exit GLEICH
 sys1 wait GLEICH
 sys1 fork GLEICH
 sys1 sbreak GLEICH
-clock clock NAHE
+clock clock GLEICH
 text xswap GLEICH
 text xfree GLEICH
 text xalloc GLEICH
@@ -187,7 +187,7 @@ rk syioctl GLEICH
 lp lpopen GLEICH
 lp lpclose GLEICH
 lp lpwrite GLEICH
-lp lpcanon NAHE
+lp lpcanon GLEICH
 lp lpoutput GLEICH
 lp lpintr NAHE
 lp lpxfer GLEICH

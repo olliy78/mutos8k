@@ -52,6 +52,7 @@ unsigned tk;
 	register t;
 	int a;
 
+	display();	/* V7: display register; MUTOS: 040C in low is a bare RET */
 	t = tk >> 8;	/* MUTOS: number of ticks this interrupt stands for (V7: one) */
 	/*
 	 * callouts
@@ -104,8 +105,7 @@ unsigned tk;
 	pp = u.u_procp;
 	if (++pp->p_cpu == 0)	/* V7: if(++pp->p_cpu == 0) */
 		pp->p_cpu--;
-	lbolt += t;
-	if (lbolt >= HZ) {
+	if ((lbolt = lbolt + t) >= HZ) {	/* V7: lbolt += t; if (lbolt >= HZ): only this form compares r2 as the kernel does */
 		if (ps0 & 07)	/* V7 BASEPRI(ps) */
 			return;
 		lbolt -= HZ;

@@ -28,3 +28,4 @@ _savfp   03F8
 _restfp  03FE
 _argp    88E2
 _fdcmd   8D6A
+_display 040C

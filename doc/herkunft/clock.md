@@ -23,3 +23,7 @@ Stand 2026-10-31.  Quelle: UNIX V7 `usr/sys/sys/clock.c` (`clock`; `timeout` ste
 Vorlage: `original/hippe-v7/usr/sys/sys/clock.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
 Nur Folgeaenderung: `proctop` -> `MAX_PROC`.
 Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: `clock` weiter nahe (210 von 260 Woertern, unveraendert; Z8001-Parameterliste, Tickzaehlung).
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe C)
+
+`clock` ist bytegleich, mit zwei Aenderungen: (1) `display();` als erster Aufruf (V7 `clock.c`; in MUTOS ist `040C` in `low` ein bares `RET`; `_display 040C` in `kernel/karte/adressen.txt`), (2) `if ((lbolt = lbolt + t) >= HZ)` statt `lbolt += t; if (lbolt >= HZ)`: nur diese Form vergleicht `cp r2,#50` wie der Kernel (gemessen an 9 Formen; `(lbolt += t) >= HZ` gibt `cp lbolt,#50`).

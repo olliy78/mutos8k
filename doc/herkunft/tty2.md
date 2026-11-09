@@ -95,3 +95,7 @@ statt 0.  Stufe 2 (verschobenes Layout) nullt weiter.  Ein erster Versuch, die T
 ## Absicherung
 
 `python3 -I tools/kernel/gesamtbau.py --arbeit <Scratchpad> --uebersetzen --stufe 1 --boot` (Endstand, 2026-11-01): alle C-Dateien uebersetzen im Gast, **190 von 227** Funktionen aus C (vorher 186; neu bytegleich: `ttyecho`, `ttywipe`, `ttyspcl`, `ttyoutput`), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#` (68 s) und Arbeitstests ok (`summe = 5050` zweimal, `cc -O -c prf.c` -> 1600 B).  `pytest` ganz: 219 passed, 2 skipped.
+
+## Nachtrag 2026-11-04 (Plan 43 Gruppe C)
+
+`ttioccomm`: unsere `switch` baut die Sprungtabelle wie der Kernel (`div rr2,#6 ; ... ; jp @r1` stimmt bis zur ersten Abweichung); die erste Abweichung ist der Fehlersprung im Fall TIOCSETA: Kernel `jr ne` (Abstand genau -254 Byte, Reichweite von `jr`), Werkzeug `jp ne`.  Die Wahl `jr`/`jp` trifft das Werkzeug (Randfall der Sprungweite), nicht der Quelltext.  Die Annahme in Plan 43 §2 ("unser `cc` baut nie eine Sprungtabelle") war falsch.

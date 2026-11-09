@@ -234,14 +234,14 @@ register struct inode *ip;
 {
 	register i;
 	dev_t dev;
-	daddr_t bn;
 
 	i = ip->i_mode & IFMT;
 	if (i!=IFREG && i!=IFDIR)
 		return;
 	dev = ip->i_dev;
 	for(i=NADDR-1; i>=0; i--) {
-		bn = ip->i_un.i_addr[i];
+		{
+		daddr_t bn = ip->i_un.i_addr[i];
 		if(bn == (daddr_t)0)
 			continue;
 		ip->i_un.i_addr[i] = (daddr_t)0;
@@ -261,6 +261,7 @@ register struct inode *ip;
 
 		case NADDR-1:
 			tloop(dev, bn, 1, 1);
+		}
 		}
 	}
 	ip->i_size = 0;

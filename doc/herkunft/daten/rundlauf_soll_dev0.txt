@@ -1,0 +1,12 @@
+# Sollwerte fuer dev0 (im Original ohne -O uebersetzt): OHNE_O=1 SOLL=doc/herkunft/daten/rundlauf_soll_dev0.txt tools/herkunft/rundlauf.sh WORKDIR dev0
+dev0 fdopen GLEICH
+dev0 fdclose GLEICH
+dev0 fdsub GLEICH
+dev0 fdstrategy GLEICH
+dev0 fdstart GLEICH
+dev0 fdintr GLEICH
+dev0 fdadj GLEICH
+dev0 fdread GLEICH
+dev0 fdwrite GLEICH
+dev0 fdphys GLEICH
+dev0 fdioctl GLEICH

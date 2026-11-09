@@ -327,14 +327,13 @@ update()
 	register struct inode *ip;
 	register struct mount *mp;
 	register struct buf *bp;
-	struct filsys *fp;
 
 	if(updlock)
 		return;
 	updlock++;
 	for(mp = &mount[0]; mp < &mount[NMOUNT]; mp++)
 		if(mp->m_bufp != NULL) {
-			fp = mp->m_bufp->b_un.b_filsys;
+			struct filsys *fp = mp->m_bufp->b_un.b_filsys;
 			if(fp->s_fmod==0 || fp->s_ilock!=0 ||
 			   fp->s_flock!=0 || fp->s_ronly!=0)
 				continue;

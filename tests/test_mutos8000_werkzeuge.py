@@ -154,7 +154,8 @@ def test_wurzel_fuer_mfm_laufwerke_hat_dieselbe_blockabbildung(tmp_path, monkeyp
     mfm = tmp_path / "mfm.hfe"
     bau_aus_archiv.bauen(str(ARCHIV), str(mfm), ausgabe=lambda *_: None, laufwerke="k5601")
     info = subprocess.run([str(DISKTOOL), "info", str(mfm)], capture_output=True, text=True).stdout
-    assert "Format:      udos_ss77" in info and "Dateisystem: mutos8k_26x128_mfm" in info     # MFM, nicht mf3200_26x128
+    assert "Format:      ss77_26x128" in info and "Dateisystem: mutos8k_ss77_26x128" in info     # MFM, nicht fm_ss77_26x128
+    # (Namen nach Emulator-Entwurf 47; frueher udos_ss77 / mutos8k_26x128_mfm, die nur noch als Eingabe-Aliase gelten)
     # Blockabbildung gleich der FM-Fassung (nur die Anlagezeit ist fluechtig) ...
     assert _ohne_anlagezeit(_lesen(DISKTOOL, mfm, tmp_path, "mfm")) == \
         _ohne_anlagezeit(_lesen(DISKTOOL, WURZEL, tmp_path, "fm"))
@@ -169,13 +170,13 @@ def test_wurzel_fuer_mfm_laufwerke_hat_dieselbe_blockabbildung(tmp_path, monkeyp
 
 # Variante -> (Katalogformat der Aufzeichnung, Laufwerkstyp-Konstante, eingecheckte Diskette)
 VARIANTEN = {
-    "mf3200": ("mf3200_26x128", 0x2A, "a5120_mutos8000_boot_udos_mf3200.hfe"),
-    "k5601": ("udos_ss77", 0xFF, "a5120_mutos8000_boot_udos_k5601.hfe"),
-    "mf3200_k5601": ("mf3200_26x128", 0xFE, "a5120_mutos8000_boot_udos_mf3200_k5601.hfe"),
+    "mf3200": ("fm_ss77_26x128", 0x2A, "a5120_mutos8000_boot_udos_mf3200.hfe"),
+    "k5601": ("ss77_26x128", 0xFF, "a5120_mutos8000_boot_udos_k5601.hfe"),
+    "mf3200_k5601": ("fm_ss77_26x128", 0xFE, "a5120_mutos8000_boot_udos_mf3200_k5601.hfe"),
     # Varianten mit Patches (Ticket #22): Aufzeichnung und Konstante wie die Grundvariante
-    "k5601_nur_a": ("udos_ss77", 0xFF, "a5120_mutos8000_boot_udos_k5601_nur_a.hfe"),
-    "mf3200_k5601_nur_a": ("mf3200_26x128", 0xFE, "a5120_mutos8000_boot_udos_mf3200_k5601_nur_a.hfe"),
-    "k5601_8x512": ("udos_ss77", 0xFF, "a5120_mutos8000_boot_udos_k5601_8x512.hfe"),
+    "k5601_nur_a": ("ss77_26x128", 0xFF, "a5120_mutos8000_boot_udos_k5601_nur_a.hfe"),
+    "mf3200_k5601_nur_a": ("fm_ss77_26x128", 0xFE, "a5120_mutos8000_boot_udos_mf3200_k5601_nur_a.hfe"),
+    "k5601_8x512": ("ss77_26x128", 0xFF, "a5120_mutos8000_boot_udos_k5601_8x512.hfe"),
 }
 # Variante -> {Datei: (Patchart, Optionen)}; die UEBRIGEN Dateien muessen die Archivdateien sein.
 ERWARTETE_PATCHES = {
@@ -385,7 +386,7 @@ def test_datendisketten_pwd_ist_die_aeltere_fassung():
 
 @braucht_disktool
 @pytest.mark.parametrize("rolle", sorted(ROLLEN))
-@pytest.mark.parametrize("laufwerke,suffix,profil", [("mf3200", "_fm", "mutos8k_26x128_fm"), ("k5601", "_mfm", "mutos8k_26x128_mfm")])
+@pytest.mark.parametrize("laufwerke,suffix,profil", [("mf3200", "_fm", "mutos8k_fm_ss77_26x128"), ("k5601", "_mfm", "mutos8k_ss77_26x128")])
 def test_datendiskette_aus_dem_archiv_ist_die_eingecheckte(tmp_path, monkeypatch, rolle, laufwerke, suffix, profil):
     monkeypatch.setenv("K1520_DISKTOOL", str(DISKTOOL))
     sys.path.insert(0, str(TOOLS))
@@ -576,7 +577,9 @@ def test_8x512_wurzel_und_befehle_sind_die_td0_originale_mit_der_alten_pwd(tmp_p
     assert _holen(ziele["cmd"], tmp_path / "n_cmd") == orig_cmd and len(orig_cmd) == 19
     for z in ziele.values():
         r = subprocess.run([str(DISKTOOL), "info", z], capture_output=True, text=True)
-        assert "mutos8k_8x512_mfm" in r.stdout
+        # angelegt mit mutos8k_8x512_mfm (Alias von mutos8k_ss77_8x512); `info` erkennt das Abbild als mutos8k_ss77_8x512
+        # oder mutos8k_ss80_8x512 (gemessen: ss80) -- frueher deckte der Teilstring beide Altnamen (..._mfm/_mfm_80) ab
+        assert re.search(r"Dateisystem: mutos8k_ss(77|80)_8x512\b", r.stdout)
     # die eingecheckten Disketten sind dieselben Inhalte
     assert _holen(FERTIG / "a5120_mutos8000_root_8x512.hfe", tmp_path / "e_root") == neu_root
     assert _holen(FERTIG / "a5120_mutos8000_cmd_8x512.hfe", tmp_path / "e_cmd") == orig_cmd

@@ -700,16 +700,35 @@ def tabelle(alt_archiv, log=print):
 # ---------------------------------------------------------------- members file generator for any program
 def zusatz_anwenden(txt, pfad):
     """Hand-made corrections that must survive a regeneration: file NAME.members.zusatz, one line `MEMBER key=value ...`;
-    each key replaces the same option of that member line (or is appended)."""
+    each key replaces the same option of that member line (or is appended).  A line `+ MEMBER FROM TO key=value ...` adds a
+    whole member line that members_auto does not find (e.g. login getpass, which lies in front of the first strong match);
+    it is inserted in address order unless a line for MEMBER already exists."""
     if not os.path.isfile(pfad):
         return txt
-    zus = {}
+    zus, neu_zeilen = {}, []
     for z in open(pfad).read().split("\n"):
         if z.strip() and not z.startswith("#"):
             t = z.split()
-            zus[t[0]] = dict(x.split("=", 1) for x in t[1:])
+            if t[0] == "+":
+                neu_zeilen.append(t[1:])
+            else:
+                zus[t[0]] = dict(x.split("=", 1) for x in t[1:])
+    zeilen = txt.split("\n")
+    vorhanden = {z.split()[0] for z in zeilen if z.strip() and not z.startswith("#")}
+    for t in neu_zeilen:
+        if t[0] in vorhanden:
+            continue
+        von = int(t[1], 16)
+        pos = len(zeilen)
+        for i, z in enumerate(zeilen):
+            u = z.split()
+            if len(u) > 2 and not z.startswith("#") and u[0] not in ("common", "extern") \
+                    and re.match(r"[0-9A-Fa-f]{4}$", u[1]) and int(u[1], 16) > von:
+                pos = i
+                break
+        zeilen.insert(pos, " ".join(t))
     out = []
-    for z in txt.split("\n"):
+    for z in zeilen:
         t = z.split()
         if t and t[0] in zus and len(t) > 2 and not t[0] in ("common", "extern"):
             opt = [x.split("=", 1) for x in t[3:]]
