@@ -44,6 +44,14 @@ PROGRAMME = {
 # 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
 C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31"}}
+# ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
+# (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
+C2_NUR_SH = {"R11", "R12", "R13", "R14"}
+
+
+def c2_aus(name):
+    """Set of c2 rules switched off for program NAME."""
+    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH)
 
 
 def pfad(name, *teile):
@@ -168,12 +176,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, C2_AUS.get(name, ()))
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name))
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], C2_AUS.get(name, ()))
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name))
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)

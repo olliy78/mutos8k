@@ -100,3 +100,9 @@ Alle wirken auf die `cc -O -S`-Ausgabe (`c2_emu_s`) und sind je Programm abschal
 * Die Regel, welche `register char` das alte `cc` behaelt (Abweichung 1), ist nicht bestimmt, nur die 3 Ausnahmen sind gemessen.
 * `R16` ist ein Einzelfall (Daten statt `jr`): ob der Original-`as` allgemein -256 zulaesst, ist nicht geprueft (nur diese eine Stelle in `sh`).
 * Die Frage "anderer c2-Stand oder Modell" ist fuer `sh` entschieden (siehe oben), fuer die uebrigen Programme der Wurzeldiskette (`cat`/`ls` zeigen R4) nur gegenueber `sh` abgegrenzt.
+
+## Nachtrag nach dem Merge in `userspace-herkunft` (gemessen)
+R11-R14 galten zunaechst fuer alle Programme; R12-R14 fragten den Abschaltschalter nicht ab.  Folge nach dem Merge:
+`cat` 4060/4072, `login` 9902/9904 B.  Jetzt sind R11-R14 nur fuer `sh` an (`pipeline.py: C2_NUR_SH`, `c2_aus()`), alle Regeln
+pruefen den Schalter.  Regression danach: `sh` 18296 B (`cmp` 0 Abweichungen), init, cat, ls, date, mount, login, umount, stty
+(`--libc alt`), getty, sync -- alle elf ganzdatei bytegleich.  Waechter: `tests/test_userspace_pipeline.py::test_sh_rules_are_off_for_other_programs`.

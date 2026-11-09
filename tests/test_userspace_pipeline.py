@@ -109,3 +109,14 @@ def test_c2_model_sh_rules_r11_r16():
     assert "cp\tr3,#%2A" in t and "wval\t-%1180" in t and "jp\tne" not in t
     t2, n2 = U.c2_emu_s(s, {"R11", "R16"})
     assert n2["R11"] == 0 and n2["R16"] == 0 and "cp\tr2,#%2A" in t2
+
+
+def test_sh_rules_are_off_for_other_programs():
+    # R11-R14 were measured on sh only; applied to cat/login they broke byte identity (measured after the us-sh merge)
+    import pipeline as P
+    assert P.c2_aus("cat") >= {"R11", "R12", "R13", "R14"} and not (P.c2_aus("sh") & {"R11", "R12", "R13", "R14"})
+    s = "\n".join(["ld\t-%2C(FP),r2", "cp\t-%2C(FP),#%2000"])      # R13 shape (sh); must stay untouched for cat
+    t, n = U.c2_emu_s(s, P.c2_aus("cat"))
+    assert n["R13"] == 0
+    t, n = U.c2_emu_s(s, P.c2_aus("sh"))
+    assert n["R13"] == 1

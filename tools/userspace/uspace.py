@@ -483,7 +483,7 @@ def c2_emu_s(s, aus=()):
             bytemem[l12.group(2)] = l12.group(1)
         # R12  `ldb rl0,rlN ; cpb rlN,X` where rlN was stored to MEM earlier (`ldb MEM,rlN`) -> the original reloads: `ldb rl0,MEM ; cpb rl0,X`
         c12 = re.match(r"ldb\trl0,(rl\d)$", a)
-        if c12 and c12.group(1) in bytemem and re.match(r"cpb\t%s," % c12.group(1), b):
+        if c12 and "R12" not in aus and c12.group(1) in bytemem and re.match(r"cpb\t%s," % c12.group(1), b):
             out.append("ldb\trl0," + bytemem[c12.group(1)])
             out.append(b.replace("cpb\t" + c12.group(1) + ",", "cpb\trl0,", 1))
             n["R12"] += 1
@@ -493,7 +493,7 @@ def c2_emu_s(s, aus=()):
         #      `... ldb MEM,rlN ; ldb rlN,MEM ; and rN,#k` (sh stoi `WHILE (c = *cp, digit(c))`; 1 site -- the same shape with an
         #      offset operand `ldb rlN,off(rM)` in word.c is NOT reloaded)
         m14 = re.match(r"ldb\t(-?%[0-9A-F]+\(FP\)),rl(\d)$", a)
-        if (m14 and re.match(r"and\tr%s,#" % m14.group(2), b) and out and out[-1] == "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))
+        if (m14 and "R14" not in aus and re.match(r"and\tr%s,#" % m14.group(2), b) and out and out[-1] == "xorb\trh%s,rh%s" % (m14.group(2), m14.group(2))
                 and len(out) > 1 and out[-2] == "ldb\trl%s,@%s" % (m14.group(2), out[-2].split("@")[-1]) and "@" in out[-2]):
             out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1))]
             n["R14"] += 1
@@ -511,7 +511,7 @@ def c2_emu_s(s, aus=()):
         # R13  `ld MEM,rN ; cp MEM,#k` -> `ld MEM,rN ; cp rN,#k` (the original compares the register just stored)
         m13 = re.match(r"ld\t([^,]+),(r\d+)$", a)
         c13 = re.match(r"cp\t([^,]+),(#.*)$", b)
-        if m13 and c13 and c13.group(1) == m13.group(1) and not re.match(r"(r\d+|@.*)$", m13.group(1)):
+        if m13 and c13 and "R13" not in aus and c13.group(1) == m13.group(1) and not re.match(r"(r\d+|@.*)$", m13.group(1)):
             out += [a, "cp\t%s,%s" % (m13.group(2), c13.group(2))]
             n["R13"] += 1
             i += 2
