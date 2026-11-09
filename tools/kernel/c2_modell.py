@@ -6,6 +6,10 @@ Same method as tools/userspace/uspace.py c2_emu_s (doc/userspace/README.md): the
 MODEL of the differences of the lost older c2, not a run of it.  Proven by a byte-identical result is only
 "C source + shipped compiler + these rules = original bytes".
 
+Why a rewriting step between c2 and as (Plan 43 section 15.1): the measurements point to ONE older compiler for the whole kernel, not
+to hand edits -- the 12 functions sit in 7 modules whose other functions are byte-identical with the shipped c2, every kernel site of
+a rule's pattern shows the old behaviour (K1: 6 of 6), and K4-K6 are optimizer decisions (K6 even a fault), not human edits.
+
 Every rule is bound to the functions where it was measured (RULES below) and counted per site; a rule never touches other
 functions, so every function that is byte-identical without the model stays untouched.  Function blocks in the .s are
 `~~name:` (name cut to 8 characters) up to the next `end _...`.

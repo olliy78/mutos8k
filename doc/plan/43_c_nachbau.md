@@ -189,3 +189,31 @@ alte `c2` genau diese Regeln hatte.  Die Regeln greifen an 1 bis 6 Stellen (zusa
 Assembler-Behelf wie Userspace R16.  K6 baut den Fehler des Originals bewusst nach: ein Kernel aus diesem Weg hat ihn auch.
 Damit ist die Entscheidung aus §5 praktisch als Mischung aus (a) und (c) gefallen: Status `NAHE` fuer den reinen Bau bleibt,
 das Modell ist ein dritter, dokumentierter Bauweg.  Test: `tests/test_kernel_c2_modell.py` (Regeln auf dem Host).
+
+### 15.1 Begruendung fuer den Zwischenschritt (Regeln zwischen `c2` und `as`)
+
+Frage: Wurden die 12 Funktionen von Hand im Assembler nachbearbeitet, oder mit einem anderen Compiler gebaut?  Beides waere ein Grund,
+die `.s` vor dem `as` umzuschreiben -- aber nur die zweite Deutung traegt ein *allgemeines* Werkzeug.  Die Messungen sprechen fuer einen
+**einzigen, aelteren Compilerstand fuer den ganzen Kernel**; das Modell bildet diesen Stand nach, es flickt keine Einzelstellen.
+
+* **Es sind 12 Funktionen, keine 12 Dateien** (gemessen): sie liegen in 7 Modulen, deren uebrige Funktionen mit dem ausgelieferten `c2`
+  bytegleich sind (z. B. `tty2` 16 von 20).  Eine anders gebaute Datei waere als Ganzes abgewichen.
+* **Die Regeln beschreiben seltene Muster, keine Stellen.**  Ein Optimierer weicht nur dort ab, wo sein Muster vorkommt.  Gemessen fuer K1:
+  im ganzen Kernel steht hinter `ld r2,r3` sechsmal `cp r3` und **nie** `cp r2` -- jede Stelle mit dem Muster zeigt das alte Verhalten,
+  die uebrigen 218 Funktionen enthalten es nicht.  Die Bindung der Regeln an Funktionen in `c2_modell.py` ist Vorsicht beim Bau, kein Befund.
+* **Gegen Handarbeit** (aus dem Code geschlossen): K6 ist ein Fehler (gestrichenes Laden, danach Rechnen mit falschem Wert) -- typisch fuer
+  einen Peephole-Optimierer, der ueber eine Sprungmarke hinweg Registerinhalte falsch annimmt, nicht fuer einen Menschen.  K5 ist eine
+  Sprungweitenentscheidung genau an der Grenze (-254 Byte), K4 eine interne Blockreihenfolge ohne Wirkung auf Groesse oder Verhalten.
+  Gezielte Handeingriffe saehen anders aus (wenige Zeilen fuer Hardware oder Zeitverhalten), nicht wie gleiche Muster quer durch
+  Speicherverwaltung, Dateisystem, Terminal und Drucker.
+* **Weitere Belege fuer eine aeltere Werkzeugkette** (gemessen): `dev0.c` (ohne `-O`) zeigt ein aelteres `c1`-Verhalten (Laden nach r2 vor
+  jedem Vergleich, §11); die Userspace-Programme der Wurzeldiskette brauchen ebenfalls Regeln eines aelteren `c2`, `sh` sogar einen anderen
+  Stand als `init`/`cat` (`doc/userspace/README.md`).  K1 entspricht der sh-Regel R11 -- *angenommen*: der Kernel-`c2` steht dem von `sh` nahe
+  (nicht systematisch verglichen).
+* **Folgerung** (*angenommen*, aus den Messungen geschlossen): Kernel und Programme wurden mit einem aelteren Compilerstand gebaut; spaeter wurde
+  der Compiler auf den Disketten erneuert, die Binaerdateien blieben.  Da der aeltere `c2` verloren ist, ist der Zwischenschritt
+  `cc -O -S` (ausgelieferter Compiler) -> Regeln -> `as` die einzige Stelle, an der sich sein Verhalten nachbilden laesst, ohne den
+  Compiler selbst zu aendern.  Dasselbe gilt fuer den Userspace (`uspace.c2_emu_s`, `libc_alt.libc_regeln`).
+
+**Offene Gegenprobe:** die Regeln K1-K6 ungebunden auf alle Module anwenden.  Bleiben alle 218 uebrigen Funktionen bytegleich, hat ein
+einziger aelterer `c2` den ganzen Kernel erzeugt; bricht eine, ist die Regel zu weit gefasst und zeigt, wo das Modell noch nicht stimmt.

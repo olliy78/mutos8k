@@ -113,7 +113,7 @@ Die restlichen 12 sind "nahe" Funktionen (unten); `dev0.c` ist seit 2026-11-04 v
 | prf | complete | 5/5 | | rk | partial | 13/13 |
 | rdwri | complete | 4/5 | | | | |
 
-**Mit c2-Modell (2026-11-09):** `gesamtbau.py --uebersetzen --c2modell --stufe 1 --boot` baut **alle 230 Funktionen bytegleich aus C**; die 12 unten verbleibenden werden mit den Regeln K1-K6 aus `tools/kernel/c2_modell.py` gleich (Plan 43 §15, Aussagekraft dort).
+**Mit c2-Modell (2026-11-09):** `gesamtbau.py --uebersetzen --c2modell --stufe 1 --boot` baut **alle 230 Funktionen bytegleich aus C**; die 12 unten verbleibenden werden mit den Regeln K1-K6 aus `tools/kernel/c2_modell.py` gleich (Plan 43 §15, Aussagekraft dort).  Begruendung des Zwischenschritts: die Messungen sprechen fuer einen einzigen aelteren Compilerstand fuer den ganzen Kernel, nicht fuer Handarbeit am Assembler (Plan 43 §15.1).
 
 Verbleibende "nahe" Funktionen (12, Stand 2026-11-05, `gesamtbau.py --status`); alle mit gemessener `c2`-Ursache (Plan 43 §8, §10, §12):
 `mfree`, `exece`, `ttyretype`, `ttread` (je 1 Wort: `cp r3` statt `cp r2`), `malloc`, `readi` (Kernel behaelt `test` nach `sub`), `alloc`, `ialloc`, `bmap` (Test vom Stapelplatz statt Register),
