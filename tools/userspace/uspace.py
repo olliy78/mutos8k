@@ -398,7 +398,7 @@ def c2_emu_s(s, aus=()):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0}
     i = 0
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
@@ -495,6 +495,15 @@ def c2_emu_s(s, aus=()):
                 and len(out) > 1 and out[-2] == "ldb\trl%s,@%s" % (m14.group(2), out[-2].split("@")[-1]) and "@" in out[-2]):
             out += [a, "ldb\trl%s,%s" % (m14.group(2), m14.group(1))]
             n["R14"] += 1
+            i += 1
+            continue
+        # R16  `jp ne,L ; ldb ; xorb ; add ; bitb ; jp eq,L` (same target L, backward distance exactly 256 B): the original c2/as range
+        #      check lets the first jump be a short `jr` (disp -128 words), the usr c2 keeps `jp` (sh word(), 1 site)
+        m16 = re.match(r"jp\tne\t(L\d+)$", a)
+        if (m16 and i + 5 < len(z) and z[i + 5] == "jp\teq\t" + m16.group(1) and z[i + 4].startswith("bitb\t")
+                and i > 0 and z[i - 1].startswith("and\tr2,#%80")):
+            out.append("jr\tne\t" + m16.group(1))
+            n["R16"] += 1
             i += 1
             continue
         # R13  `ld MEM,rN ; cp MEM,#k` -> `ld MEM,rN ; cp rN,#k` (the original compares the register just stored)
