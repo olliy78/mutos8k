@@ -156,3 +156,10 @@ Fuer die verbleibenden Funktionen: die `c2`-Eigenheiten aus §10 (1-5) sind weit
 ## 13. Stand `lpcanon` (2026-11-05, gemessen)
 
 `lpcanon` bytegleich: `default:` steht zuerst im `switch` und faellt in `case ' '` (Marke `sp:`), der Rest liegt hinter dem `switch` (`cr:`, `rest:`, `goto sp`); Einzelheiten `doc/herkunft/lp.md`.  Die Form ist logisch gleichwertig zur alten (alle uebrigen Faelle enden mit `return`).  Gesamtbau Stufe 1 `--boot`: **217 von 230**, BYTEGLEICH, 11 Arbeitstests ok.
+
+## 14. Abschluss (2026-11-05, gemessen)
+
+* `getxfile` bytegleich (`doc/herkunft/sys1.md`, Nachtrag): beide `ETXTBSY`-Pruefungen im Zweig des grossen Kopfes, `goto bad` nach `estabur`-Fehler (wie V7, die alte Annahme "Rueckgabe 1" war falsch), `ctos` im Overlay-Zweig.
+* `ttyinput` bleibt: der Original-`c2` streicht vor `t_xstate ^= XPAGE` ein noetiges Laden (Fehler im Original, `doc/herkunft/tty2.md`).
+* Gesamtbau Stufe 1 `--boot`: **218 von 230**, BYTEGLEICH, 11 Arbeitstests ok.  Die 12 verbleibenden Funktionen haben alle eine gemessene `c2`-Ursache; mit Quellformen ist hier nach heutigem Stand nichts mehr zu holen.
+* Offen ist nur noch die Entscheidung aus §5 (empfohlen: Status `NAHE` belassen).

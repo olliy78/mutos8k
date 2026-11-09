@@ -92,32 +92,31 @@ Passend waere ein PDP-11-V7-Derivat in der Naehe der Sammlung als Zwischenstufe.
 
 ## 5. Stand der Quellen: Rundlauf und Gesamtbau (gemessen, 2026-11-03)
 
-Gesamtbau `--uebersetzen --stufe 1 --boot`: **217 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
-Die restlichen 13 sind "nahe" Funktionen (unten); `dev0.c` ist seit 2026-11-04 vollstaendig bytegleich (Rundlauf ohne `-O`: `OHNE_O=1 SOLL=doc/herkunft/daten/rundlauf_soll_dev0.txt tools/herkunft/rundlauf.sh WORKDIR dev0`).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
+Gesamtbau `--uebersetzen --stufe 1 --boot`: **218 von 230 Funktionen bytegleich aus C** (Stand 2026-11-04 nach Arbeitspaket 0 von Plan 43: +`schar`, `max`, `lpsgtty` neu als Funktionen, +`namei`, `writei`, `lpxfer`, `core`, `setregs` jetzt gleich), `Gesamt: BYTEGLEICH (0 Byte ungleich)`, 36 352 Byte, Boot bis `#`, Arbeitstests ok.
+Die restlichen 12 sind "nahe" Funktionen (unten); `dev0.c` ist seit 2026-11-04 vollstaendig bytegleich (Rundlauf ohne `-O`: `OHNE_O=1 SOLL=doc/herkunft/daten/rundlauf_soll_dev0.txt tools/herkunft/rundlauf.sh WORKDIR dev0`).  `gesamtbau.py --arbeit DIR --status` listet sie mit Status und gleicht die Zaehlung mit `rundlauf_soll.txt` ab (Exit 1 bei Abweichung).
 "Origin" ist der Wert aus dem Dateikopf; "bytegleich" zaehlt die Funktionen mit `GLEICH` in `daten/rundlauf_soll.txt` (Rundlauf je Funktion).
 
 | Modul | Origin | bytegleich | | Modul | Origin | bytegleich |
 |---|---|---|---|---|---|---|
-| alloc | complete | 4/7 | | sig | complete | 10/10 |
-| bio | partial | 17/19 | | slp | complete | 11/11 |
-| clock | partial | 0/1 | | subr | complete | 6/7 |
-| dev0 | partial | Gesamtbau (11 Fkt.) | | sys1 | complete | 6/8 |
+| alloc | complete | 5/7 | | sig | complete | 10/10 |
+| bio | partial | 19/19 | | slp | complete | 11/11 |
+| clock | partial | 1/1 | | subr | complete | 6/7 |
+| dev0 | partial | 11/11 | | sys1 | complete | 7/8 |
 | fio | complete | 8/8 | | sys2 | complete | 11/11 |
-| iget | complete | 6/8 | | sys3 | complete | 8/8 |
-| lp | partial | 4/7 | | sys4 | complete | 23/24 |
-| machdep | partial | 3/4 | | text | partial | 10/10 |
+| iget | complete | 8/8 | | sys3 | complete | 8/8 |
+| lp | partial | 7/8 | | sys4 | complete | 24/24 |
+| machdep | partial | 4/4 | | text | partial | 10/10 |
 | main | complete | 3/3 | | trap | partial | 3/3 |
-| malloc | complete | 0/2 | | tty | partial | 10/11 |
-| nami | complete | 1/1 | | tty2 | complete | 16/20 |
-| pipe | complete | 8/8 | | ureg | partial | 2/3 |
+| malloc | complete | 0/2 | | tty | partial | 11/11 |
+| nami | complete | 2/2 | | tty2 | complete | 16/20 |
+| pipe | complete | 8/8 | | ureg | partial | 3/3 |
 | prf | complete | 5/5 | | rk | partial | 13/13 |
-| rdwri | complete | 3/4 | | | | |
+| rdwri | complete | 4/5 | | | | |
 
-Verbleibende "nahe" Funktionen (25, Wortzahlen = abweichende Woerter, `rundlauf_soll.txt` und Modulprotokolle): `alloc` 84/158, `ialloc` 169/220, `update` 85/119, `itrunc` 61/93, `tloop` 42/79, `ssig` 39/52,
-`bmap` 263/308, `malloc` 24/52, `mfree` 1/119, `readi` 108/206, `mapalloc` 14/37, `mapstart` 28/44, `exece` 1/389, `getxfile` 177/401, `clock` 210/260, `startup` 45/90, ``lpwrite` 42/124,
-`lpcanon` 104/212, `lpintr` 21/75, `putchar` 54/88, `ttioccomm` 181/371, `ttyinput` 281/458, `ttyretype` 1/116, `ttread` 1/139.  Ihre Ursachen sind teils Eigenheiten des Kernel-`c2` (Blockanordnung, Registerladen),
-teils offene Quellformen; das alte Bild "alle Abweichungen sind `c2`" gilt nicht mehr (`doc/kernel/c_rueckbau.md`, Hinweise dort).  Die Funktionen, deren Abweichung sich als reine Quellform erwies,
-sind jetzt bytegleich (u. a. `bcopy`, `iomove`, `iupdat`, `swtch`, `newproc`, `core`, `procxmt`, `rdwr`, `chdirec`, `binit`, `trap`, 16 Funktionen von `tty2`).
+Verbleibende "nahe" Funktionen (12, Stand 2026-11-05, `gesamtbau.py --status`); alle mit gemessener `c2`-Ursache (Plan 43 §8, §10, §12):
+`mfree`, `exece`, `ttyretype`, `ttread` (je 1 Wort: `cp r3` statt `cp r2`), `malloc`, `readi` (Kernel behaelt `test` nach `sub`), `alloc`, `ialloc`, `bmap` (Test vom Stapelplatz statt Register),
+`lpintr` (Endstueck hinter dem letzten Aufruf), `ttioccomm` (`jr` an der Sprunggrenze), `ttyinput` (Kernel laesst ein noetiges Laden weg: Fehler des Original-`c2`, `tty2.md`).
+Die Funktionen, deren Abweichung sich als Quellform erwies, sind bytegleich; die Formen stehen in den Modulprotokollen und in Plan 43.
 
 ## 6. Offene Punkte
 
