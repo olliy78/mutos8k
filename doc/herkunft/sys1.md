@@ -38,3 +38,12 @@ Rueckfall: keiner (der bytegleiche Code blieb unveraendert, es kamen nur Komment
 Vorlage: `original/hippe-v7/usr/sys/sys/sys1.c` der TUHS-Sammlung (Standardkonfiguration `conf/m.h`: `PROC_MAX`, `EXIT`, `LRUI` an; Schalterauflösung `tools/herkunft/ifdef_resolve.py`; "Hippe-Sammlung" = Name der Sammlung, nicht des Urhebers).
 `exit` (eine Schleife, `wakeup(&proc[1])` einmal), `wait` (`while((--max_proc)->p_stat == NULL)`), `fork` (`if(p2 > max_proc)`), `rexit` (`struct a { int rval; }`) und `exece` (Zugriffstest mit `iput(ip); return;`, `ns`, `getxfile(ip, nc, ns)`, `NBPW`, `BMASK`, `NCARGS`, `(NCARGS+BSIZE-1)/BSIZE`, `struct execa`, `B_AGE`-Schleife wie die Vorlage) im Vorlagentext; `proctop` heisst `max_proc` (`MAX_PROC`).  Z8001-Abweichungen bleiben: `u_ar0[8]`, `fork`-Groesse, Kopfformate in `getxfile`, `setregs`.
 Rundlauf (Gast `cc -O -c`, je Funktion gegen `mutos_1216`) nach der Änderung: `exit`, `wait`, `fork`, `rexit`, `setregs`, `sbreak` bytegleich (wie vorher); `exece` 1 von 389 Woertern (wie vorher, jetzt auch mit der Vorlagenform `iput; return`), `getxfile` 177 von 401 (Z8001-Kopfformate, unveraendert).
+
+## Nachtrag 2026-11-05 (Plan 43): getxfile bytegleich
+
+`getxfile` ist bytegleich (sys1 7 von 8, nur `exece` weicht ab: `c2`-Eigenheit `cp r3`, Plan 43 §8).  Aenderungen gegen den alten Stand, alle durch die Bytegleichheit belegt:
+
+* Die beiden `ETXTBSY`-Pruefungen stehen beide im Zweig des grossen Kopfes (`u_ex[0] & 0x100`); der Kernel testet Bit 8 nur einmal.  Fuer den kleinen Kopf gibt es keine Pruefung.  `u_ex[1]` und `u_ex[14]` werden vorher geloescht, die Pruefungen greifen also nie (*aus dem Text geschlossen*).
+* Bei einem `estabur`-Fehler `goto bad` (wie V7) statt `return(1)`: die fruehere Annahme "Rueckgabe 1" war falsch.  `estabur` scheitert nur bei mehr als 256 Klicks.
+* `psignal(.., SIGTRC)` als `else`-Zweig hinter der SUID/SGID-Behandlung (`if ((p_flag & STRC) == 0) {..} else psignal(..)`), gleiche Wirkung.
+* Im Overlay-Zweig `ctos(x)` = `((x)+255)/256` (vorzeichenlose Division, `LD Rn,#-8 ; SDL`) statt `btoc`.

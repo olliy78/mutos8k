@@ -142,7 +142,7 @@ main main GLEICH
 main iinit GLEICH
 main binit GLEICH
 sys1 exece NAHE
-sys1 getxfile NAHE
+sys1 getxfile GLEICH
 sys1 setregs GLEICH
 sys1 rexit GLEICH
 sys1 exit GLEICH

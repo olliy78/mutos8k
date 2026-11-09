@@ -35,6 +35,7 @@
 #include "reg.h"
 
 #define btoc(x)		((unsigned)((x)+255)>>8)
+#define ctos(x)		(((x)+255)/256)	/* MUTOS: V7 ((x+127)/128); unsigned division gives LD Rn,#-8 ; SDL */
 #define ctod2(x)	(((unsigned)(x)+1)>>1)
 
 extern char regloc[8];
@@ -243,12 +244,12 @@ register struct inode *ip;
 		u.u_error = ENOEXEC;
 		goto bad;
 	}
+	/* MUTOS: both checks only for the large header (the kernel tests bit 8 once); ex[1] and ex[14] were cleared above, so neither ever fires */
 	if (u.u_ex[0] & 0x100) {
 		if (u.u_ex[14] && (ip->i_flag & ITEXT) == 0 && ip->i_count != 1) {
 			u.u_error = ETXTBSY;
 			goto bad;
 		}
-	} else {
 		if (u.u_ex[1] && (ip->i_flag & ITEXT) == 0 && ip->i_count != 1) {
 			u.u_error = ETXTBSY;
 			goto bad;
@@ -273,7 +274,7 @@ register struct inode *ip;
 	ds = btoc((unsigned)lsize);
 	ss = btoc(nargc + ns) + 5;	/* MUTOS: V7 SSIZE + btoc(nargc), SSIZE is 5 */
 	if (overlay) {
-		if ((u.u_sep == 0 && btoc(ts) != btoc(u.u_tsize)) || nargc) {
+		if ((u.u_sep == 0 && ctos(ts) != ctos(u.u_tsize)) || nargc) {
 			u.u_error = ENOMEM;
 			goto bad;
 		}
@@ -287,9 +288,8 @@ register struct inode *ip;
 		else
 			u.u_ar0[12] = u.u_ex[5] & ~1;
 	} else {
-		/* MUTOS: V7 "goto bad" returns overlay (0); here the return value is 1 */
 		if (estabur(ts, ds, ss, sep, 2))
-			return(1);
+			goto bad;
 
 		/*
 		 * allocate and clear core
@@ -321,9 +321,7 @@ register struct inode *ip;
 		/*
 		 * set SUID/SGID protections, if no tracing
 		 */
-		if (u.u_procp->p_flag & STRC)
-			psignal(u.u_procp, SIGTRC);
-		else {
+		if ((u.u_procp->p_flag & STRC) == 0) {
 			if (ip->i_mode & ISUID)
 				if (u.u_uid != 0) {
 					u.u_uid = ip->i_uid;
@@ -331,7 +329,8 @@ register struct inode *ip;
 				}
 			if (ip->i_mode & ISGID)
 				u.u_gid = ip->i_gid;
-		}
+		} else
+			psignal(u.u_procp, SIGTRC);
 	}
 	u.u_tsize = ts;
 	u.u_dsize = ds;

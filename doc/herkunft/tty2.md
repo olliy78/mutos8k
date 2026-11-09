@@ -99,3 +99,7 @@ statt 0.  Stufe 2 (verschobenes Layout) nullt weiter.  Ein erster Versuch, die T
 ## Nachtrag 2026-11-04 (Plan 43 Gruppe C)
 
 `ttioccomm`: unsere `switch` baut die Sprungtabelle wie der Kernel (`div rr2,#6 ; ... ; jp @r1` stimmt bis zur ersten Abweichung); die erste Abweichung ist der Fehlersprung im Fall TIOCSETA: Kernel `jr ne` (Abstand genau -254 Byte, Reichweite von `jr`), Werkzeug `jp ne`.  Die Wahl `jr`/`jp` trifft das Werkzeug (Randfall der Sprungweite), nicht der Quelltext.  Die Annahme in Plan 43 §2 ("unser `cc` baut nie eine Sprungtabelle") war falsch.
+
+## Nachtrag 2026-11-05 (Plan 43): ttyinput, Ursache gemessen
+
+`ttyinput` bleibt (281 von 458 Woertern).  Ursache an 7326: der Kernel rechnet `xor r2,#1 ; ld %2A(r12),r2` **ohne** vorher `t_xstate` zu laden; davor steht nur `testb %21(r12)` (`t_length`), das r2 nicht setzt.  Der Original-`c2` hat das Laden gestrichen, weil er r2 noch fuer `t_xstate` hielt; an 7326 laufen aber mehrere Wege zusammen (u. a. der Rueckweg von `putc`).  Damit setzt das Original bei `CPAGE` `t_xstate` aus einem zufaelligen Wert (*aus dem Code geschlossen, nicht im Lauf beobachtet*).  Keine korrekte Quellform erzeugt das; gemessen an 3 Laeufen mit zusammen ~20 Varianten (beste: `if(!((tp->t_xstate ^= XPAGE)&XPAGE1))`, 7 Woerter auf 912 Byte, aber 2 Woerter zu kurz).  Wertung: **`c2`-Fehler**, Status `NAHE`.
