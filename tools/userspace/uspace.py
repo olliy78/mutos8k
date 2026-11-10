@@ -400,7 +400,8 @@ def c2_emu_s(s, aus=()):
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
-    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0}
+    out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
+         "R32": 0, "R33": 0, "R34": 0}
     i = 0
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
@@ -442,6 +443,13 @@ def c2_emu_s(s, aus=()):
                     and re.match(r"add\tr%s," % x.group(1)[2:], k)):
                 out += [a, c, j, a]
                 n["R10"] += 1
+                i += 3
+                continue
+            # R32  `xorb rhN ; cp rN,.. ; jr cc L ; cp rN,..` (chained char range test) -> rhN zeroed again before the 2nd cp (kill 1x)
+            if ("R32" not in aus and re.match(r"cp\tr%s," % x.group(1)[2:], c) and re.match(r"jr\t\w+\tL\d+$", j)
+                    and re.match(r"cp\tr%s," % x.group(1)[2:], k)):
+                out += [a, c, j, a]
+                n["R32"] += 1
                 i += 3
                 continue
         # R7  `ldb rlN,mem ; cp rN,..` (new c2 knows rhN is still zero) -> the original zeroes it again: `xorb rhN,rhN` inserted
@@ -539,6 +547,14 @@ def c2_emu_s(s, aus=()):
         # R5  `ld rA,rB ; test rB` -> `test rA` is what the usr c2 emits; the original keeps `test rA`
         t5 = re.match(r"ld\t(r\d+),(r\d+)$", a)
         t6 = re.match(r"test\t(r\d+)$", b)
+        # R33  exception to R5: `call f ; ld rA,r2 ; test r2` (value of a call assigned and tested, `while (o = what())`) keeps
+        #      `test r2` (chmod 1x; MODEL of the old c2, not a run of it)
+        if (t5 and t6 and t5.group(2) == "r2" and t6.group(1) == "r2" and out and out[-1].startswith("call\t")
+                and "R5" not in aus and "R33" not in aus):
+            out += [a, b]
+            n["R33"] += 1
+            i += 2
+            continue
         if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus:
             out += [a, "test\t" + t5.group(1)]
             n["R5"] += 1
@@ -565,6 +581,15 @@ def c2_emu_s(s, aus=()):
             t = "r%d" % (int(m7b.group(1)[1:]) + 1)
             out += [a, "ld\t%s,%s" % (t, m7b.group(2)), "or\t%s,%s" % (m7b.group(1), t)]
             n["R9"] += 1
+            i += 2
+            continue
+        # R34  `test rN ; jr eq|ne L ; jr mi|pl|lt|ge|gt|le L2` -> the original repeats `test rN` (flags not remembered) -- only right after `ld MEM,rN` (value of `n = read()` tested twice); getty's `read(); test r2; jr eq; jr pl` keeps one (cp 1x)
+        t34 = re.match(r"test\t(r\d+)$", a)
+        if (t34 and "R34" not in aus and out and re.match(r"ld\t[^r][^,]*,%s$" % t34.group(1), out[-1])
+                and re.match(r"jr\t(eq|ne)\tL\d+$", b)
+                and re.match(r"jr\t(mi|pl|lt|ge|gt|le)\tL\d+$", z[i + 2] if i + 2 < len(z) else "")):
+            out += [a, b, a]
+            n["R34"] += 1
             i += 2
             continue
         out.append(a)
