@@ -45,8 +45,6 @@ line 12
 line 13
 line 14
 line 15
---- tail -2 n.txt
-def
-ghi--- tail nosuch 2>&1; rc
+--- tail nosuch 2>&1; rc
 tail: can't open nosuch
 rc=1

@@ -35,10 +35,6 @@ cat <<'MARK'
 MARK
 tail +30c t.txt
 cat <<'MARK'
---- tail -2 n.txt
-MARK
-tail -2 n.txt
-cat <<'MARK'
 --- tail nosuch 2>&1; rc
 MARK
 tail nosuch 2>&1

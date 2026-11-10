@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/times.h>
+/* Differs from V7: <times.h> instead of <sys/times.h>. Cause: the framework (erg.py) lays V7 headers flat next to the
+ * source on /mnt (-I/mnt), so the sys/ subdirectory does not exist in the guest; contents of times.h are unchanged V7. */
+#include <times.h>
 
 extern int errno;
 extern char *sys_errlist[];
