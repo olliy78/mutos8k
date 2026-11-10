@@ -1,0 +1,19 @@
+--- file c.txt asm.txt short.txt english.txt garb.txt
+c.txt:	c program text
+asm.txt:	assembler program text
+short.txt:	ascii text
+english.txt:	English text
+garb.txt:	data
+--- file nosuch /
+nosuch:	cannot stat
+/:	directory
+--- file /bin/cat /usr/lib/libc.a
+/bin/cat:	data
+/usr/lib/libc.a:	archive
+--- file -f lst.txt; rc
+c.txt:	c program text
+short.txt:	ascii text
+rc=1
+--- file -f nosuch.lst 2>&1; rc
+Can't open nosuch.lst
+rc=2

@@ -1,0 +1,6 @@
+#include <stdio.h>
+int x;
+main()
+{
+	x = 1;
+}

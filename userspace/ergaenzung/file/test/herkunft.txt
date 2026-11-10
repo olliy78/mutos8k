@@ -1,0 +1,7 @@
+Erwartung: aus dem V7-Quelltext (original/unix-v7/usr/src/cmd/file.c) und dem Handbuch (man1/file.1) von Hand abgeleitet; GNU file ist NICHT Referenz
+(andere Wortwahl: V7 "ascii text", "English text", "c program text", "assembler program text", "data", "archive", "directory", "cannot stat").
+Ausgabeform je Datei: "NAME:<TAB>ART".  Die Textdateien in eingabe/ haben im Gast keine Ausfuehrbits ("commands text" daher nicht getestet).
+/bin/cat: Kopf der MUTOS-Binaerdateien ist E807 (doc/werkzeugkette/objformat.md), nicht eine PDP-11-Magic (0407/0410/0411) -> V7-file kennt sie nicht,
+  faellt in den Textzweig, das erste Byte hat Bit 7 -> "data".  (Grenze: file erkennt keine Z8000-Programme.)
+/usr/lib/libc.a: Archiv-Magic FF65 = 0177545 gleich V7 -> "archive".
+Nicht getestet: roff-Erkennung (liest buf[-1], V7-Eigenheit), Geraetedateien, "commands text", Fortran.

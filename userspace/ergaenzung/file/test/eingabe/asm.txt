@@ -1,0 +1,4 @@
+.globl _main
+_main:
+	mov r0,r1
+	rts pc
