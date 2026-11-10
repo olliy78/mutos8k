@@ -1,0 +1,38 @@
+0BA1 mknod
+0C0E null
+0CB6 Unknown error
+0D11 #Error 0
+0D1A Not owner
+0D24 No such file or directory
+0D3E No such process
+0D4E Interrupted system call
+0D66 I/O error
+0D70 No such device or address
+0D8A Arg list too long
+0D9C Exec format error
+0DAE Bad file number
+0DBE No children
+0DCA No more processes
+0DDC Not enough core
+0DEC Permission denied
+0DFE Bad address
+0E0A Block device required
+0E20 Mount device busy
+0E32 File exists
+0E3E Cross-device link
+0E50 No such device
+0E5F Not a directory
+0E6F Is a directory
+0E7E Invalid argument
+0E8F File table overflow
+0EA3 Too many open files
+0EB7 Not a typewriter
+0EC8 Text file busy
+0ED7 File too large
+0EE6 No space left on device
+0EFE Illegal seek
+0F0B Read-only file system
+0F21 Too many links
+0F30 Broken pipe
+0F3C Argument too large
+0F4F Result too large
