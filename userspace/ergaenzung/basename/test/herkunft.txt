@@ -1,0 +1,4 @@
+Erwartung auf dem Host bestimmt (2026-11-10) mit GNU coreutils 9.7:
+  cd test-ordner; sh befehle.sh > erwartet.txt   (basename = /usr/bin/basename)
+Nur Faelle, in denen V7 und GNU gleich arbeiten (kein Argument, abschliessender Schraegstrich, Suffix = ganzer Name ausgelassen).
+V7-Handbuch: original/unix-v7/usr/man/man1/basename.1

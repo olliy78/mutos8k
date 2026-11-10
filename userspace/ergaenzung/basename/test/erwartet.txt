@@ -1,0 +1,9 @@
+foo.c
+foo
+foo.c
+foo
+foo
+c.tar
+c
+x.
+z
