@@ -7,3 +7,4 @@ __pycache__/
 
 # Userspace-Pipeline: Arbeitsdateien
 userspace/*/work/
+userspace/ergaenzung/*/work/
