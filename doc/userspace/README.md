@@ -11,6 +11,9 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `kleine_befehle.md` | `/bin/sync` (ganzdatei-bytegleich), `cat`, `date`, `ls` (Eigencode befehlsgleich); c2-Regeln R4-R9 |
 | `stty.md` | `/bin/stty` (kein V7: erweitertes `stty`, gleiche Zeichenketten wie Hippe-Sammlung; Eigencode wortgleich bis auf Adressen); c2-Regel R10 |
 | `sh.md` | `/bin/sh` (V7-Bourne-Shell, 20 Module, Mehrdatei-Bau; **ganzdatei-bytegleich**, 18296 B; anderer c2-Stand als `init`, c2-Regeln R11-R14/R16) |
+| `cmd_a1.md` | `cmd`-Diskette: echo, pwd, rmdir, mkdir (ganzdatei bytegleich) |
+| `cmd_a2.md` | `cmd`-Diskette: chmod, kill, cp, ln (ganzdatei bytegleich), c2-Regeln R32-R34 |
+| `cmd_a3.md` | `cmd`-Diskette: wc, size (ganzdatei bytegleich) |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
 | `../plan/42_unix_herkunft.md`, `../plan/43_c_nachbau.md` | Plaene (H7 = Userspace) |
@@ -61,6 +64,31 @@ Der Kernel (Plan 43 §15) nutzt dieselbe Methode mit eigenen Regeln K1-K6 (`tool
 Quellen: `userspace/NAME/NAME.c`; Karte/Listing/Namen daneben (`k.txt`, `NAME.lst`, `NAME.namen`, `NAME.strings`, `namen.txt`, optional
 `karte_extra.txt`); Arbeitsdateien in `userspace/NAME/work/` (git-ignoriert).  Test: `tests/test_userspace_pipeline.py`
 (`gast`; der Gast-Bau nur mit `USERSPACE_GAST=1`).
+
+## Herkunft der Quellen: Diskette `cmd`, Stufe 1 (Plan 44; gemessen 2026-11-10)
+
+Zehn weitere Programme, alle **ganzdatei bytegleich** (`pipeline.py alles NAME --c2emu --libc alt --ist neu_c2_s`, danach `cmp` gegen `work/NAME.orig`).
+Die Bytegleichheit hat dieselbe Aussagekraft und dieselben Grenzen wie oben (Punkte 1, 2, 5): c2-Regeln als Modell, libc-Teil aus `libc_alt`, daher
+**keine** Herkunftsaussage ueber den libc-Teil.  Ohne `--libc alt` und c2-Modell ist keines der zehn ganzdatei gleich (z. B. pwd Text 4486 statt 3134 B).
+
+| Programm | Datei (B) | Eigencode-Quelle | Abweichung vom V7-Text | c2-Regeln (Stellen) | Doku |
+|----------|-----------|------------------|------------------------|---------------------|------|
+| echo | 2168 | V7 `echo.c` | keine; `fputs` als Zusatzglied (nicht das der ausgelieferten `libc.a`) | R4 1 | `cmd_a1.md` |
+| pwd | 3460 | V7 `pwd.c` | `"param.h"`, `"dir.h"` statt `<sys/..>` (`-I/mnt` kennt keine Unterverzeichnisse) | R1 5, R2 2 | `cmd_a1.md` |
+| rmdir | 4160 | V7 `rmdir.c` | `"dir.h"` | R1 4, R4 1 | `cmd_a1.md` |
+| mkdir | 3950 | V7 `mkdir.c` | keine | R1 7, R4 1 | `cmd_a1.md` |
+| chmod | 3710 | V7 `chmod.c` | keine | R1 2, R4 1, R33 1 | `cmd_a2.md` |
+| kill | 3808 | V7 `kill.c` | keine | R4 2, R32 1 | `cmd_a2.md` |
+| cp | 3592 | V7 `cp.c` | keine | R1 1, R4 2, R30 2, R34 1 | `cmd_a2.md` |
+| ln | 4330 | V7 `ln.c` | keine | R1 2, R4 4 | `cmd_a2.md` |
+| wc | 4148 | V7 `wc.c` | keine | R4 4, R5 2 | `cmd_a3.md` |
+| size | 4064 | V7 `size.c` | **3**: `A_MAGIC2` entfaellt (kein `A_MAGIC2` im `a.out.h` der Diskette), Format `%x+%x+%x`, `%Db = 0%Xb` | R4 2 | `cmd_a3.md` |
+
+Vergleichsquelle ist `original/unix-v7/usr/src/cmd/NAME.c`.  Ob die drei `size`-Abweichungen die MUTOS-Fassung sind oder anderswo herkommen, ist eine **Annahme**
+(gemessen ist nur: ohne sie baut der Gast-`cc` nicht bzw. andere Bytes).
+Neue c2-Regeln R32-R34 (je **eine** Stelle, kill/chmod/cp) sind schwach belegt: ein beschriebener Unterschied, keine Erklaerung des alten c2; Quellvarianten wurden
+dafuer nicht durchprobiert.  R32 trifft auch `sh` (18298 statt 18296 B) und ist deshalb in `C2_AUS["sh"]` abgeschaltet.
+Behelfe: `kill` (Datenfenster und `errlst` in `libc_alt/kill.members` von Hand), `ln` (`karte_extra.txt`: `ohne 0B00`), `size` (Zusatzglied `rdwr`).
 
 ## Stolpersteine fuer weitere Programme (alle gemessen)
 1. **Die ausgelieferte `libc.a` ist nicht die Bibliothek der Originalprogramme.**  In `init` fehlt der Gleitkomma-Teil von `doprnt` (Stub `ffltpr`), und die
