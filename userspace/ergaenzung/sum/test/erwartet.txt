@@ -1,0 +1,6 @@
+46769     1
+46769     1 sa.txt
+33708     2 sb.txt
+46769     1
+sum: Can't open nofile
+r=10

@@ -1,0 +1,6 @@
+Pruefsumme: Host-Referenz GNU sum (coreutils) 9.7, "sum -r" (BSD-Algorithmus = rotierende 16-Bit-Summe wie V7): 46769 fuer sa.txt, 33708 fuer sb.txt (gemessen 2026-11-10);
+dieselben Werte liefert eine Python-Nachrechnung der V7-Schleife.
+Blockzahl: V7 zaehlt BUFSIZ-Bloecke (512 B), GNU sum -r 1024-Bloecke -- deshalb Blockzahl aus der V7-Formel (nbytes+BUFSIZ-1)/BUFSIZ: sb.txt (1000 B) = 2. Annahme: BUFSIZ der
+Diskette ist 512 (stdio.h der Diskette nicht geprueft). Zwei Dateien: Name angehaengt (Quelltext).
+Fehlerfall: "sum: Can't open nofile", per continue springt die do-while-Bedingung an und die Schleife endet ohne weitere Zeile; Exit 10 (Quelltext).
+Eingaben sa.txt/sb.txt: test/eingabe. Nicht im Gast gemessen (Stand: Vorbereitung).
