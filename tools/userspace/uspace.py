@@ -401,8 +401,9 @@ def c2_emu_s(s, aus=()):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0}
     i = 0
+    stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
     while i < len(z):
@@ -423,6 +424,14 @@ def c2_emu_s(s, aus=()):
                 # R30  exception to R2: the stored byte is tested right away (value of `(*p++ = *q++) == 0`) -> XORB stays
                 if re.match(r"testb\trl%s$" % x.group(1)[2:], z[i + 2] if i + 2 < len(z) else ""):
                     n["R30"] += 1
+                    out.append(a)
+                    i += 1
+                    continue
+                # R43  exception to R2: `inc rK,#%n(n>1) ; ldb rlN,@rK ; xorb rhN ; ldb @rM,rlN` (copy of a struct member array element,
+                #      ncheck `hp->h_name[k] = dp->d_name[k]`, 1x; post-increment copies `inc rK,#1` still drop the XORB) keeps the XORB
+                src36 = re.match(r"ldb\trl%s,@(r\d+)$" % x.group(1)[2:], z[i - 1]) if i >= 2 else None
+                if (src36 and "R43" not in aus and b.startswith("ldb	@r") and re.match(r"inc\t%s,#%%([2-9A-F]|[0-9A-F]{2,})$" % src36.group(1), z[i - 2])):
+                    n["R43"] += 1
                     out.append(a)
                     i += 1
                     continue
@@ -496,6 +505,50 @@ def c2_emu_s(s, aus=()):
             n["R36"] += 1
             i += 2
             continue
+        # R45  `xor r2,r2 ; div rr2,#k` (unsigned remainder/quotient by a constant) -> `exts rr2 ; div rr2,#k` (the original divides as signed; ncheck lookup `i%HSIZE`, 1x)
+        if a == "xor\tr2,r2" and b.startswith("div\trr2,#") and "R45" not in aus:
+            out.append("exts\trr2")
+            n["R45"] += 1
+            i += 1
+            continue
+        # R48  `ld MEM,rN ; ... ; ld r0,rN ; cp rN,X` -> `ld r0,MEM ; cp r0,X` (the original reloads the stored variable, icheck 1x)
+        c41 = re.match(r"cp\t(r\d+),", b)
+        if re.match(r"ld\tr0,r\d+$", a) and c41 and "R48" not in aus and stored.get(c41.group(1)) and a == "ld\tr0," + c41.group(1):
+            out += ["ld\tr0," + stored[c41.group(1)], b.replace("cp\t" + c41.group(1) + ",", "cp\tr0,", 1)]
+            n["R48"] += 1
+            i += 2
+            continue
+        # R42  `ld rN,SRC ; ld MEM,rN ; test rN` (SRC, MEM memory operands) -> `test MEM` (the original tests the stored variable; a call result
+        #      `call ; ld MEM,r2 ; test r2` keeps `test r2`, R33; ncheck `kno = dp->d_ino` 2x, icheck `n = sblock.s_..` 3x)
+        m35 = re.match(r"ld\t([^,@#]+),(r\d+)$", a)
+        #      (not when R37 applies to the same place: `test rN ; jr cc ; ld r0,rN ; cp rN,X` -- R37 (dcheck) covers it, measured)
+        if (m35 and "R42" not in aus and b == "test\t" + m35.group(2) and not re.match(r"(r[hlqr]?\d+|sp|fp)$", m35.group(1), re.I)
+                and not (i + 3 < len(z) and z[i + 2].startswith("jr\t") and z[i + 3] == "ld\tr0," + m35.group(2))
+                and out and re.match(r"ld\t%s,[^r#][^,]*$|ld\t%s,@r\d+$" % (m35.group(2), m35.group(2)), out[-1])):
+            out += [a, "test\t" + m35.group(1)]
+            stored[m35.group(2)] = m35.group(1)
+            n["R42"] += 1
+            i += 2
+            continue
+        # R46  `ldl rr0,rr2 ; cpl rr2,M ; jr cc L` -> `cpl rr0,M` (the original compares the copy); when the code behind the jump goes on with
+        #      `ld r5,.. ; xor r4,r4 ; cpl rr2,rr4 ; jr .. ; pushl @SP,rr2` it reloads rr2 first and pushes rr0 (icheck 3x; the long part 1x)
+        if a == "ldl\trr0,rr2" and re.match(r"cpl\trr2,", b) and "R46" not in aus and re.match(r"jr\t", z[i + 2] if i + 2 < len(z) else ""):
+            out += [a, b.replace("cpl\trr2,", "cpl\trr0,", 1), z[i + 2]]
+            n["R46"] += 1
+            if (i + 7 < len(z) and z[i + 3].startswith("ld\tr5,") and z[i + 4] == "xor\tr4,r4" and z[i + 5] == "cpl\trr2,rr4"
+                    and z[i + 6].startswith("jr\t") and z[i + 7] == "pushl\t@SP,rr2"):
+                out += ["ldl\trr2,rr0"] + z[i + 3:i + 7] + ["pushl\t@SP,rr0"]
+                i += 8
+            else:
+                i += 3
+            continue
+        # R47  `divl rq0,rr4 ; ld rN,r3` -> `ld r2,r3 ; ld rN,r2` (the quotient/remainder moves over r2, as R26; icheck 1x)
+        d40 = re.match(r"ld\t(r\d+),r3$", b)
+        if a.startswith("divl\trq0,") and d40 and "R47" not in aus and d40.group(1) != "r2":
+            out += [a, "ld\tr2,r3", "ld\t%s,r2" % d40.group(1)]
+            n["R47"] += 1
+            i += 2
+            continue
         # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
         #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
         c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
@@ -520,6 +573,10 @@ def c2_emu_s(s, aus=()):
         # label / call / jump target = new basic block for R12's byte memory
         if re.match(r"L\d+:$", a) or a.startswith("call"):
             bytemem = {}
+            stored = {}
+        sw = re.match(r"ld\t(-?%[0-9A-F]+\(FP\)),(r\d+)$", a)
+        if sw:
+            stored[sw.group(2)] = sw.group(1)
         l12 = re.match(r"ldb\t([^r@][^,]*|-?%[0-9A-F]+\(FP\)),(rl\d)$", a)
         if l12 and i > 0 and z[i - 1] == "xorb\trh%s,rh%s" % (l12.group(2)[2:], l12.group(2)[2:]):
             # only a byte that was LOADED from memory (xorb right before the store), not a call result (macro skipto: no reload)
