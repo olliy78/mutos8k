@@ -4,6 +4,10 @@ Stand 2026-11-10.  Vorlage: Plan 44 (Rueckbau vorhandener Programme).  Hier geht
 liegen, aus den V7-Quellen (`original/unix-v7/usr/src/cmd`) mit dem MUTOS-`cc` fuer MUTOS bauen und als **Ergaenzung** (nicht als Original) fuehren.
 Auftrag des Projektinhabers (2026-11-10): fehlende V7-Programme wie `make`, `yacc`, `bc`, `egrep` aus V7 nachbauen und ergaenzen.
 
+**Grundsatz (Entscheidung des Projektinhabers, 2026-11-10): MUTOS bleibt ein UNIX V7.**  Ergaenzt wird nur, was V7 selbst enthaelt (`original/unix-v7`).
+Keine Programme aus System III oder anderen Quellen (z. B. `fsck`, `fsdb`, die in V7 fehlen); `original/sys3` bleibt Vergleichsmaterial.  Die vorhandenen Dateisystemwerkzeuge
+(`icheck dcheck ncheck clri mkfs`) sind die V7-Werkzeuge und passen zum System.
+
 ## 1. Bestand (gemessen)
 
 Alle Abbilder in `disks/original` (`best_*.zip` und die einzelnen `td0`) per `k1520disktool ls` ausgelesen; die `td0` enthalten **keine** Befehle ausser den
