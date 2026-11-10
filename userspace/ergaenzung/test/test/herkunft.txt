@@ -1,0 +1,3 @@
+Erwartung: GNU coreutils 9.7 /usr/bin/test (Host, Debian), Rueckgabewert je Ausdruck ('echo rc=$?').
+Nur Ausdruecke, die in V7 test.c definiert sind (-r -w -d -f -s -n -z, = != -eq -ne -gt -ge -lt -le, ! -a -o, Klammern); nicht getestet: -e -x -h -L (V7 kennt sie nicht).
+Man: original/unix-v7/usr/man/man1/test.1.  -t und -l nicht getestet (-t haengt vom Gast-Terminal ab).

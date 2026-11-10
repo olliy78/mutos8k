@@ -1,0 +1,4 @@
+Erwartung: GNU coreutils 9.7 uniq (Host, Debian), Lauf mit Uebersetzung der V7-Optionen durch einen Wrapper:
+  -N -> -f N, +N -> -s N, -c: Zaehler als '%4d ' statt GNU '%7d ' (V7 uniq.c pline: printf("%4d ", linec)).
+Fehlerfall 'uniq nosuch': Text und Exit 1 aus dem V7-Quelltext (printe: "cannot open %s\n" auf stderr, exit(1)), nicht von GNU.
+Quelle der Optionsform: original/unix-v7/usr/man/man1/uniq.1.

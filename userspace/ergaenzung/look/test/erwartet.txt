@@ -1,0 +1,28 @@
+--- look ban w.txt
+banana
+bandit
+bank
+--- look -f ban f.txt
+Banana
+banana
+bandit
+Bank
+--- look Ba w.txt
+Banana
+Bart
+--- look apple w.txt
+apple
+--- look zebra w.txt
+zebra
+--- look zzz w.txt
+--- look -t: key t.txt
+key:1
+key:2
+keyx:3
+--- look -d ab d.txt
+a-b
+ab
+abc
+--- look foo /nonexistent 2>&1; echo rc=$?
+look: can't open /nonexistent
+rc=2

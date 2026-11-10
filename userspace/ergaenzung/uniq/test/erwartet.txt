@@ -1,0 +1,35 @@
+--- uniq u.txt
+apple
+banana
+cherry
+date
+--- uniq -u u.txt
+banana
+date
+--- uniq -d u.txt
+apple
+cherry
+--- uniq -c u.txt
+   2 apple
+   1 banana
+   3 cherry
+   1 date
+--- uniq -1 f.txt
+1 x foo
+3 y foo
+--- uniq +2 g.txt
+aXfoo
+cZbar
+--- cat u.txt | uniq
+apple
+banana
+cherry
+date
+--- uniq u.txt o.out; cat o.out
+apple
+banana
+cherry
+date
+--- uniq nosuch 2>&1; echo rc=$?
+cannot open nosuch
+rc=1
