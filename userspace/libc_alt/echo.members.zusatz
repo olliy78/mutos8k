@@ -1,0 +1,3 @@
+# fputs (V7 stdio/fputs.c, compiled with the old cc) lies in front of the first strong libc match (flsbuf), so members_auto
+# counts it as own code.  Same situation as login getpass.
++ fputs 010C 015C exp=_fputs@010C src=G
