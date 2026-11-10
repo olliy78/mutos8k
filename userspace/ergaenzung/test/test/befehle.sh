@@ -1,84 +1,196 @@
-echo '--- test a = a'
+cat <<'MARK'
+--- test a = a
+MARK
 test a = a
-echo rc=$?
-echo '--- test a = b'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test a = b
+MARK
 test a = b
-echo rc=$?
-echo '--- test a != b'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test a != b
+MARK
 test a != b
-echo rc=$?
-echo '--- test -n x'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -n x
+MARK
 test -n x
-echo rc=$?
-echo '--- test -z ""'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -z ""
+MARK
 test -z ""
-echo rc=$?
-echo '--- test -z x'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -z x
+MARK
 test -z x
-echo rc=$?
-echo '--- test -f t.txt'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -f t.txt
+MARK
 test -f t.txt
-echo rc=$?
-echo '--- test -f nosuch'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -f nosuch
+MARK
 test -f nosuch
-echo rc=$?
-echo '--- test -d /tmp'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -d /tmp
+MARK
 test -d /tmp
-echo rc=$?
-echo '--- test -d t.txt'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -d t.txt
+MARK
 test -d t.txt
-echo rc=$?
-echo '--- test -r t.txt'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -r t.txt
+MARK
 test -r t.txt
-echo rc=$?
-echo '--- test -w t.txt'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -w t.txt
+MARK
 test -w t.txt
-echo rc=$?
-echo '--- test -s t.txt'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -s t.txt
+MARK
 test -s t.txt
-echo rc=$?
-echo '--- test -s empty'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -s empty
+MARK
 test -s empty
-echo rc=$?
-echo '--- test 3 -lt 5'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 3 -lt 5
+MARK
 test 3 -lt 5
-echo rc=$?
-echo '--- test 5 -lt 3'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 5 -lt 3
+MARK
 test 5 -lt 3
-echo rc=$?
-echo '--- test 10 -eq 10'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 10 -eq 10
+MARK
 test 10 -eq 10
-echo rc=$?
-echo '--- test 10 -ne 10'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 10 -ne 10
+MARK
 test 10 -ne 10
-echo rc=$?
-echo '--- test 7 -ge 7'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 7 -ge 7
+MARK
 test 7 -ge 7
-echo rc=$?
-echo '--- test 7 -gt 7'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test 7 -gt 7
+MARK
 test 7 -gt 7
-echo rc=$?
-echo '--- test ! -f nosuch'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test ! -f nosuch
+MARK
 test ! -f nosuch
-echo rc=$?
-echo '--- test -f t.txt -a -d /tmp'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -f t.txt -a -d /tmp
+MARK
 test -f t.txt -a -d /tmp
-echo rc=$?
-echo '--- test -f nosuch -o -d /tmp'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -f nosuch -o -d /tmp
+MARK
 test -f nosuch -o -d /tmp
-echo rc=$?
-echo '--- test -f nosuch -a -d /tmp'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test -f nosuch -a -d /tmp
+MARK
 test -f nosuch -a -d /tmp
-echo rc=$?
-echo '--- test \( -n x \)'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test \( -n x \)
+MARK
 test \( -n x \)
-echo rc=$?
-echo '--- test x'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test x
+MARK
 test x
-echo rc=$?
-echo '--- test ""'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test ""
+MARK
 test ""
-echo rc=$?
-echo '--- test'
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- test
+MARK
 test
-echo rc=$?
+cat <<RC
+rc=$?
+RC

@@ -1,12 +1,11 @@
---- nice echo hi
+--- nice cat h.txt
 hi
---- nice -3 echo hi
+--- nice -3 cat h.txt h.txt
 hi
---- nice -3 echo a b c
-a b c
---- nice 2>&1; echo rc=$?
+hi
+--- nice 2>&1; rc
 usage: nice [ -n ] command
 rc=1
---- nice nosuchcmd 2>&1; echo rc=$?
+--- nice nosuchcmd 2>&1; rc
 No such file or directory: nosuchcmd
 rc=1

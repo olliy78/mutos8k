@@ -1,22 +1,26 @@
---- split -3 s.txt pre; ls pre*; cat preaa; echo ==; cat preab; echo ==; cat preac
+--- split -3 s.txt pre; ls pre*; cat preaa preab preac
 preaa
 preab
 preac
 row 1
 row 2
 row 3
-==
 row 4
 row 5
 row 6
-==
 row 7
---- rm pre*; cat s.txt | split -2 - q; ls q*; cat qad
+--- cat s.txt | split -2 - q; ls q*; cat qad
 qaa
 qab
 qac
 qad
 row 7
---- rm q*; split s.txt; ls x*; cat xaa | wc -l
+--- split s.txt; ls x*; cat xaa
 xaa
-7
+row 1
+row 2
+row 3
+row 4
+row 5
+row 6
+row 7

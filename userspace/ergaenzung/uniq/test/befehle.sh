@@ -1,18 +1,39 @@
-echo '--- uniq u.txt'
+cat <<'MARK'
+--- uniq u.txt
+MARK
 uniq u.txt
-echo '--- uniq -u u.txt'
+cat <<'MARK'
+--- uniq -u u.txt
+MARK
 uniq -u u.txt
-echo '--- uniq -d u.txt'
+cat <<'MARK'
+--- uniq -d u.txt
+MARK
 uniq -d u.txt
-echo '--- uniq -c u.txt'
+cat <<'MARK'
+--- uniq -c u.txt
+MARK
 uniq -c u.txt
-echo '--- uniq -1 f.txt'
+cat <<'MARK'
+--- uniq -1 f.txt
+MARK
 uniq -1 f.txt
-echo '--- uniq +2 g.txt'
+cat <<'MARK'
+--- uniq +2 g.txt
+MARK
 uniq +2 g.txt
-echo '--- cat u.txt | uniq'
+cat <<'MARK'
+--- cat u.txt | uniq
+MARK
 cat u.txt | uniq
-echo '--- uniq u.txt o.out; cat o.out'
+cat <<'MARK'
+--- uniq u.txt o.out; cat o.out
+MARK
 uniq u.txt o.out; cat o.out
-echo '--- uniq nosuch 2>&1; echo rc=$?'
-uniq nosuch 2>&1; echo rc=$?
+cat <<'MARK'
+--- uniq nosuch 2>&1; rc
+MARK
+uniq nosuch 2>&1
+cat <<RC
+rc=$?
+RC

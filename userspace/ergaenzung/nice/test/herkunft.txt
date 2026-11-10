@@ -1,2 +1,2 @@
 Erwartung: aus dem V7-Quelltext nice.c und dem Handbuch original/unix-v7/usr/man/man1/nice.1 abgeleitet (kein Referenzwerkzeug: GNU nice hat andere Meldungen/Optionen).
-Meldung bei unbekanntem Befehl: sys_errlist[ENOENT] = "No such file or directory" (V7 libc perror.c / errlst).  Die Wirkung der Prioritaet ist im Gast nicht beobachtbar (kein ps-Feld im Test): X.
+Meldung bei unbekanntem Befehl: sys_errlist[ENOENT] = "No such file or directory" (V7 libc perror.c / errlst).  Die Wirkung der Prioritaet ist im Gast nicht beobachtbar (kein ps auf der Gastplatte): nur Aufruf und Fehlerpfade sind getestet.

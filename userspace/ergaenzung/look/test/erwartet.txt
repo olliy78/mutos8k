@@ -23,6 +23,6 @@ keyx:3
 a-b
 ab
 abc
---- look foo /nonexistent 2>&1; echo rc=$?
+--- look foo /nonexistent 2>&1; rc
 look: can't open /nonexistent
 rc=2

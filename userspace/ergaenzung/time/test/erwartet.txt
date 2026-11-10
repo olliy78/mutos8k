@@ -1,12 +1,9 @@
---- time echo hi 2>t.err; echo rc=$?
+--- time cat h.txt 2>t.err; rc
 hi
 rc=0
---- time sh -c "exit 3" 2>t.err; echo rc=$?
+--- time sh -c "exit 3" 2>t.err; rc
 rc=3
---- time nosuchcmd 2>t.err; echo rc=$?
+--- time nosuchcmd 2>t.err; rc
 rc=1
---- time; echo rc=$?
+--- time; rc
 rc=0
---- stderr lines
-hi
-      4

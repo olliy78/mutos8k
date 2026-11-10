@@ -1,11 +1,28 @@
-echo '--- time echo hi 2>t.err; echo rc=$?'
-time echo hi 2>t.err; echo rc=$?
-echo '--- time sh -c "exit 3" 2>t.err; echo rc=$?'
-time sh -c "exit 3" 2>t.err; echo rc=$?
-echo '--- time nosuchcmd 2>t.err; echo rc=$?'
-time nosuchcmd 2>t.err; echo rc=$?
-echo '--- time; echo rc=$?'
-time; echo rc=$?
-echo '--- stderr lines'
-time echo hi 2>t.err
-wc -l t.err
+cat <<'MARK'
+--- time cat h.txt 2>t.err; rc
+MARK
+time cat h.txt 2>t.err
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- time sh -c "exit 3" 2>t.err; rc
+MARK
+time sh -c "exit 3" 2>t.err
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- time nosuchcmd 2>t.err; rc
+MARK
+time nosuchcmd 2>t.err
+cat <<RC
+rc=$?
+RC
+cat <<'MARK'
+--- time; rc
+MARK
+time
+cat <<RC
+rc=$?
+RC

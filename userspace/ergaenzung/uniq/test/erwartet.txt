@@ -30,6 +30,6 @@ apple
 banana
 cherry
 date
---- uniq nosuch 2>&1; echo rc=$?
+--- uniq nosuch 2>&1; rc
 cannot open nosuch
 rc=1
