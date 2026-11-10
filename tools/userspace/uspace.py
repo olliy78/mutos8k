@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -417,6 +417,18 @@ def c2_emu_s(s, aus=(), mkfs=False):
             n["R1"] += 1
             i += 2
             continue
+        # R63  `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` (`while ((c = *s++ = *t++))` with register c): exception to R2 (the XORB stays) and
+        #      the original works on the copy: `... ; ld rK,rN ; ld rX,rK ; test rK` (mv 1x; MODEL of the old c2, not a run of it)
+        x63 = re.match(r"xorb\trh(\d),rh\1$", a)
+        if x63 and "R63" not in aus and i + 4 < len(z):
+            r = x63.group(1)
+            c63 = re.match(r"ld\t(r\d+),r%s$" % r, z[i + 2])
+            d63 = re.match(r"ld\t(r\d+),r%s$" % r, z[i + 3])
+            if re.match(r"ldb\t@r\d+,rl%s$" % r, b) and c63 and d63 and z[i + 4] == "test\tr" + r:
+                out += [a, b, z[i + 2], "ld\t%s,%s" % (d63.group(1), c63.group(1)), "test\t" + c63.group(1)]
+                n["R63"] += 1
+                i += 5
+                continue
         x = re.match(r"xorb\t(rh\d),(rh\d)$", a)
         if x and x.group(1) == x.group(2):
             y = re.match(r"ldb\t([^,]+),r([hl]\d)$", b)
@@ -549,10 +561,53 @@ def c2_emu_s(s, aus=(), mkfs=False):
             n["R47"] += 1
             i += 2
             continue
+        # R64  `ldl MEM,rr4 ; testl rr4 ; jr eq L ; ldl rr2,rr4 ; ld r5,X ; xor r4,r4 ; cpl rr2,rr4 ; jr lt L2 ; ldl rr0,MEM ; cpl rr0,M` (`b = a[i]; if (b == 0) ..;
+        #      if (b < x || b >= y)`, b a long local): the original works on the memory copy first and then on the loaded pair: `testl MEM ; jr eq L ; ldl rr2,MEM ;
+        #      ld r5,X ; xor r4,r4 ; cpl rr2,rr4 ; jr lt L2 ; ldl rr0,rr2 ; cpl rr2,M` (df 1x; MODEL of the old c2, not a run of it)
+        m64 = re.match(r"ldl\t([^,r][^,]*),rr4$", a)
+        if (m64 and "R64" not in aus and i + 9 < len(z) and b == "testl\trr4" and re.match(r"jr\teq\tL\d+$", z[i + 2])
+                and z[i + 3] == "ldl\trr2,rr4" and z[i + 5] == "xor\tr4,r4" and z[i + 6] == "cpl\trr2,rr4"
+                and re.match(r"jr\tlt\tL\d+$", z[i + 7]) and z[i + 8] == "ldl\trr0," + m64.group(1)
+                and re.match(r"cpl\trr0,", z[i + 9])):
+            out += [a, "testl\t" + m64.group(1), z[i + 2], "ldl\trr2," + m64.group(1), z[i + 4], z[i + 5], z[i + 6], z[i + 7],
+                    "ldl\trr0,rr2", "cpl\trr2," + z[i + 9][len("cpl\trr0,"):]]
+            n["R64"] += 1
+            i += 10
+            continue
+        # R61  `ld MEM,r3 ; ld r2,r3 ; ldb rl3,@r2 ; xorb rh3,rh3 ; cp r3,#k ; jr ne L ; ld r2,MEM` (MEM = frame local; `arg = argv[1]; if (arg[0] == 'c' && ...`)
+        #      -> the original reloads r2 from the variable and keeps it: `ld MEM,r3 ; ld r2,MEM ; ldb .. ; xorb ; cp ; jr ne L` (the reload behind the jump
+        #      is dropped; cmp 3x; MODEL of the old c2, not a run of it)
+        m61 = re.match(r"ld\t(-%[0-9A-F]+\(FP\)),r3$", a)
+        if (m61 and "R61" not in aus and b == "ld\tr2,r3" and i + 6 < len(z) and z[i + 2] == "ldb\trl3,@r2"
+                and z[i + 3] == "xorb\trh3,rh3" and re.match(r"cp\tr3,#", z[i + 4]) and re.match(r"jr\tne\tL\d+$", z[i + 5])
+                and z[i + 6] == "ld\tr2," + m61.group(1)):
+            out += [a, "ld\tr2," + m61.group(1), z[i + 2], z[i + 3], z[i + 4], z[i + 5]]
+            n["R61"] += 1
+            i += 7
+            continue
+        # R62  `L: ld rN,r3 ; ld r2,X` right behind `pop r2,@SP` (join of the getc() macro, r2 dead afterwards): the shipped c2 drops the dead `ld r2,r3`,
+        #      the original keeps it: `ld r2,r3 ; ld rN,r2` (cmp 1x; the three other getc joins get the same form from R5; MODEL of the old c2)
+        m62 = re.match(r"ld\t(r\d+),r3$", a)
+        if (m62 and "R62" not in aus and len(out) > 1 and re.match(r"L\d+:$", out[-1]) and out[-2] == "pop\tr2,@SP"
+                and m62.group(1) != "r2" and re.match(r"ld\tr2,", b)):
+            out += ["ld\tr2,r3", "ld\t%s,r2" % m62.group(1)]
+            n["R62"] += 1
+            i += 1
+            continue
         # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
         #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
         c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
         if c4 and "R4" not in aus and not re.match(r"(r[hlqr]?\d+|sp|fp)$", c4.group(1), re.I) and not c4.group(1).startswith("@"):
+            # R60  `ld MEM,rN ; cp MEM,#k` -> the original loads R0 from the register just stored: `ld r0,rN ; cp r0,#k` (od `c &= 0377; if (c > 037 ...`, 1x; MODEL)
+            m60 = re.match(r"ld\t(.+),(r\d+)$", out[-1]) if out else None
+            #      only behind `and rN,#%FF` (the same shape behind another mask or a byte load keeps R4's `ld r0,MEM`: cat 1x, mkfs 5x measured)
+            if (m60 and "R60" not in aus and m60.group(1) == c4.group(1) and len(out) > 1
+                    and out[-2] == "and\t%s,#%%FF" % m60.group(2)):
+                out += ["ld\tr0," + m60.group(2), "cp\tr0," + c4.group(2)]
+                r0mem = c4.group(1)
+                n["R60"] += 1
+                i += 1
+                continue
             if r0mem == c4.group(1):
                 out.append("cp\tr0," + c4.group(2))
             else:

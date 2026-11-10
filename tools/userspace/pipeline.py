@@ -55,13 +55,25 @@ PROGRAMME = {
     "dcheck": ("cmd", "etc/dcheck", "userspace/dcheck/dcheck.c",
                [V7INC + "sys/param.h", V7INC + "sys/inode.h", V7INC + "sys/ino.h", V7INC + "sys/dir.h",
                 V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
+    "df": ("cmd", "bin/df", "userspace/df/df.c", [V7INC + "sys/param.h", V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
+    "rm": ("cmd", "bin/rm", "userspace/rm/rm.c", [V7INC + "sys/dir.h"]),
+    "mv": ("cmd", "bin/mv", "userspace/mv/mv.c", [V7INC + "sys/dir.h"]),
+    "od": ("cmd", "bin/od", "userspace/od/od.c", []),
+    "who": ("cmd", "bin/who", "userspace/who/who.c", [V7INC + "utmp.h"]),
+    "cmp": ("cmd", "bin/cmp", "userspace/cmp/cmp.c", []),
 }
 
 
 # c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
 # 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
-C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45"}}
+C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45"},
+         # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
+         "od": {"R3"},
+         # df: the original has `CP mem,#k` (no R4) and `INC R15,#4 ; LD @R15,#0` (no R1): newer c2 forms for these two (4 sites, measured)
+         "df": {"R1", "R4"},
+         # rm: same newer c2 forms for R1/R4 (8 sites) and R5 (`i = b = getchar()` keeps `ld r2,r3 ; ld MEM,r3`, 2 sites; measured)
+         "rm": {"R1", "R4", "R5"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}

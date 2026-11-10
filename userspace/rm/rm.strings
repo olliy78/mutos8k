@@ -1,0 +1,15 @@
+14C2 directory %s: 
+14E6 %s/%.14s
+1501 %s: 
+1506 rm: %s %o mode 
+152A %s: 
+152F /bin/rmdir
+153A rmdir
+1540 /usr/bin/rmdir
+154F rmdir
+1555 rmdir
+155B rmdir
+15BC null
+1663 b/bin/sh
+166C PATH
+1671 :/bin:/usr/bin

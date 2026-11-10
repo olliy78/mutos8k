@@ -1,0 +1,2 @@
+# Hand-made correction for rm.members: 474 B variant of doprnt (LD R4,R2 instead of EXTSL RQ4), jump-table entry points 2 bytes later (see df.members.zusatz).
+doprnt code=0792,0798,07AE

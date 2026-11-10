@@ -1,0 +1,3 @@
+# Hand-made correction for df.members: the doprnt of this program is the 474 B variant (LD R4,R2 instead of EXTSL RQ4, as in dcheck/ncheck/mkfs),
+# so the three jump-table entry points lie 2 bytes later than members_auto assumed (as dcheck: 065C,0662,0678 for a member at 0532).
+doprnt code=03E4,03EA,0400
