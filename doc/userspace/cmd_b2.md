@@ -53,7 +53,7 @@ Vor dem Einbau der Regeln wurden alle 20 vorhandenen `neu.s` der Hauptkopie auf 
 ## Regression (gemessen, `cmp` gegen `work/NAME.orig`)
 
 Ganzdatei bytegleich nach den Regeln: sync getty cat date ls stty init login mount umount echo pwd rmdir mkdir wc size chmod kill cp ln (`alles NAME --c2emu [--libc alt]`);
-`sh`: siehe Bericht (`bau sh --c2emu --variante v7fix`).
+`sh`: `bau sh --c2emu --variante v7fix` zuerst 18298 B (R35 1x, R38 1x griffen), nach Abschalten in `C2_AUS["sh"]` 18296 B und `cmp` gegen `work/sh.orig` gleich.
 
 ## Aussagekraft
 
