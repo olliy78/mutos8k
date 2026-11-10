@@ -1,8 +1,13 @@
-cd /tmp
-echo start
+cat <<E
+start
+E
 sleep 1
-echo ok
+cat <<E
+ok
+E
 sleep 0
 sleep 1x
 sleep
-echo ende
+cat <<E
+ende
+E
