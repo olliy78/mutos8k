@@ -47,6 +47,7 @@ PROGRAMME = {
     "mkdir": ("cmd", "bin/mkdir", "userspace/mkdir/mkdir.c", []),
     "wc": ("cmd", "bin/wc", "userspace/wc/wc.c", []),
     "size": ("cmd", "bin/size", "userspace/size/size.c", []),
+    "mkfs": ("cmd", "etc/mkfs", "userspace/mkfs/mkfs.c", [V7INC + "sys/" + h for h in ("param.h", "ino.h", "inode.h", "filsys.h", "fblk.h", "dir.h")]),
 }
 
 
@@ -186,12 +187,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name))
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs")
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name))
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs")
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)

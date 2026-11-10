@@ -378,7 +378,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
     return erg
 
 
-def c2_emu_s(s, aus=()):
+def c2_emu_s(s, aus=(), mkfs=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -594,7 +594,157 @@ def c2_emu_s(s, aus=()):
             continue
         out.append(a)
         i += 1
+    if mkfs:
+        t, n2 = c2_mkfs_s("\n".join(out))
+        n.update(n2)
+        return t, n
     return "\n".join(out), n
+
+
+def c2_mkfs_s(s):
+    """Rules R35-R45: measured on `etc/mkfs` ONLY (doc/userspace/cmd_b3.md), applied behind c2_emu_s and only when it is called with
+    mkfs=True (pipeline.py passes it for mkfs alone).  Each describes where the (older) original c2 differs from the shipped one in
+    that program, with the number of sites; none of them is a run of the old c2.
+      R35  `ld MEM,rN [; test rN ; jr ..] ; ld r0,MEM ; cp r0,#k` -> `ld r0,rN ; cp r0,#k`; the first following `push @SP,rN`/`test rN`
+           (behind the jr chain) uses r0
+      R36  `cp @rN,#k` -> `ld r0,@rN ; cp r0,#k`   (R4 for a register-indirect operand)
+      R37  after `ld r0,MEM ; cp r0,#k` a later `ld rN,MEM` (same basic block, r0/MEM untouched) -> `ld rN,r0`
+      R38  `mult rr4,#k ; ld r4,r5 ; sub rX,r5` -> `sub rX,r4`
+      R39  `call _getnum ; ld -N(FP),r3` -> `ld r2,r3 ; ld -N(FP),r2`
+      R40  `ldl MEM,rr4 ; testl rr4` -> `testl MEM`
+      R41  `ld rN,X ; ld MEM(FP),rN ; ld r3,Y .. add rN,.. ; ld MEM(FP),rN` -> reload `ld rN,MEM` behind the first store (`dp = x; dp += y`)
+      R42  `ld r4,@r3 ; sla r4,#%4 ; add r2,r4` -> `.. ; ld r3,r4 ; add r2,r3`
+      R43  `ld r3,MEM ; .. ; ld r2,r3 ; inc @r2,#%1` -> `ld r2,MEM`
+      R44  `ldl rr2,MEM ; ldl DST,rr2 ; ldk r5,#%19 ; exts rr4 ; extsl rq0 ; divl rq0,rr4` -> `ldl rr2,MEM ; nop*3 ; ldl DST,rr2 ; ldl rr2,MEM ; ..`
+      R45  `ldl rr0,rr2 ; cpl rr2,M ; jr cc L ; ld r5,X ; xor r4,r4 ; cpl rr2,rr4 ; jr cc L2 ; pushl @SP,rr2` -> cpl on rr0, `ldl rr2,rr0` behind the
+           first jr, `pushl @SP,rr0`"""
+    z = s.split("\n")
+    names = ("R35", "R36", "R37", "R38", "R39", "R40", "R41", "R42", "R43", "R44", "R45")
+    n = {k: 0 for k in names}
+    reg = r"(r[hl]?\d+|rr\d+|rq\d+|sp|fp|@.*)$"
+    out = []
+    fwd = None            # R37: MEM mirrored in r0
+    alias = None          # R35: register whose next use becomes r0
+    i = 0
+    while i < len(z):
+        a = z[i]
+        b = z[i + 1] if i + 1 < len(z) else ""
+        # --- bookkeeping: end of basic block
+        if re.match(r"L\d+:$", a) or re.match(r"(call|jp|ret)\b", a):
+            fwd = None
+            alias = None
+        if alias and not a.startswith(("jr\t", "cp\tr0,#")):
+            if a == "push\t@SP," + alias or a == "test\t" + alias:
+                a = a.replace(alias, "r0")
+            alias = None
+        # R37 behind the others' bookkeeping
+        f37 = re.match(r"ld\t(r[1-9]\d*),(.+)$", a)
+        if fwd and f37 and f37.group(2) == fwd:
+            out.append("ld\t%s,r0" % f37.group(1))
+            n["R37"] += 1
+            i += 1
+            continue
+        # R35
+        m35 = re.match(r"ld\t([^,]+),(r\d+)$", a)
+        if m35 and not re.match(reg, m35.group(1)) and not (i and z[i - 1].startswith("xorb\t")):   # byte loads (`c = string[i]`) keep the reload
+            j = i + 1
+            while j < len(z) and (z[j] == "test\t" + m35.group(2) or z[j].startswith("jr\t")):
+                j += 1
+            if j + 1 < len(z) and z[j] == "ld\tr0," + m35.group(1) and z[j + 1].startswith("cp\tr0,#"):
+                out += z[i:j]
+                out += ["ld\tr0," + m35.group(2), z[j + 1]]
+                alias = m35.group(2)
+                fwd = m35.group(1)
+                n["R35"] += 1
+                i = j + 2
+                continue
+        # R36
+        m36 = re.match(r"cp\t(@r\d+),(#[^,]+)$", a)
+        if m36:
+            out += ["ld\tr0," + m36.group(1), "cp\tr0," + m36.group(2)]
+            n["R36"] += 1
+            i += 1
+            continue
+        # R37 start: R4 form
+        m4 = re.match(r"ld\tr0,([^@,][^,]*)$", a)
+        if m4 and b.startswith("cp\tr0,#") and not re.match(reg, m4.group(1)):
+            fwd = m4.group(1)
+        elif fwd and not re.match(r"(cp|cpl|cpb|test|testl|testb|jr|push|pushl)\t", a) and (
+                re.match(r"\w+\t(r0|rr0|rl0|rh0|rq0)\b", a) or re.match(r"\w+\t%s(,|$)" % re.escape(fwd), a)):
+            fwd = None
+        # R38
+        if out and out[-1].startswith("mult\trr4,#") and a == "ld\tr4,r5" and re.match(r"sub\t(r\d+),r5$", b):
+            out += [a, "sub\t%s,r4" % re.match(r"sub\t(r\d+),r5$", b).group(1)]
+            n["R38"] += 1
+            i += 2
+            continue
+        # R39
+        if out and out[-1] == "call\t_getnum" and re.match(r"ld\t-%[0-9A-F]+\(FP\),r3$", a):
+            out += ["ld\tr2,r3", a.replace(",r3", ",r2")]
+            n["R39"] += 1
+            i += 1
+            continue
+        # R40
+        if re.match(r"ldl\t[^r][^,]*,rr4$", a) and b == "testl\trr4":
+            out += [a, "testl\t" + a.split("\t")[1].split(",")[0]]
+            n["R40"] += 1
+            i += 2
+            continue
+        # R41
+        m41 = re.match(r"ld\t(-%[0-9A-F]+\(FP\)),(r\d+)$", a)
+        if m41 and out and re.match(r"ld\t%s," % m41.group(2), out[-1]) and b.startswith("ld\tr3,"):
+            k = i + 1
+            seen_add = False
+            hit = False
+            while k < len(z) and k < i + 10 and not re.match(r"(L\d+:|call|jp|jr)", z[k]):
+                if z[k].startswith("add\t%s," % m41.group(2)):
+                    seen_add = True
+                if z[k] == a and seen_add:
+                    hit = True
+                    break
+                k += 1
+            if hit:
+                out += [a, "ld\t%s,%s" % (m41.group(2), m41.group(1))]
+                n["R41"] += 1
+                i += 1
+                continue
+        # R42
+        if out and out[-1] == "ld\tr4,@r3" and a == "sla\tr4,#%4" and b == "add\tr2,r4":
+            out += [a, "ld\tr3,r4", "add\tr2,r3"]
+            n["R42"] += 1
+            i += 2
+            continue
+        # R43
+        if a == "ld\tr2,r3" and b == "inc\t@r2,#%1":
+            for q in range(len(out) - 1, max(len(out) - 8, -1), -1):
+                mq = re.match(r"ld\tr3,(%[0-9A-F]+\(FP\))$", out[q])
+                if mq:
+                    out += ["ld\tr2," + mq.group(1), b]
+                    n["R43"] += 1
+                    i += 2
+                    break
+            else:
+                mq = None
+            if mq:
+                continue
+        # R44
+        if (re.match(r"ldl\trr2,[^r]", a) and re.match(r"ldl\t[^r][^,]*,rr2$", b) and z[i + 2:i + 5] == ["ld\tr5,#%19", "exts\trr4", "extsl\trq0"]
+                and z[i + 5:i + 6] == ["divl\trq0,rr4"]):
+            out += [a, "nop", "nop", "nop", b, a]
+            n["R44"] += 1
+            i += 2
+            continue
+        # R45
+        if (a == "ldl\trr0,rr2" and re.match(r"cpl\trr2,[^r]", b) and re.match(r"jr\t\w+\tL\d+$", z[i + 2:i + 3] and z[i + 2] or "")
+                and z[i + 3].startswith("ld\tr5,") and z[i + 4] == "xor\tr4,r4" and z[i + 5] == "cpl\trr2,rr4"
+                and z[i + 6].startswith("jr\t") and z[i + 7] == "pushl\t@SP,rr2"):
+            out += [a, b.replace("rr2", "rr0", 1), z[i + 2], "ldl\trr2,rr0", z[i + 3], z[i + 4], z[i + 5], z[i + 6], "pushl\t@SP,rr0"]
+            n["R45"] += 1
+            i += 8
+            continue
+        out.append(a)
+        i += 1
+    return "\n".join(out), {k: v for k, v in n.items()}
 
 
 # ---------------------------------------------------------------- comparison
