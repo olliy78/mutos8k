@@ -1,0 +1,4 @@
+Erwartung aus V7-Handbuch man1/touch.1 und V7-Quelltext touch.c: -c legt nicht an (n1 fehlt im ersten ls); ohne -c wird angelegt (a); Inhalt bleibt (ein Byte
+lesen und zurueckschreiben; cat h -> hi); Meldung "touch: file %s does not exist." bei -c ohne Datei; "ls -t" sortiert nach Aenderungszeit, neueste zuerst (man1/ls.1).
+Die Reihenfolge nach "touch old" setzt voraus, dass die Gastuhr zwischen den Schreibvorgaengen weiterlaeuft (sleep 2) -- sonst T.
+Im Gast gemessen 2026-11-10: Ausgabe gleich der Erwartung (erg.py alles).

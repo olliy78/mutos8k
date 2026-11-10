@@ -1,0 +1,2 @@
+Erwartung: GNU coreutils 9.7 split (Host, Debian) mit Wrapper fuer die V7-Syntax: -N -> -l N, '-' = Standardeingabe, Namensstamm als letztes Argument (Vorgabe x -> xaa, xab ...).
+Dateinamenfolge aa, ab, ... wie V7 split.c (fnumber/26, fnumber%26).  Man: original/unix-v7/usr/man/man1/split.1.

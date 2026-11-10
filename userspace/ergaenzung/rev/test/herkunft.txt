@@ -1,0 +1,4 @@
+Host-Referenz: rev (util-linux 2.41.5) auf denselben Eingaben (gemessen 2026-11-10): r1 -> "cba", "", "dlrow olleh", "54321"; r2 -> "0008 SOTUM", "yx".
+Fehlerfall nach V7-Quelltext rev.c: "rev: cannot open nofile" auf stderr, Exit 1.
+Hinweis: V7-rev verwirft eine letzte Zeile ohne Zeilenende (anders als util-linux); die Eingaben enden deshalb mit Zeilenende.
+Im Gast gemessen 2026-11-10: Ausgabe gleich der Erwartung (erg.py alles).

@@ -1,0 +1,2 @@
+Erwartung: GNU coreutils 9.7 comm (Host, Debian), 'comm --nocheck-order'; Eingaben sind sortiert (LC_ALL=C).
+Gleiche Spaltenaufteilung mit Tabulatoren wie V7 (man comm: Spalte 2 mit einem, Spalte 3 mit zwei Tabs, abgeschaltete Spalten rutschen auf).

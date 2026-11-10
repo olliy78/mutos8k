@@ -1,0 +1,3 @@
+Erwartung aus dem V7-Quelltext tty.c und man1/tty.1 ("not a tty" wenn Standardeingabe kein Terminal; Exit 1; -s unterdrueckt die Ausgabe).
+Nur der Fall ohne Terminal ist geprueft. Der Fall mit Terminal (Name der Konsole in /dev) haengt von den Geraetedateien des Gastes ab, die nicht bekannt sind:
+nicht geraten, nicht Teil dieses Tests (offen). Im Gast gemessen 2026-11-10: Ausgabe gleich der Erwartung (erg.py alles).

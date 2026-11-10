@@ -1,0 +1,16 @@
+cba
+
+dlrow olleh
+54321
+0008 SOTUM
+yx
+cba
+
+dlrow olleh
+54321
+0008 SOTUM
+yx
+0008 SOTUM
+yx
+rev: cannot open nofile
+r=1

@@ -1,0 +1,5 @@
+start
+ok
+bad character
+arg count
+ende
