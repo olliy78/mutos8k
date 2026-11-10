@@ -112,9 +112,9 @@ Aussagekraft wie oben (Punkte 1, 2, 5).  Die Quellen sind V7 (`original/unix-v7/
 Alle Abweichungen sind an der Stelle mit `/* Differs from V7: ... */` kommentiert und im Dokument belegt.  Dass sie die **MUTOS-Fassung** sind, ist jeweils eine
 **Annahme**; gemessen ist nur, dass dieser Text die Originalbytes erzeugt (z. B. `itab` 4096 B im Original, `sblock` 512 B statt 440 B der V7-`struct filsys`).
 
-**Warnung zu den Regeln.**  Mit Stufe 2 kamen 25 weitere c2-Regeln hinzu (R35-R59 ohne R40, R44; R44 entfaellt, weil B1s R38 dieselbe Form erzeugt).  Mehr als die Haelfte
-greift an genau einer Stelle: sie beschreiben einen Unterschied, erklaeren aber nicht den alten c2.  Die Regeln von drei Auftraegen sind getrennt entstanden und mussten
-umbenannt werden (B2: R35-R41 zu R42-R48; B3: R35-R45 zu R49-R59, gelten nur in `c2_mkfs_s`); R35 und R38 aus `cmd_b2`/B1 treffen sonst `sh` (dort in `C2_AUS` abgeschaltet).
+**Warnung zu den Regeln.**  Mit Stufe 2 kamen 22 weitere c2-Regeln hinzu (B1: R35-R39, B2: R42, R43, R45-R48, B3: R49-R59; die Nummer R44 ist frei, weil B1s R38 dieselbe Form erzeugt).  Die Mehrzahl
+greift an nur einer Stelle (Schaetzung nach den Agentenberichten, nicht ausgezaehlt): sie beschreiben einen Unterschied, erklaeren aber nicht den alten c2.  Die Regeln von drei Auftraegen sind getrennt entstanden und mussten
+umbenannt werden (B2: R35-R41 zu R42-R48; B3: R35-R45 zu R49-R59, gelten nur in `c2_mkfs_s`); B2s R42 und R45 (urspruenglich R35, R38) treffen sonst `sh` (dort in `C2_AUS` abgeschaltet).
 Regel R42 (B2) weicht der B1-Regel R37 aus: das ist eine nachtraegliche Anpassung, die Bytegleichheit bleibt (Regression 26/26).
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
@@ -129,7 +129,7 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | E1a | sleep, touch, yes, tty, sum, rev (`mesg`: **X**, baut, nicht getestet) | keine | `erg_e1a.md` |
 | E1b | uniq, comm, split, tail, cal, look, nice, time, test | `time.c`: `<times.h>` statt `<sys/times.h>` | `erg_e1b.md` |
 
-Gemessen (auch vom Projektinhaber-Agenten nachgepruft): alle 17 B im Gast.  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 17 B im Gast.  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
 **Offen:** `tail -2` auf eine Datei ohne Schlusszeilenumbruch gibt im Gast drei statt zwei Zeilen aus; vermutlich V7-Verhalten, **nicht** gegen eine PDP-11 und nicht gegen einen
 Compilerfehler abgegrenzt.
