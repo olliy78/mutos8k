@@ -47,6 +47,11 @@ PROGRAMME = {
     "mkdir": ("cmd", "bin/mkdir", "userspace/mkdir/mkdir.c", []),
     "wc": ("cmd", "bin/wc", "userspace/wc/wc.c", []),
     "size": ("cmd", "bin/size", "userspace/size/size.c", []),
+    "clri": ("cmd", "etc/clri", "userspace/clri/clri.c", [V7INC + "sys/ino.h"]),
+    "mknod": ("cmd", "etc/mknod", "userspace/mknod/mknod.c", []),
+    "dcheck": ("cmd", "etc/dcheck", "userspace/dcheck/dcheck.c",
+               [V7INC + "sys/param.h", V7INC + "sys/inode.h", V7INC + "sys/ino.h", V7INC + "sys/dir.h",
+                V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
 }
 
 
