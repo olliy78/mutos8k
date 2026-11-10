@@ -1,0 +1,9 @@
+1838 /etc/utmp
+1844 tty??
+184C who: cannot open utmp
+1862 %-8.8s %-8.8s
+1878 /etc/passwd
+18D0 null
+1977 v/dev/
+19B8 SunMonTueWedThuFriSat
+19CE JanFebMarAprMayJunJulAugSepOctNovDec
