@@ -1,0 +1,12 @@
+pear
+apple
+Banana
+cherry
+apple
+date
+Cherry
+fig
+10 ten
+9 nine
+ leading
+zebra
