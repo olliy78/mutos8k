@@ -18,6 +18,8 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b2.md` | `/etc`: ncheck, icheck (ganzdatei bytegleich), c2-Regeln R42-R48 |
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
+| `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
+| `erg_e2a.md`, `erg_e2b.md` | Ergaenzungen aus V7 (Plan 45): grep fgrep tr join du file; sort find diff diffh |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
 | `../plan/42_unix_herkunft.md`, `../plan/43_c_nachbau.md` | Plaene (H7 = Userspace) |
@@ -117,6 +119,25 @@ greift an nur einer Stelle (Schaetzung nach den Agentenberichten, nicht ausgezae
 umbenannt werden (B2: R35-R41 zu R42-R48; B3: R35-R45 zu R49-R59, gelten nur in `c2_mkfs_s`); B2s R42 und R45 (urspruenglich R35, R38) treffen sonst `sh` (dort in `C2_AUS` abgeschaltet).
 Regel R42 (B2) weicht der B1-Regel R37 aus: das ist eine nachtraegliche Anpassung, die Bytegleichheit bleibt (Regression 26/26).
 
+## Herkunft der Quellen: Diskette `cmd`, Stufe 3a (gemessen 2026-11-11)
+
+Sechs weitere Programme, **ganzdatei bytegleich** (`pipeline.py alles NAME --c2emu --libc alt --ist neu_c2_s`).  Nach dem Merge wiederholt gemessen (cmp/Bericht): df rm mv od who cmp
+sowie als Stichprobe cat ls mkfs ncheck init -- 11 von 11 gleich; der Agent meldet 33 von 33 aller Rueckbau-Programme (22:20-23:00, nicht von mir wiederholt).  Aussagekraft wie oben.
+
+| Programm | Datei (B) | Abweichung vom V7-Text | c2-Regeln |
+|----------|-----------|------------------------|-----------|
+| od | 5552 | keine | R60 1; `C2_AUS` R3 |
+| who | 6662 | keine | -- |
+| cmp | 4656 | keine | R61 3, R62 1 |
+| mv | 6836 | `"dir.h"` statt `<sys/dir.h>` | R63 1 |
+| rm | 5782 | `"dir.h"`; **eine Zeile, die nicht V7 ist** (`execlp("rmdir","rmdir",f,0);`, ohne sie fehlten 580 B im libc-Teil) | `C2_AUS` R1 R4 R5 (keine Regel greift) |
+| df | 3562 | `"x.h"`-Includes, Geraete `/dev/rk0`/`rk1` statt `rp0`/`rp3`, `sblock`/`buf` auf 512 B aufgefuellt, `BSIZE` statt `sizeof` | R64 1; `C2_AUS` R1 R4 |
+
+Dass die Abweichungen die MUTOS-Fassung sind, ist **Annahme**; gemessen ist nur, dass der Text die Originalbytes erzeugt.  Dass df und rm mit einem anderen c2-Stand uebersetzt wurden
+(`C2_AUS`), ist Annahme.  R60-R64 sind schwach belegt (1 bis 3 Stellen).  Behelfe: `who.members` von Hand (Glied `getgrgid` in `getpwuid` umbenannt, geht bei Neuerzeugung verloren),
+`cmp.members.zusatz`, `df.members.zusatz`, `rm.members.zusatz`.
+Gemessener Stolperstein: ein parallel gestarteter Lauf scheitert gelegentlich beim Emulator-Neubau (`dev.sh build failed`, GoogleTest-Ziele) -- das ist kein Befund zum Programm; Wiederholung einzeln.
+
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
 Programme, die auf den MUTOS-Disketten **fehlen**, aus den V7-Quellen (nur V7, nichts aus System III).  Es gibt keine Originalreferenz, deshalb keine Bytegleichheit:
@@ -128,9 +149,13 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | E0 | basename, tee | keine (tee braucht `errno.h` aus V7) | `erg_e0.md` |
 | E1a | sleep, touch, yes, tty, sum, rev (`mesg`: **X**, baut, nicht getestet) | keine | `erg_e1a.md` |
 | E1b | uniq, comm, split, tail, cal, look, nice, time, test | `time.c`: `<times.h>` statt `<sys/times.h>` | `erg_e1b.md` |
+| E2a | grep, fgrep, tr, join, du, file | grep, du, file: `<param.h>`/`<dir.h>` statt `<sys/..>` | `erg_e2a.md` |
+| E2b | sort, find, diff, diffh | find: `<dir.h>` statt `<sys/dir.h>` | `erg_e2b.md` |
 
-Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 17 B im Gast.  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 27 B im Gast (E0 bis E2b).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
+E2: `file` erkennt keine Z8000-Programme (MUTOS-Magic E807, V7 kennt nur 0407/0410/0411); `diff -h` ist im Gast nicht testbar (`/usr/lib/diffh` fest, `usr`-Platte voll);
+`find` hat keine Host-Referenz (Erwartung = Gastausgabe, von Hand gegen das Handbuch geprueft); `du` nur Dateizweig getestet.
 **Offen:** `tail -2` auf eine Datei ohne Schlusszeilenumbruch gibt im Gast drei statt zwei Zeilen aus; vermutlich V7-Verhalten, **nicht** gegen eine PDP-11 und nicht gegen einen
 Compilerfehler abgegrenzt.
 
