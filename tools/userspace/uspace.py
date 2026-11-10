@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=()):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R44": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -505,14 +505,6 @@ def c2_emu_s(s, aus=()):
             n["R36"] += 1
             i += 2
             continue
-        # R44  `ld r0,MEM ; cp r0,#k ; jr cc L ; ld rX,MEM` (R4 form) -> `ld rX,r0` (the original reuses R0 as a copy of MEM; ncheck bmap `i < NADDR-3`, 1x)
-        l37 = re.match(r"ld\t(r\d+),([^,@]+)$", a)
-        if (l37 and "R44" not in aus and r0mem == l37.group(2) and len(out) >= 2 and out[-1].startswith("jr\t")
-                and out[-2].startswith("cp\tr0,") and not re.match(r"r\d+$", l37.group(2))):
-            out.append("ld\t%s,r0" % l37.group(1))
-            n["R44"] += 1
-            i += 1
-            continue
         # R45  `xor r2,r2 ; div rr2,#k` (unsigned remainder/quotient by a constant) -> `exts rr2 ; div rr2,#k` (the original divides as signed; ncheck lookup `i%HSIZE`, 1x)
         if a == "xor\tr2,r2" and b.startswith("div\trr2,#") and "R45" not in aus:
             out.append("exts\trr2")
@@ -529,7 +521,9 @@ def c2_emu_s(s, aus=()):
         # R42  `ld rN,SRC ; ld MEM,rN ; test rN` (SRC, MEM memory operands) -> `test MEM` (the original tests the stored variable; a call result
         #      `call ; ld MEM,r2 ; test r2` keeps `test r2`, R33; ncheck `kno = dp->d_ino` 2x, icheck `n = sblock.s_..` 3x)
         m35 = re.match(r"ld\t([^,@#]+),(r\d+)$", a)
+        #      (not when R37 applies to the same place: `test rN ; jr cc ; ld r0,rN ; cp rN,X` -- R37 (dcheck) covers it, measured)
         if (m35 and "R42" not in aus and b == "test\t" + m35.group(2) and not re.match(r"(r[hlqr]?\d+|sp|fp)$", m35.group(1), re.I)
+                and not (i + 3 < len(z) and z[i + 2].startswith("jr\t") and z[i + 3] == "ld\tr0," + m35.group(2))
                 and out and re.match(r"ld\t%s,[^r#][^,]*$|ld\t%s,@r\d+$" % (m35.group(2), m35.group(2)), out[-1])):
             out += [a, "test\t" + m35.group(1)]
             stored[m35.group(2)] = m35.group(1)
