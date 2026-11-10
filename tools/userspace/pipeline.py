@@ -37,6 +37,10 @@ PROGRAMME = {
     "stty": ("root", "bin/stty", "userspace/stty/stty.c", []),   # not V7: extended stty, doc/userspace/stty.md
     "date": ("root", "bin/date", "userspace/date/date.c", [V7INC + "sys/timeb.h", V7INC + "utmp.h"]),
     "ls": ("root", "bin/ls", "userspace/ls/ls.c", [V7INC + "sys/param.h", V7INC + "sys/dir.h"]),
+    "echo": ("cmd", "bin/echo", "userspace/echo/echo.c", []),
+    "pwd": ("cmd", "bin/pwd", "userspace/pwd/pwd.c", [V7INC + "sys/param.h", V7INC + "sys/dir.h"]),
+    "rmdir": ("cmd", "bin/rmdir", "userspace/rmdir/rmdir.c", [V7INC + "sys/dir.h"]),
+    "mkdir": ("cmd", "bin/mkdir", "userspace/mkdir/mkdir.c", []),
 }
 
 
