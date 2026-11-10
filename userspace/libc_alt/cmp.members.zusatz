@@ -1,0 +1,6 @@
+# Hand-made corrections for cmp.members (read by `libc_alt.py members cmp`).
+# cmp uses isdigit(), i.e. the data-only member ctype_ (130 B at 119C..121E); members_auto adds it only for atof and
+# so placed the doprnt/data windows 0x48 bytes too far back.  Measured: "null" of doprnt at 10F4, _iob at 10FA, ctype table at 119C.
+doprnt data=10AE:10FA
+data data=10FA:119C exp=__iob@10FA,__lastbu@119A
++ ctype_ 0CCA 0CCA data=119C:121E exp=__ctype@119C src=S
