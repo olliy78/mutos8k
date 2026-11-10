@@ -1,0 +1,5 @@
+Erwartung: GNU coreutils 9.7 tr auf dem Host (LC_ALL=C), gleicher Befehl, Ausgabe + Exit-Status ("rc=N").
+Nur Faelle, in denen V7-tr und GNU gleich arbeiten: Bereiche a-z, -d, -c, -cd, -s mit zwei Zeichenketten (SET1 SET2), Auffuellen von string2 mit dem letzten
+Zeichen, Oktalschreibweise \101 und \012, \\.
+Nicht getestet (Abweichung): V7 '-s' mit nur einem Argument quetscht nichts (squeez wird nur aus string2 gefuellt; GNU quetscht SET1); V7 verwirft NUL-Bytes;
+Zeichenklassen [:alpha:] und [x*n] gibt es in V7 nicht.  Handbuch: original/unix-v7/usr/man/man1/tr.1.

@@ -1,0 +1,178 @@
+--- tr a-z A-Z <t.txt
+HELLO WORLD, 123 TIMES!
+THE  QUICK   BROWN FOX
+
+AAA BBB  CCC
+TAB	HERE AND A\ BACKSLASH
+ZZZ 007
+rc=0
+--- tr A-Z a-z <t.txt
+hello world, 123 times!
+the  quick   brown fox
+
+aaa bbb  ccc
+tab	here and a\ backslash
+zzz 007
+rc=0
+--- tr -d aeiou <t.txt
+Hll Wrld, 123 tms!
+th  qck   brwn fx
+
+AAA bbb  ccc
+tb	hr nd \ bckslsh
+zzz 007
+rc=0
+--- tr -d '0-9' <t.txt
+Hello World,  times!
+the  quick   brown fox
+
+AAA bbb  ccc
+tab	here and a\ backslash
+zzz 
+rc=0
+--- tr -cd '0-9' <t.txt
+123007rc=0
+--- tr -cd '0-9\012' <t.txt
+123
+
+
+
+
+007
+rc=0
+--- tr -s ' ' ' ' <t.txt
+Hello World, 123 times!
+the quick brown fox
+
+AAA bbb ccc
+tab	here and a\ backslash
+zzz 007
+rc=0
+--- tr -s 'a-z' 'a-z' <t.txt
+Helo World, 123 times!
+the  quick   brown fox
+
+AAA b  c
+tab	here and a\ backslash
+z 007
+rc=0
+--- tr -cs A-Za-z '\012' <t.txt
+Hello
+World
+times
+the
+quick
+brown
+fox
+AAA
+bbb
+ccc
+tab
+here
+and
+a
+backslash
+zzz
+rc=0
+--- tr abc x <t.txt
+Hello World, 123 times!
+the  quixk   xrown fox
+
+AAA xxx  xxx
+txx	here xnd x\ xxxkslxsh
+zzz 007
+rc=0
+--- tr abcdef 12 <t.txt
+H2llo Worl2, 123 tim2s!
+th2  qui2k   2rown 2ox
+
+AAA 222  222
+t12	h2r2 1n2 1\ 212ksl1sh
+zzz 007
+rc=0
+--- tr 'lo' 'xy' <t.txt
+Hexxy Wyrxd, 123 times!
+the  quick   brywn fyx
+
+AAA bbb  ccc
+tab	here and a\ backsxash
+zzz 007
+rc=0
+--- tr '\101' 'z' <t.txt
+Hello World, 123 times!
+the  quick   brown fox
+
+zzz bbb  ccc
+tab	here and a\ backslash
+zzz 007
+rc=0
+--- tr ' ' '\012' <t.txt
+Hello
+World,
+123
+times!
+the
+
+quick
+
+
+brown
+fox
+
+AAA
+bbb
+
+ccc
+tab	here
+and
+a\
+backslash
+zzz
+007
+rc=0
+--- tr -c 'a-z' '_' <t.txt
+_ello__orld______times__the__quick___brown_fox______bbb__ccc_tab_here_and_a__backslash_zzz_____rc=0
+--- tr -c 'a-zA-Z0-9' '\012' <t.txt
+Hello
+World
+
+123
+times
+
+the
+
+quick
+
+
+brown
+fox
+
+AAA
+bbb
+
+ccc
+tab
+here
+and
+a
+
+backslash
+zzz
+007
+rc=0
+--- cat t.txt | tr a-c A-C
+Hello World, 123 times!
+the  quiCk   Brown fox
+
+AAA BBB  CCC
+tAB	here And A\ BACkslAsh
+zzz 007
+rc=0
+--- tr '\\' '/' <t.txt
+Hello World, 123 times!
+the  quick   brown fox
+
+AAA bbb  ccc
+tab	here and a/ backslash
+zzz 007
+rc=0
