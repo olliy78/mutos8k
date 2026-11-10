@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=()):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0}
     i = 0
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
     r0mem = None        # R4: memory operand currently mirrored in R0 by an emitted `ld r0,mem ; cp r0,#k`
@@ -468,6 +468,34 @@ def c2_emu_s(s, aus=()):
             n["R6"] += 1
             i += 4
             continue
+        # R37  `ld M,rN ; test rN ; jr cc L ; ld r0,rN ; cp rN,X` (M = frame/direct operand) -> the original works on the memory
+        #      copy: `test M ; jr cc L ; ld r0,M ; cp r0,X`, and R4's R0 reuse then covers a following `cp M,#k` (dcheck 1x; MODEL)
+        if (a.startswith("test\t") and "R37" not in aus and out and i + 3 < len(z)):
+            t37 = re.match(r"test\t(r\d+)$", a)
+            l37 = re.match(r"ld\t([^,]+),(r\d+)$", out[-1])
+            c37 = re.match(r"cp\t(r\d+),([^,]+)$", z[i + 3])
+            if (t37 and l37 and l37.group(2) == t37.group(1) and not re.match(r"(r[hlqr]?\d+|sp|fp)$|@", l37.group(1), re.I)
+                    and re.match(r"jr\t", b) and z[i + 2] == "ld\tr0," + t37.group(1) and c37 and c37.group(1) == t37.group(1)):
+                out += ["test\t" + l37.group(1), b, "ld\tr0," + l37.group(1), "cp\tr0," + c37.group(2)]
+                r0mem = l37.group(1)
+                n["R37"] += 1
+                i += 4
+                continue
+        # R35  `ldb @r2,#%FF` (byte store of 255 through r2) -> the original loads the constant first: `ld r3,#%FF ; ldb @r2,rl3` (dcheck 1x; MODEL)
+        if a == "ldb\t@r2,#%FF" and "R35" not in aus:
+            out += ["ld\tr3,#%FF", "ldb\t@r2,rl3"]
+            n["R35"] += 1
+            i += 1
+            continue
+        # R36  `and rB,#%FF ; ld rA,rB ; cp rB,M` -> `cp rA,M` (the original compares the copy; dcheck 1x; MODEL)
+        c36 = re.match(r"cp\t(r\d+),([^,r][^,]*|r\d+\([^,]*)$", b)
+        l36 = re.match(r"ld\t(r\d+),(r\d+)$", a)
+        if (l36 and c36 and c36.group(1) == l36.group(2) and "R36" not in aus and out and out[-1] == "and\t%s,#%%FF" % l36.group(2)
+                and not c36.group(2).startswith("r0")):
+            out += [a, "cp\t%s,%s" % (l36.group(1), c36.group(2))]
+            n["R36"] += 1
+            i += 2
+            continue
         # R4  `cp mem,#k` (mem = frame/direct operand) -> `ld r0,mem ; cp r0,#k`; a following `cp mem,#k2` directly
         #     behind a `jr cc` of the same chain reuses R0 (`cp r0,#k2`)
         c4 = re.match(r"cp\t([^,]+),(#[^,]+)$", a)
@@ -478,6 +506,13 @@ def c2_emu_s(s, aus=()):
                 out += ["ld\tr0," + c4.group(1), "cp\tr0," + c4.group(2)]
                 r0mem = c4.group(1)
             n["R4"] += 1
+            # R38  `cp M,#k ; jr cc L ; ld rN,M` -> the original reuses R0: `ld rN,r0` (dcheck bmap 1x; MODEL)
+            l38 = re.match(r"ld\t(r\d+),(.*)$", z[i + 2]) if i + 2 < len(z) else None
+            if (l38 and "R38" not in aus and l38.group(2) == c4.group(1) and re.match(r"jr\t", b)):
+                out += [b, "ld\t%s,r0" % l38.group(1)]
+                n["R38"] += 1
+                i += 3
+                continue
             i += 1
             continue
         if not re.match(r"jr\t", a):
@@ -553,6 +588,14 @@ def c2_emu_s(s, aus=()):
                 and "R5" not in aus and "R33" not in aus):
             out += [a, b]
             n["R33"] += 1
+            i += 2
+            continue
+        # R39  exception to R5: `xorb rhN,rhN ; ld rA,rN ; test rN` (char value `c = *s++` assigned to a register variable and tested) keeps
+        #      `test rN` (clri 1x; only for a register variable r8..r13 as target: cat's `ld r2,r3 ; test r3` -> `test r2` still follows R5; MODEL of the old c2)
+        if (t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus and "R39" not in aus and out
+                and int(t5.group(1)[1:]) >= 8 and out[-1] == "xorb\trh%s,rh%s" % (t5.group(2)[1:], t5.group(2)[1:])):
+            out += [a, b]
+            n["R39"] += 1
             i += 2
             continue
         if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus:

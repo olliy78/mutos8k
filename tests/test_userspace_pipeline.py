@@ -52,7 +52,7 @@ def test_c2_model_rewrites_and_canonicalises():
                    "ldb\trl3,@r2", "xorb\trh3,rh3", "ldb\t_tty(r13),rl3",
                    "xorb\trh2,rh2", "cp\tr2,#%A", "jr\teq\tL9020", "jr\tL82"])
     t, n = U.c2_emu_s(s)
-    assert n == {"R1": 1, "R2": 1, "R3": 1, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0, "R32": 0, "R33": 0, "R34": 0}
+    assert n == {"R1": 1, "R2": 1, "R3": 1, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0, "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0}
     assert "inc\tSP,#%6\npush\t@SP,#%3C" in t and t.count("xorb") == 2
     # the canonical form of the listing lines equalises both compilers' output
     orig = ["INC R15,#6", "PUSH @R15,#%003C", "LDB RL3,@R2", "LDB %1832(R13),RL3"]
