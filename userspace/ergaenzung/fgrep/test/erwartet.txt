@@ -1,0 +1,63 @@
+--- fgrep apple g1.txt
+apple crumble
+last line apple
+rc=0
+--- fgrep -n apple g1.txt
+4:apple crumble
+8:last line apple
+rc=0
+--- fgrep -v apple g1.txt
+Apple pie
+banana split
+cherry tart
+Banana bread
+grape jelly
+
+-v is not an option here
+ab*c literal
+aXXc and abbbc
+rc=0
+--- fgrep -c apple g1.txt
+2
+rc=0
+--- fgrep -l apple g1.txt g2.txt
+g1.txt
+g2.txt
+rc=0
+--- fgrep apple g1.txt g2.txt
+g1.txt:apple crumble
+g1.txt:last line apple
+g2.txt:second file apple
+rc=0
+--- fgrep -h apple g1.txt g2.txt
+apple crumble
+last line apple
+second file apple
+rc=0
+--- fgrep -x 'grape jelly' g1.txt
+grape jelly
+rc=0
+--- fgrep -x grape g1.txt
+rc=1
+--- fgrep 'ab*c' g1.txt
+ab*c literal
+rc=0
+--- fgrep 'a.c' g1.txt
+rc=1
+--- fgrep -f pat.txt g1.txt
+banana split
+cherry tart
+rc=0
+--- fgrep -e -v g1.txt
+-v is not an option here
+rc=0
+--- fgrep zzz g1.txt
+rc=1
+--- fgrep -s zzz g1.txt
+rc=1
+--- cat g1.txt | fgrep jelly
+grape jelly
+rc=0
+--- fgrep apple nosuch 2>&1
+fgrep: can't open nosuch
+rc=2

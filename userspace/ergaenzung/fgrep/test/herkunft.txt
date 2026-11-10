@@ -1,0 +1,5 @@
+Erwartung: GNU grep 3.11 -F auf dem Host (/usr/bin/grep, LC_ALL=C), Optionen gleich (-v -c -l -n -h -x -s -f -e), Ausgabe + Exit-Status ("rc=N").
+Ausnahme: Fehlerfall 'fgrep apple nosuch': Text "fgrep: can't open nosuch" und Exit 2 stammen aus dem V7-Quelltext (original/unix-v7/usr/src/cmd/fgrep.c Zeile 124), nicht von GNU.
+(Eine erste Erwartung "egrep: ..." war falsch: "egrep:" steht nur bei Fehlern der -f-Wortdatei und "unknown flag", Zeilen 81/90.)
+Nicht getestet: -b (V7 Blocknummer zu 512 Byte, GNU Byte-Offset), mehrzeilige Wortlisten als Argument (Testwerkzeug kann nur einzeilige Befehle).
+Handbuch: original/unix-v7/usr/man/man1/grep.1 (fgrep dort mitbeschrieben).
