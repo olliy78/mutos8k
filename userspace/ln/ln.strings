@@ -1,0 +1,38 @@
+0D39 %s/%s
+0D86 null
+0E2D ,Unknown error
+0E89 #Error 0
+0E92 Not owner
+0E9C No such file or directory
+0EB6 No such process
+0EC6 Interrupted system call
+0EDE I/O error
+0EE8 No such device or address
+0F02 Arg list too long
+0F14 Exec format error
+0F26 Bad file number
+0F36 No children
+0F42 No more processes
+0F54 Not enough core
+0F64 Permission denied
+0F76 Bad address
+0F82 Block device required
+0F98 Mount device busy
+0FAA File exists
+0FB6 Cross-device link
+0FC8 No such device
+0FD7 Not a directory
+0FE7 Is a directory
+0FF6 Invalid argument
+1007 File table overflow
+101B Too many open files
+102F Not a typewriter
+1040 Text file busy
+104F File too large
+105E No space left on device
+1076 Illegal seek
+1083 Read-only file system
+1099 Too many links
+10A8 Broken pipe
+10B4 Argument too large
+10C7 Result too large
