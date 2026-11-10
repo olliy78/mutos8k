@@ -1,0 +1,2 @@
+# fread/fwrite (member rdwr, as in ls.members) lie in front of the first strong libc match (fopen), so members_auto counts them as own code.
++ rdwr 0162 0242 exp=_fread@0162,_fwrite@01CA src=G

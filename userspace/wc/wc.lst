@@ -1,0 +1,1531 @@
+L0000:
+0000  21F6                  LD R6,@R15
+0002  A1F7                  LD R7,R15
+0004  A971                  INC R7,#2
+0006  2172                  LD R2,@R7
+0008  4D28 FFFE             CLR %FFFE(R2)
+000C  91F6                  PUSHL @R15,RR6
+000E  9200                  SUBL RR0,RR0
+0010  BB74 0106             CPIR R0,@R7,R1,Z
+0014  8B27                  CP R7,R2
+0016  EE01                  JR NZ,L001A
+0018  AB71                  DEC R7,#2
+L001A:
+001A  6FF7 0004             LD %0004(R15),R7
+001E  6F07 1424             LD %1424,R7
+0022  5F00 0030             CALL L0030
+0026  A9F3                  INC R15,#4
+0028  2FF2                  LD @R15,R2
+002A  5F00 0B8C             CALL _exit
+002E  7F01                  SC #%01
+L0030:
+0030  5F00 0EE0             CALL csv
+0034  030F 001E             SUB R15,#%001E
+0038  8900                  XOR R0,R0
+003A  A101                  LD R1,R0
+003C  5DE0 FFE0             LDL %FFE0(R14),RR0
+0040  8900                  XOR R0,R0
+0042  A101                  LD R1,R0
+0044  5DE0 FFDC             LDL %FFDC(R14),RR0
+0048  8900                  XOR R0,R0
+004A  A101                  LD R1,R0
+004C  5DE0 FFD8             LDL %FFD8(R14),RR0
+0050  2102 0EFE             LD R2,#%0EFE
+0054  6FE2 FFD6             LD %FFD6(R14),R2
+0058  61E0 0004             LD R0,%0004(R14)
+005C  0B00 0001             CP R0,#%0001
+0060  E215                  JR LE,L008C
+0062  61E2 0006             LD R2,%0006(R14)
+0066  A921                  INC R2,#2
+0068  2123                  LD R3,@R2
+006A  203C                  LDB RL4,@R3
+006C  8844                  XORB RH4,RH4
+006E  0B04 002D             CP R4,#%002D
+0072  EE0C                  JR NZ,L008C
+0074  61E2 0006             LD R2,%0006(R14)
+0078  A921                  INC R2,#2
+007A  2920                  INC @R2,#1
+007C  2123                  LD R3,@R2
+007E  A132                  LD R2,R3
+0080  6FE2 FFD6             LD %FFD6(R14),R2
+0084  6BE0 0004             DEC %0004(R14),#1
+0088  69E1 0006             INC %0006(R14),#2
+L008C:
+008C  4DE5 FFF2 0001        LD %FFF2(R14),#%0001
+0092  210D 0F80             LD R13,#%0F80
+L0096:
+0096  61E0 0004             LD R0,%0004(R14)
+009A  0B00 0001             CP R0,#%0001
+009E  E21F                  JR LE,L00DE
+00A0  0DF9 0F02             PUSH @R15,#%0F02
+00A4  61E2 FFF2             LD R2,%FFF2(R14)
+00A8  B329 0001             SLA R2,#1
+00AC  41E2 0006             ADD R2,%0006(R14)
+00B0  13F2                  PUSH @R15,@R2
+00B2  5F00 0288             CALL _fopen
+00B6  A9F3                  INC R15,#4
+00B8  A12D                  LD R13,R2
+00BA  8DD4                  TEST R13
+00BC  EE10                  JR NZ,L00DE
+00BE  61E2 FFF2             LD R2,%FFF2(R14)
+00C2  B329 0001             SLA R2,#1
+00C6  41E2 0006             ADD R2,%0006(R14)
+00CA  13F2                  PUSH @R15,@R2
+00CC  0DF9 0F04             PUSH @R15,#%0F04
+00D0  0DF9 0F90             PUSH @R15,#%0F90
+00D4  5F00 02A4             CALL _fprintf
+00D8  A9F5                  INC R15,#6
+00DA  5E08 01F4             JP L01F4
+L00DE:
+00DE  8900                  XOR R0,R0
+00E0  A101                  LD R1,R0
+00E2  5DE0 FFEC             LDL %FFEC(R14),RR0
+00E6  A101                  LD R1,R0
+00E8  5DE0 FFE8             LDL %FFE8(R14),RR0
+00EC  A101                  LD R1,R0
+00EE  5DE0 FFE4             LDL %FFE4(R14),RR0
+L00F2:
+00F2  4DE8 FFF0             CLR %FFF0(R14)
+L00F6:
+00F6  66D1 0006             BITB %0006(R13),#1
+00FA  EE0C                  JR NZ,L0114
+00FC  6BD0 0002             DEC %0002(R13),#1
+0100  4DD4 0002             TEST %0002(R13)
+0104  E507                  JR MI,L0114
+0106  21D2                  LD R2,@R13
+0108  29D0                  INC @R13,#1
+010A  202B                  LDB RL3,@R2
+010C  8833                  XORB RH3,RH3
+010E  0703 00FF             AND R3,#%00FF
+0112  E807                  JR L0122
+L0114:
+0114  93F2                  PUSH @R15,R2
+0116  93FD                  PUSH @R15,R13
+0118  5F00 0308             CALL __filbuf
+011C  A9F1                  INC R15,#2
+011E  A123                  LD R3,R2
+0120  97F2                  POP R2,@R15
+L0122:
+0122  A132                  LD R2,R3
+0124  A12C                  LD R12,R2
+0126  0B0C FFFF             CP R12,#%FFFF
+012A  E62C                  JR Z,L0184
+012C  54E2 FFE4             LDL RR2,%FFE4(R14)
+0130  1602 0000 0001        ADDL RR2,#%00000001
+0136  5DE2 FFE4             LDL %FFE4(R14),RR2
+013A  0B0C 0020             CP R12,#%0020
+013E  E210                  JR LE,L0160
+0140  0B0C 007F             CP R12,#%007F
+0144  E90D                  JR GE,L0160
+0146  4DE4 FFF0             TEST %FFF0(R14)
+014A  EED5                  JR NZ,L00F6
+014C  54E2 FFE8             LDL RR2,%FFE8(R14)
+0150  1602 0000 0001        ADDL RR2,#%00000001
+0156  5DE2 FFE8             LDL %FFE8(R14),RR2
+015A  69E0 FFF0             INC %FFF0(R14),#1
+015E  E8CB                  JR L00F6
+L0160:
+0160  0B0C 000A             CP R12,#%000A
+0164  EE08                  JR NZ,L0176
+0166  54E2 FFEC             LDL RR2,%FFEC(R14)
+016A  1602 0000 0001        ADDL RR2,#%00000001
+0170  5DE2 FFEC             LDL %FFEC(R14),RR2
+0174  E8BE                  JR L00F2
+L0176:
+0176  0B0C 0020             CP R12,#%0020
+017A  E6BB                  JR Z,L00F2
+017C  0B0C 0009             CP R12,#%0009
+0180  EEBA                  JR NZ,L00F6
+0182  E8B7                  JR L00F2
+L0184:
+0184  51FE FFEC             PUSHL @R15,%FFEC(R14)
+0188  51FE FFE8             PUSHL @R15,%FFE8(R14)
+018C  51FE FFE4             PUSHL @R15,%FFE4(R14)
+0190  53FE FFD6             PUSH @R15,%FFD6(R14)
+0194  5F00 023C             CALL L023C
+0198  A9FD                  INC R15,#14
+019A  61E0 0004             LD R0,%0004(R14)
+019E  0B00 0001             CP R0,#%0001
+01A2  E20D                  JR LE,L01BE
+01A4  61E2 FFF2             LD R2,%FFF2(R14)
+01A8  B329 0001             SLA R2,#1
+01AC  41E2 0006             ADD R2,%0006(R14)
+01B0  13F2                  PUSH @R15,@R2
+01B2  0DF9 0F17             PUSH @R15,#%0F17
+01B6  5F00 02D8             CALL _printf
+01BA  A9F3                  INC R15,#4
+01BC  E805                  JR L01C8
+L01BE:
+01BE  0DF9 0F1C             PUSH @R15,#%0F1C
+01C2  5F00 02D8             CALL _printf
+01C6  A9F1                  INC R15,#2
+L01C8:
+01C8  93FD                  PUSH @R15,R13
+01CA  5F00 088C             CALL L088C
+01CE  A9F1                  INC R15,#2
+01D0  54E2 FFE0             LDL RR2,%FFE0(R14)
+01D4  56E2 FFEC             ADDL RR2,%FFEC(R14)
+01D8  5DE2 FFE0             LDL %FFE0(R14),RR2
+01DC  54E2 FFDC             LDL RR2,%FFDC(R14)
+01E0  56E2 FFE8             ADDL RR2,%FFE8(R14)
+01E4  5DE2 FFDC             LDL %FFDC(R14),RR2
+01E8  54E2 FFD8             LDL RR2,%FFD8(R14)
+01EC  56E2 FFE4             ADDL RR2,%FFE4(R14)
+01F0  5DE2 FFD8             LDL %FFD8(R14),RR2
+L01F4:
+01F4  69E0 FFF2             INC %FFF2(R14),#1
+01F8  61E0 FFF2             LD R0,%FFF2(R14)
+01FC  4BE0 0004             CP R0,%0004(R14)
+0200  5E01 0096             JP LT,L0096
+0204  61E0 0004             LD R0,%0004(R14)
+0208  0B00 0002             CP R0,#%0002
+020C  E210                  JR LE,L022E
+020E  51FE FFE0             PUSHL @R15,%FFE0(R14)
+0212  51FE FFDC             PUSHL @R15,%FFDC(R14)
+0216  51FE FFD8             PUSHL @R15,%FFD8(R14)
+021A  53FE FFD6             PUSH @R15,%FFD6(R14)
+021E  5F00 023C             CALL L023C
+0222  A9FD                  INC R15,#14
+0224  0DF9 0F1E             PUSH @R15,#%0F1E
+0228  5F00 02D8             CALL _printf
+022C  A9F1                  INC R15,#2
+L022E:
+022E  0DF9 0000             PUSH @R15,#%0000
+0232  5F00 0B8C             CALL _exit
+0236  A9F1                  INC R15,#2
+0238  5E08 0EEE             JP cret
+L023C:
+023C  5F00 0EE0             CALL csv
+0240  61ED 0004             LD R13,%0004(R14)
+0244  E815                  JR L0270
+L0246:
+0246  0B02 006C             CP R2,#%006C
+024A  EE16                  JR NZ,L0278
+024C  51FE 000E             PUSHL @R15,%000E(R14)
+0250  0DF9 0F26             PUSH @R15,#%0F26
+0254  E80A                  JR L026A
+L0256:
+0256  20DA                  LDB RL2,@R13
+0258  8822                  XORB RH2,RH2
+025A  A9D0                  INC R13,#1
+025C  0B02 0063             CP R2,#%0063
+0260  EEF2                  JR NZ,L0246
+0262  51FE 0006             PUSHL @R15,%0006(R14)
+0266  0DF9 0F31             PUSH @R15,#%0F31
+L026A:
+026A  5F00 02D8             CALL _printf
+026E  A9F5                  INC R15,#6
+L0270:
+0270  0CD4                  TESTB @R13
+0272  EEF1                  JR NZ,L0256
+0274  5E08 0EEE             JP cret
+L0278:
+0278  0B02 0077             CP R2,#%0077
+027C  EEF9                  JR NZ,L0270
+027E  51FE 000A             PUSHL @R15,%000A(R14)
+0282  0DF9 0F2B             PUSH @R15,#%0F2B
+0286  E8F1                  JR L026A
+_fopen:
+0288  5F00 0EE0             CALL csv
+028C  5F00 0B64             CALL __findio
+0290  93F2                  PUSH @R15,R2
+0292  53FE 0006             PUSH @R15,%0006(R14)
+0296  53FE 0004             PUSH @R15,%0004(R14)
+029A  5F00 0A3E             CALL L0A3E
+029E  A9F5                  INC R15,#6
+02A0  5E08 0EEE             JP cret
+_fprintf:
+02A4  5F00 0EE0             CALL csv
+02A8  53FE 0004             PUSH @R15,%0004(R14)
+02AC  A1E2                  LD R2,R14
+02AE  A927                  INC R2,#8
+02B0  93F2                  PUSH @R15,R2
+02B2  53FE 0006             PUSH @R15,%0006(R14)
+02B6  5F00 03FC             CALL L03FC
+02BA  A9F5                  INC R15,#6
+02BC  61E2 0004             LD R2,%0004(R14)
+02C0  A925                  INC R2,#6
+02C2  202B                  LDB RL3,@R2
+02C4  8833                  XORB RH3,RH3
+02C6  0703 0020             AND R3,#%0020
+02CA  E604                  JR Z,L02D4
+02CC  2102 FFFF             LD R2,#%FFFF
+L02D0:
+02D0  5E08 0EEE             JP cret
+L02D4:
+02D4  8922                  XOR R2,R2
+02D6  E8FC                  JR L02D0
+_printf:
+02D8  5F00 0EE0             CALL csv
+02DC  0DF9 0F88             PUSH @R15,#%0F88
+02E0  A1E2                  LD R2,R14
+02E2  A925                  INC R2,#6
+02E4  93F2                  PUSH @R15,R2
+02E6  53FE 0004             PUSH @R15,%0004(R14)
+02EA  5F00 03FC             CALL L03FC
+02EE  A9F5                  INC R15,#6
+02F0  600A 0F8E             LDB RL2,L0F8E
+02F4  8822                  XORB RH2,RH2
+02F6  0702 0020             AND R2,#%0020
+02FA  E604                  JR Z,L0304
+02FC  2102 FFFF             LD R2,#%FFFF
+L0300:
+0300  5E08 0EEE             JP cret
+L0304:
+0304  8922                  XOR R2,R2
+0306  E8FC                  JR L0300
+__filbuf:
+0308  5F00 0EE0             CALL csv
+030C  61ED 0004             LD R13,%0004(R14)
+0310  66D7 0006             BITB %0006(R13),#7
+0314  E60B                  JR Z,L032C
+0316  66D1 0006             BITB %0006(R13),#1
+031A  E606                  JR Z,L0328
+031C  93FD                  PUSH @R15,R13
+031E  5F00 0818             CALL L0818
+0322  A9F1                  INC R15,#2
+0324  62D1 0006             RESB %0006(R13),#1
+L0328:
+0328  64D0 0006             SETB %0006(R13),#0
+L032C:
+032C  60DA 0006             LDB RL2,%0006(R13)
+0330  8822                  XORB RH2,RH2
+0332  0702 0001             AND R2,#%0001
+0336  E603                  JR Z,L033E
+0338  66D6 0006             BITB %0006(R13),#6
+033C  E60C                  JR Z,L0356
+L033E:
+033E  2102 FFFF             LD R2,#%FFFF
+L0342:
+0342  5E08 0EEE             JP cret
+L0346:
+0346  0B0D 0F80             CP R13,#%0F80
+034A  EE16                  JR NZ,L0378
+034C  2102 1024             LD R2,#%1024
+0350  E80D                  JR L036C
+L0352:
+0352  64D2 0006             SETB %0006(R13),#2
+L0356:
+0356  4DD4 0004             TEST %0004(R13)
+035A  EE1C                  JR NZ,L0394
+035C  66D2 0006             BITB %0006(R13),#2
+0360  E6F2                  JR Z,L0346
+0362  60DA 0007             LDB RL2,%0007(R13)
+0366  8822                  XORB RH2,RH2
+0368  0102 1426             ADD R2,#%1426
+L036C:
+036C  6FD2 0004             LD %0004(R13),R2
+0370  E8F2                  JR L0356
+L0372:
+0372  2102 1224             LD R2,#%1224
+0376  E8FA                  JR L036C
+L0378:
+0378  0B0D 0F88             CP R13,#%0F88
+037C  E6FA                  JR Z,L0372
+037E  0DF9 0200             PUSH @R15,#%0200
+0382  5F00 0B9A             CALL L0B9A
+0386  A9F1                  INC R15,#2
+0388  6FD2 0004             LD %0004(R13),R2
+038C  8D24                  TEST R2
+038E  E6E1                  JR Z,L0352
+0390  64D3 0006             SETB %0006(R13),#3
+L0394:
+0394  61D2 0004             LD R2,%0004(R13)
+0398  2FD2                  LD @R13,R2
+039A  66D2 0006             BITB %0006(R13),#2
+039E  E603                  JR Z,L03A6
+03A0  0DF9 0001             PUSH @R15,#%0001
+03A4  E802                  JR L03AA
+L03A6:
+03A6  0DF9 0200             PUSH @R15,#%0200
+L03AA:
+03AA  13FD                  PUSH @R15,@R13
+03AC  60D8 0007             LDB RL0,%0007(R13)
+03B0  8800                  XORB RH0,RH0
+03B2  93F0                  PUSH @R15,R0
+03B4  5F00 0E6A             CALL _read
+03B8  A9F5                  INC R15,#6
+03BA  6FD2 0002             LD %0002(R13),R2
+03BE  6BD0 0002             DEC %0002(R13),#1
+03C2  4DD4 0002             TEST %0002(R13)
+03C6  ED12                  JR PL,L03EC
+03C8  61D0 0002             LD R0,%0002(R13)
+03CC  0B00 FFFF             CP R0,#%FFFF
+03D0  EE08                  JR NZ,L03E2
+03D2  64D4 0006             SETB %0006(R13),#4
+03D6  66D7 0006             BITB %0006(R13),#7
+03DA  E605                  JR Z,L03E6
+03DC  62D0 0006             RESB %0006(R13),#0
+03E0  E802                  JR L03E6
+L03E2:
+03E2  64D5 0006             SETB %0006(R13),#5
+L03E6:
+03E6  4DD8 0002             CLR %0002(R13)
+03EA  E8A9                  JR L033E
+L03EC:
+03EC  21D2                  LD R2,@R13
+03EE  29D0                  INC @R13,#1
+03F0  202B                  LDB RL3,@R2
+03F2  8833                  XORB RH3,RH3
+03F4  0703 00FF             AND R3,#%00FF
+03F8  A132                  LD R2,R3
+03FA  E8A3                  JR L0342
+L03FC:
+03FC  5F00 0EE0             CALL csv
+0400  030F 0086             SUB R15,#%0086
+0404  61EC 0004             LD R12,%0004(R14)
+0408  61ED 0006             LD R13,%0006(R14)
+L040C:
+040C  A1FA                  LD R10,R15
+L040E:
+040E  20C8                  LDB RL0,@R12
+0410  A9C0                  INC R12,#1
+0412  8C84                  TESTB RL0
+0414  E606                  JR Z,L0422
+0416  0A08 2525             CPB RL0,#%25
+041A  E603                  JR Z,L0422
+041C  2EA8                  LDB @R10,RL0
+041E  A9A0                  INC R10,#1
+0420  E8F6                  JR L040E
+L0422:
+0422  8BFA                  CP R10,R15
+0424  E60D                  JR Z,L0440
+0426  A108                  LD R8,R0
+0428  A1F1                  LD R1,R15
+042A  53FE 0008             PUSH @R15,%0008(R14)
+042E  0DF9 0000             PUSH @R15,#%0000
+0432  831A                  SUB R10,R1
+0434  93FA                  PUSH @R15,R10
+0436  93F1                  PUSH @R15,R1
+0438  5F00 05DE             CALL L05DE
+043C  A9F7                  INC R15,#8
+043E  A180                  LD R0,R8
+L0440:
+0440  8C84                  TESTB RL0
+0442  5E06 0EEE             JP Z,cret
+0446  A1FA                  LD R10,R15
+0448  4DE8 FFF0             CLR %FFF0(R14)
+044C  89BB                  XOR R11,R11
+044E  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
+0454  0CC1 2D2D             CPB @R12,#%2D
+0458  EE04                  JR NZ,L0462
+045A  A9C0                  INC R12,#1
+045C  4DE5 FFF0 0001        LD %FFF0(R14),#%0001
+L0462:
+0462  0CC1 3030             CPB @R12,#%30
+0466  EE03                  JR NZ,L046E
+0468  4DE5 FFEE 0030        LD %FFEE(R14),#%0030
+L046E:
+046E  DF65                  CALR L05A6
+0470  6FE1 FFF2             LD %FFF2(R14),R1
+0474  8999                  XOR R9,R9
+0476  0B02 002E             CP R2,#%002E
+047A  EE02                  JR NZ,L0480
+047C  DF6C                  CALR L05A6
+047E  A11B                  LD R11,R1
+L0480:
+0480  8966                  XOR R6,R6
+0482  BD38                  LDK R3,#8
+0484  2107 0F36             LD R7,#%0F36
+L0488:
+0488  9774                  POP R4,@R7
+048A  8D44                  TEST R4
+048C  EE03                  JR NZ,L0494
+048E  2EAA                  LDB @R10,RL2
+0490  A9A0                  INC R10,#1
+0492  E872                  JR L0578
+L0494:
+0494  9775                  POP R5,@R7
+0496  8B52                  CP R2,R5
+0498  EEF7                  JR NZ,L0488
+049A  1E48                  JP @R4
+L049C:
+049C  20C9                  LDB RL1,@R12
+049E  A9C0                  INC R12,#1
+04A0  0A09 6F6F             CPB RL1,#%6F
+04A4  E60B                  JR Z,L04BC
+04A6  0A09 7878             CPB RL1,#%78
+04AA  E60A                  JR Z,L04C0
+04AC  0A09 6464             CPB RL1,#%64
+04B0  E610                  JR Z,L04D2
+04B2  0A09 7575             CPB RL1,#%75
+04B6  E619                  JR Z,L04EA
+04B8  ABC0                  DEC R12,#1
+04BA  E818                  JR L04EC
+L04BC:
+04BC  97D6                  POP R6,@R13
+04BE  E802                  JR L04C4
+L04C0:
+04C0  97D6                  POP R6,@R13
+04C2  B330                  RL R3,#1
+L04C4:
+04C4  97D7                  POP R7,@R13
+04C6  E814                  JR L04F0
+L04C8:
+04C8  97D7                  POP R7,@R13
+04CA  B16A                  EXTS RR6
+04CC  8D64                  TEST R6
+04CE  E505                  JR MI,L04DA
+04D0  E80E                  JR L04EE
+L04D2:
+04D2  97D6                  POP R6,@R13
+04D4  8D64                  TEST R6
+04D6  ED0A                  JR PL,L04EC
+04D8  97D7                  POP R7,@R13
+L04DA:
+04DA  8D62                  NEG R6
+04DC  8D72                  NEG R7
+04DE  EF01                  JR NC,L04E2
+04E0  AB60                  DEC R6,#1
+L04E2:
+04E2  0CA5 2D2D             LDB @R10,#%2D
+04E6  A9A0                  INC R10,#1
+04E8  E802                  JR L04EE
+L04EA:
+04EA  97D6                  POP R6,@R13
+L04EC:
+04EC  97D7                  POP R7,@R13
+L04EE:
+04EE  A931                  INC R3,#2
+L04F0:
+04F0  9C68                  TESTL RR6
+04F2  E605                  JR Z,L04FE
+04F4  8DB4                  TEST R11
+04F6  E603                  JR Z,L04FE
+04F8  0CA5 3030             LDB @R10,#%30
+04FC  A9A0                  INC R10,#1
+L04FE:
+04FE  8922                  XOR R2,R2
+0500  DFFF                  CALR L0504
+0502  E83A                  JR L0578
+L0504:
+0504  B147                  EXTSL RQ4
+0506  9A24                  DIVL RQ4,RR2
+0508  93F5                  PUSH @R15,R5
+050A  E601                  JR Z,L050E
+050C  D005                  CALR L0504
+L050E:
+050E  97F0                  POP R0,@R15
+0510  0100 0030             ADD R0,#%0030
+0514  0B00 0039             CP R0,#%0039
+0518  E202                  JR LE,L051E
+051A  0100 0007             ADD R0,#%0007
+L051E:
+051E  2EA8                  LDB @R10,RL0
+0520  A9A0                  INC R10,#1
+0522  9E08                  RET
+0524  5F00 05D4 E827 5F00   DW %5F00,%05D4,%E827,%5F00
+052C  05D4 E824             DW %05D4,%E824
+L0530:
+0530  A9B0                  INC R11,#1
+0532  8D94                  TEST R9
+0534  EE02                  JR NZ,L053A
+0536  BDB7                  LDK R11,#7
+0538  A1B9                  LD R9,R11
+L053A:
+053A  5F00 05D4             CALL L05D4
+053E  E81C                  JR L0578
+0540  21DD 97DC 5E08 040C   DW %21DD,%97DC,%5E08,%040C
+L0548:
+0548  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
+054E  97D0                  POP R0,@R13
+0550  8C84                  TESTB RL0
+0552  E612                  JR Z,L0578
+0554  2EA8                  LDB @R10,RL0
+0556  A9A0                  INC R10,#1
+0558  E80F                  JR L0578
+L055A:
+055A  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
+0560  97D2                  POP R2,@R13
+0562  8D24                  TEST R2
+0564  EE02                  JR NZ,L056A
+0566  2102 0F7A             LD R2,#%0F7A
+L056A:
+056A  A12A                  LD R10,R2
+056C  8888                  XORB RL0,RL0
+056E  BAA4 0B86             CPIRB RL0,@R10,R11,Z
+0572  EE03                  JR NZ,L057A
+0574  ABA0                  DEC R10,#1
+0576  E801                  JR L057A
+L0578:
+0578  A1F2                  LD R2,R15
+L057A:
+057A  832A                  SUB R10,R2
+057C  61E1 FFF2             LD R1,%FFF2(R14)
+0580  83A1                  SUB R1,R10
+0582  E901                  JR GE,L0586
+0584  8911                  XOR R1,R1
+L0586:
+0586  4DE4 FFF0             TEST %FFF0(R14)
+058A  EE01                  JR NZ,L058E
+058C  8D12                  NEG R1
+L058E:
+058E  53FE FFEE             PUSH @R15,%FFEE(R14)
+0592  53FE 0008             PUSH @R15,%0008(R14)
+0596  93F1                  PUSH @R15,R1
+0598  93FA                  PUSH @R15,R10
+059A  93F2                  PUSH @R15,R2
+059C  5F00 05DE             CALL L05DE
+05A0  A9F9                  INC R15,#10
+05A2  5E08 040C             JP L040C
+L05A6:
+05A6  8999                  XOR R9,R9
+05A8  A191                  LD R1,R9
+L05AA:
+05AA  8822                  XORB RH2,RH2
+05AC  20CA                  LDB RL2,@R12
+05AE  A9C0                  INC R12,#1
+05B0  0302 0030             SUB R2,#%0030
+05B4  0B02 FFFA             CP R2,#%FFFA
+05B8  EE02                  JR NZ,L05BE
+05BA  97D2                  POP R2,@R13
+05BC  E808                  JR L05CE
+L05BE:
+05BE  0B02 0009             CP R2,#%0009
+05C2  EB05                  JR UGT,L05CE
+05C4  A990                  INC R9,#1
+05C6  1900 000A             MULT RR0,#%000A
+05CA  8121                  ADD R1,R2
+05CC  E8EE                  JR L05AA
+L05CE:
+05CE  0102 0030             ADD R2,#%0030
+05D2  9E08                  RET
+L05D4:
+05D4  A9D7                  INC R13,#8
+05D6  0CA5 3F3F             LDB @R10,#%3F
+05DA  A9A0                  INC R10,#1
+05DC  9E08                  RET
+L05DE:
+05DE  5F00 0EE0             CALL csv
+05E2  61ED 0004             LD R13,%0004(R14)
+05E6  61EC 0006             LD R12,%0006(R14)
+05EA  61EB 000A             LD R11,%000A(R14)
+05EE  E845                  JR L067A
+L05F0:
+05F0  20DA                  LDB RL2,@R13
+05F2  8822                  XORB RH2,RH2
+05F4  0B02 002D             CP R2,#%002D
+05F8  EE27                  JR NZ,L0648
+05FA  61E0 000C             LD R0,%000C(R14)
+05FE  0B00 0030             CP R0,#%0030
+0602  EE22                  JR NZ,L0648
+0604  66B0 0006             BITB %0006(R11),#0
+0608  EE10                  JR NZ,L062A
+060A  6BB0 0002             DEC %0002(R11),#1
+060E  4DB4 0002             TEST %0002(R11)
+0612  E50B                  JR MI,L062A
+0614  21B2                  LD R2,@R11
+0616  29B0                  INC @R11,#1
+0618  A1D3                  LD R3,R13
+061A  A9D0                  INC R13,#1
+061C  203C                  LDB RL4,@R3
+061E  8844                  XORB RH4,RH4
+0620  0704 00FF             AND R4,#%00FF
+0624  A143                  LD R3,R4
+0626  2E2B                  LDB @R2,RL3
+0628  E80E                  JR L0646
+L062A:
+062A  93F2                  PUSH @R15,R2
+062C  93FB                  PUSH @R15,R11
+062E  A1D2                  LD R2,R13
+0630  A9D0                  INC R13,#1
+0632  202B                  LDB RL3,@R2
+0634  8833                  XORB RH3,RH3
+0636  0703 00FF             AND R3,#%00FF
+063A  93F3                  PUSH @R15,R3
+063C  5F00 0706             CALL L0706
+0640  A9F3                  INC R15,#4
+0642  A123                  LD R3,R2
+0644  97F2                  POP R2,@R15
+L0646:
+0646  ABC0                  DEC R12,#1
+L0648:
+0648  66B0 0006             BITB %0006(R11),#0
+064C  EE0B                  JR NZ,L0664
+064E  6BB0 0002             DEC %0002(R11),#1
+0652  4DB4 0002             TEST %0002(R11)
+0656  E506                  JR MI,L0664
+0658  21B2                  LD R2,@R11
+065A  29B0                  INC @R11,#1
+065C  61E3 000C             LD R3,%000C(R14)
+0660  2E2B                  LDB @R2,RL3
+0662  E809                  JR L0676
+L0664:
+0664  93F2                  PUSH @R15,R2
+0666  93FB                  PUSH @R15,R11
+0668  53FE 000C             PUSH @R15,%000C(R14)
+066C  5F00 0706             CALL L0706
+0670  A9F3                  INC R15,#4
+0672  A123                  LD R3,R2
+0674  97F2                  POP R2,@R15
+L0676:
+0676  69E0 0008             INC %0008(R14),#1
+L067A:
+067A  4DE4 0008             TEST %0008(R14)
+067E  E5B8                  JR MI,L05F0
+0680  E821                  JR L06C4
+L0682:
+0682  6BB0 0002             DEC %0002(R11),#1
+0686  4DB4 0002             TEST %0002(R11)
+068A  E50E                  JR MI,L06A8
+068C  21B2                  LD R2,@R11
+068E  29B0                  INC @R11,#1
+0690  A1D3                  LD R3,R13
+0692  A9D0                  INC R13,#1
+0694  203C                  LDB RL4,@R3
+0696  8844                  XORB RH4,RH4
+0698  0704 00FF             AND R4,#%00FF
+069C  A143                  LD R3,R4
+069E  2E2B                  LDB @R2,RL3
+06A0  E811                  JR L06C4
+L06A2:
+06A2  66B0 0006             BITB %0006(R11),#0
+06A6  E6ED                  JR Z,L0682
+L06A8:
+06A8  93F2                  PUSH @R15,R2
+06AA  93FB                  PUSH @R15,R11
+06AC  A1D2                  LD R2,R13
+06AE  A9D0                  INC R13,#1
+06B0  202B                  LDB RL3,@R2
+06B2  8833                  XORB RH3,RH3
+06B4  0703 00FF             AND R3,#%00FF
+06B8  93F3                  PUSH @R15,R3
+06BA  5F00 0706             CALL L0706
+06BE  A9F3                  INC R15,#4
+06C0  A123                  LD R3,R2
+06C2  97F2                  POP R2,@R15
+L06C4:
+06C4  ABC0                  DEC R12,#1
+06C6  EDED                  JR PL,L06A2
+06C8  E819                  JR L06FC
+L06CA:
+06CA  66B0 0006             BITB %0006(R11),#0
+06CE  EE0B                  JR NZ,L06E6
+06D0  6BB0 0002             DEC %0002(R11),#1
+06D4  4DB4 0002             TEST %0002(R11)
+06D8  E506                  JR MI,L06E6
+06DA  21B2                  LD R2,@R11
+06DC  29B0                  INC @R11,#1
+06DE  61E3 000C             LD R3,%000C(R14)
+06E2  2E2B                  LDB @R2,RL3
+06E4  E809                  JR L06F8
+L06E6:
+06E6  93F2                  PUSH @R15,R2
+06E8  93FB                  PUSH @R15,R11
+06EA  53FE 000C             PUSH @R15,%000C(R14)
+06EE  5F00 0706             CALL L0706
+06F2  A9F3                  INC R15,#4
+06F4  A123                  LD R3,R2
+06F6  97F2                  POP R2,@R15
+L06F8:
+06F8  6BE0 0008             DEC %0008(R14),#1
+L06FC:
+06FC  4DE4 0008             TEST %0008(R14)
+0700  EEE4                  JR NZ,L06CA
+0702  5E08 0EEE             JP cret
+L0706:
+0706  5F00 0EE0             CALL csv
+070A  61ED 0006             LD R13,%0006(R14)
+070E  ABF1                  DEC R15,#2
+0710  66D7 0006             BITB %0006(R13),#7
+0714  E615                  JR Z,L0740
+0716  66D0 0006             BITB %0006(R13),#0
+071A  E60E                  JR Z,L0738
+071C  0DF9 0001             PUSH @R15,#%0001
+0720  8933                  XOR R3,R3
+0722  B12A                  EXTS RR2
+0724  91F2                  PUSHL @R15,RR2
+0726  93FD                  PUSH @R15,R13
+0728  5F00 08FC             CALL L08FC
+072C  A9F7                  INC R15,#8
+072E  62D0 0006             RESB %0006(R13),#0
+0732  61D2 0004             LD R2,%0004(R13)
+0736  2FD2                  LD @R13,R2
+L0738:
+0738  64D1 0006             SETB %0006(R13),#1
+073C  62D4 0006             RESB %0006(R13),#4
+L0740:
+0740  66D2 0006             BITB %0006(R13),#2
+0744  E614                  JR Z,L076E
+0746  61E2 0004             LD R2,%0004(R14)
+074A  6EEA FFF3             LDB %FFF3(R14),RL2
+074E  BDA1                  LDK R10,#1
+0750  93FA                  PUSH @R15,R10
+0752  A1E2                  LD R2,R14
+0754  AB2C                  DEC R2,#13
+0756  93F2                  PUSH @R15,R2
+0758  60D8 0007             LDB RL0,%0007(R13)
+075C  8800                  XORB RH0,RH0
+075E  93F0                  PUSH @R15,R0
+0760  5F00 0EBC             CALL _write
+0764  A9F5                  INC R15,#6
+0766  A12B                  LD R11,R2
+0768  4DD8 0002             CLR %0002(R13)
+076C  E84A                  JR L0802
+L076E:
+076E  61DC 0004             LD R12,%0004(R13)
+0772  8DC4                  TEST R12
+0774  EE2B                  JR NZ,L07CC
+0776  0B0D 0F80             CP R13,#%0F80
+077A  EE15                  JR NZ,L07A6
+077C  2102 1024             LD R2,#%1024
+L0780:
+0780  6FD2 0004             LD %0004(R13),R2
+0784  2FD2                  LD @R13,R2
+0786  E8DC                  JR L0740
+L0788:
+0788  6008 0F8F             LDB RL0,L0F8F
+078C  8800                  XORB RH0,RH0
+078E  93F0                  PUSH @R15,R0
+0790  5F00 0DA4             CALL _isatty
+0794  A9F1                  INC R15,#2
+0796  8D24                  TEST R2
+0798  E603                  JR Z,L07A0
+L079A:
+079A  64D2 0006             SETB %0006(R13),#2
+079E  E8D0                  JR L0740
+L07A0:
+07A0  2102 1224             LD R2,#%1224
+07A4  E8ED                  JR L0780
+L07A6:
+07A6  0B0D 0F88             CP R13,#%0F88
+07AA  E6EE                  JR Z,L0788
+07AC  0DF9 0200             PUSH @R15,#%0200
+07B0  5F00 0B9A             CALL L0B9A
+07B4  A9F1                  INC R15,#2
+07B6  A12C                  LD R12,R2
+07B8  A1C2                  LD R2,R12
+07BA  6FD2 0004             LD %0004(R13),R2
+07BE  8D24                  TEST R2
+07C0  E6EC                  JR Z,L079A
+07C2  64D3 0006             SETB %0006(R13),#3
+07C6  89BB                  XOR R11,R11
+07C8  A1BA                  LD R10,R11
+07CA  E812                  JR L07F0
+L07CC:
+07CC  21DB                  LD R11,@R13
+07CE  83CB                  SUB R11,R12
+07D0  A1B2                  LD R2,R11
+07D2  A12A                  LD R10,R2
+07D4  8DA4                  TEST R10
+07D6  E50C                  JR MI,L07F0
+07D8  E60B                  JR Z,L07F0
+07DA  2FDC                  LD @R13,R12
+07DC  93FB                  PUSH @R15,R11
+07DE  93FC                  PUSH @R15,R12
+07E0  60D8 0007             LDB RL0,%0007(R13)
+07E4  8800                  XORB RH0,RH0
+07E6  93F0                  PUSH @R15,R0
+07E8  5F00 0EBC             CALL _write
+07EC  A9F5                  INC R15,#6
+07EE  A12B                  LD R11,R2
+L07F0:
+07F0  4DD5 0002 01FF        LD %0002(R13),#%01FF
+07F6  A1C2                  LD R2,R12
+07F8  A9C0                  INC R12,#1
+07FA  61E3 0004             LD R3,%0004(R14)
+07FE  2E2B                  LDB @R2,RL3
+0800  2FDC                  LD @R13,R12
+L0802:
+0802  8BBA                  CP R10,R11
+0804  E606                  JR Z,L0812
+0806  64D5 0006             SETB %0006(R13),#5
+080A  2102 FFFF             LD R2,#%FFFF
+L080E:
+080E  5E08 0EEE             JP cret
+L0812:
+0812  61E2 0004             LD R2,%0004(R14)
+0816  E8FB                  JR L080E
+L0818:
+0818  5F00 0EE0             CALL csv
+081C  61ED 0004             LD R13,%0004(R14)
+0820  60DA 0006             LDB RL2,%0006(R13)
+0824  8822                  XORB RH2,RH2
+0826  0702 0006             AND R2,#%0006
+082A  0B02 0002             CP R2,#%0002
+082E  EE1D                  JR NZ,L086A
+0830  61DC 0004             LD R12,%0004(R13)
+0834  8DC4                  TEST R12
+0836  E619                  JR Z,L086A
+0838  21DB                  LD R11,@R13
+083A  83CB                  SUB R11,R12
+083C  E516                  JR MI,L086A
+083E  E615                  JR Z,L086A
+0840  2FDC                  LD @R13,R12
+0842  4DD5 0002 0200        LD %0002(R13),#%0200
+0848  93FB                  PUSH @R15,R11
+084A  93FC                  PUSH @R15,R12
+084C  60D8 0007             LDB RL0,%0007(R13)
+0850  8800                  XORB RH0,RH0
+0852  93F0                  PUSH @R15,R0
+0854  5F00 0EBC             CALL _write
+0858  A9F5                  INC R15,#6
+085A  8BB2                  CP R2,R11
+085C  E606                  JR Z,L086A
+085E  64D5 0006             SETB %0006(R13),#5
+0862  2102 FFFF             LD R2,#%FFFF
+L0866:
+0866  5E08 0EEE             JP cret
+L086A:
+086A  8922                  XOR R2,R2
+086C  E8FC                  JR L0866
+L086E:
+086E  5F00 0EE0             CALL csv
+0872  210D 0F80             LD R13,#%0F80
+0876  E805                  JR L0882
+L0878:
+0878  93FD                  PUSH @R15,R13
+087A  5F00 088C             CALL L088C
+087E  A9F1                  INC R15,#2
+0880  A9D7                  INC R13,#8
+L0882:
+0882  4B0D 1020             CP R13,L1020
+0886  E7F8                  JR C,L0878
+0888  5E08 0EEE             JP cret
+L088C:
+088C  5F00 0EE0             CALL csv
+0890  61ED 0004             LD R13,%0004(R14)
+0894  210C FFFF             LD R12,#%FFFF
+0898  60DA 0006             LDB RL2,%0006(R13)
+089C  8822                  XORB RH2,RH2
+089E  0702 0083             AND R2,#%0083
+08A2  E620                  JR Z,L08E4
+08A4  60DA 0006             LDB RL2,%0006(R13)
+08A8  8822                  XORB RH2,RH2
+08AA  0702 0040             AND R2,#%0040
+08AE  EE1A                  JR NZ,L08E4
+08B0  93FD                  PUSH @R15,R13
+08B2  5F00 0818             CALL L0818
+08B6  A9F1                  INC R15,#2
+08B8  A12C                  LD R12,R2
+08BA  60D8 0007             LDB RL0,%0007(R13)
+08BE  8800                  XORB RH0,RH0
+08C0  93F0                  PUSH @R15,R0
+08C2  5F00 0DFE             CALL _close
+08C6  A9F1                  INC R15,#2
+08C8  8D24                  TEST R2
+08CA  ED02                  JR PL,L08D0
+08CC  210C FFFF             LD R12,#%FFFF
+L08D0:
+08D0  66D3 0006             BITB %0006(R13),#3
+08D4  E605                  JR Z,L08E0
+08D6  53FD 0004             PUSH @R15,%0004(R13)
+08DA  5F00 0CE8             CALL L0CE8
+08DE  A9F1                  INC R15,#2
+L08E0:
+08E0  4DD8 0004             CLR %0004(R13)
+L08E4:
+08E4  60DA 0006             LDB RL2,%0006(R13)
+08E8  8822                  XORB RH2,RH2
+08EA  0702 FF00             AND R2,#%FF00
+08EE  6EDA 0006             LDB %0006(R13),RL2
+08F2  4DD8 0002             CLR %0002(R13)
+08F6  A1C2                  LD R2,R12
+08F8  5E08 0EEE             JP cret
+L08FC:
+08FC  5F00 0EE0             CALL csv
+0900  61ED 0004             LD R13,%0004(R14)
+0904  ABF3                  DEC R15,#4
+0906  62D4 0006             RESB %0006(R13),#4
+090A  66D0 0006             BITB %0006(R13),#0
+090E  E66D                  JR Z,L09EA
+0910  61E0 000A             LD R0,%000A(R14)
+0914  0B00 0002             CP R0,#%0002
+0918  E950                  JR GE,L09BA
+091A  4DD4 0004             TEST %0004(R13)
+091E  E64D                  JR Z,L09BA
+0920  66D2 0006             BITB %0006(R13),#2
+0924  EE4A                  JR NZ,L09BA
+0926  61DC 0002             LD R12,%0002(R13)
+092A  54E2 0006             LDL RR2,%0006(R14)
+092E  5DE2 FFF0             LDL %FFF0(R14),RR2
+0932  8D04                  TEST R0
+0934  EE1C                  JR NZ,L096E
+0936  54E2 FFF0             LDL RR2,%FFF0(R14)
+093A  93F2                  PUSH @R15,R2
+093C  93F3                  PUSH @R15,R3
+093E  0DF9 0001             PUSH @R15,#%0001
+0942  8933                  XOR R3,R3
+0944  B12A                  EXTS RR2
+0946  91F2                  PUSHL @R15,RR2
+0948  60D8 0007             LDB RL0,%0007(R13)
+094C  8800                  XORB RH0,RH0
+094E  93F0                  PUSH @R15,R0
+0950  5F00 0E3E             CALL _lseek
+0954  A9F7                  INC R15,#8
+0956  9424                  LDL RR4,RR2
+0958  97F3                  POP R3,@R15
+095A  97F2                  POP R2,@R15
+095C  91F4                  PUSHL @R15,RR4
+095E  A1C5                  LD R5,R12
+0960  B14A                  EXTS RR4
+0962  95F0                  POPL RR0,@R15
+0964  9204                  SUBL RR4,RR0
+0966  9642                  ADDL RR2,RR4
+0968  5DE2 FFF0             LDL %FFF0(R14),RR2
+096C  E807                  JR L097C
+L096E:
+096E  54E2 0006             LDL RR2,%0006(R14)
+0972  A1C5                  LD R5,R12
+0974  B14A                  EXTS RR4
+0976  9242                  SUBL RR2,RR4
+0978  5DE2 0006             LDL %0006(R14),RR2
+L097C:
+097C  66D7 0006             BITB %0006(R13),#7
+0980  EE1C                  JR NZ,L09BA
+0982  8DC4                  TEST R12
+0984  E51A                  JR MI,L09BA
+0986  E619                  JR Z,L09BA
+0988  A1C3                  LD R3,R12
+098A  B12A                  EXTS RR2
+098C  50E2 FFF0             CPL RR2,%FFF0(R14)
+0990  E114                  JR LT,L09BA
+0992  61D3 0004             LD R3,%0004(R13)
+0996  03D3                  SUB R3,@R13
+0998  B12A                  EXTS RR2
+099A  50E2 FFF0             CPL RR2,%FFF0(R14)
+099E  EA0D                  JR GT,L09BA
+09A0  21D2                  LD R2,@R13
+09A2  41E2 FFF2             ADD R2,%FFF2(R14)
+09A6  2FD2                  LD @R13,R2
+09A8  61D2 0002             LD R2,%0002(R13)
+09AC  43E2 FFF2             SUB R2,%FFF2(R14)
+09B0  6FD2 0002             LD %0002(R13),R2
+L09B4:
+09B4  8922                  XOR R2,R2
+L09B6:
+09B6  5E08 0EEE             JP cret
+L09BA:
+09BA  66D7 0006             BITB %0006(R13),#7
+09BE  E605                  JR Z,L09CA
+09C0  61D2 0004             LD R2,%0004(R13)
+09C4  2FD2                  LD @R13,R2
+09C6  62D0 0006             RESB %0006(R13),#0
+L09CA:
+09CA  53FE 000A             PUSH @R15,%000A(R14)
+09CE  51FE 0006             PUSHL @R15,%0006(R14)
+09D2  60D8 0007             LDB RL0,%0007(R13)
+09D6  8800                  XORB RH0,RH0
+09D8  93F0                  PUSH @R15,R0
+09DA  5F00 0E3E             CALL _lseek
+09DE  A9F7                  INC R15,#8
+09E0  5DE2 FFF0             LDL %FFF0(R14),RR2
+09E4  4DD8 0002             CLR %0002(R13)
+09E8  E821                  JR L0A2C
+L09EA:
+09EA  60DA 0006             LDB RL2,%0006(R13)
+09EE  8822                  XORB RH2,RH2
+09F0  0702 0082             AND R2,#%0082
+09F4  E61B                  JR Z,L0A2C
+09F6  93FD                  PUSH @R15,R13
+09F8  5F00 0818             CALL L0818
+09FC  A9F1                  INC R15,#2
+09FE  66D7 0006             BITB %0006(R13),#7
+0A02  E607                  JR Z,L0A12
+0A04  4DD8 0002             CLR %0002(R13)
+0A08  62D1 0006             RESB %0006(R13),#1
+0A0C  61D2 0004             LD R2,%0004(R13)
+0A10  2FD2                  LD @R13,R2
+L0A12:
+0A12  53FE 000A             PUSH @R15,%000A(R14)
+0A16  51FE 0006             PUSHL @R15,%0006(R14)
+0A1A  60D8 0007             LDB RL0,%0007(R13)
+0A1E  8800                  XORB RH0,RH0
+0A20  93F0                  PUSH @R15,R0
+0A22  5F00 0E3E             CALL _lseek
+0A26  A9F7                  INC R15,#8
+0A28  5DE2 FFF0             LDL %FFF0(R14),RR2
+L0A2C:
+0A2C  1400 FFFF FFFF        LDL RR0,#%FFFFFFFF
+0A32  50E0 FFF0             CPL RR0,%FFF0(R14)
+0A36  EEBE                  JR NZ,L09B4
+0A38  2102 FFFF             LD R2,#%FFFF
+0A3C  E8BC                  JR L09B6
+L0A3E:
+0A3E  5F00 0EE0             CALL csv
+0A42  61ED 0008             LD R13,%0008(R14)
+0A46  8DD4                  TEST R13
+0A48  EE03                  JR NZ,L0A50
+L0A4A:
+0A4A  8922                  XOR R2,R2
+L0A4C:
+0A4C  5E08 0EEE             JP cret
+L0A50:
+0A50  61E2 0006             LD R2,%0006(R14)
+0A54  A920                  INC R2,#1
+0A56  202B                  LDB RL3,@R2
+0A58  8833                  XORB RH3,RH3
+0A5A  0B03 002B             CP R3,#%002B
+0A5E  E602                  JR Z,L0A64
+0A60  8933                  XOR R3,R3
+0A62  E801                  JR L0A66
+L0A64:
+0A64  BD31                  LDK R3,#1
+L0A66:
+0A66  A132                  LD R2,R3
+0A68  A12C                  LD R12,R2
+0A6A  61E2 0006             LD R2,%0006(R14)
+0A6E  202B                  LDB RL3,@R2
+0A70  8833                  XORB RH3,RH3
+0A72  A132                  LD R2,R3
+0A74  0B02 0061             CP R2,#%0061
+0A78  E60C                  JR Z,L0A92
+0A7A  0B02 0072             CP R2,#%0072
+0A7E  E62E                  JR Z,L0ADC
+0A80  0B02 0077             CP R2,#%0077
+0A84  EEE2                  JR NZ,L0A4A
+0A86  93FC                  PUSH @R15,R12
+0A88  53FE 0004             PUSH @R15,%0004(R14)
+0A8C  5F00 0B2A             CALL L0B2A
+0A90  E830                  JR L0AF2
+L0A92:
+0A92  8DC4                  TEST R12
+0A94  E603                  JR Z,L0A9C
+0A96  0DF9 0002             PUSH @R15,#%0002
+0A9A  E802                  JR L0AA0
+L0A9C:
+0A9C  0DF9 0001             PUSH @R15,#%0001
+L0AA0:
+0AA0  53FE 0004             PUSH @R15,%0004(R14)
+0AA4  5F00 0E54             CALL _open
+0AA8  A9F3                  INC R15,#4
+0AAA  A12B                  LD R11,R2
+0AAC  8DB4                  TEST R11
+0AAE  ED0C                  JR PL,L0AC8
+0AB0  6100 1446             LD R0,%1446
+0AB4  0B00 0002             CP R0,#%0002
+0AB8  EE07                  JR NZ,L0AC8
+0ABA  93FC                  PUSH @R15,R12
+0ABC  53FE 0004             PUSH @R15,%0004(R14)
+0AC0  5F00 0B2A             CALL L0B2A
+0AC4  A9F3                  INC R15,#4
+0AC6  A12B                  LD R11,R2
+L0AC8:
+0AC8  0DF9 0002             PUSH @R15,#%0002
+0ACC  8933                  XOR R3,R3
+0ACE  B12A                  EXTS RR2
+0AD0  91F2                  PUSHL @R15,RR2
+0AD2  93FB                  PUSH @R15,R11
+0AD4  5F00 0E3E             CALL _lseek
+0AD8  A9F7                  INC R15,#8
+0ADA  E80D                  JR L0AF6
+L0ADC:
+0ADC  8DC4                  TEST R12
+0ADE  E603                  JR Z,L0AE6
+0AE0  0DF9 0002             PUSH @R15,#%0002
+0AE4  E802                  JR L0AEA
+L0AE6:
+0AE6  0DF9 0000             PUSH @R15,#%0000
+L0AEA:
+0AEA  53FE 0004             PUSH @R15,%0004(R14)
+0AEE  5F00 0E54             CALL _open
+L0AF2:
+0AF2  A9F3                  INC R15,#4
+0AF4  A12B                  LD R11,R2
+L0AF6:
+0AF6  8DB4                  TEST R11
+0AF8  E5A8                  JR MI,L0A4A
+0AFA  4DD8 0002             CLR %0002(R13)
+0AFE  A1B2                  LD R2,R11
+0B00  6EDA 0007             LDB %0007(R13),RL2
+0B04  8DC4                  TEST R12
+0B06  E603                  JR Z,L0B0E
+0B08  64D7 0006             SETB %0006(R13),#7
+0B0C  E80C                  JR L0B26
+L0B0E:
+0B0E  61E2 0006             LD R2,%0006(R14)
+0B12  202B                  LDB RL3,@R2
+0B14  8833                  XORB RH3,RH3
+0B16  0B03 0072             CP R3,#%0072
+0B1A  EE03                  JR NZ,L0B22
+0B1C  64D0 0006             SETB %0006(R13),#0
+0B20  E802                  JR L0B26
+L0B22:
+0B22  64D1 0006             SETB %0006(R13),#1
+L0B26:
+0B26  A1D2                  LD R2,R13
+0B28  E891                  JR L0A4C
+L0B2A:
+0B2A  5F00 0EE0             CALL csv
+0B2E  61ED 0004             LD R13,%0004(R14)
+0B32  0DF9 01B6             PUSH @R15,#%01B6
+0B36  93FD                  PUSH @R15,R13
+0B38  5F00 0E12             CALL _creat
+0B3C  A9F3                  INC R15,#4
+0B3E  A12C                  LD R12,R2
+0B40  4DE4 0006             TEST %0006(R14)
+0B44  E60C                  JR Z,L0B5E
+0B46  8DC4                  TEST R12
+0B48  E50A                  JR MI,L0B5E
+0B4A  93FC                  PUSH @R15,R12
+0B4C  5F00 0DFE             CALL _close
+0B50  0DF5 0002             LD @R15,#%0002
+0B54  93FD                  PUSH @R15,R13
+0B56  5F00 0E54             CALL _open
+0B5A  A9F3                  INC R15,#4
+0B5C  A12C                  LD R12,R2
+L0B5E:
+0B5E  A1C2                  LD R2,R12
+0B60  5E08 0EEE             JP cret
+__findio:
+0B64  5F00 0EE0             CALL csv
+0B68  210D 0F80             LD R13,#%0F80
+0B6C  E807                  JR L0B7C
+L0B6E:
+0B6E  4B0D 1020             CP R13,L1020
+0B72  E703                  JR C,L0B7A
+0B74  8922                  XOR R2,R2
+L0B76:
+0B76  5E08 0EEE             JP cret
+L0B7A:
+0B7A  A9D7                  INC R13,#8
+L0B7C:
+0B7C  60DA 0006             LDB RL2,%0006(R13)
+0B80  8822                  XORB RH2,RH2
+0B82  0702 0083             AND R2,#%0083
+0B86  EEF3                  JR NZ,L0B6E
+0B88  A1D2                  LD R2,R13
+0B8A  E8F5                  JR L0B76
+_exit:
+0B8C  93FE                  PUSH @R15,R14
+0B8E  A1FE                  LD R14,R15
+0B90  5F00 086E             CALL L086E
+0B94  61E0 0004             LD R0,%0004(R14)
+0B98  7F01                  SC #%01
+L0B9A:
+0B9A  5F00 0EE0             CALL csv
+0B9E  4D04 143A             TEST %143A
+0BA2  EE12                  JR NZ,L0BC8
+0BA4  2102 143C             LD R2,#%143C
+0BA8  A520                  SET R2,#0
+0BAA  6F02 143A             LD %143A,R2
+0BAE  2102 143A             LD R2,#%143A
+0BB2  A520                  SET R2,#0
+0BB4  6F02 143C             LD %143C,R2
+0BB8  2102 143C             LD R2,#%143C
+0BBC  6F02 1440             LD %1440,R2
+0BC0  2102 143A             LD R2,#%143A
+0BC4  6F02 143E             LD %143E,R2
+L0BC8:
+0BC8  61E2 0004             LD R2,%0004(R14)
+0BCC  A922                  INC R2,#3
+0BCE  2103 FFFF             LD R3,#%FFFF
+0BD2  B323 0300             SDL R2,R3
+0BD6  A12B                  LD R11,R2
+0BD8  610D 143E             LD R13,%143E
+L0BDC:
+0BDC  4D08 1444             CLR %1444
+L0BE0:
+0BE0  27D0                  BIT @R13,#0
+0BE2  EE13                  JR NZ,L0C0A
+0BE4  E802                  JR L0BEA
+L0BE6:
+0BE6  21C2                  LD R2,@R12
+0BE8  2FD2                  LD @R13,R2
+L0BEA:
+0BEA  21DC                  LD R12,@R13
+0BEC  A1C2                  LD R2,R12
+0BEE  2720                  BIT @R2,#0
+0BF0  E6FA                  JR Z,L0BE6
+0BF2  A1B2                  LD R2,R11
+0BF4  B329 0001             SLA R2,#1
+0BF8  81D2                  ADD R2,R13
+0BFA  8BC2                  CP R2,R12
+0BFC  EB06                  JR UGT,L0C0A
+0BFE  A1B2                  LD R2,R11
+0C00  B329 0001             SLA R2,#1
+0C04  81D2                  ADD R2,R13
+0C06  8BD2                  CP R2,R13
+0C08  EF5B                  JR NC,L0CC0
+L0C0A:
+0C0A  A1DC                  LD R12,R13
+0C0C  21DD                  LD R13,@R13
+0C0E  A3D0                  RES R13,#0
+0C10  8BCD                  CP R13,R12
+0C12  EBE6                  JR UGT,L0BE0
+0C14  4B0C 1440             CP R12,%1440
+0C18  EE03                  JR NZ,L0C20
+0C1A  0B0D 143A             CP R13,#%143A
+0C1E  E603                  JR Z,L0C26
+L0C20:
+0C20  8922                  XOR R2,R2
+L0C22:
+0C22  5E08 0EEE             JP cret
+L0C26:
+0C26  6900 1444             INC %1444,#1
+0C2A  6100 1444             LD R0,%1444
+0C2E  0B00 0001             CP R0,#%0001
+0C32  E2D6                  JR LE,L0BE0
+0C34  A1B2                  LD R2,R11
+0C36  0102 0200             ADD R2,#%0200
+0C3A  2103 FFF7             LD R3,#%FFF7
+0C3E  B32B 0300             SDA R2,R3
+0C42  B329 0009             SLA R2,#9
+0C46  6F02 1444             LD %1444,R2
+0C4A  0DF9 0000             PUSH @R15,#%0000
+0C4E  5F00 0E80             CALL _sbrk
+0C52  A9F1                  INC R15,#2
+0C54  A12C                  LD R12,R2
+0C56  6102 1444             LD R2,%1444
+0C5A  B329 0001             SLA R2,#1
+0C5E  81C2                  ADD R2,R12
+0C60  0102 0200             ADD R2,#%0200
+0C64  8BC2                  CP R2,R12
+0C66  E7DC                  JR C,L0C20
+0C68  6102 1444             LD R2,%1444
+0C6C  B329 0001             SLA R2,#1
+0C70  93F2                  PUSH @R15,R2
+0C72  5F00 0E80             CALL _sbrk
+0C76  A9F1                  INC R15,#2
+0C78  A12C                  LD R12,R2
+0C7A  0B0C FFFF             CP R12,#%FFFF
+0C7E  E6D0                  JR Z,L0C20
+0C80  6102 1440             LD R2,%1440
+0C84  2F2C                  LD @R2,R12
+0C86  6102 1440             LD R2,%1440
+0C8A  A921                  INC R2,#2
+0C8C  8BC2                  CP R2,R12
+0C8E  E608                  JR Z,L0CA0
+0C90  6102 1440             LD R2,%1440
+0C94  6103 1440             LD R3,%1440
+0C98  2134                  LD R4,@R3
+0C9A  A540                  SET R4,#0
+0C9C  A143                  LD R3,R4
+0C9E  2F23                  LD @R2,R3
+L0CA0:
+0CA0  6102 1444             LD R2,%1444
+0CA4  B329 0001             SLA R2,#1
+0CA8  81C2                  ADD R2,R12
+0CAA  AB21                  DEC R2,#2
+0CAC  2FC2                  LD @R12,R2
+0CAE  6F02 1440             LD %1440,R2
+0CB2  6102 1440             LD R2,%1440
+0CB6  2103 143A             LD R3,#%143A
+0CBA  A530                  SET R3,#0
+0CBC  2F23                  LD @R2,R3
+0CBE  E88E                  JR L0BDC
+L0CC0:
+0CC0  A1B2                  LD R2,R11
+0CC2  B329 0001             SLA R2,#1
+0CC6  81D2                  ADD R2,R13
+0CC8  6F02 143E             LD %143E,R2
+0CCC  8B2C                  CP R12,R2
+0CCE  E305                  JR ULE,L0CDA
+0CD0  2123                  LD R3,@R2
+0CD2  6F03 1442             LD %1442,R3
+0CD6  21D3                  LD R3,@R13
+0CD8  2F23                  LD @R2,R3
+L0CDA:
+0CDA  6102 143E             LD R2,%143E
+0CDE  A520                  SET R2,#0
+0CE0  2FD2                  LD @R13,R2
+0CE2  A1D2                  LD R2,R13
+0CE4  A921                  INC R2,#2
+0CE6  E89D                  JR L0C22
+L0CE8:
+0CE8  5F00 0EE0             CALL csv
+0CEC  61ED 0004             LD R13,%0004(R14)
+0CF0  A1DC                  LD R12,R13
+0CF2  ABC1                  DEC R12,#2
+0CF4  6F0C 143E             LD %143E,R12
+0CF8  21C2                  LD R2,@R12
+0CFA  A320                  RES R2,#0
+0CFC  2FC2                  LD @R12,R2
+0CFE  5E08 0EEE             JP cret
+0D02  5F00 0EE0 61ED 0004   DW %5F00,%0EE0,%61ED,%0004
+0D0A  67D0 FFFE E604 93FD   DW %67D0,%FFFE,%E604,%93FD
+0D12  5F00 0CE8 A9F1 61D3   DW %5F00,%0CE8,%A9F1,%61D3
+0D1A  FFFE 83D3 B12A 1B02   DW %FFFE,%83D3,%B12A,%1B02
+0D22  0002 A132 A12A 53FE   DW %0002,%A132,%A12A,%53FE
+0D2A  0006 5F00 0B9A A9F1   DW %0006,%5F00,%0B9A,%A9F1
+0D32  A12C 8DC4 E602 8BDC   DW %A12C,%8DC4,%E602,%8BDC
+0D3A  EE03 A1C2 5E08 0EEE   DW %EE03,%A1C2,%5E08,%0EEE
+0D42  A1D9 A1C8 61E2 0006   DW %A1D9,%A1C8,%61E2,%0006
+0D4A  A920 2103 FFFF B323   DW %A920,%2103,%FFFF,%B323
+0D52  0300 A12B 8BAB EF08   DW %0300,%A12B,%8BAB,%EF08
+0D5A  A1BA E806 A182 A981   DW %A1BA,%E806,%A182,%A981
+0D62  A193 A991 2134 2F24   DW %A193,%A991,%2134,%2F24
+0D6A  A1A2 ABA0 8D24 EEF6   DW %A1A2,%ABA0,%8D24,%EEF6
+0D72  8BDC EFE3 A1B2 B321   DW %8BDC,%EFE3,%A1B2,%B321
+0D7A  0001 81C2 8BD2 E7DD   DW %0001,%81C2,%8BD2,%E7DD
+0D82  A1B2 B321 0001 81C2   DW %A1B2,%B321,%0001,%81C2
+0D8A  83D2 A123 B12A 1B02   DW %83D2,%A123,%B12A,%1B02
+0D92  0002 A132 B329 0001   DW %0002,%A132,%B329,%0001
+0D9A  81C2 6103 1442 2F23   DW %81C2,%6103,%1442,%2F23
+0DA2  E8CC                  DW %E8CC
+_isatty:
+0DA4  5F00 0EE0             CALL csv
+0DA8  ABFB                  DEC R15,#12
+0DAA  A1E2                  LD R2,R14
+0DAC  0102 FFE8             ADD R2,#%FFE8
+0DB0  93F2                  PUSH @R15,R2
+0DB2  53FE 0004             PUSH @R15,%0004(R14)
+0DB6  5F00 0DE4             CALL _gtty
+0DBA  A9F3                  INC R15,#4
+0DBC  8D24                  TEST R2
+0DBE  ED03                  JR PL,L0DC6
+0DC0  8922                  XOR R2,R2
+L0DC2:
+0DC2  5E08 0EEE             JP cret
+L0DC6:
+0DC6  BD21                  LDK R2,#1
+0DC8  E8FC                  JR L0DC2
+_stty:
+0DCA  5F00 0EE0 53FE 0006   DW %5F00,%0EE0,%53FE,%0006
+0DD2  0DF9 7409 53FE 0004   DW %0DF9,%7409,%53FE,%0004
+0DDA  5F00 0E28 A9F5 5E08   DW %5F00,%0E28,%A9F5,%5E08
+0DE2  0EEE                  DW %0EEE
+_gtty:
+0DE4  5F00 0EE0             CALL csv
+0DE8  53FE 0006             PUSH @R15,%0006(R14)
+0DEC  0DF9 7408             PUSH @R15,#%7408
+0DF0  53FE 0004             PUSH @R15,%0004(R14)
+0DF4  5F00 0E28             CALL _ioctl
+0DF8  A9F5                  INC R15,#6
+0DFA  5E08 0EEE             JP cret
+_close:
+0DFE  93FE                  PUSH @R15,R14
+0E00  A1FE                  LD R14,R15
+0E02  61E0 0004             LD R0,%0004(R14)
+0E06  7F06                  SC #%06
+0E08  5E07 0ED2             JP C,cerror
+0E0C  8922                  XOR R2,R2
+0E0E  97FE                  POP R14,@R15
+0E10  9E08                  RET
+_creat:
+0E12  93FE                  PUSH @R15,R14
+0E14  A1FE                  LD R14,R15
+0E16  5CE1 0001 0004        LDM R0,%0004(R14),#2
+0E1C  7F08                  SC #%08
+0E1E  5E07 0ED2             JP C,cerror
+0E22  A142                  LD R2,R4
+0E24  97FE                  POP R14,@R15
+0E26  9E08                  RET
+_ioctl:
+0E28  93FE                  PUSH @R15,R14
+0E2A  A1FE                  LD R14,R15
+0E2C  5CE1 0002 0004        LDM R0,%0004(R14),#3
+0E32  7F36                  SC #%36
+0E34  5E07 0ED2             JP C,cerror
+0E38  8922                  XOR R2,R2
+0E3A  97FE                  POP R14,@R15
+0E3C  9E08                  RET
+_lseek:
+0E3E  93FE                  PUSH @R15,R14
+0E40  A1FE                  LD R14,R15
+0E42  5CE1 0003 0004        LDM R0,%0004(R14),#4
+0E48  7F13                  SC #%13
+0E4A  5E07 0ED2             JP C,cerror
+0E4E  9442                  LDL RR2,RR4
+0E50  97FE                  POP R14,@R15
+0E52  9E08                  RET
+_open:
+0E54  93FE                  PUSH @R15,R14
+0E56  A1FE                  LD R14,R15
+0E58  5CE1 0001 0004        LDM R0,%0004(R14),#2
+0E5E  7F05                  SC #%05
+0E60  5E07 0ED2             JP C,cerror
+0E64  A142                  LD R2,R4
+0E66  97FE                  POP R14,@R15
+0E68  9E08                  RET
+_read:
+0E6A  93FE                  PUSH @R15,R14
+0E6C  A1FE                  LD R14,R15
+0E6E  5CE1 0002 0004        LDM R0,%0004(R14),#3
+0E74  7F03                  SC #%03
+0E76  5E07 0ED2             JP C,cerror
+0E7A  A142                  LD R2,R4
+0E7C  97FE                  POP R14,@R15
+0E7E  9E08                  RET
+_sbrk:
+0E80  93FE                  PUSH @R15,R14
+0E82  A1FE                  LD R14,R15
+0E84  61E0 0004             LD R0,%0004(R14)
+0E88  6101 1022             LD R1,L1022
+0E8C  8500                  OR R0,R0
+0E8E  5E06 0E9E             JP Z,L0E9E
+0E92  8110                  ADD R0,R1
+0E94  7F11                  SC #%11
+0E96  5E07 0ED2             JP C,cerror
+0E9A  6F00 1022             LD L1022,R0
+L0E9E:
+0E9E  A112                  LD R2,R1
+0EA0  97FE                  POP R14,@R15
+0EA2  9E08                  RET
+_brk:
+0EA4  93FE A1FE 61E0 0004   DW %93FE,%A1FE,%61E0,%0004
+0EAC  7F11 5E07 0ED2 6F00   DW %7F11,%5E07,%0ED2,%6F00
+0EB4  1022 8922 97FE 9E08   DW %1022,%8922,%97FE,%9E08
+_write:
+0EBC  93FE                  PUSH @R15,R14
+0EBE  A1FE                  LD R14,R15
+0EC0  5CE1 0002 0004        LDM R0,%0004(R14),#3
+0EC6  7F04                  SC #%04
+0EC8  5E07 0ED2             JP C,cerror
+0ECC  A142                  LD R2,R4
+0ECE  97FE                  POP R14,@R15
+0ED0  9E08                  RET
+cerror:
+0ED2  6F04 1446             LD %1446,R4
+0ED6  2102 FFFF             LD R2,#%FFFF
+0EDA  A1EF                  LD R15,R14
+0EDC  97FE                  POP R14,@R15
+0EDE  9E08                  RET
+csv:
+0EE0  21F1                  LD R1,@R15
+0EE2  ABFB                  DEC R15,#12
+0EE4  1CF9 0806             LDM @R15,R8,#7
+0EE8  A1FE                  LD R14,R15
+0EEA  A9EB                  INC R14,#12
+0EEC  1E18                  JP @R1
+cret:
+0EEE  A1E5                  LD R5,R14
+0EF0  5C51 0806 FFF4        LDM R8,%FFF4(R5),#7
+0EF6  A15F                  LD R15,R5
+0EF8  A9F1                  INC R15,#2
+0EFA  9E08                  RET
+0EFC  0000 6C77 6300 7200   DW %0000,%6C77,%6300,%7200
+0F04  7763 3A20 6361 6E27   DW %7763,%3A20,%6361,%6E27
+0F0C  7420 6F70 656E 2025   DW %7420,%6F70,%656E,%2025
+0F14  730A 0020 2573 0A00   DW %730A,%0020,%2573,%0A00
+0F1C  0A00 2074 6F74 616C   DW %0A00,%2074,%6F74,%616C
+0F24  0A00 2537 6C64 0025   DW %0A00,%2537,%6C64,%0025
+0F2C  376C 6420 0025 376C   DW %376C,%6420,%0025,%376C
+0F34  6400 04C8 0064 04C4   DW %6400,%04C8,%0064,%04C4
+0F3C  006F 04C2 0078 0524   DW %006F,%04C2,%0078,%0524
+0F44  0066 0530 0065 052A   DW %0066,%0530,%0065,%052A
+0F4C  0067 0548 0063 055A   DW %0067,%0548,%0063,%055A
+0F54  0073 049C 006C 049C   DW %0073,%049C,%006C,%049C
+0F5C  004C 04EC 0075 0540   DW %004C,%04EC,%0075,%0540
+0F64  0072 04D2 0044 04BC   DW %0072,%04D2,%0044,%04BC
+0F6C  004F 04C0 0058 04EA   DW %004F,%04C0,%0058,%04EA
+0F74  0055 0000 0000 6E75   DW %0055,%0000,%0000,%6E75
+0F7C  6C6C 0000 1024 0000   DW %6C6C,%0000,%1024,%0000
+0F84  1024 0100 0000 0000   DW %1024,%0100,%0000,%0000
+0F8C  0000                  DW %0000
+L0F8E:
+0F8E  02                    DB %02
+L0F8F:
+0F8F  01                    DB %01
+0F90  0000 0000 0000 0602   DW %0000,%0000,%0000,%0602
+0F98  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FA0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FA8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FB0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FB8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FC0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FC8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FD0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FD8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FE0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FE8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FF0  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+0FF8  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+1000  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+1008  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+1010  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+1018  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+L1020:
+1020  1020                  DW %1020
+L1022:
+1022  1448                  DW %1448
