@@ -13,8 +13,8 @@ sind **ganzdatei bytegleich (G)**.  Befehl je Programm (nach `libc_alt.py member
 | mkdir | 3934 B (3562/372/1080) | 3950 B | G | V7 `mkdir.c` unveraendert | R1 7, R4 1 | keine |
 
 ## Herkunft
-* Der Eigencode ist V7-Text (`original/unix-v7/usr/src/cmd/NAME.c`); ohne c2-Modell bleiben nur die Regelstellen (Befehlsvergleich Eigencode: pwd 169 von 172,
-  mkdir 198 von 202 Befehlen gleich *ohne* Modell-Treffer 159/183 -- die Zahlen des Berichts "matching (without c2 model)" gelten fuer die Variante mit shipped-libc).
+* Der Eigencode ist V7-Text (`original/unix-v7/usr/src/cmd/NAME.c`).  Erster Lauf ohne Modell und mit ausgelieferter libc: Eigencode pwd 169 von 172, mkdir 198 von 202 Befehlen gleich
+  (nur Regelstellen und Adressverschiebungen); mit c2-Modell und `libc_alt` dann ganzdatei gleich.
 * pwd, rmdir: `/usr/include` der Diskette hat kein `sys/param.h` und kein `sys/dir.h`; wie bei `ls` stehen die V7-Header flach auf `/mnt`
   und der Quelltext schreibt `#include "param.h"` bzw. `"dir.h"` (Kommentar im Quelltext).  Das aendert den Code nicht (gemessen: bytegleich).
   Der erste Versuch mit `<sys/param.h>` scheiterte: `Can't find include file sys/param.h` (`-I/mnt` kennt keine Unterverzeichnisse).
