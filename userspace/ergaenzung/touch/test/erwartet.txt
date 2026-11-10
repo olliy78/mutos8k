@@ -1,0 +1,7 @@
+a
+hi
+touch: file nofile does not exist.
+new
+old
+old
+new
