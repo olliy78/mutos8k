@@ -14,6 +14,10 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_a1.md` | `cmd`-Diskette: echo, pwd, rmdir, mkdir (ganzdatei bytegleich) |
 | `cmd_a2.md` | `cmd`-Diskette: chmod, kill, cp, ln (ganzdatei bytegleich), c2-Regeln R32-R34 |
 | `cmd_a3.md` | `cmd`-Diskette: wc, size (ganzdatei bytegleich) |
+| `cmd_b1.md` | `cmd`-Diskette `/etc`: clri, mknod, dcheck (ganzdatei bytegleich), c2-Regeln R35-R39 |
+| `cmd_b2.md` | `/etc`: ncheck, icheck (ganzdatei bytegleich), c2-Regeln R42-R48 |
+| `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
+| `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
 | `../plan/42_unix_herkunft.md`, `../plan/43_c_nachbau.md` | Plaene (H7 = Userspace) |
@@ -89,6 +93,46 @@ Vergleichsquelle ist `original/unix-v7/usr/src/cmd/NAME.c`.  Ob die drei `size`-
 Neue c2-Regeln R32-R34 (je **eine** Stelle, kill/chmod/cp) sind schwach belegt: ein beschriebener Unterschied, keine Erklaerung des alten c2; Quellvarianten wurden
 dafuer nicht durchprobiert.  R32 trifft auch `sh` (18298 statt 18296 B) und ist deshalb in `C2_AUS["sh"]` abgeschaltet.
 Behelfe: `kill` (Datenfenster und `errlst` in `libc_alt/kill.members` von Hand), `ln` (`karte_extra.txt`: `ohne 0B00`), `size` (Zusatzglied `rdwr`).
+
+## Herkunft der Quellen: Diskette `cmd`, Stufe 2 (`/etc`, Plan 44; gemessen 2026-11-10)
+
+Sechs weitere Programme, alle **ganzdatei bytegleich** (`pipeline.py alles NAME --c2emu --libc alt --ist neu_c2_s`).  Regressionslauf aller 26 Rueckbau-Programme nach dem Merge
+(sync getty cat date ls stty init login mount umount sh echo pwd rmdir mkdir wc size chmod kill cp ln clri mknod dcheck ncheck icheck mkfs): **26 von 26 gleich**.
+Aussagekraft wie oben (Punkte 1, 2, 5).  Die Quellen sind V7 (`original/unix-v7/usr/src/cmd/NAME.c`), die V7-Header liegen flach als `"x.h"` neben der Quelle.
+
+| Programm | Datei (B) | Abweichung vom V7-Text | c2-Regeln (Stellen) | Doku |
+|----------|-----------|------------------------|---------------------|------|
+| mknod | 3954 | keine | R4 3 | `cmd_b1.md` |
+| clri | 3574 | 1 (Include) | R1 4, R4 2, R39 1 | `cmd_b1.md` |
+| dcheck | 4514 | 4: `NI` 8 statt 16, `sblock` mit Auffuellung auf 512 B, Includes | R4 4, R35-R38 je 1 | `cmd_b1.md` |
+| ncheck | 5078 | `NI` 8, `HSIZE` 1103 statt 2503, `sblock`-Auffuellung, Includes | R42 2, R43 1, R45 1, R38 1 u. a. | `cmd_b2.md` |
+| icheck | 6542 | `NI` 8, `sblock`-Auffuellung, `n = ndirect+nindir+niindir+niiindir`, Includes | R42 3, R46 3, R47 1, R48 1, R38 2 u. a. | `cmd_b2.md` |
+| mkfs | 8406 | 5: Includes, Variable `badflag`, `if(argc == 6) badflag++`, `badblk()` mit `lseek`/`read` statt Stumpf, `>=` zu `>` in `iput` | R49-R59 (elf, nur mkfs) | `cmd_b3.md` |
+
+Alle Abweichungen sind an der Stelle mit `/* Differs from V7: ... */` kommentiert und im Dokument belegt.  Dass sie die **MUTOS-Fassung** sind, ist jeweils eine
+**Annahme**; gemessen ist nur, dass dieser Text die Originalbytes erzeugt (z. B. `itab` 4096 B im Original, `sblock` 512 B statt 440 B der V7-`struct filsys`).
+
+**Warnung zu den Regeln.**  Mit Stufe 2 kamen 25 weitere c2-Regeln hinzu (R35-R59 ohne R40, R44; R44 entfaellt, weil B1s R38 dieselbe Form erzeugt).  Mehr als die Haelfte
+greift an genau einer Stelle: sie beschreiben einen Unterschied, erklaeren aber nicht den alten c2.  Die Regeln von drei Auftraegen sind getrennt entstanden und mussten
+umbenannt werden (B2: R35-R41 zu R42-R48; B3: R35-R45 zu R49-R59, gelten nur in `c2_mkfs_s`); R35 und R38 aus `cmd_b2`/B1 treffen sonst `sh` (dort in `C2_AUS` abgeschaltet).
+Regel R42 (B2) weicht der B1-Regel R37 aus: das ist eine nachtraegliche Anpassung, die Bytegleichheit bleibt (Regression 26/26).
+
+## Ergaenzungen aus V7 (Plan 45) -- keine Originale
+
+Programme, die auf den MUTOS-Disketten **fehlen**, aus den V7-Quellen (nur V7, nichts aus System III).  Es gibt keine Originalreferenz, deshalb keine Bytegleichheit:
+Beweis ist der Bau mit dem unveraenderten Gast-`cc -O -s` plus ein Gast-Test gegen eine Erwartung (`erg.py alles NAME`, Ergebnis B = baut und Test gleich).
+Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
+
+| Gruppe | Programme (Ergebnis B) | Abweichungen vom V7-Text | Doku |
+|--------|------------------------|--------------------------|------|
+| E0 | basename, tee | keine (tee braucht `errno.h` aus V7) | `erg_e0.md` |
+| E1a | sleep, touch, yes, tty, sum, rev (`mesg`: **X**, baut, nicht getestet) | keine | `erg_e1a.md` |
+| E1b | uniq, comm, split, tail, cal, look, nice, time, test | `time.c`: `<times.h>` statt `<sys/times.h>` | `erg_e1b.md` |
+
+Gemessen (auch vom Projektinhaber-Agenten nachgepruft): alle 17 B im Gast.  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
+**Offen:** `tail -2` auf eine Datei ohne Schlusszeilenumbruch gibt im Gast drei statt zwei Zeilen aus; vermutlich V7-Verhalten, **nicht** gegen eine PDP-11 und nicht gegen einen
+Compilerfehler abgegrenzt.
 
 ## Stolpersteine fuer weitere Programme (alle gemessen)
 1. **Die ausgelieferte `libc.a` ist nicht die Bibliothek der Originalprogramme.**  In `init` fehlt der Gleitkomma-Teil von `doprnt` (Stub `ffltpr`), und die
