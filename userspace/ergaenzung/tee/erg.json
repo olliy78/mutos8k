@@ -1,0 +1,1 @@
+{"header": ["errno.h"], "flags": "-O -s", "quelle": "original/unix-v7/usr/src/cmd/tee.c"}

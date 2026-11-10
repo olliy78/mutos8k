@@ -1,0 +1,4 @@
+Erwartung auf dem Host bestimmt (2026-11-10) mit GNU coreutils 9.7:
+  cd leerer-ordner (mit eingabe/in.txt); sh befehle.sh > erwartet.txt   (tee = /usr/bin/tee)
+Standardausgabe ist in allen Faellen eine Datei (kein Terminal): tee schreibt 512-Byte-Bloecke, Ergebnis wie GNU.
+V7-Handbuch: original/unix-v7/usr/man/man1/tee.1
