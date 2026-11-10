@@ -1,5 +1,15 @@
-cd /tmp
-yes | dd bs=10 count=1 2>/dev/null
-echo
-yes no | dd bs=9 count=1 2>/dev/null
-echo ende
+yes | (read x; cat <<E
+got $x
+E
+)
+yes no | (read x; cat <<E
+got $x
+E
+)
+yes 'a b' | (read x; cat <<E
+got $x
+E
+)
+cat <<E
+ende
+E

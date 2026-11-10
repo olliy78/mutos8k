@@ -1,10 +1,4 @@
-y
-y
-y
-y
-y
-
-no
-no
-no
+got y
+got no
+got a b
 ende
