@@ -1,5 +1,8 @@
-cd /tmp
 tty < /dev/null
-echo r=$?
+cat <<E
+r=$?
+E
 tty -s < /dev/null
-echo r=$?
+cat <<E
+r=$?
+E
