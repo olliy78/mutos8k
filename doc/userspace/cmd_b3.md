@@ -4,7 +4,7 @@ Stand 2026-11-10, Branch `us-cmd-b3`.  Alles *gemessen* (`K1520EMU=/home/olliy/p
 
 | Programm | Aussage | Datei | Abbild | Quelle | c2-Regeln (Stellen) |
 |----------|---------|-------|--------|--------|---------------------|
-| `etc/mkfs` | **G** ganzdatei bytegleich | 8406 B | 8390 B (text 7714, data 676, bss 2684) | V7 `mkfs.c` mit 5 belegten Abweichungen (Include-Zeilen, `badflag`/`badblk`, `>`) | R1 11, R4 32, R30 1 (alt) + **R35-R45** (neu, nur mkfs) |
+| `etc/mkfs` | **G** ganzdatei bytegleich | 8406 B | 8390 B (text 7714, data 676, bss 2684) | V7 `mkfs.c` mit 5 belegten Abweichungen (Include-Zeilen, `badflag`/`badblk`, `>`) | R1 11, R4 32, R30 1 (alt) + **R49-R59** (neu, nur mkfs) |
 
 Befehle:
 
@@ -43,7 +43,7 @@ Rundlauf `libc_alt.py bau mkfs`: 0 Glieder abweichend.  Der Libc-Teil belegt kei
 (`z8kdis left data words in the code`, die `code=`-Einstiege waren wegen der 2 Byte um 2 verschoben); von Hand `doprnt 1202 13DC ... code=132C,1332,1348 src=G`
 (Behelf, nur `mkfs.members`).  *Annahme*: mkfs wurde mit einer anderen Bibliotheksfassung gelinkt; nicht weiter untersucht.
 
-## c2-Modell: neue Regeln R35-R45 (nur mkfs)
+## c2-Modell: neue Regeln R49-R59 (nur mkfs)
 
 Ohne neue Regeln: nach den Quelltextkorrekturen 26 Differenzbloecke im Eigencode, Libc-Teil gleich.  Alle Bloecke sind Codeformen, die kein Quelltext
 beeinflusst (Befehlsmenge gleich, nur Registerwahl/Nachladen).  Die Regeln stehen in `uspace.c2_mkfs_s`, laufen hinter `c2_emu_s` und **nur mit `mkfs=True`**
@@ -52,20 +52,20 @@ Sie sind **Beschreibungen** der Unterschiede (Modell, kein Lauf des alten c2), d
 
 | Regel | Stellen | Muster (Ausgabe des ausgelieferten c2 -> Original) |
 |-------|---------|-----------------------------------------------------|
-| R35 | 5 (+1 `push`/`test` Folgeverwendung je Stelle, 2x) | `ld MEM,rN [;test rN;jr..]; ld r0,MEM; cp r0,#k` -> `ld r0,rN; cp r0,#k`; die naechste `push @SP,rN`/`test rN` hinter der Sprungkette nimmt r0.  Nicht bei Byte-Laden (`xorb` davor): dort laedt das Original aus MEM (1 Stelle, gemessen) |
-| R36 | 3 | `cp @rN,#k` -> `ld r0,@rN; cp r0,#k` (R4 fuer register-indirekte Operanden; R4 selbst schliesst sie aus) |
-| R37 | 3 | nach `ld r0,MEM; cp r0,#k` ein spaeteres `ld rN,MEM` im selben Block -> `ld rN,r0` |
-| R38 | 1 | `mult rr4,#k; ld r4,r5; sub rX,r5` -> `sub rX,r4` |
-| R39 | 2 | `call _getnum; ld -N(FP),r3` -> `ld r2,r3; ld -N(FP),r2` |
-| R40 | 1 | `ldl MEM,rr4; testl rr4` -> `testl MEM` |
-| R41 | 2 | `dp = x; dp += y`: hinter `ld MEM,rN` wird `ld rN,MEM` nachgeladen (entry, iput) |
-| R42 | 1 | `ld r4,@r3; sla r4,#4; add r2,r4` -> `...; ld r3,r4; add r2,r3` |
-| R43 | 1 | `ld r3,MEM; ..; ld r2,r3; inc @r2,#1` -> `ld r2,MEM` |
-| R44 | 1 | `ldl rr2,MEM; ldl DST,rr2; ld r5,#25; exts rr4; extsl rq0; divl` -> `ldl rr2,MEM; nop; nop; nop; ldl DST,rr2; ldl rr2,MEM; ...` (die 3 `NOP` = 6 Byte im Original sind unerklaert; nachgebildet) |
-| R45 | 1 | `ldl rr0,rr2; cpl rr2,M; jr; ld r5..; xor r4,r4; cpl rr2,rr4; jr; pushl rr2` -> `cpl rr0,M`, `ldl rr2,rr0` hinter dem ersten `jr`, `pushl rr0` |
+| R49 | 5 (+1 `push`/`test` Folgeverwendung je Stelle, 2x) | `ld MEM,rN [;test rN;jr..]; ld r0,MEM; cp r0,#k` -> `ld r0,rN; cp r0,#k`; die naechste `push @SP,rN`/`test rN` hinter der Sprungkette nimmt r0.  Nicht bei Byte-Laden (`xorb` davor): dort laedt das Original aus MEM (1 Stelle, gemessen) |
+| R50 | 3 | `cp @rN,#k` -> `ld r0,@rN; cp r0,#k` (R4 fuer register-indirekte Operanden; R4 selbst schliesst sie aus) |
+| R51 | 3 | nach `ld r0,MEM; cp r0,#k` ein spaeteres `ld rN,MEM` im selben Block -> `ld rN,r0` |
+| R52 | 1 | `mult rr4,#k; ld r4,r5; sub rX,r5` -> `sub rX,r4` |
+| R53 | 2 | `call _getnum; ld -N(FP),r3` -> `ld r2,r3; ld -N(FP),r2` |
+| R54 | 1 | `ldl MEM,rr4; testl rr4` -> `testl MEM` |
+| R55 | 2 | `dp = x; dp += y`: hinter `ld MEM,rN` wird `ld rN,MEM` nachgeladen (entry, iput) |
+| R56 | 1 | `ld r4,@r3; sla r4,#4; add r2,r4` -> `...; ld r3,r4; add r2,r3` |
+| R57 | 1 | `ld r3,MEM; ..; ld r2,r3; inc @r2,#1` -> `ld r2,MEM` |
+| R58 | 1 | `ldl rr2,MEM; ldl DST,rr2; ld r5,#25; exts rr4; extsl rq0; divl` -> `ldl rr2,MEM; nop; nop; nop; ldl DST,rr2; ldl rr2,MEM; ...` (die 3 `NOP` = 6 Byte im Original sind unerklaert; nachgebildet) |
+| R59 | 1 | `ldl rr0,rr2; cpl rr2,M; jr; ld r5..; xor r4,r4; cpl rr2,rr4; jr; pushl rr2` -> `cpl rr0,M`, `ldl rr2,rr0` hinter dem ersten `jr`, `pushl rr0` |
 
-Zaehlerstand des letzten Laufs: `R1 11, R4 32, R30 1, R35 5, R36 3, R37 3, R38 1, R39 2, R40 1, R41 2, R42 1, R43 1, R44 1, R45 1`.
-Sechs der Regeln (R38, R40, R42-R45) haben **eine** Stelle: kaum mehr als ein beschriebener Unterschied.  Quellvarianten wurden dafuer nicht durchprobiert
+Zaehlerstand des letzten Laufs: `R1 11, R4 32, R30 1, R49 5, R50 3, R51 3, R52 1, R53 2, R54 1, R55 2, R56 1, R57 1, R58 1, R59 1`.
+Sechs der Regeln (R52, R54, R56-R59) haben **eine** Stelle: kaum mehr als ein beschriebener Unterschied.  Quellvarianten wurden dafuer nicht durchprobiert
 (*Annahme*: Codeformen des aelteren c2, der V7-Text steht fest; nur die Abweichungen 2-5 oben waren Quelltext).
 
 ## Ergebnis
