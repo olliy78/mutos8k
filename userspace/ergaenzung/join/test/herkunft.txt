@@ -1,0 +1,6 @@
+Erwartung: GNU coreutils 9.7 join auf dem Host (LC_ALL=C); Eingaben nach ASCII sortiert.  V7-Optionen werden fuer den Host uebersetzt:
+  -a1 -> -a 1;  -o 1.1 2.2 1.3 (getrennte Argumente) -> -o 1.1,2.2,1.3;  -j1 N -j2 M -> -1 N -2 M;  -t: gleich.
+Die Ausgabe ist gleich, auch bei mehrfachen Schluesseln (Kreuzprodukt) und Standardeingabe als '-'.
+Fehlerfaelle ('can't open', Usage, Exit 1) stammen aus dem V7-Quelltext (original/unix-v7/usr/src/cmd/join.c, error()), nicht von GNU.
+Nicht getestet: -e (V7 und GNU verhalten sich bei unpaarigen Zeilen mit -o unterschiedlich), mehrere Leerzeichen als ein Trenner (GNU anders),
+Eingaben mit mehr als 20 Feldern/Zeile (NFLD).  Handbuch: original/unix-v7/usr/man/man1/join.1.

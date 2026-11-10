@@ -1,0 +1,87 @@
+--- join j1.txt j2.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+e 5 w eel
+rc=0
+--- join -a1 j1.txt j2.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+c 3 z
+e 5 w eel
+rc=0
+--- join -a2 j1.txt j2.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+d date
+e 5 w eel
+rc=0
+--- join -a1 -a2 j1.txt j2.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+c 3 z
+d date
+e 5 w eel
+rc=0
+--- join -o 1.1 2.2 1.3 j1.txt j2.txt
+a apple x
+b banana y
+b blueberry y
+b banana yy
+b blueberry yy
+e eel w
+rc=0
+--- join -j1 2 -j2 1 j3.txt j4.txt
+10 one first ten
+20 two second twenty
+rc=0
+--- join -j1 2 -j2 1 -a1 j3.txt j4.txt
+10 one first ten
+20 two second twenty
+30 three third
+rc=0
+--- join -t: c1.txt c2.txt
+k1:v1:w1:x1
+k4:v4:w4:x4
+rc=0
+--- join -t: -a1 -a2 c1.txt c2.txt
+k1:v1:w1:x1
+k2:v2:w2
+k3:x3
+k4:v4:w4:x4
+rc=0
+--- join - j2.txt <j1.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+e 5 w eel
+rc=0
+--- cat j1.txt | join - j2.txt
+a 1 x apple
+b 2 y banana
+b 2 y blueberry
+b 22 yy banana
+b 22 yy blueberry
+e 5 w eel
+rc=0
+--- join j1.txt j4.txt
+rc=0
+--- join nosuch j2.txt 2>&1
+join: can't open nosuch
+rc=1
+--- join j1.txt 2>&1
+join: usage: join [-j1 x -j2 y] [-o list] file1 file2
+rc=1
