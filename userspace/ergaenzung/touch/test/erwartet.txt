@@ -1,7 +1,7 @@
-a
+ta
 hi
 touch: file nofile does not exist.
-new
-old
-old
-new
+tnew
+told
+told
+tnew

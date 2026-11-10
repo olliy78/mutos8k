@@ -1,21 +1,20 @@
-cd /tmp
-mkdir td
-cd td
-touch -c n1
-touch a
-touch -c a
-ls
-echo hi > h
-touch h
-cat h
+touch -c tn1
+touch ta
+touch -c ta
+ls t[an]*
+cat > th <<E
+hi
+E
+touch th
+cat th
 touch -c nofile 2>&1
-cd /tmp
-mkdir td2
-cd td2
-echo old > old
+cat > told <<E
+old
+E
 sleep 2
-echo new > new
-ls -t
-touch old
-ls -t
-cd /tmp
+cat > tnew <<E
+new
+E
+ls -t told tnew
+touch told
+ls -t told tnew
