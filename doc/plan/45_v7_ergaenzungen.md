@@ -61,3 +61,20 @@ Doku deutsch in `doc/userspace/erg_<auftrag>.md`, `README.md` nicht anfassen, je
 ## 6. Zusammenfuehrung
 
 Merge der Branches, Regressionslauf der Rueckbau-Programme (Plan 44 Abschnitt 6) unveraendert, dazu die Funktionstests der Ergaenzungen; Uebersicht in `doc/userspace/README.md` (eigener Abschnitt "Ergaenzungen, keine Originale").
+
+## 7. Schnittstelle des Rahmens E0 (Vertrag fuer parallele Agenten)
+
+Damit E1/E2-Agenten parallel zu E0 arbeiten koennen, ist die Schnittstelle vorab festgelegt.  E0 setzt sie um (`tools/userspace/erg.py`); die Programmagenten
+bereiten Quelle und Test vor und benutzen sie, sobald der Branch `us-erg-e0` den Commit "E0: Rahmen nutzbar" enthaelt (`git log us-erg-e0 --oneline`; mit `git merge us-erg-e0` uebernehmen).
+
+* **Ordner je Programm:** `userspace/ergaenzung/NAME/` mit `NAME.c` (oder mehreren `*.c`/`*.h` bei Mehrdatei-Programmen), `erg.json`
+  (`{"header": ["sys/xxx.h", ...], "flags": "-O -s", "quelle": "original/unix-v7/usr/src/cmd/NAME.c"}`; `header` = V7-Header relativ zu `original/unix-v7/usr/include`,
+  flach neben die Quelle gelegt) und `test/`.  Es gibt **keine gemeinsame Tabelle** (kein `PROGRAMME`-Eintrag), damit parallele Branches nicht kollidieren.
+* **Test je Programm:** `test/befehle.sh` (Gast-Shell-Skript, Standardausgabe wird verglichen), `test/erwartet.txt` (Soll-Ausgabe), optional `test/eingabe/*` (Dateien,
+  die vor dem Lauf nach `/tmp` des Gastes kommen) und `test/herkunft.txt` (woher die Erwartung stammt: Referenzwerkzeug mit Befehl und Version, oder V7-Handbuchstelle).
+* **Aufrufe:**
+  * `python3 -I tools/userspace/erg.py bau NAME [--parallel N]` -- Gast-Bau `cc -O -s`; Ergebnis `userspace/ergaenzung/NAME/work/bau/NAME.bin` (git-ignoriert), Meldungen `NAME.err`.  Exit 0 = gebaut.
+  * `python3 -I tools/userspace/erg.py test NAME` -- baut bei Bedarf, fuehrt `befehle.sh` im Gast aus, vergleicht mit `erwartet.txt`; Exit 0 = gleich, 1 = Abweichung (Diff ausgeben), 77 = Emulator fehlt.
+  * `python3 -I tools/userspace/erg.py alles NAME...` -- bau + test fuer mehrere Programme, Ergebniszeile je Programm (B/T/N, siehe Abschnitt 5).
+* **Gast:** wie Plan 44 (Laufwerk A leeres `/tmp`, `usr` fuer `cc`, Quelle auf `/mnt`); Platten nur als Kopien; Gast-Zeit 1987.
+* **Pytest:** `tests/test_erg.py` sammelt alle `userspace/ergaenzung/*/test` (Marke `gast`, Skip ohne Emulator); jeder Programmagent traegt nichts in diese Datei ein, sie findet die Ordner selbst.
