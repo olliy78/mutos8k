@@ -6,6 +6,7 @@
 
 */
 
+/* Differs from V7: MUTOS a.out.h has no A_MAGIC2, so it is not in the list. */
 int a_magic[] = {A_MAGIC1,A_MAGIC3,A_MAGIC4,0};
 
 main(argc, argv)
@@ -38,8 +39,10 @@ char **argv;
 		}
 		if (gorp>2)
 			printf("%s: ", *argv);
+		/* Differs from V7 (%u): the original binary prints the three sizes in hex. */
 		printf("%x+%x+%x = ", buf.a_text,buf.a_data,buf.a_bss);
 		sum = (long) buf.a_text + (long) buf.a_data + (long) buf.a_bss;
+		/* Differs from V7 (%Ob): the original binary prints the sum in hex. */
 		printf("%Db = 0%Xb\n", sum, sum);
 		fclose(f);
 	}

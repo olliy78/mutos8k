@@ -49,13 +49,18 @@ PROGRAMME = {
     "size": ("cmd", "bin/size", "userspace/size/size.c", []),
     "ncheck": ("cmd", "etc/ncheck", "userspace/ncheck/ncheck.c", [V7INC + "sys/param.h", V7INC + "sys/inode.h", V7INC + "sys/ino.h", V7INC + "sys/dir.h", V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
     "icheck": ("cmd", "etc/icheck", "userspace/icheck/icheck.c", [V7INC + "sys/param.h", V7INC + "sys/inode.h", V7INC + "sys/ino.h", V7INC + "sys/dir.h", V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
+    "clri": ("cmd", "etc/clri", "userspace/clri/clri.c", [V7INC + "sys/ino.h"]),
+    "mknod": ("cmd", "etc/mknod", "userspace/mknod/mknod.c", []),
+    "dcheck": ("cmd", "etc/dcheck", "userspace/dcheck/dcheck.c",
+               [V7INC + "sys/param.h", V7INC + "sys/inode.h", V7INC + "sys/ino.h", V7INC + "sys/dir.h",
+                V7INC + "sys/filsys.h", V7INC + "sys/fblk.h"]),
 }
 
 
 # c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
 # 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
-C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R35", "R38"}}
+C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
