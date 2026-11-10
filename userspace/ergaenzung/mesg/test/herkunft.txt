@@ -1,3 +1,0 @@
-Erwartung aus dem V7-Quelltext mesg.c (nicht aus dem Handbuch: man1/mesg.1 nennt Exit 2 bei Fehler, der Quelltext liefert exit(-1) = 255 im sh).
-"is y"/"is n"/Fehlermeldung gehen nach stderr = Konsole und erscheinen im Bildschirmtext. Voraussetzung: stderr ist ein Terminal, das ttyname(2) in /dev findet
-(Geraetedatei der Konsole vorhanden und stat-bar). Ist das im Gast nicht der Fall, ist mesg dort nicht testbar (-> X). Nicht im Gast gemessen (Stand: Vorbereitung).

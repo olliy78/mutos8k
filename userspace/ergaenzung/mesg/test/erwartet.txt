@@ -1,9 +1,0 @@
-r=0
-r=1
-is n
-r=1
-r=0
-is y
-r=0
-mesg: usage: mesg [y] [n]
-r=255
