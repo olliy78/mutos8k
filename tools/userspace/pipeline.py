@@ -41,6 +41,12 @@ PROGRAMME = {
     "kill": ("cmd", "bin/kill", "userspace/kill/kill.c", []),
     "cp": ("cmd", "bin/cp", "userspace/cp/cp.c", []),
     "ln": ("cmd", "bin/ln", "userspace/ln/ln.c", []),
+    "echo": ("cmd", "bin/echo", "userspace/echo/echo.c", []),
+    "pwd": ("cmd", "bin/pwd", "userspace/pwd/pwd.c", [V7INC + "sys/param.h", V7INC + "sys/dir.h"]),
+    "rmdir": ("cmd", "bin/rmdir", "userspace/rmdir/rmdir.c", [V7INC + "sys/dir.h"]),
+    "mkdir": ("cmd", "bin/mkdir", "userspace/mkdir/mkdir.c", []),
+    "wc": ("cmd", "bin/wc", "userspace/wc/wc.c", []),
+    "size": ("cmd", "bin/size", "userspace/size/size.c", []),
 }
 
 
