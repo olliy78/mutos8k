@@ -30,12 +30,18 @@ Behelfe (`libc_alt`, c2-Regeln mit einer Stelle) braucht die Ganzdatei-Bytegleic
 | 4 | Toolchain `as`, `ld`, `cc`, `cpp`, `c0`, `c1`, `c2` (Ziel: Selbsthosting, Regeln des alten c2 klaeren) | spaeter, eigener Plan |
 | 5 | `bin`-Diskette: mt, tar, adb | zuletzt, niedrige Prioritaet |
 
+Anmerkung zu Stufe 4 (*gemessen* an `original/unix-v7/usr/src/cmd`): In V7 haben Einzeldatei-Befehle (`echo.c`, `cp.c` ...) kein eigenes `makefile`;
+das Skript `makeall` ruft je `*.c`/`*.s`/`*.y` `cmake` auf.  Mehrdatei-Programme (`sh`, `make`, `as`, `c`, `cpp`, `adb`, `awk`, `lex`, `yacc`, `sed` ...) sind
+Unterverzeichnisse mit eigenem `makefile` und `*.h`.  Fuer die Toolchain (Selbsthosting) braucht jedes dieser Programme daher ein V7-`makefile`, das unsere
+`make` im Gast versteht; die Pipeline-Reihenfolge (alphabetisch) ist bisher nur an `sh` gemessen, nicht gegen dessen `makefile` gegengelesen.
+
 ## 3. Regeln fuer alle Agentenauftraege
 
 * Arbeitsverzeichnis ist ein eigener git-Worktree/Branch (`us-cmd-<auftrag>`); nie auf `main` committen, nie in einem anderen Worktree arbeiten.
 * Emulator: Umgebungsvariable `K1520EMU=/home/olliy/projects/a5120emu` setzen; Werkzeuge nur ueber `tools/emu.py` bzw. `tools/userspace/pipeline.py`; nichts kopieren.
 * Gast-Laeufe dauern Minuten: mit `run_in_background` starten, auf die Benachrichtigung warten, **nie** mit `sleep` pollen.  Platten nur als Kopien (die Pipeline tut das).
 * Quellen: K&R-C, 7-Bit-ASCII, Kommentare auf Englisch, V7-Text soweit moeglich unveraendert.  Fehlende Header (`/usr/include` kennt nur `a.out ar ctype execargs grp math pwd sgtty signal stdio symbol time sys/{stat,types}`) aus `original/unix-v7/usr/include` in `PROGRAMME` eintragen; nie einen Header eintragen, den `/usr/include` hat.
+* Quelltext bleibt V7-Text; jede Abweichung davon (auch Include-Zeilen) bekommt an der Stelle einen kurzen englischen Kommentar `/* Differs from V7: ... */`, sonst keine neuen Kommentare (Kommentare aendern die Bytes nicht, den Bau trotzdem erneut mit `cmp` pruefen).
 * Dokumentation: Deutsch, Aussagen *gemessen* (mit Befehl) oder *Annahme*.  Pro Auftrag **eine eigene Datei** `doc/userspace/cmd_<auftrag>.md`; `README.md`, `pipeline.md` und `doc/herkunft/` nicht anfassen (das tut die Zusammenfuehrung).
 * Aenderungen an `tools/userspace/pipeline.py`: nur Eintraege in `PROGRAMME` (eine Zeile je Programm).  Neue c2-Regeln in `uspace.py` nur, wenn ohne sie kein `0 Abweichungsbloecke` erreichbar ist; dann Stellenzahl angeben und **alle** bisherigen Programme (`sync cat date ls stty init login getty mount umount sh`) auf unveraenderte Bytegleichheit pruefen (README: Regeln koennen andere Programme zerstoeren).
 * Nicht raten: ein Unterschied, den keine Quellvariante erklaert, wird gemessen berichtet, nicht wegmodelliert.
