@@ -1,0 +1,105 @@
+--- diff a.txt b.txt
+3c3
+< three
+---
+> THREE
+5d4
+< five
+7a7
+> seven and a half
+10a11
+> eleven
+--- diff b.txt a.txt
+3c3
+< THREE
+---
+> three
+4a5
+> five
+7d7
+< seven and a half
+11d10
+< eleven
+--- diff same.txt same2.txt; echo rc=$?
+rc=0
+--- diff a.txt b.txt; echo rc=$?
+3c3
+< three
+---
+> THREE
+5d4
+< five
+7a7
+> seven and a half
+10a11
+> eleven
+rc=1
+--- diff -e a.txt b.txt
+10a
+eleven
+.
+7a
+seven and a half
+.
+5d
+3c
+THREE
+.
+--- diff -f a.txt b.txt
+c3
+THREE
+.
+d5
+a7
+seven and a half
+.
+a10
+eleven
+.
+--- diff -b c.txt d.txt; echo rc=$?
+3c3
+< gamma
+---
+>  gamma
+rc=1
+--- diff c.txt d.txt
+1c1
+< alpha
+---
+> alpha  
+3c3
+< gamma
+---
+>  gamma
+--- diff empty.txt c.txt
+0a1,3
+> alpha
+> beta
+> gamma
+--- diff c.txt empty.txt
+1,3d0
+< alpha
+< beta
+< gamma
+--- diff e.txt f.txt
+5c5
+< x5
+---
+> y5
+20d19
+< x20
+34c33
+< x34
+---
+> y34
+--- cat b.txt | diff a.txt -
+3c3
+< three
+---
+> THREE
+5d4
+< five
+7a7
+> seven and a half
+10a11
+> eleven
