@@ -1,0 +1,9 @@
+--- time cat h.txt 2>t.err; rc
+hi
+rc=0
+--- time sh -c "exit 3" 2>t.err; rc
+rc=3
+--- time nosuchcmd 2>t.err; rc
+rc=1
+--- time; rc
+rc=0

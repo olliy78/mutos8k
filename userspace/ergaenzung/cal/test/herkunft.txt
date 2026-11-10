@@ -1,0 +1,5 @@
+Erwartung: kein cal auf dem Host (weder util-linux cal noch ncal installiert).  Aus dem V7-Quelltext cal.c (Ausgabeformat: Kopfzeile "   Monat Jahr", Wochentage " S  M Tu  W Th  F  S",
+Zellen '%2d ' ohne Nachlauf-Blanks, 6 Wochenzeilen immer ausgegeben, Jahresansicht mit Tabulatoren) und dem Handbuch original/unix-v7/usr/man/man1/cal.1 abgeleitet;
+die Tagesraster (Wochentag des 1. und Monatslaenge) stammen aus Python 3.13 calendar (Sonntag zuerst, proleptisch gregorianisch) -- gueltig fuer 1900, 2000, 2024, 2026.
+Sonderfall 9 1752 (Kalenderumstellung, Tage 3..13 fehlen): von Hand nach dem bekannten historischen Kalender (2. September 1752 war ein Mittwoch, danach der 14.); V7 cal.c kodiert dies in mon[9]=19.
+Die Erwartung ist also nicht von einem Referenzprogramm gemessen, sondern abgeleitet.

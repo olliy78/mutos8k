@@ -1,0 +1,26 @@
+--- split -3 s.txt pre; ls pre*; cat preaa preab preac
+preaa
+preab
+preac
+row 1
+row 2
+row 3
+row 4
+row 5
+row 6
+row 7
+--- cat s.txt | split -2 - q; ls q*; cat qad
+qaa
+qab
+qac
+qad
+row 7
+--- split s.txt; ls x*; cat xaa
+xaa
+row 1
+row 2
+row 3
+row 4
+row 5
+row 6
+row 7

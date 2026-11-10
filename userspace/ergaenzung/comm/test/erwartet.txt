@@ -1,0 +1,29 @@
+--- comm a.txt b.txt
+apple
+		banana
+		cherry
+date
+	elder
+	fig
+--- comm -12 a.txt b.txt
+banana
+cherry
+--- comm -3 a.txt b.txt
+apple
+date
+	elder
+	fig
+--- comm -23 a.txt b.txt
+apple
+date
+--- comm -13 a.txt b.txt
+elder
+fig
+--- comm -123 a.txt b.txt
+--- cat b.txt | comm a.txt -
+apple
+		banana
+		cherry
+date
+	elder
+	fig

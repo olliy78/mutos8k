@@ -1,0 +1,3 @@
+Erwartung: util-linux 2.41.5 look (Host, Debian); w.txt ist in C-Reihenfolge sortiert.  Optionen -d -f -t wie V7 (man look: original/unix-v7/usr/man/man1/look.1).
+Hinweis: 'look -f ban f.txt' ohne Sortierung nach Faltung kann zwischen V7 und util-linux abweichen (Eingabe ist nur C-sortiert).
+Fehlerfall: Text "look: can't open /nonexistent", Exit 2 aus V7 look.c (nicht von util-linux).  Der Aufruf 'look WORT' ohne Datei benutzt /usr/dict/words und wird nicht getestet (Datei fehlt im Gast).

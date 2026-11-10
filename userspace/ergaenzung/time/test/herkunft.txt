@@ -1,0 +1,4 @@
+Erwartung: aus dem V7-Quelltext time.c und dem Handbuch original/unix-v7/usr/man/man1/time.1 abgeleitet (das Referenzwerkzeug 'time' des Host ist ein Shell-Schluesselwort mit anderem Format).
+Die Zeitwerte selbst (real/user/sys) sind nicht deterministisch und werden nicht verglichen; geprueft werden Weitergabe von Ausgabe und Rueckgabewert, Rueckgabewert 1 bei unbekanntem Befehl,
+Die Zeitausgabe auf stderr (1 Leerzeile + real/user/sys; time.c schreibt dabei Nullbytes, printf("%c",0) fuer sep/nsep) wird nicht verglichen: der Gast hat kein wc/grep/ed (nur sh, cat, ls, date, stty, sync).
+Annahme: der Gast-Kernel liefert times() sinnvolle Werte in tms_cutime/tms_cstime; das wird hier nicht geprueft.

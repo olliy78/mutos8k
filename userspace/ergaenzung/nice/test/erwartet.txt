@@ -1,0 +1,11 @@
+--- nice cat h.txt
+hi
+--- nice -3 cat h.txt h.txt
+hi
+hi
+--- nice 2>&1; rc
+usage: nice [ -n ] command
+rc=1
+--- nice nosuchcmd 2>&1; rc
+No such file or directory: nosuchcmd
+rc=1

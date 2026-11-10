@@ -1,0 +1,4 @@
+Erwartung: GNU coreutils 9.7 tail und tac (Host, Debian) mit Wrapper fuer die V7-Syntax:
+  -N -> -n N; +N -> -n +N; -Nc -> -c N; +Nc -> -c +N; -Nr -> 'tail -n N | tac' (GNU tail kennt -r nicht; V7: letzte N Zeilen in umgekehrter Reihenfolge).
+Hinweis: 'tail +30c' beginnt beim 30. Byte (V7: n-- und lseek(0,29,0)).  Fehlerfall 'tail nosuch': Text "tail: can't open nosuch" und Exit 1 aus dem V7-Quelltext, nicht von GNU.
+Standardfall ohne Argument/Option = 10 Zeilen (V7: "-10l").  Man: original/unix-v7/usr/man/man1/tail.1.

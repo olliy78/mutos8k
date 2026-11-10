@@ -1,0 +1,56 @@
+--- test a = a
+rc=0
+--- test a = b
+rc=1
+--- test a != b
+rc=0
+--- test -n x
+rc=0
+--- test -z ""
+rc=0
+--- test -z x
+rc=1
+--- test -f t.txt
+rc=0
+--- test -f nosuch
+rc=1
+--- test -d /tmp
+rc=0
+--- test -d t.txt
+rc=1
+--- test -r t.txt
+rc=0
+--- test -w t.txt
+rc=0
+--- test -s t.txt
+rc=0
+--- test -s empty
+rc=1
+--- test 3 -lt 5
+rc=0
+--- test 5 -lt 3
+rc=1
+--- test 10 -eq 10
+rc=0
+--- test 10 -ne 10
+rc=1
+--- test 7 -ge 7
+rc=0
+--- test 7 -gt 7
+rc=1
+--- test ! -f nosuch
+rc=0
+--- test -f t.txt -a -d /tmp
+rc=0
+--- test -f nosuch -o -d /tmp
+rc=0
+--- test -f nosuch -a -d /tmp
+rc=1
+--- test \( -n x \)
+rc=0
+--- test x
+rc=0
+--- test ""
+rc=1
+--- test
+rc=1
