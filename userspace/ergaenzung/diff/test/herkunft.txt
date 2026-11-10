@@ -1,0 +1,3 @@
+Erwartung: GNU diffutils 3.10 (Host, Debian), LC_ALL=C, Normalformat, -e, -f, -b auf denselben Eingaben (eindeutige Faelle, in denen V7 und GNU dieselben Bloecke bilden).
+Stdin als "-", Exit 0/1 wie GNU.  Nicht getestet: Verzeichnisvergleich (kein mkdir im Gast), diff -h (siehe doc/userspace/erg_e2b.md).
+Handbuch: original/unix-v7/usr/man/man1/diff.1.

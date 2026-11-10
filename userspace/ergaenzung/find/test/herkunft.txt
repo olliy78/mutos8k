@@ -1,0 +1,3 @@
+Keine Host-Referenz: Erwartung = Ausgabe des Gastes, von Hand gegen V7-Handbuch find.1 und die im selben Lauf ausgegebenen ls -l-Daten (Modi, Groessen, Namen von /bin, /usr/bin, /usr/lib) geprueft.
+-size zaehlt 512-Byte-Bloecke (aufgerundet), -perm 751 / -020 gegen die ls -l-Modi, -mtime gegen die Zeiten 1986/1987.  Reihenfolge = Verzeichnisreihenfolge der Platte.
+Nicht getestet: -user/-group (kein /etc/passwd im Gast geprueft), -newer, -ok, -inum, Fehlermeldungen (find ruft popen("pwd"): im Gast fehlt pwd, "sh: pwd: not found" auf stderr).

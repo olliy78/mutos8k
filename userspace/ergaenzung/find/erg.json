@@ -1,0 +1,5 @@
+{
+ "header": ["sys/dir.h"],
+ "flags": "-O -s",
+ "quelle": "original/unix-v7/usr/src/cmd/find.c"
+}

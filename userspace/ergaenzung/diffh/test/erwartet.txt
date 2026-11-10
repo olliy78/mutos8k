@@ -1,0 +1,16 @@
+--- diffh same.txt same2.txt; echo rc=$?
+rc=0
+--- diffh e.txt g.txt
+5c5
+< x5
+---
+> y5
+20d19
+< x20
+--- diffh g.txt e.txt
+5c5
+< y5
+---
+> x5
+19a20
+> x20

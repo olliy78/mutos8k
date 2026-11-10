@@ -1,0 +1,7 @@
+Erwartung: GNU coreutils sort 9.7 (Host, Debian), LC_ALL=C, auf denselben Eingaben; V7-Syntax uebersetzt:
+  +1n -> -k2n; +1 -2 -> -k2,2; +0 -1 -> -k1,1 (sonst gleiche Optionen).
+Die Zeilen "--- Befehl" sind V7-Syntax (Gast), GNU lief mit dem uebersetzten Befehl.
+Nicht verglichen: sort -c bei Unordnung (Meldungstext V7 vs GNU), -T, Stabilitaet.
+s7.txt (13200 Byte, 1200 Zeilen, zufaellig, Seed 45) ist gross genug, um Zwischendateien in /tmp zu erzwingen (siehe doc/userspace/erg_e2b.md).
+Handbuch: original/unix-v7/usr/man/man1/sort.1.
+Weggelassen: "sort -b s1.txt" ohne Schluessel: GNU ignoriert fuehrende Blanks der ganzen Zeile, V7 nur in Feldvergleichen (Ganzzeilen-Vergleich bleibt bytegenau: " leading" zuerst).

@@ -1,0 +1,92 @@
+--- ls -l /bin /usr/bin /usr/lib
+
+/bin:
+total 106
+-rwxr-xr-x 1 root     4088 Jan  9  1986 cat
+-rwxrwxr-x 1 root     5774 Jan  9  1986 date
+-rwxrwxr-x 1 root     9920 Jan  9  1986 login
+-rwxr-xr-x 1 root     8260 Jan  9  1986 ls
+-rwxrwxr-x 1 root    18296 Jan  9  1986 sh
+-rwxrwxr-x 1 root     5830 Jan  9  1986 stty
+-rwxrwxr-x 1 root      132 Jan  9  1986 sync
+
+/usr/bin:
+total 104
+-rwxrwxr-x 1 root    35814 Mar 17  1987 as
+-rwxrwxr-x 1 root     6536 Mar 17  1987 cc
+-rwxrwxr-x 1 root    10726 Mar 17  1987 ld
+
+/usr/lib:
+total 337
+-rwxr-x--x 1 root    26826 Mar 17  1987 c0
+-rwxr-x--x 1 root    35774 Mar 17  1987 c1
+-rwxr-x--x 1 root    18976 Mar 17  1987 c2
+-rwxr-x--x 1 root    16382 Mar 17  1987 cpp
+-rw-r--r-- 1 root      200 Mar 17  1987 crt0.o
+-rw-rw-r-- 1 root    71914 Mar 17  1987 libc.a
+-rw-r--r-- 1 root      548 Mar 17  1987 mcrt0.o
+--- find /bin -print
+/bin
+/bin/cat
+/bin/date
+/bin/login
+/bin/ls
+/bin/sh
+/bin/stty
+/bin/sync
+--- find /bin -name s* -print
+/bin/sh
+/bin/stty
+/bin/sync
+--- find /usr -type f -name c* -print
+/usr/bin/cc
+/usr/include/ctype.h
+/usr/lib/c0
+/usr/lib/c1
+/usr/lib/c2
+/usr/lib/cpp
+/usr/lib/crt0.o
+--- find /usr/lib -size +50 -print
+/usr/lib/c0
+/usr/lib/c1
+/usr/lib/libc.a
+--- find /usr/lib -size 1 -print
+/usr/lib
+/usr/lib/crt0.o
+--- find /usr/lib -perm 751 -print
+/usr/lib/c0
+/usr/lib/c1
+/usr/lib/c2
+/usr/lib/cpp
+--- find /bin -perm -020 -print
+/bin
+/bin/date
+/bin/login
+/bin/sh
+/bin/stty
+/bin/sync
+--- find /bin ( -name cat -o -name ls ) -print
+/bin/cat
+/bin/ls
+--- find /bin ! -name s* -print
+/bin
+/bin/cat
+/bin/date
+/bin/login
+/bin/ls
+--- find /bin /usr/bin -name ?? -print
+/bin/ls
+/bin/sh
+/usr/bin/as
+/usr/bin/cc
+/usr/bin/ld
+--- find /bin -type d -print
+/bin
+--- find /bin -mtime -1 -print
+--- find /bin -mtime +30 -name d* -print
+/bin/date
+--- find /bin -name sync -exec ls -l {} ;
+-rwxrwxr-x 1 root      132 Jan  9  1986 /bin/sync
+--- find /usr/lib -name c? -a -size +40 -print
+/usr/lib/c0
+/usr/lib/c1
