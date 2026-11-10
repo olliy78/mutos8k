@@ -1,0 +1,20 @@
+--- du -a s0 s1 s512 s513 s1000 s5000
+0	s0
+1	s1
+1	s512
+2	s513
+2	s1000
+10	s5000
+rc=0
+--- du -s s1000 s5000
+2	s1000
+10	s5000
+rc=0
+--- du -a s513
+2	s513
+rc=0
+--- du s1000
+rc=0
+--- du nosuch 2>&1
+--bad status < nosuch >
+rc=0

@@ -1,0 +1,4 @@
+Erwartung: GNU coreutils 9.7 du auf dem Host: du --apparent-size -B512 (Blockzahl = aufgerundete Dateigroesse / 512; V7-du rechnet (st_size+511)>>9, nicht
+belegte Plattenbloecke).  Eingaben s0 s1 s512 s513 s1000 s5000 haben genau diese Byteanzahl (Name = Groesse).
+V7-Eigenheiten, aus du.c/du.1 abgeleitet statt von GNU: 'du DATEI' ohne -a/-s druckt nichts (nur Verzeichnisse); Fehlertext '--bad status < nosuch >' auf stderr, Exit 0.
+Nicht getestet: Verzeichnisse (im Gast kein mkdir; /tmp ist nicht stabil, weil der Rahmen dort mitschreibt), Hardlinks (kein ln), GNU-Rundung der Verzeichnisbloecke (V7 zaehlt das Verzeichnis selbst mit).
