@@ -1,0 +1,6 @@
+Erwartung: GNU grep 3.11 auf dem Host (/usr/bin/grep; der Shell-Alias ugrep wurde NICHT benutzt), je Befehl im Host-Verzeichnis mit den Eingaben ausgefuehrt
+(LC_ALL=C), Ausgabe + Exit-Status ("rc=N").  Nur Faelle, in denen V7-grep (ed-artige Ausdruecke) und GNU gleich arbeiten.
+Uebersetzung V7 -> GNU: -y (V7: Kleinbuchstaben im Muster passen auch auf Grossbuchstaben) = -i.
+Nicht getestet (V7 und GNU weichen ab oder nicht deterministisch): -b (V7: Blocknummer zu 512 Byte, GNU: Byte-Offset), \{ \} und + ? | (nicht in V7-grep),
+Zeilen ueber 256 Zeichen (V7 kuerzt, siehe Handbuch BUGS), Fehlermeldung bei Syntaxfehlern.
+Quelle der Optionen: original/unix-v7/usr/man/man1/grep.1.

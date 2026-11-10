@@ -1,0 +1,74 @@
+--- grep apple g1.txt
+apple crumble
+last line apple
+rc=0
+--- grep -n apple g1.txt
+4:apple crumble
+8:last line apple
+rc=0
+--- grep -v apple g1.txt
+Apple pie
+banana split
+cherry tart
+Banana bread
+grape jelly
+
+-v is not an option here
+ab*c literal
+aXXc and abbbc
+rc=0
+--- grep -c apple g1.txt
+2
+rc=0
+--- grep -y apple g1.txt
+Apple pie
+apple crumble
+last line apple
+rc=0
+--- grep -l apple g1.txt g2.txt
+g1.txt
+g2.txt
+rc=0
+--- grep apple g1.txt g2.txt
+g1.txt:apple crumble
+g1.txt:last line apple
+g2.txt:second file apple
+rc=0
+--- grep -h apple g1.txt g2.txt
+apple crumble
+last line apple
+second file apple
+rc=0
+--- grep '^[Bb]anana' g1.txt
+banana split
+Banana bread
+rc=0
+--- grep 'e$' g1.txt
+Apple pie
+apple crumble
+last line apple
+-v is not an option here
+rc=0
+--- grep 'ab*c' g1.txt
+aXXc and abbbc
+rc=0
+--- grep 'a.*c' g1.txt
+apple crumble
+ab*c literal
+aXXc and abbbc
+rc=0
+--- grep '^$' g1.txt
+
+rc=0
+--- grep -e -v g1.txt
+-v is not an option here
+rc=0
+--- grep -s apple nosuch
+rc=2
+--- grep -s zzz g1.txt
+rc=1
+--- grep zzz g1.txt
+rc=1
+--- cat g1.txt | grep jelly
+grape jelly
+rc=0
