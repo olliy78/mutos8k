@@ -1,0 +1,6 @@
+Taschenrechner-Grammatik calc.y (eigenes Beispiel im Stil des V7-Handbuchs yacc).
+Erwartung von Hand aus der Arithmetik bestimmt (kein Host-yacc vorhanden: byacc, bison, yacc fehlen):
+1+2=3, 2+3*4=14, (2+3)*4=20, 100/7-3=11 (Ganzzahldivision), -5+2=-3, 2*(3+4)*5=70,
+"7 +" -> Syntaxfehler, die error-Regel liefert "error", 8-3-2=3 (links assoziativ), 1000*30=30000 (passt in 16 Bit).
+y.tab.h: Token ab 257 (V7 y2.c: Zeilen "# define NAME n"), NUMBER=257, UMINUS=258 (Reihenfolge der Deklaration).
+yaccpar ist V7 usr/lib/yaccpar unveraendert; der Test legt es ins Arbeitsverzeichnis /tmp (Abweichung PARSER, siehe doc/userspace/erg_e3a.md).

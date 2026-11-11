@@ -51,6 +51,8 @@ def quellen(name):
     if not cs:
         raise SystemExit("%s: no .c file" % name)
     koepfe = {f: open(os.path.join(d, f), "rb").read() for f in os.listdir(d) if f.endswith(".h")}
+    for f in konfig(name).get("dateien", []):     # extra files of the program dir that are no .c/.h (yacc: dextern, files)
+        koepfe[f] = open(os.path.join(d, f), "rb").read()
     for h in konfig(name)["header"]:
         koepfe[os.path.basename(h)] = open(os.path.join(U.REPO, V7INC + h), "rb").read()
     if cs == [name + ".c"]:
