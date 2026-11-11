@@ -1,0 +1,11 @@
+# define NUMBER 257
+# define UMINUS 258
+3
+14
+20
+11
+-3
+70
+error
+3
+30000
