@@ -36,3 +36,12 @@ Nicht ausgefuehrt: die Bedingung "nur wenn B funktioniert" ist nicht erfuellt.  
 ## 4. Folgerung
 
 yacc bleibt bei `SMALL` (`erg_e3a.md`).  `MEDIUM` mit `-i` braeuchte einen Kernel, der `E811` annimmt und dem Prozess ein zweites 64-KB-Datensegment der U8001 gibt (`getxfile`, `estabur`, Segmentzuordnung, U880-Seite) -- *Annahme*, nicht bewertet.  Zwischenweg ohne Kernelaenderung: Tabellengroessen zwischen SMALL und MEDIUM (Grenze: 64 KB minus 24 KB Text, 4 KB Daten, Stapel/stdio), nicht gemessen.
+
+## 5. Korrektur (Angabe des Projektinhabers, 2026-11-11)
+
+**Der Rechner hat keinen Z8010 (keine MMU).**  Damit entfaellt die in Abschnitt 4 genannte Kernelarbeit ("zweites 64-KB-Datensegment"): Der kompilierte Code hat 16-Bit-Zeiger,
+und getrennte Befehls- und Datenraeume braeuchten Hardware, die Befehlsholen und Datenzugriff auf verschiedene Segmente abbildet.  Das passt zum Kernel: `ureg.c` stellt fest, dass es keine
+Speicherverwaltungshardware gibt, `estabur` ist nur eine Groessenpruefung (`nt+nd+ns <= 256` Klicks).  **Getrennte I&D sind auf dieser Maschine kein gangbarer Weg**, auch nicht mit Kernelaenderung.
+Die Annahme in Abschnitt 4 und die Frage nach der MMU-Faehigkeit im Gespraech waren falsch bzw. gegenstandslos.
+Verbleibend: ein Programm hat hoechstens 64 KB fuer Text, Daten, BSS und Stapel zusammen.  Dynamisch angelegte Tabellen (sbrk) aendern daran nichts, sie liegen im selben Segment.
+Fuer `yacc` bleibt nur eine Tabellengroesse zwischen `SMALL` und `MEDIUM` (ungemessen, hoechstens wenige KB mehr) oder das Erzeugen grosser Parser mit einem `yacc` auf dem Host.
