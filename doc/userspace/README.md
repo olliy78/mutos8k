@@ -19,6 +19,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
+| `erg_e3a.md`, `erg_e3b.md` | Ergaenzungen aus V7: yacc (verkleinert, SMALL), vmake (V7 make) |
 | `erg_e2a.md`, `erg_e2b.md` | Ergaenzungen aus V7 (Plan 45): grep fgrep tr join du file; sort find diff diffh |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
@@ -151,11 +152,16 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | E1b | uniq, comm, split, tail, cal, look, nice, time, test | `time.c`: `<times.h>` statt `<sys/times.h>` | `erg_e1b.md` |
 | E2a | grep, fgrep, tr, join, du, file | grep, du, file: `<param.h>`/`<dir.h>` statt `<sys/..>` | `erg_e2a.md` |
 | E2b | sort, find, diff, diffh | find: `<dir.h>` statt `<sys/dir.h>` | `erg_e2b.md` |
+| E3a | yacc | `files`: `yaccpar` im Arbeitsverzeichnis statt `/usr/lib` (usr-Platte voll); `dextern`: Groessenklasse `SMALL` statt `MEDIUM` (MEDIUM = 78314 B, ueber 64 KB), MEMSIZE 4000 | `erg_e3a.md` |
+| E3b | vmake (V7 make) | `files.c`: `<dir.h>`, `A_MAGIC2` auf `A_MAGIC1`; `gram.y` unveraendert, `gram.c` im Gast mit dem MUTOS-yacc erzeugt (`tools/userspace/vmake_gram.py`) | `erg_e3b.md` |
 
-Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 27 B im Gast (E0 bis E2b).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 B im Gast (E0 bis E3b).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
 E2: `file` erkennt keine Z8000-Programme (MUTOS-Magic E807, V7 kennt nur 0407/0410/0411); `diff -h` ist im Gast nicht testbar (`/usr/lib/diffh` fest, `usr`-Platte voll);
 `find` hat keine Host-Referenz (Erwartung = Gastausgabe, von Hand gegen das Handbuch geprueft); `du` nur Dateizweig getestet.
+E3: `yacc` laeuft nur in der Groessenklasse `SMALL` (56714 B Text+Daten+BSS; 300 Zustaende, 200 Produktionen, 127 Terminale); grosse Grammatiken koennen mit `out of space` scheitern
+(`bc.y` brauchte MEMSIZE 4000).  `vmake` (28820 B): V7-make kennt `$(X:.c=.o)` nicht (`misc.c` `subst()` liest `X:.c=.o` als Namen); nicht getestet: Neubau bei juengerer Quelle,
+`-p -d -k`, Archivnotation, Wildcards.  Die Ergaenzung `vmake` ist **nicht** unser Eigenbau `userspace/make` (Vergleich: `erg_e3b.md`).
 **Offen:** `tail -2` auf eine Datei ohne Schlusszeilenumbruch gibt im Gast drei statt zwei Zeilen aus; vermutlich V7-Verhalten, **nicht** gegen eine PDP-11 und nicht gegen einen
 Compilerfehler abgegrenzt.
 
