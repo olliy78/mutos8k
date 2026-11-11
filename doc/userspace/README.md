@@ -19,6 +19,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
+| `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
 | `erg_e3a.md`, `erg_e3b.md` | Ergaenzungen aus V7: yacc (verkleinert, SMALL), vmake (V7 make) |
 | `erg_e2a.md`, `erg_e2b.md` | Ergaenzungen aus V7 (Plan 45): grep fgrep tr join du file; sort find diff diffh |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
@@ -159,7 +160,7 @@ Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
 E2: `file` erkennt keine Z8000-Programme (MUTOS-Magic E807, V7 kennt nur 0407/0410/0411); `diff -h` ist im Gast nicht testbar (`/usr/lib/diffh` fest, `usr`-Platte voll);
 `find` hat keine Host-Referenz (Erwartung = Gastausgabe, von Hand gegen das Handbuch geprueft); `du` nur Dateizweig getestet.
-E3: `yacc` laeuft nur in der Groessenklasse `SMALL` (56714 B Text+Daten+BSS; 300 Zustaende, 200 Produktionen, 127 Terminale); grosse Grammatiken koennen mit `out of space` scheitern
+E3: `yacc` laeuft nur in der Groessenklasse `SMALL` (`ld -i` hilft nicht: der Kernel nimmt nur E807/E707, `sys1.c:227`, gelesen; E811 wird im Gast als Skript gelesen, gemessen, `exp_ldi.md`) (56714 B Text+Daten+BSS; 300 Zustaende, 200 Produktionen, 127 Terminale); grosse Grammatiken koennen mit `out of space` scheitern
 (`bc.y` brauchte MEMSIZE 4000).  `vmake` (28820 B): V7-make kennt `$(X:.c=.o)` nicht (`misc.c` `subst()` liest `X:.c=.o` als Namen); nicht getestet: Neubau bei juengerer Quelle,
 `-p -d -k`, Archivnotation, Wildcards.  Die Ergaenzung `vmake` ist **nicht** unser Eigenbau `userspace/make` (Vergleich: `erg_e3b.md`).
 **Offen:** `tail -2` auf eine Datei ohne Schlusszeilenumbruch gibt im Gast drei statt zwei Zeilen aus; vermutlich V7-Verhalten, **nicht** gegen eine PDP-11 und nicht gegen einen
