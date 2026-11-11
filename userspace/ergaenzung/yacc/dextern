@@ -46,7 +46,7 @@
 	   binary): the program is rejected by exec ("too big").  SMALL keeps the relationships stated below. */
 # ifdef SMALL
 # define ACTSIZE 2000
-# define MEMSIZE 2400
+# define MEMSIZE 4000	/* V7 MEDIUM 5200; 2400 was too small for V7 bc.y ("out of space") */
 # define NSTATES 300
 # define NTERMS 127
 # define NPROD 200
