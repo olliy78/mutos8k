@@ -1,0 +1,56 @@
+== -n all
+cat s1.sa >obj1
+cat s2.sa >obj2
+cat obj1 obj2 >prog
+cat data.sa >data.sb
+cat prog data.sb
+== -n macro on the command line
+cat hello there
+cat quiet
+cat nofile
+== -n question-mark macro
+cat s1.sa s2.sa >list
+== -s -n (nothing)
+== -f Mk2, suffix substitution, several targets in one rule
+cat a.o >/dev/null
+cat b.o >/dev/null
+cat a.o b.o >x
+== built-in suffix rule .c.o
+cc  -c t.c
+== run prog
+cat s1.sa >obj1
+cat s2.sa >obj2
+cat obj1 obj2 >prog
+one
+two
+== prog again
+`prog' is up to date.
+== run all
+cat data.sa >data.sb
+cat prog data.sb
+one
+two
+data
+== -q
+rc=0
+rc=255
+== -t
+touch(list)
+list
+`list' is up to date.
+== error stops
+sh ex3
+*** Error code 3
+rc=1
+== -i
+sh ex3
+*** Error code 3 (ignored)
+cat s2.sa
+two
+== ignored by -
+sh ex3
+*** Error code 3 (ignored)
+cat s1.sa
+one
+== unknown target
+rc=1

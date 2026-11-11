@@ -1,0 +1,16 @@
+Erwartung vmake (V7-make), Herkunft je Abschnitt:
+
+* "-n all", "-n macro on the command line", "-n question-mark macro", "-f Mk2 ...": Befehlszeilen von GNU Make 4.4.1 auf dem Host
+  (`make -n -r -f Makefile all`, `make -n -r NAME=there show`, `make -n -r list`, `make -n -r -f Mk2`), gleich mit V7-Semantik
+  (Handbuch original/unix-v7/usr/man/man1/make.1: -n druckt die Befehle, fuehrt sie nicht aus; $? = die juengeren Abhaengigkeiten, $@, $<).
+  V7 druckt auch Befehle mit @-Praefix bei -n und entfernt das Praefix (doname.c docom1), GNU ebenso.
+* "-s -n (nothing)": V7 doname.c docom1: -s unterdrueckt jede Ausgabe.
+* "built-in suffix rule .c.o": nur V7-Text (files.c builtin[]: ".c.o :" "\t$(CC) $(CFLAGS) -c $<", CC=cc, CFLAGS= leer -> "cc  -c t.c" mit zwei Blanks).
+  Annahme: im Gast ist keine Umgebungsvariable CC/CFLAGS gesetzt (V7 make liest die Umgebung als Makros).
+* "run prog", "prog again", "run all": V7-Text (Befehle werden vor der Ausfuehrung gedruckt; "`prog' is up to date." aus doname.c); Ausfuehrung durch /bin/sh.
+* "-q": doname.c: exit(ndocoms>0 ? -1 : 0).  Erwartung 0 und 255 (exit(-1) als Prozessstatus 255 -- Annahme fuer MUTOS, durch den Test zu bestaetigen).
+* "-t": doname.c docom: Meldung "touch(NAME)", Datei wird angelegt (files.c/dosys.c touch(YES, name)).
+* "error stops"/"-i"/"ignored by -": doname.c docom1: "*** Error code N" bzw. " (ignored)"; Fehlerstatus 3 liefert `sh ex3` (Datei ex3 = "exit 3");
+  fatal() beendet mit exit(1) (misc.c).  "unknown target": fatal1 (stderr), Exit 1.
+Nicht getestet: Aktualisierung bei juengerer Quelle (Dateizeiten haben Sekundenaufloesung, im Gast ohne sleep/touch nicht herstellbar),
+-p, -d, -k, a(b)-Archivnotation, Umgebungsvariablen, Wildcards (srchdir) in Abhaengigkeiten.

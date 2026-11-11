@@ -1,0 +1,6 @@
+SRC = a.c b.c
+OBJ = $(SRC:.c=.o)
+x: $(OBJ)
+	cat $(OBJ) >x
+a.o b.o:
+	cat $@ >/dev/null
