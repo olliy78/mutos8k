@@ -11,10 +11,12 @@ cat nofile
 == -n question-mark macro
 cat s1.sa s2.sa >list
 == -s -n (nothing)
-== -f Mk2, suffix substitution, several targets in one rule
+== -f Mk2, nested macro, several targets in one rule
 cat a.o >/dev/null
 cat b.o >/dev/null
 cat a.o b.o >x
+== -f Mk3, macro with colon (not in V7: expands to nothing)
+cat  >x
 == built-in suffix rule .c.o
 cc  -c t.c
 == run prog

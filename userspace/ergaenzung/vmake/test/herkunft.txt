@@ -14,3 +14,7 @@ Erwartung vmake (V7-make), Herkunft je Abschnitt:
   fatal() beendet mit exit(1) (misc.c).  "unknown target": fatal1 (stderr), Exit 1.
 Nicht getestet: Aktualisierung bei juengerer Quelle (Dateizeiten haben Sekundenaufloesung, im Gast ohne sleep/touch nicht herstellbar),
 -p, -d, -k, a(b)-Archivnotation, Umgebungsvariablen, Wildcards (srchdir) in Abhaengigkeiten.
+
+Korrektur nach dem ersten Gastlauf (Befund T): `$(SRC:.c=.o)` kennt der V7-make NICHT.  misc.c subst() liest den Namen bis zur schliessenden Klammer
+(`while(*a!=' ' && *a!=closer ...) *s++ = *a++;`) und nimmt "SRC:.c=.o" als ganzen Variablennamen; ohne Wert wird nichts eingesetzt (`if(...varval != 0)`).
+Erwartet ist daher "cat  >x" (Mk3).  Das Handbuch make.1 erwaehnt die Form nicht.  Mk2 benutzt stattdessen verschachtelte Makros (GNU-bestaetigt).

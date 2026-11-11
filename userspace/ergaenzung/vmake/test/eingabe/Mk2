@@ -1,5 +1,5 @@
-SRC = a.c b.c
-OBJ = $(SRC:.c=.o)
+SRC = a.o b.o
+OBJ = $(SRC)
 x: $(OBJ)
 	cat $(OBJ) >x
 a.o b.o:

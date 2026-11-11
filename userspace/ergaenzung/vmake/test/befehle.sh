@@ -15,9 +15,13 @@ cat <<M
 M
 vmake -s -n show
 cat <<M
-== -f Mk2, suffix substitution, several targets in one rule
+== -f Mk2, nested macro, several targets in one rule
 M
 vmake -n -f Mk2
+cat <<M
+== -f Mk3, macro with colon (not in V7: expands to nothing)
+M
+vmake -n -f Mk3
 cat <<M
 == built-in suffix rule .c.o
 M
