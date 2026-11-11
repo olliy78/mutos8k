@@ -5,7 +5,7 @@
   python3 -I tools/userspace/erg.py alles NAME...               # bau + test per program, result line B/T/N
 
 Program directory: userspace/ergaenzung/NAME/ with NAME.c (or several *.c / *.h), erg.json
-({"header": [...relative to original/unix-v7/usr/include], "flags": "-O -s", "quelle": "..."}) and test/
+({"header": [...relative to original/unix-v7/usr/include], "dateien": [extra files of the folder without .c/.h suffix, optional], "flags": "-O -s", "quelle": "..."}) and test/
 (befehle.sh, erwartet.txt, optional eingabe/*, herkunft.txt).  There is no original to compare with: the proof is
 "builds" plus "output equals the expectation".  Exit: 0 ok, 1 difference / no build, 77 emulator or disk missing.
 
@@ -51,6 +51,8 @@ def quellen(name):
     if not cs:
         raise SystemExit("%s: no .c file" % name)
     koepfe = {f: open(os.path.join(d, f), "rb").read() for f in os.listdir(d) if f.endswith(".h")}
+    for f in konfig(name).get("dateien", []):   # extra files without .c/.h suffix (V7 make: "defs"), next to the sources
+        koepfe[f] = open(os.path.join(d, f), "rb").read()
     for h in konfig(name)["header"]:
         koepfe[os.path.basename(h)] = open(os.path.join(U.REPO, V7INC + h), "rb").read()
     if cs == [name + ".c"]:

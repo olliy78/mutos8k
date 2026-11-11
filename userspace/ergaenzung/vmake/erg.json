@@ -1,0 +1,6 @@
+{
+ "header": ["sys/dir.h", "errno.h"],
+ "dateien": ["defs"],
+ "flags": "-O -s",
+ "quelle": "original/unix-v7/usr/src/cmd/make/ (defs ident.c main.c doname.c misc.c files.c dosys.c gram.y)"
+}
