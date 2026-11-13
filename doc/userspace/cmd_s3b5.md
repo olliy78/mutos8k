@@ -7,7 +7,7 @@ Beide Programme: **G** (ganzdatei bytegleich).  **Beide sind kein V7-Programm**;
 | Programm | Datei | Abbild (text/data/bss) | Quelle | c2-Regeln (Stellen, Lauf mit Modell) |
 |----------|-------|------------------------|--------|--------------------------------------|
 | `bin/hex` | 4326 B | 4310 (3994/316/1188) | rekonstruiert, kein V7 | nur bekannte: R5 1; R2 aus (`C2_AUS`, 2 Stellen) |
-| `bin/convert` | 4602 B | 4586 (4182/404/2138) | rekonstruiert, kein V7 | **R65 2, R66 1, R67 1, R68 1, R69 1**; R1 9, R4 7; R2 aus (`C2_AUS`, 2 Stellen) |
+| `bin/convert` | 4602 B | 4586 (4182/404/2138) | rekonstruiert, kein V7 | **R72 2, R73 1, R74 1, R75 1, R76 1**; R1 9, R4 7; R2 aus (`C2_AUS`, 2 Stellen) |
 
 Befehle je Programm (Bau und Beweis):
 
@@ -74,19 +74,19 @@ Woran die Struktur erkannt wurde (`userspace/convert/convert.lst`):
 * Quellvarianten, die Bytes veraenderten: `if ((fd = open(argv[1], 2)) == -1)` (sonst Zusatzbefehl `LD R0,R2`); `q = (char *)&w;` *vor* `c = *p++ & 0377;` in `l3tol`.
 * Eigencode 0000-0648 (497 Befehle) und libc-Teil (849 Befehle) wortgleich; `libc_alt.members`: 21 Glieder, **kein** G-Glied, nur die doprnt-Zusatzdatei (`code=07A2,07A8,07BE`), Rundlauf 0 Glieder abweichend.
 
-## Neue c2-Regeln R65-R69 (`uspace.c2_convert_s`; Modell des alten c2, kein Lauf desselben)
+## Neue c2-Regeln R72-R76 (`uspace.c2_convert_s`; Modell des alten c2, kein Lauf desselben)
 
 Alle fuenf **beschreiben** Unterschiede zwischen dem ausgelieferten c2 und dem Original an je 1-2 Stellen (also **schwach belegt**) und sind **auf den Text von `convert` beschraenkt**:
-`c2_emu_s` ruft `c2_convert_s` nur auf, wenn der `.s`-Text die Funktion `_convdir` enthaelt (kein anderes Programm hat eine).  Quellvarianten wurden fuer R65, R66, R68, R69 nicht durchprobiert
-(V7-Text-Konventionen, nur Codeformen); Nummern R65-R69 koennen mit anderen Auftraegen kollidieren (bei der Zusammenfuehrung umnummerieren).
+`c2_emu_s` ruft `c2_convert_s` nur auf, wenn der `.s`-Text die Funktion `_convdir` enthaelt (kein anderes Programm hat eine).  Quellvarianten wurden fuer R72, R73, R75, R76 nicht durchprobiert
+(V7-Text-Konventionen, nur Codeformen); Nummern R72-R76 koennen mit anderen Auftraegen kollidieren (bei der Zusammenfuehrung umnummerieren).
 
 | Regel | Stellen | Muster (ausgelieferter c2 -> Original) |
 |-------|---------|----------------------------------------|
-| R65 | 2 (`blk`, `rdino`) | `call _lseek ; inc SP,#%8 ; test r2 ; jr pl L` -> `testl rr2 ; jr pl L` (`lseek(..) < 0`: der alte c2 verkuerzt den Vorzeichentest nicht) |
-| R66 | 1 (`swab`) | `sra r12,#%1` -> `ld r2,#-%1 ; sda r12,r2` (`n >>= 1`) |
-| R67 | 1 (`main`) | Schleifeninversion des ausgelieferten c2 (`ivloop` in `c20.c`) rueckgaengig fuer die Freilistschleife: `jr Lh ; L9nnn: BODY Lh: KOPF jr ne L9nnn ; jr Lx` -> `Lh: KOPF jr eq Lx ; BODY jr Lh`.  Das Original hat die Schleife nicht invertiert (`JR Z,L01A6` im Kopf, `JR L0106` am Ende).  Quelltext-Ursache **nicht gefunden** (`for (;;) { blk(); if (curr == 0) break; ..}` wird vom ausgelieferten c2 invertiert; die Bedingung `p3->labno == p1->forw->labno` in `codemove` trifft dort zu) |
-| R68 | 1 (`swab`) | `inc rK,#%1 ; ld r2,rK ; inc rK,#%1 ; ld r3,rM ; ldb @r2,rl3` -> `inc rK,#%1 ; ld r2,rK ; ld r3,rM ; ldb @r2,rl3 ; inc rK,#%1` (`*p++ = t` mit Registerwert: der alte c2 zaehlt hinter dem Speichern hoch) |
-| R69 | 1 (`swab`) | `ldb rl2,%1(r13) ; ldb @r13,rl2` -> `xorb rh2,rh2` dazwischen (`*p = p[1]`; der ausgelieferte c2 streicht die Nullerweiterung, das Original behaelt sie) |
+| R72 | 2 (`blk`, `rdino`) | `call _lseek ; inc SP,#%8 ; test r2 ; jr pl L` -> `testl rr2 ; jr pl L` (`lseek(..) < 0`: der alte c2 verkuerzt den Vorzeichentest nicht) |
+| R73 | 1 (`swab`) | `sra r12,#%1` -> `ld r2,#-%1 ; sda r12,r2` (`n >>= 1`) |
+| R74 | 1 (`main`) | Schleifeninversion des ausgelieferten c2 (`ivloop` in `c20.c`) rueckgaengig fuer die Freilistschleife: `jr Lh ; L9nnn: BODY Lh: KOPF jr ne L9nnn ; jr Lx` -> `Lh: KOPF jr eq Lx ; BODY jr Lh`.  Das Original hat die Schleife nicht invertiert (`JR Z,L01A6` im Kopf, `JR L0106` am Ende).  Quelltext-Ursache **nicht gefunden** (`for (;;) { blk(); if (curr == 0) break; ..}` wird vom ausgelieferten c2 invertiert; die Bedingung `p3->labno == p1->forw->labno` in `codemove` trifft dort zu) |
+| R75 | 1 (`swab`) | `inc rK,#%1 ; ld r2,rK ; inc rK,#%1 ; ld r3,rM ; ldb @r2,rl3` -> `inc rK,#%1 ; ld r2,rK ; ld r3,rM ; ldb @r2,rl3 ; inc rK,#%1` (`*p++ = t` mit Registerwert: der alte c2 zaehlt hinter dem Speichern hoch) |
+| R76 | 1 (`swab`) | `ldb rl2,%1(r13) ; ldb @r13,rl2` -> `xorb rh2,rh2` dazwischen (`*p = p[1]`; der ausgelieferte c2 streicht die Nullerweiterung, das Original behaelt sie) |
 
 R2 (XORB streichen) ist fuer `hex` und `convert` abgeschaltet (`C2_AUS`): das Original behaelt `xorb rhN,rhN` vor Bytespeicherungen (hex: Feldkopien `pbuf[j] = obuf[j]` und `pascii[j] = ascii[j]`; convert: `l3tol`).
 Das ist dieselbe Art Befund wie bei `df`/`rm` (neuere c2-Form im ausgelieferten c2).
@@ -99,5 +99,5 @@ Geprueft ist, dass die neuen Regeln und `C2_AUS`-Eintraege **die Eingabe der and
 **kein Gastlauf** der 33 Programme in dieser Sitzung (Annahme, durch die Gleichheit der Eingabetexte begruendet).  `pipeline.py --check hex|convert` OK, `pytest tests/test_userspace_pipeline.py -q`: 8 passed, 1 skipped.
 
 ## Offen
-* R67: Quelltextform, die den ausgelieferten c2 die Freilistschleife nicht invertieren laesst (vielleicht eine andere Schleifenart oder ein anderer Aufbau des Endes von `main`).
+* R74: Quelltextform, die den ausgelieferten c2 die Freilistschleife nicht invertieren laesst (vielleicht eine andere Schleifenart oder ein anderer Aufbau des Endes von `main`).
 * Funktion beider Programme ist aus dem Code gelesen, nicht im Gast ausgefuehrt (`convert` hat nicht gegen ein echtes Dateisystem gelaufen).

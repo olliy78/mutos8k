@@ -761,51 +761,51 @@ def c2_emu_s(s, aus=(), mkfs=False):
 
 
 def c2_convert_s(s):
-    """Rules R65-R69: measured on `bin/convert` ONLY (doc/userspace/cmd_s3b5.md); the caller applies them only to a text that contains the
+    """Rules R72-R76: measured on `bin/convert` ONLY (doc/userspace/cmd_s3b5.md); the caller applies them only to a text that contains the
     function `_convdir` (no other program has one).  Model of the old c2, not a run of it.
-      R65  `call _lseek ; inc SP,#%8 ; test r2 ; jr pl|mi L`  ->  `testl rr2` (the original does not shorten the sign test of a long)   (2 sites)
-      R66  `sra rN,#%1`  ->  `ld r2,#-%1 ; sda rN,r2`  (the original does not turn the shift by a constant into SRA)   (1 site)
-      R67  loop inversion of the shipped c2 undone for the free-list loop of main (head `... call _blk ; inc SP,#%4 ; testl _curr ; jr ne L9nnn ; jr Lx`):
+      R72  `call _lseek ; inc SP,#%8 ; test r2 ; jr pl|mi L`  ->  `testl rr2` (the original does not shorten the sign test of a long)   (2 sites)
+      R73  `sra rN,#%1`  ->  `ld r2,#-%1 ; sda rN,r2`  (the original does not turn the shift by a constant into SRA)   (1 site)
+      R74  loop inversion of the shipped c2 undone for the free-list loop of main (head `... call _blk ; inc SP,#%4 ; testl _curr ; jr ne L9nnn ; jr Lx`):
            `jr Lh ; L9nnn: BODY Lh: HEAD jr ne L9nnn ; jr Lx`  ->  `Lh: HEAD jr eq Lx ; BODY jr Lh`   (1 site)
-      R68  `inc rK,#%1 ; ld r2,rK ; inc rK,#%1 ; ld r3,rM ; ldb @r2,rl3`  ->  `inc rK,#%1 ; ld r2,rK ; ld r3,rM ; ldb @r2,rl3 ; inc rK,#%1`
+      R75  `inc rK,#%1 ; ld r2,rK ; inc rK,#%1 ; ld r3,rM ; ldb @r2,rl3`  ->  `inc rK,#%1 ; ld r2,rK ; ld r3,rM ; ldb @r2,rl3 ; inc rK,#%1`
            (`*p++ = t` with register t: the original increments behind the store)   (1 site)
-      R69  `ldb rl2,%1(r13) ; ldb @r13,rl2`  ->  `xorb rh2,rh2` inserted between (`*p = p[1]`: the shipped c2 drops the zero-extension, the original keeps it)   (1 site)
+      R76  `ldb rl2,%1(r13) ; ldb @r13,rl2`  ->  `xorb rh2,rh2` inserted between (`*p = p[1]`: the shipped c2 drops the zero-extension, the original keeps it)   (1 site)
     Returns (text, counts)."""
     z = s.split("\n")
-    n = {"R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0}
+    n = {"R72": 0, "R73": 0, "R74": 0, "R75": 0, "R76": 0}
     out = []
     i = 0
     while i < len(z):
         a = z[i]
         w = lambda k: z[i + k] if i + k < len(z) else ""
-        # R65
+        # R72
         if (a == "test\tr2" and re.match(r"jr\t(pl|mi)\tL\d+$", w(1)) and len(out) > 1 and out[-1] == "inc\tSP,#%8"
                 and out[-2] == "call\t_lseek"):
             out.append("testl\trr2")
-            n["R65"] += 1
+            n["R72"] += 1
             i += 1
             continue
-        # R66
+        # R73
         m = re.match(r"sra\t(r\d+),#%1$", a)
         if m:
             out += ["ld\tr2,#-%1", "sda\t%s,r2" % m.group(1)]
-            n["R66"] += 1
+            n["R73"] += 1
             i += 1
             continue
-        # R69
+        # R76
         if a == "ldb\trl2,%1(r13)" and w(1) == "ldb\t@r13,rl2":
             out += [a, "xorb\trh2,rh2"]
-            n["R69"] += 1
+            n["R76"] += 1
             i += 1
             continue
-        # R68
+        # R75
         m = re.match(r"inc\t(r\d+),#%1$", a)
         if (m and w(1) == "ld\tr2," + m.group(1) and w(2) == a and re.match(r"ld\tr3,r\d+$", w(3)) and w(4) == "ldb\t@r2,rl3"):
             out += [a, w(1), w(3), w(4), a]
-            n["R68"] += 1
+            n["R75"] += 1
             i += 5
             continue
-        # R67
+        # R74
         m = re.match(r"jr\t(L\d+)$", a)
         if m and re.match(r"L9\d+:$", w(1)):
             lh, lb = m.group(1), w(1)[:-1]
@@ -818,7 +818,7 @@ def c2_convert_s(s):
             if (j < len(z) and k < len(z) and "testl\t_curr" in z[j:k] and "call\t_blk" in z[j:k]
                     and re.match(r"jr\tL\d+$", z[k + 1] if k + 1 < len(z) else "")):
                 out += [lh + ":"] + z[j + 1:k] + ["jr\teq\t" + z[k + 1][3:]] + z[i + 2:j] + ["jr\t" + lh]
-                n["R67"] += 1
+                n["R74"] += 1
                 i = k + 2
                 continue
         out.append(a)
