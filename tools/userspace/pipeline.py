@@ -70,7 +70,7 @@ PROGRAMME = {
 # c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
 # 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
-C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R69"},
+C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
          # dd: R3 would put an XORB before the `jr` after `cp r2,#%30 ; jr nc` in number() (`switch(c)` dispatch at the end of the digit loop); the original has none (1 site, measured)
