@@ -1,0 +1,4 @@
+# Hand-made corrections for nm.members: ftell and rdwr (fread/fwrite) lie in front of the first strong match (fopen 079C), members_auto does not see them.
+# Measured: ftell 05FE..06BC (188 B + 2 pad), rdwr 06BC..079C (224 B, fread@06BC, fwrite@06BC+0x68 as in size).
++ ftell 05FE 06BC exp=_ftell@05FE src=G
++ rdwr 06BC 079C exp=_fread@06BC,_fwrite@0724 src=G
