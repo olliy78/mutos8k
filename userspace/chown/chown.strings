@@ -1,0 +1,38 @@
+1154 /etc/passwd
+11AC null
+1253 RUnknown error
+12AF #Error 0
+12B8 Not owner
+12C2 No such file or directory
+12DC No such process
+12EC Interrupted system call
+1304 I/O error
+130E No such device or address
+1328 Arg list too long
+133A Exec format error
+134C Bad file number
+135C No children
+1368 No more processes
+137A Not enough core
+138A Permission denied
+139C Bad address
+13A8 Block device required
+13BE Mount device busy
+13D0 File exists
+13DC Cross-device link
+13EE No such device
+13FD Not a directory
+140D Is a directory
+141C Invalid argument
+142D File table overflow
+1441 Too many open files
+1455 Not a typewriter
+1466 Text file busy
+1475 File too large
+1484 No space left on device
+149C Illegal seek
+14A9 Read-only file system
+14BF Too many links
+14CE Broken pipe
+14DA Argument too large
+14ED Result too large

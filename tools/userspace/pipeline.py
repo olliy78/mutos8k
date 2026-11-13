@@ -61,6 +61,9 @@ PROGRAMME = {
     "od": ("cmd", "bin/od", "userspace/od/od.c", []),
     "who": ("cmd", "bin/who", "userspace/who/who.c", [V7INC + "utmp.h"]),
     "cmp": ("cmd", "bin/cmp", "userspace/cmp/cmp.c", []),
+    "nm": ("cmd", "bin/nm", "userspace/nm/nm.c", []),
+    "strip": ("cmd", "bin/strip", "userspace/strip/strip.c", []),
+    "chown": ("cmd", "bin/chown", "userspace/chown/chown.c", []),
 }
 
 
