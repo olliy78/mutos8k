@@ -1,0 +1,2 @@
+# pr: rdwr (fread+fwrite) lies in front of the first strong libc match (fopen), so members_auto counts it as own code (like login getpass)
++ rdwr 096E 0A4E exp=_fread@096E,_fwrite@09D6 src=G

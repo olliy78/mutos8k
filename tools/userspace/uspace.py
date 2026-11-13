@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -601,6 +601,14 @@ def c2_emu_s(s, aus=(), mkfs=False):
             n["R68"] += 1
             i += 1
             continue
+        # R69  `div rr2,X ; ld MEM,r3` (quotient stored to a variable; `colw = width / ncol`): the original keeps the copy: `ld r2,r3 ; ld MEM,r2`
+        #      (pr 1x; MODEL of the old c2)
+        m69 = re.match(r"ld\t([^r@][^,]*),r3$", a)
+        if m69 and "R69" not in aus and out and re.match(r"div\trr2,", out[-1]):
+            out += ["ld\tr2,r3", "ld\t%s,r2" % m69.group(1)]
+            n["R69"] += 1
+            i += 1
+            continue
         # R61  `ld MEM,r3 ; ld r2,r3 ; ldb rl3,@r2 ; xorb rh3,rh3 ; cp r3,#k ; jr ne L ; ld r2,MEM` (MEM = frame local; `arg = argv[1]; if (arg[0] == 'c' && ...`)
         #      -> the original reloads r2 from the variable and keeps it: `ld MEM,r3 ; ld r2,MEM ; ldb .. ; xorb ; cp ; jr ne L` (the reload behind the jump
         #      is dropped; cmp 3x; MODEL of the old c2, not a run of it)
@@ -644,7 +652,8 @@ def c2_emu_s(s, aus=(), mkfs=False):
             # R38  `cp M,#k ; jr cc L ; ld rN,M` -> the original reuses R0: `ld rN,r0` (dcheck bmap 1x; MODEL)
             l38 = re.match(r"ld\t(r\d+),(.*)$", z[i + 2]) if i + 2 < len(z) else None
             if (l38 and "R38" not in aus and l38.group(2) == c4.group(1) and re.match(r"jr\t", b)):
-                out += [b, "ld\t%s,r0" % l38.group(1)]
+                # `ld r0,M` right behind a `cp r0,#k ; jr cc` chain is dropped altogether by the original (pr `ncol > 72 || ncol > width`, 1x)
+                out += [b] if l38.group(1) == "r0" else [b, "ld\t%s,r0" % l38.group(1)]
                 n["R38"] += 1
                 i += 3
                 continue
@@ -737,7 +746,8 @@ def c2_emu_s(s, aus=(), mkfs=False):
             n["R39"] += 1
             i += 2
             continue
-        if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus:
+        # (pseudo rule "R5T" in `aus` switches off this `test` form only, leaving the `ld DST` form below: pr, 4 sites keep `ld r11,r2 ; test r2`)
+        if t5 and t6 and t6.group(1) == t5.group(2) and "R5" not in aus and "R5T" not in aus:
             out += [a, "test\t" + t5.group(1)]
             n["R5"] += 1
             i += 2
