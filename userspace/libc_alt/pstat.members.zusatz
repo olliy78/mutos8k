@@ -1,0 +1,2 @@
+# Hand-made correction for pstat.members: 474 B doprnt variant, jump-table entry points 2 bytes later than members_auto assumed (as df, rm)
+doprnt code=0D12,0D18,0D2E

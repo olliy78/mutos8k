@@ -72,6 +72,8 @@ PROGRAMME = {
     "hex": ("cmd", "bin/hex", "userspace/hex/hex.c", []),   # not V7: doc/userspace/cmd_s3b5.md
     "convert": ("cmd", "bin/convert", "userspace/convert/convert.c",
                 [V7INC + "sys/" + h for h in ("param.h", "ino.h", "filsys.h", "fblk.h", "dir.h")]),   # not V7: doc/userspace/cmd_s3b5.md
+    "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
+    "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
 }
 
 
@@ -92,7 +94,9 @@ C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R
          # hex: the original keeps `xorb rhN,rhN` in the two char array copies (`pbuf[j] = obuf[j]`, `pascii[j] = ascii[j]`; 2 sites, measured)
          "hex": {"R2"},
          # convert: the original keeps `xorb rhN,rhN` before the byte stores in swab and l3tol (2 sites, measured)
-         "convert": {"R2"}}
+         "convert": {"R2"},
+         # ps, pstat: the shipped c2 form everywhere (all of R1-R76 off, measured: the plain cc -O output equals the original up to R77, doc/userspace/cmd_s3b4.md)
+         "ps": {"R%d" % k for k in range(1, 77)}, "pstat": {"R%d" % k for k in range(1, 77)}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
