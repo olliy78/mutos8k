@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R70": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -415,6 +415,14 @@ def c2_emu_s(s, aus=(), mkfs=False):
             out.append("inc\tSP,#%%%X" % (int(m1.group(1), 16) + 2))
             out.append("push\t@SP," + m2.group(1))
             n["R1"] += 1
+            i += 2
+            continue
+        # R70  `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne,L` -> `jr ne,L` (ps pstatus: `if (pp->p_stat == SSLEEP)` with the long switch behind it; the original c2/as
+        #      chose the short jump for a span of 0xA8 bytes where the shipped c2 keeps `jp`; 1 site, MODEL of the old c2, not a run of it)
+        m70 = re.match(r"jp\tne\t(L\d+)$", b)
+        if ("R70" not in aus and a == "cp\tr2,#%1" and m70 and len(out) > 1 and out[-1] == "xorb\trh2,rh2" and out[-2] == "ldb\trl2,@r13"):
+            out += [a, "jr\tne\t" + m70.group(1)]
+            n["R70"] += 1
             i += 2
             continue
         # R63  `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` (`while ((c = *s++ = *t++))` with register c): exception to R2 (the XORB stays) and
