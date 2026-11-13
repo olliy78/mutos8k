@@ -604,7 +604,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
         # R69  `div rr2,X ; ld MEM,r3` (quotient stored to a variable; `colw = width / ncol`): the original keeps the copy: `ld r2,r3 ; ld MEM,r2`
         #      (pr 1x; MODEL of the old c2)
         m69 = re.match(r"ld\t([^r@][^,]*),r3$", a)
-        if m69 and "R69" not in aus and out and re.match(r"div\trr2,", out[-1]):
+        if m69 and "R69" not in aus and out and re.match(r"div\trr2,[^#]", out[-1]) and not re.match(r"jr\t", b):
             out += ["ld\tr2,r3", "ld\t%s,r2" % m69.group(1)]
             n["R69"] += 1
             i += 1
