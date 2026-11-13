@@ -5,7 +5,7 @@ Beide Programme: **G** (ganzdatei bytegleich).
 
 | Programm | Datei | Abbild (text/data/bss) | Quelle | c2-Regeln (Stellen) |
 |----------|-------|------------------------|--------|---------------------|
-| `bin/ps` | 7846 B | 7830 (6722/1108/14732) | **kein V7-Text**; MUTOS-eigene Fassung im Aufbau der Hippe-`ps.c` (nur Vergleichsreferenz), s. u. | **R70 1**; alle R1-R64 aus (`C2_AUS`) |
+| `bin/ps` | 7846 B | 7830 (6722/1108/14732) | **kein V7-Text**; MUTOS-eigene Fassung im Aufbau der Hippe-`ps.c` (nur Vergleichsreferenz), s. u. | **R77 1**; alle R1-R64 aus (`C2_AUS`) |
 | `bin/pstat` | 6866 B | 6850 (5500/1350/1062) | V7-`pstat.c` als Gerüst, aber an fast jeder Stelle abweichend, s. u. | **keine** (alle Zähler 0) |
 
 Befehle je Programm (Bau und Beweis):
@@ -75,10 +75,10 @@ Gerüst und Aufrufreihenfolge (`doinode dotext dotty doproc dousr dofil`, Schalt
 Beide Programme sind mit der **ausgelieferten** c2-Form gebaut (wie `df`/`rm`): kein Zähler von R1-R64 greift (`neu: c2 model rewrote` alles 0 bei `pstat`; bei `ps` griffen R1-R5, R7, R30 (zusammen 28 Stellen) und verschlechterten das Ergebnis,
 gemessen: mit dem Modell 1095 statt 1102 Befehle gleich, 9 statt 0 Differenzblöcke im Eigencode) und sind deshalb in `C2_AUS` abgeschaltet (`ps`, `pstat`: R1-R69).
 
-* **R70 (neu, 1 Stelle, nur `ps`):** `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne,L` -> `jr ne,L` (`pstatus`: `if (pp->p_stat == SSLEEP)`, Spanne 0xA8 Byte).  Das Original hat die kurze Form, der ausgelieferte
+* **R77 (neu, 1 Stelle, nur `ps`):** `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne,L` -> `jr ne,L` (`pstatus`: `if (pp->p_stat == SSLEEP)`, Spanne 0xA8 Byte).  Das Original hat die kurze Form, der ausgelieferte
   c2 behält `jp` (2 Byte mehr, alle folgenden Adressen verschoben).  Wie R60-R64 eine **schwache Modellregel** (eine Stelle).  Quelltextvarianten wurden dafür nicht durchprobiert; die Spanne ist gleich lang, ein Quelltextgrund ist unwahrscheinlich.
-* Host-Prüfung: `c2_emu_s` auf allen `neu.s` der Hauptkopie (32 Programme plus die `*/*.s` von `sh`) ergibt R70 = 0; die Regel verändert kein anderes Programm.
-* Zählerliste in `tests/test_userspace_pipeline.py` um `R70` ergänzt.
+* Host-Prüfung: `c2_emu_s` auf allen `neu.s` der Hauptkopie (32 Programme plus die `*/*.s` von `sh`) ergibt R77 = 0; die Regel verändert kein anderes Programm.
+* Zählerliste in `tests/test_userspace_pipeline.py` um `R77` ergänzt.
 
 ## libc-Teil
 
@@ -89,14 +89,14 @@ gemessen: mit dem Modell 1095 statt 1102 Befehle gleich, 9 statt 0 Differenzblö
 
 ## Verlauf (Fehlerbilder)
 
-* Erster `ps`-Lauf: 27 Differenzblöcke, 78 Byte zu lang: `out2` hatte `ip` nicht als `register`-Parameter (Original `LD R13,%0004(R14)`).  Danach Eigencode gleich lang, 11 Blöcke (nur libc-Adressen, `qsort`/`flsbuf`-Namen und R70).
+* Erster `ps`-Lauf: 27 Differenzblöcke, 78 Byte zu lang: `out2` hatte `ip` nicht als `register`-Parameter (Original `LD R13,%0004(R14)`).  Danach Eigencode gleich lang, 11 Blöcke (nur libc-Adressen, `qsort`/`flsbuf`-Namen und R77).
 * Mit dem c2-Modell (alle Regeln an) war `ps` schlechter als ohne (u. a. `LD R3,R5` -> `LD R3,R4` bei 03E2, `LD R11,R3` -> `LD R11,R2` viermal in `getnames`); daher `C2_AUS`.
 * `pstat`: erster Lauf 70 Blöcke durch **ein** fehlendes Leerzeichen in der Kopfzeile von `doproc` (alle folgenden Datenadressen um 1 verschoben); `nlbase` zunächst `int` (Listing: `PUSH R2 ; PUSH #0`, also `unsigned`).
   Die Zeichenketten beider Quellen wurden danach maschinell gegen die Datenbereiche des Originals verglichen (Reihenfolge und Inhalt gleich).
 
 ## Regressionslauf
 
-Alle 33 bisherigen Programme wurden nach den Werkzeugänderungen (R70, `common`-Zeilen in `libc_alt.py`, `C2_AUS` für `ps`/`pstat`) im Gast neu gebaut, 3 parallel, 2026-11-13 gemessen
+Alle 33 bisherigen Programme wurden nach den Werkzeugänderungen (R77, `common`-Zeilen in `libc_alt.py`, `C2_AUS` für `ps`/`pstat`) im Gast neu gebaut, 3 parallel, 2026-11-13 gemessen
 (`alles NAME --c2emu --libc alt --ist neu_c2_s`; `sync`, `getty` ohne `--libc alt` (haben kein eigenes Archiv): `alles NAME --c2emu`; `sh`: `bau sh --c2emu --variante v7fix`; je danach `BYTE-IDENTICAL` im Log bzw. `cmp` gegen `work/NAME.orig`):
 **33 von 33 bytegleich**: sync, getty, cat, date, ls, stty, init, login, mount, umount, echo, pwd, rmdir, mkdir, wc, size, chmod, kill, cp, ln, clri, mknod, dcheck, ncheck, icheck, mkfs, sh, df, rm, mv, od, who, cmp.
 (Erster Versuch: `sync`/`getty` meldeten `no libc_alt archive` wegen falscher Aufrufform des Regressionsskripts, nicht wegen der Änderungen.)
@@ -104,6 +104,6 @@ Dazu `pytest tests/test_userspace_pipeline.py -q`: 8 passed, 1 skipped; `pipelin
 
 ## Aussagekraft
 
-Wie README Punkt 1, 2 und 5: *C-Quelle + ausgelieferter Compiler (+ R70) = Originalbytes*.  Der Text beider Programme ist **eine** Quelle, die diese Bytes erzeugt, keine Rekonstruktion des Originaltexts:
+Wie README Punkt 1, 2 und 5: *C-Quelle + ausgelieferter Compiler (+ R77) = Originalbytes*.  Der Text beider Programme ist **eine** Quelle, die diese Bytes erzeugt, keine Rekonstruktion des Originaltexts:
 Namen der Hilfsvariablen und -funktionen (`ttylist`, `memorg`, `stkaddr`, `nlbase`, `pad`), die Gestalt der Adressausdrücke in `ps getusr` und die Kommentare sind erfunden.  Bei `ps` sind die Z8001-Adressformeln (Konstanten 0xFE00, 0xEC00, 0xFC00, 0xFE)
 nur als Befehlsfolge belegt.  Der libc-Teil ist aus dem Abbild bzw. der ausgelieferten `libc.a` gewonnen und belegt keine Herkunft.

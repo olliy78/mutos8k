@@ -76,7 +76,7 @@ C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R
          "df": {"R1", "R4"},
          # rm: same newer c2 forms for R1/R4 (8 sites) and R5 (`i = b = getchar()` keeps `ld r2,r3 ; ld MEM,r3`, 2 sites; measured)
          "rm": {"R1", "R4", "R5"},
-         # ps, pstat: the shipped c2 form everywhere (all of R1-R64 off, measured: the plain cc -O output equals the original up to R70, doc/userspace/cmd_s3b4.md)
+         # ps, pstat: the shipped c2 form everywhere (all of R1-R64 off, measured: the plain cc -O output equals the original up to R77, doc/userspace/cmd_s3b4.md)
          "ps": {"R%d" % k for k in range(1, 70)}, "pstat": {"R%d" % k for k in range(1, 70)}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
