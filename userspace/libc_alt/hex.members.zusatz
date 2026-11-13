@@ -1,0 +1,2 @@
+# Hand-made correction for hex.members: 474 B variant of doprnt (LD R4,R2 instead of EXTSL RQ4), jump-table entry points 2 bytes later than members_auto assumed (see df.members.zusatz).
+doprnt code=05B4,05BA,05D0
