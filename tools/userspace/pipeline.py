@@ -62,6 +62,8 @@ PROGRAMME = {
     "who": ("cmd", "bin/who", "userspace/who/who.c", [V7INC + "utmp.h"]),
     "cmp": ("cmd", "bin/cmp", "userspace/cmp/cmp.c", []),
     "hex": ("cmd", "bin/hex", "userspace/hex/hex.c", []),   # not V7: doc/userspace/cmd_s3b5.md
+    "convert": ("cmd", "bin/convert", "userspace/convert/convert.c",
+                [V7INC + "sys/" + h for h in ("param.h", "ino.h", "filsys.h", "fblk.h", "dir.h")]),   # not V7: doc/userspace/cmd_s3b5.md
 }
 
 
@@ -76,7 +78,9 @@ C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R
          # rm: same newer c2 forms for R1/R4 (8 sites) and R5 (`i = b = getchar()` keeps `ld r2,r3 ; ld MEM,r3`, 2 sites; measured)
          "rm": {"R1", "R4", "R5"},
          # hex: the original keeps `xorb rhN,rhN` in the two char array copies (`pbuf[j] = obuf[j]`, `pascii[j] = ascii[j]`; 2 sites, measured)
-         "hex": {"R2"}}
+         "hex": {"R2"},
+         # convert: the original keeps `xorb rhN,rhN` before the byte stores in swab and l3tol (2 sites, measured)
+         "convert": {"R2"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
