@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -573,6 +573,33 @@ def c2_emu_s(s, aus=(), mkfs=False):
                     "ldl\trr0,rr2", "cpl\trr2," + z[i + 9][len("cpl\trr0,"):]]
             n["R64"] += 1
             i += 10
+            continue
+        # R65  `ldb @r2,rl3 ; djnz rN,L` (tail of `do { a = *ip++; ip[-1] = *ip; *ip++ = a; } while(--c)`, register c): the original has no DJNZ but
+        #      `dec rN,#1 ; jr ne L` (dd 1x; MODEL of the old c2; gated on the preceding `ldb @r2,rl3`, other programs keep their DJNZ)
+        m65 = re.match(r"djnz\t(r\d+),(L\d+)$", a)
+        if m65 and "R65" not in aus and len(out) > 0 and out[-1] == "ldb\t@r2,rl3":
+            out += ["dec\t%s,#%%1" % m65.group(1), "jr\tne\t" + m65.group(2)]
+            n["R65"] += 1
+            i += 1
+            continue
+        # R66  `ld r3,MEM ; ldb rl0,@r2 ; cpb rl0,@r3 ; jr eq L ; ld r2,r3 ; testb @r2` (`while(*cs++ == *s) ..; if(*s != 0)`-style compare of two walkers, MEM a
+        #      frame parameter): the original reloads `ld r2,MEM` instead of copying r3 (dd match() 1x; MODEL of the old c2)
+        m66 = re.match(r"ld\tr3,(%[0-9A-F]+\(FP\))$", a)
+        if (m66 and "R66" not in aus and i + 5 < len(z) and b == "ldb\trl0,@r2" and z[i + 2] == "cpb\trl0,@r3"
+                and re.match(r"jr\teq\tL\d+$", z[i + 3]) and z[i + 4] == "ld\tr2,r3" and z[i + 5] == "testb\t@r2"):
+            out += [a, b, z[i + 2], z[i + 3], "ld\tr2," + m66.group(1)]
+            n["R66"] += 1
+            i += 5
+            continue
+        # R68  `call _strcmp ; inc SP,#4 ; test r2 ; jr eq L ; push @SP,#Lk` (`if (strcmp(..) != 0)` jumping over the whole password-change body): the original has a
+        #      long `jp eq L` (target 0x10C bytes away); with the other rules applied the short `jr eq` is out of range for the guest `as` (ILLEGAL VALUE)
+        #      (passwd 1x -- the second strcmp of passwd keeps its short `jr eq`; MODEL of the old c2, gated on this context incl. the label L21)
+        m68 = re.match(r"jr\teq\t(L\d+)$", a)
+        if (m68 and "R68" not in aus and len(out) >= 3 and out[-1] == "test\tr2" and out[-2] == "inc\tSP,#%4" and out[-3] == "call\t_strcmp"
+                and re.match(r"push\t@SP,#L\d+$", b) and z[i + 2] == "jr\tL9015" and m68.group(1) == "L21"):
+            out.append("jp\teq\t" + m68.group(1))
+            n["R68"] += 1
+            i += 1
             continue
         # R61  `ld MEM,r3 ; ld r2,r3 ; ldb rl3,@r2 ; xorb rh3,rh3 ; cp r3,#k ; jr ne L ; ld r2,MEM` (MEM = frame local; `arg = argv[1]; if (arg[0] == 'c' && ...`)
         #      -> the original reloads r2 from the variable and keeps it: `ld MEM,r3 ; ld r2,MEM ; ldb .. ; xorb ; cp ; jr ne L` (the reload behind the jump
@@ -749,6 +776,32 @@ def c2_emu_s(s, aus=(), mkfs=False):
             continue
         out.append(a)
         i += 1
+    # R67  range test closing an else-if chain (`else if(c>='0' && c<='9') f |= 1; else f |= 8;` with register-less c, after R4):
+    #      shipped c2 `ld r0,M ; cp r0,#lo ; jr ge LB ; LX: set..` with the then-block `LB: ld r0,M ; cp r0,#hi ; jr gt LX ; <body> ; jr LEND` placed earlier;
+    #      the original has the block inline: `ld r0,M ; cp r0,#lo ; jr lt LX ; cp r0,#hi ; jr gt LX ; <body> ; jr LEND ; LX: set..`
+    #      (passwd 1x; the two earlier ranges of the same chain keep the jump to the block, since LX is followed by a test there; MODEL of the old c2)
+    for j in range(len(out) - 3):
+        m67 = re.match(r"jr\tge\t(L\d+)$", out[j])
+        if not (m67 and "R67" not in aus and re.match(r"cp\tr0,#", out[j - 1]) and re.match(r"L\d+:$", out[j + 1])
+                and out[j + 2].startswith("set\t") and out.count(m67.group(1) + ":") == 1 and out.count(out[j]) == 1):
+            continue
+        lb, lx = m67.group(1), out[j + 1][:-1]
+        try:
+            b = out.index(lb + ":")
+        except ValueError:
+            continue
+        if b >= j or not (re.match(r"ld\tr0,", out[b + 1]) and re.match(r"cp\tr0,#", out[b + 2]) and out[b + 3] == "jr\tgt\t" + lx):
+            continue
+        e = b + 4
+        while e < len(out) and not re.match(r"jr\tL\d+$", out[e]):
+            e += 1
+        if e >= j or out[e + 1][-1:] != ":" and not out[e + 1].startswith(("ld", "cp")):
+            continue
+        blk = out[b + 2:e + 1]               # cp r0,#hi ; jr gt LX ; body ; jr LEND
+        out[j:j + 1] = ["jr\tlt\t" + lx] + blk
+        del out[b:e + 1]
+        n["R67"] += 1
+        break
     if mkfs:
         t, n2 = c2_mkfs_s("\n".join(out))
         n.update(n2)

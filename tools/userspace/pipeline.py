@@ -61,6 +61,9 @@ PROGRAMME = {
     "od": ("cmd", "bin/od", "userspace/od/od.c", []),
     "who": ("cmd", "bin/who", "userspace/who/who.c", [V7INC + "utmp.h"]),
     "cmp": ("cmd", "bin/cmp", "userspace/cmp/cmp.c", []),
+    "dd": ("cmd", "bin/dd", "userspace/dd/dd.c", []),
+    "pr": ("cmd", "bin/pr", "userspace/pr/pr.c", []),
+    "passwd": ("cmd", "bin/passwd", "userspace/passwd/passwd.c", []),
 }
 
 
@@ -70,6 +73,8 @@ PROGRAMME = {
 C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
+         # dd: R3 would put an XORB before the `jr` after `cp r2,#%30 ; jr nc` in number() (`switch(c)` dispatch at the end of the digit loop); the original has none (1 site, measured)
+         "dd": {"R3"},
          # df: the original has `CP mem,#k` (no R4) and `INC R15,#4 ; LD @R15,#0` (no R1): newer c2 forms for these two (4 sites, measured)
          "df": {"R1", "R4"},
          # rm: same newer c2 forms for R1/R4 (8 sites) and R5 (`i = b = getchar()` keeps `ld r2,r3 ; ld MEM,r3`, 2 sites; measured)
