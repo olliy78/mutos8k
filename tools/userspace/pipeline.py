@@ -67,6 +67,8 @@ PROGRAMME = {
     "dd": ("cmd", "bin/dd", "userspace/dd/dd.c", []),
     "pr": ("cmd", "bin/pr", "userspace/pr/pr.c", []),
     "passwd": ("cmd", "bin/passwd", "userspace/passwd/passwd.c", []),
+    "ar": ("cmd", "bin/ar", "userspace/ar/ar.c", []),
+    "ed": ("cmd", "bin/ed", "userspace/ed/ed.c", [V7INC + "setjmp.h"]),
 }
 
 
