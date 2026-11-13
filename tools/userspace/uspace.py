@@ -449,6 +449,8 @@ def c2_emu_s(s, aus=(), mkfs=False):
         if m71 and "R71" not in aus and re.match(r"ld\t(r\d+),%s$" % m71.group(1), b) and re.match(r"jr\tL\d+$", z[i + 2] if i + 2 < len(z) else ""):
             out += [a, "ld\t%s,%s" % (re.match(r"ld\t(r\d+),", b).group(1), m71.group(2))]
             n["R71"] += 1
+            i += 2
+            continue
         # R77  `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne,L` -> `jr ne,L` (ps pstatus: `if (pp->p_stat == SSLEEP)` with the long switch behind it; the original c2/as
         #      chose the short jump for a span of 0xA8 bytes where the shipped c2 keeps `jp`; 1 site, MODEL of the old c2, not a run of it)
         m77 = re.match(r"jp\tne\t(L\d+)$", b)
