@@ -1,0 +1,2 @@
+# passwd: getpass lies in front of the first strong match (like login)
++ getpass 04C8 05E2 data=1F32:1F40 bss=29B4:A exp=_getpass@04C8 src=G

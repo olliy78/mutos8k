@@ -1,0 +1,58 @@
+17AC ibs=
+17B1 obs=
+17B6 cbs=
+17BB bs=
+17BF if=
+17C3 of=
+17C7 skip=
+17CD seek=
+17D3 count=
+17DA files=
+17E1 conv=
+17E9 ebcdic
+17F0 ibm
+17F4 ascii
+17FA lcase
+1800 ucase
+1806 swab
+180B noerror
+1813 sync
+1874 read
+1879 write
+191C null
+19C4 Unknown error
+1A1F #Error 0
+1A28 Not owner
+1A32 No such file or directory
+1A4C No such process
+1A5C Interrupted system call
+1A74 I/O error
+1A7E No such device or address
+1A98 Arg list too long
+1AAA Exec format error
+1ABC Bad file number
+1ACC No children
+1AD8 No more processes
+1AEA Not enough core
+1AFA Permission denied
+1B0C Bad address
+1B18 Block device required
+1B2E Mount device busy
+1B40 File exists
+1B4C Cross-device link
+1B5E No such device
+1B6D Not a directory
+1B7D Is a directory
+1B8C Invalid argument
+1B9D File table overflow
+1BB1 Too many open files
+1BC5 Not a typewriter
+1BD6 Text file busy
+1BE5 File too large
+1BF4 No space left on device
+1C0C Illegal seek
+1C19 Read-only file system
+1C2F Too many links
+1C3E Broken pipe
+1C4A Argument too large
+1C5D Result too large
