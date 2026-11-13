@@ -290,6 +290,23 @@ def kartenzeilen_namen(namen, libc=None):
 
 
 # ---------------------------------------------------------------- step (d): guest build
+STUFEN_AB = 20000     # source size (bytes) from which gast_bauen runs the cc passes one by one
+
+
+def stufen_befehl(name, lib, nur_s):
+    """cc -O [-S] by hand: cpp, c0, c1, c2 (V7 cc.c order, MUTOS paths /usr/lib/.., /usr/bin/as from the strings of `cc`).  Every pass
+    truncates the files it consumed (`>file`; there is no `rm` on the guest PATH, the commands disk is not mounted), which frees the blocks.
+    Errors go to NAME.err (NAME.err2 for the -S run).  Result: /tmp/NAME (linked by `cc -s -o` like the one-step cc) or /tmp/NAME.s."""
+    e = name + (".err2" if nur_s else ".err")
+    r = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci",
+         "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5"]
+    if not nur_s:
+        r += ["/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
+              "cc -s -o %s %s.o%s >>%s 2>&1" % (name, name, lib, e), ">%s.o" % name]
+    r.append("cd /mnt")
+    return ";".join(r)
+
+
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
                log=print, libs=()):
     """varianten: {name: source text (str/bytes)}.  Each variant = its own emulator session (copies of the disks,
@@ -314,10 +331,19 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             # the guest runner appends `cat fertigN` (a file on /mnt): every command must end in /mnt
             fl = "-s" if ist_s else flags
             lib = "".join(" /mnt/" + l for l in libs)
-            befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
+            # Large sources overflow the ~250 KB /tmp disk (all cc temporaries coexist: "no space on dev 4/0"): then the
+            # passes are run by hand and each pass deletes its inputs (same commands as cc.c, cc -O only; USERSPACE_STUFEN=1 forces it).
+            stufen = (not ist_s) and "-O" in flags.split() and (len(text) > STUFEN_AB or os.environ.get("USERSPACE_STUFEN") == "1")
+            if stufen:
+                befehle = [stufen_befehl(name, lib, False)]
+            else:
+                befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
-                befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
+                if stufen:
+                    befehle.append(stufen_befehl(name, lib, True))
+                else:
+                    befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
                 rueck += [name + ".s", name + ".err2"]
             aus = {}
             r = gast_as.gast_befehle(os.path.join(arbeit, name), q, befehle, rueck, frist=frist, ausgabe=aus)
@@ -401,7 +427,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -415,6 +441,14 @@ def c2_emu_s(s, aus=(), mkfs=False):
             out.append("inc\tSP,#%%%X" % (int(m1.group(1), 16) + 2))
             out.append("push\t@SP," + m2.group(1))
             n["R1"] += 1
+            i += 2
+            continue
+        # R65  `ld rA,%k(FP) ; ld rB,rA ; jr L` (`p2 = s; for (p1 = s; ...)`, two register variables from the same argument): the original loads
+        #      both from the argument, `... ; ld rB,%k(FP) ; jr L` (ar trim(), 1x; MODEL of the old c2, not a run of it)
+        m65 = re.match(r"ld\t(r\d+),(%[0-9A-F]+\(FP\))$", a)
+        if m65 and "R65" not in aus and re.match(r"ld\t(r\d+),%s$" % m65.group(1), b) and re.match(r"jr\tL\d+$", z[i + 2] if i + 2 < len(z) else ""):
+            out += [a, "ld\t%s,%s" % (re.match(r"ld\t(r\d+),", b).group(1), m65.group(2))]
+            n["R65"] += 1
             i += 2
             continue
         # R63  `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` (`while ((c = *s++ = *t++))` with register c): exception to R2 (the XORB stays) and
