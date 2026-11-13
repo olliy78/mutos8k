@@ -427,7 +427,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R71": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -443,12 +443,12 @@ def c2_emu_s(s, aus=(), mkfs=False):
             n["R1"] += 1
             i += 2
             continue
-        # R65  `ld rA,%k(FP) ; ld rB,rA ; jr L` (`p2 = s; for (p1 = s; ...)`, two register variables from the same argument): the original loads
+        # R71  `ld rA,%k(FP) ; ld rB,rA ; jr L` (`p2 = s; for (p1 = s; ...)`, two register variables from the same argument): the original loads
         #      both from the argument, `... ; ld rB,%k(FP) ; jr L` (ar trim(), 1x; MODEL of the old c2, not a run of it)
-        m65 = re.match(r"ld\t(r\d+),(%[0-9A-F]+\(FP\))$", a)
-        if m65 and "R65" not in aus and re.match(r"ld\t(r\d+),%s$" % m65.group(1), b) and re.match(r"jr\tL\d+$", z[i + 2] if i + 2 < len(z) else ""):
-            out += [a, "ld\t%s,%s" % (re.match(r"ld\t(r\d+),", b).group(1), m65.group(2))]
-            n["R65"] += 1
+        m71 = re.match(r"ld\t(r\d+),(%[0-9A-F]+\(FP\))$", a)
+        if m71 and "R71" not in aus and re.match(r"ld\t(r\d+),%s$" % m71.group(1), b) and re.match(r"jr\tL\d+$", z[i + 2] if i + 2 < len(z) else ""):
+            out += [a, "ld\t%s,%s" % (re.match(r"ld\t(r\d+),", b).group(1), m71.group(2))]
+            n["R71"] += 1
             i += 2
             continue
         # R63  `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` (`while ((c = *s++ = *t++))` with register c): exception to R2 (the XORB stays) and
