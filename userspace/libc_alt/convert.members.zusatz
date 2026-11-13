@@ -1,0 +1,2 @@
+# Hand-made correction for convert.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see df.members.zusatz).
+doprnt code=07A2,07A8,07BE
