@@ -75,7 +75,9 @@ C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R
          # df: the original has `CP mem,#k` (no R4) and `INC R15,#4 ; LD @R15,#0` (no R1): newer c2 forms for these two (4 sites, measured)
          "df": {"R1", "R4"},
          # rm: same newer c2 forms for R1/R4 (8 sites) and R5 (`i = b = getchar()` keeps `ld r2,r3 ; ld MEM,r3`, 2 sites; measured)
-         "rm": {"R1", "R4", "R5"}}
+         "rm": {"R1", "R4", "R5"},
+         # ed: R42 (`test MEM`) and R45 (`exts` before a switch/`% k` division) were measured on other programs; ed keeps `test r2` and the `xor r2,r2` of the switch hash (4 sites)
+         "ed": {"R42", "R45"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
@@ -208,12 +210,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs")
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed")
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs")
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed")
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)

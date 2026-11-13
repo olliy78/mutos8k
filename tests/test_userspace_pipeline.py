@@ -60,6 +60,18 @@ def test_c2_model_rewrites_and_canonicalises():
     assert U.c2_kanon(orig) == U.c2_kanon(neu)
 
 
+def test_c2_model_ed_rules_r80_r90():
+    """R80-R90 (doc/userspace/cmd_s3b6.md) act only with ed=True; register parameters and `*p++` keep their copies."""
+    s = "\n".join(["ld\tr2,_dol", "ld\t_addr2,r2", "ld\tr0,r2", "cp\tr2,_zero", "jr\tne\tL1",
+                   "ld\tr13,%4(FP)", "~i:=r13", "ld\tr2,r13", "ld\tr11,%6(FP)", "ld\tr10,r11",
+                   "ld\tr13,_linp", "ld\tr2,r13", "inc\tr13,#%1"])
+    assert U.c2_emu_s(s)[0] == s
+    t, n = U.c2_emu_s(s, ed=True)
+    assert n["R80"] == 2 and n["R81"] == 1
+    assert "ld\tr0,_dol\ncp\tr0,_zero" in t and "ld\tr10,%6(FP)" in t
+    assert "~i:=r13\nld\tr2,r13" in t and "ld\tr2,r13\ninc\tr13,#%1" in t
+
+
 def test_c2_model_r4_r5_r8_r9():
     s = "\n".join(["cp\t%4(FP),#%1", "cp\tr13,#-%1", "ldb\trl2,-%D(FP)", "xorb\trh2,rh2", "ldb\trl3,rl2",
                    "ld\tr2,r3", "ld\t-%12(FP),r3", "and\tr4,#%80", "or\tr2,r4"])

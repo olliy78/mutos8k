@@ -404,7 +404,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
     return erg
 
 
-def c2_emu_s(s, aus=(), mkfs=False):
+def c2_emu_s(s, aus=(), mkfs=False, ed=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -787,6 +787,10 @@ def c2_emu_s(s, aus=(), mkfs=False):
         t, n2 = c2_mkfs_s("\n".join(out))
         n.update(n2)
         return t, n
+    if ed:
+        t, n2 = c2_ed_s("\n".join(out))
+        n.update(n2)
+        return t, n
     return "\n".join(out), n
 
 
@@ -934,6 +938,214 @@ def c2_mkfs_s(s):
         out.append(a)
         i += 1
     return "\n".join(out), {k: v for k, v in n.items()}
+
+
+def _ed_regs(op):
+    """Word registers (numbers) covered by a register operand (`r5`, `rr2`, `rq4`, `rl3`, `rh3`); empty for other operands."""
+    m = re.match(r"r([lhrq]?)(\d+)$", op)
+    if not m:
+        return frozenset()
+    return frozenset(int(m.group(2)) + j for j in range({"r": 2, "q": 4}.get(m.group(1), 1)))
+
+
+_ED_MEM = re.compile(r"-?%[0-9A-F]+\(FP\)$|_\w+$")      # frame local/argument or plain global (no @reg, no indexed, no immediate)
+_ED_NOWRITE = ("cp", "cpb", "cpl", "test", "testb", "testl", "push", "pushl", "jr", "jp", "call", "bit", "bitb", "ret")
+
+
+def c2_ed_s(s):
+    """Rules R80-R89: measured on `bin/ed` ONLY (doc/userspace/cmd_s3b6.md), applied behind c2_emu_s and only when it is called with
+    ed=True (pipeline.py passes it for ed alone).  The c2 that made ed forwards fewer register copies than the shipped one.  MODEL of
+    the old c2, not a run of it; the number of sites of each rule is in the document.
+      R80  reload instead of a register copy: `ld rB,rA` where rA holds MEM (loaded or stored in the same basic block, both
+           untouched since; also `ldl`) -> `ld rB,MEM`; MEM a global only for a scratch rB (r0-r7); MEM a local only when the store
+           was not right behind a byte load (`i = *p++` used as a value keeps the copy); a register parameter (`~x:=rA` right behind
+           the load) is the variable itself, never reloaded; nor is `ld rB,rA ; inc rA` (`*p++` of a register pointer)
+      R81  `ld rA,rB ; cp rB,X` (rA scratch) -> `cp rA,X` (the original compares the copy)
+      R82  switch hash `ld r3,rX ; xor r2,r2 ; div rr2,#k ; ex r2,r3` -> `ld r2,rX ; ld r3,r2 ; xor r2,r2 ; ...`
+      R84  `ld r3,r5 | div rr4,#k ; add|sub r2,r5` -> `ld r3,r5 ; add|sub r2,r3` (the difference is added from the copy in r3)
+      R85  `and rX,#k ; ld rN,rX ; ld MEM,rN ; jr eq|ne` -> `test rN` before the jump (the original does not keep the flags of the and)
+      R86  `cp rN,MEM` while r0 holds MEM (from R4's `ld r0,MEM ; cp r0,#k`) -> `cp rN,r0`
+      R87  `div rr2,.. | ldl rr2,rr4 ; ld MEM,r3` (MEM local) -> `ld r2,r3 ; ld MEM,r2`; the next read of r3 reloads `ld r3,MEM` first
+      R88  `ldb rl2,X ; [xorb rh2,rh2] ; ld rV,r2` (rV register variable r8-r13) -> `ldb rl0,X ; xorb rh0,rh0 ; ld rV,r0`
+      R89  `ldb rlN,X ; inc rN,#k ; ldb Y,rlN` -> `xorb rhN,rhN` kept behind the load
+      R90  loop test kept at the top (see the code)
+      R91  a `jp` that fits a `jr` becomes `jr` (one site, see the code)
+    Returns (text, {rule: count})."""
+    n = {"R80": 0, "R81": 0, "R82": 0, "R84": 0, "R85": 0, "R86": 0, "R87": 0, "R88": 0, "R89": 0, "R90": 0, "R91": 0}
+    # R90  a `while (a && b) switch (c) {...}` loop whose test the shipped c2 moved to the bottom (`jr L8 ... L8: ld r0,M ; cp r0,#k ;
+    #      jr gt LB`) and whose first case it put inline: the original keeps the test at the top, the case chain behind the
+    #      `test`, the increment as the fall-through of the chain and the first case behind it (ed main() argument loop, 1x;
+    #      three source forms -- while, for, goto -- give the same rotated code, measured)
+    r90 = re.compile(r"jr\t(L\d+)\n(L\d+):\n((?:cp\tr2,#%[0-9A-F]+\njr\teq\tL\d+\n)+)jr\t(L\d+)\n(L\d+):\n"
+                     r"((?:(?!L\d+:).*\n)*?)jr\tne\t\2\n((?:(?!L\d+:).*\n)*?)jr\t\4\n((?:.*\n)*?)\4:\n((?:(?!L\d+:).*\n){2})"
+                     r"\1:\nld\tr0,([^\n]+)\ncp\tr0,(#[^\n]+)\njr\tgt\t\5\n(L\d+):\n")
+
+    def _r90(m):
+        l8, l9001, chain, l10, l9003, body, case0, rest, incdec, mem, k, l9 = m.groups()
+        n["R90"] += 1
+        return ("%s:\nld\tr0,%s\ncp\tr0,%s\njr\tle\t%s\n%sjr\teq\t%s\n%s%s:\n%sjr\t%s\n%s:\n%sjr\t%s\n%sjr\t%s\n%s:\n"
+                % (l8, mem, k, l9, body, l9003, chain, l10, incdec, l8, l9003, case0, l10, rest, l10, l9))
+    s = r90.sub(_r90, s)
+    z = s.split("\n")
+    out = []
+    mir = {}            # (kind, number) -> (MEM, origin) the register is known to hold; kind W = rN, L = rrN; origin load|store|byte
+    lastcopy = None     # R81: (dst, src) of the last `ld rA,rB` (source as written by the shipped c2)
+    reload3 = None      # R87: MEM r3 has to be reloaded from before its next read
+
+    def kill(regs):
+        for k in [k for k in mir if (_ed_regs("r%s%d" % ("r" if k[0] == "L" else "", k[1])) & regs)]:
+            del mir[k]
+
+    def killmem(m):
+        for k in [k for k, v in mir.items() if v[0] == m]:
+            del mir[k]
+
+    i = 0
+    while i < len(z):
+        a = z[i]
+        t = a.split("\t")
+        op = t[0]
+        ops = t[-1].split(",") if len(t) > 1 else []
+        copy, lastcopy = lastcopy, None
+        nxt = z[i + 1] if i + 1 < len(z) else ""
+        # R87 pending reload of r3
+        if reload3:
+            if re.match(r"L\d+:$", a) or op in ("call", "jp", "jr", "end", "ret") or (op == "ld" and ops and ops[0] == "r3"):
+                reload3 = None
+            elif any(_ed_regs(o) & {3} for o in ops) or any("r3)" in o or o == "@r3" for o in ops):
+                out.append("ld\tr3," + reload3)
+                mir[("W", 3)] = (reload3, "load")
+                reload3 = None
+        # R91  span: `jp eq L` whose final distance fits a `jr` (measured: exactly 1 such jp in the built own code, 0 in the original);
+        #      the .s carries no addresses, so the model names the site by its shape: the EOF case of the commands() switch chain
+        if a.startswith("jp\teq\tL") and out and out[-1] == "cp\tr2,#%1FFF":
+            out.append("jr" + a[2:])
+            mir = {}
+            n["R91"] += 1
+            i += 1
+            continue
+        if re.match(r"L\d+:$", a) or op in ("call", "end", "jp", "ret") or (op == "jr" and len(t) == 2):
+            mir = {}
+            out.append(a)
+            i += 1
+            continue
+        m = re.match(r"~\w+:=r(\d+)$", a)
+        if m:
+            kill({int(m.group(1))})
+            out.append(a)
+            i += 1
+            continue
+        # R82
+        m = re.match(r"ld\tr3,(r\d+)$", a)
+        if (m and nxt == "xor\tr2,r2" and i + 3 < len(z) and re.match(r"div\trr2,#", z[i + 2]) and z[i + 3] == "ex\tr2,r3"):
+            out += ["ld\tr2," + m.group(1), "ld\tr3,r2", nxt, z[i + 2], z[i + 3]]
+            n["R82"] += 1
+            mir = {}
+            i += 4
+            continue
+        # R84
+        m = re.match(r"(add|sub)\tr2,r5$", a)
+        if m and out and (out[-1] == "ld\tr3,r5" or re.match(r"div\trr4,#", out[-1])):
+            out += ([] if out[-1] == "ld\tr3,r5" else ["ld\tr3,r5"]) + ["%s\tr2,r3" % m.group(1)]
+            kill({2, 3})
+            n["R84"] += 1
+            i += 1
+            continue
+        # R85
+        m = re.match(r"jr\t(eq|ne)\tL\d+$", a)
+        if m and len(out) > 2:
+            m1 = re.match(r"ld\t([^r][^,]*),(r\d+)$", out[-1])
+            m2 = re.match(r"ld\t(r\d+),(r\d+)$", out[-2])
+            if m1 and m2 and m2.group(1) == m1.group(2) and re.match(r"and\t%s,#" % m2.group(2), out[-3]):
+                out += ["test\t" + m1.group(2), a]
+                n["R85"] += 1
+                i += 1
+                continue
+        # R86
+        m = re.match(r"cp\t(r\d+),(.+)$", a)
+        if m and m.group(1) != "r0" and _ED_MEM.match(m.group(2)) and mir.get(("W", 0), ("",))[0] == m.group(2):
+            out.append("cp\t%s,r0" % m.group(1))
+            n["R86"] += 1
+            i += 1
+            continue
+        # R81
+        m = re.match(r"cp\t(r\d+),(.+)$", a)
+        if m and copy and copy[1] == m.group(1):
+            out.append("cp\t%s,%s" % (copy[0], m.group(2)))
+            n["R81"] += 1
+            i += 1
+            continue
+        # R88
+        m = re.match(r"ldb\trl2,([^r].*)$", a)
+        if m:
+            k = 2 if nxt == "xorb\trh2,rh2" else 1
+            mv = re.match(r"ld\tr(\d+),r2$", z[i + k] if i + k < len(z) else "")
+            if mv and 8 <= int(mv.group(1)) <= 13:
+                out += ["ldb\trl0," + m.group(1), "xorb\trh0,rh0", "ld\tr%s,r0" % mv.group(1)]
+                kill({0, int(mv.group(1))})
+                n["R88"] += 1
+                i += k + 1
+                continue
+        # R89
+        m = re.match(r"ldb\trl(\d),(.+)$", a)
+        if (m and re.match(r"inc\tr%s,#" % m.group(1), nxt) and i + 2 < len(z)
+                and re.match(r"ldb\t[^,]+,rl%s$" % m.group(1), z[i + 2])):
+            out += [a, "xorb\trh%s,rh%s" % (m.group(1), m.group(1))]
+            kill({int(m.group(1))})
+            n["R89"] += 1
+            i += 1
+            continue
+        # R87
+        m = re.match(r"ld\t(-%[0-9A-F]+\(FP\)),r3$", a)
+        if m and out and (re.match(r"div\trr2,", out[-1]) or out[-1] == "ldl\trr2,rr4"):
+            out += ["ld\tr2,r3", "ld\t%s,r2" % m.group(1)]
+            killmem(m.group(1))
+            kill({2, 3})
+            mir[("W", 2)] = (m.group(1), "store")
+            reload3 = m.group(1)
+            n["R87"] += 1
+            i += 1
+            continue
+        if op in ("ld", "ldl") and len(ops) == 2:
+            dst, src = ops
+            kind = "L" if op == "ldl" else "W"
+            rx = r"rr(\d+)$" if kind == "L" else r"r(\d+)$"
+            sr, dr = re.match(rx, src), re.match(rx, dst)
+            if sr and dr and sr.group(1) != dr.group(1):
+                lastcopy = (dst, src)
+                v = mir.get((kind, int(sr.group(1))))
+                if v and not nxt.startswith("inc\t" + src + ",") and ((v[1] == "load" and (not v[0].startswith("_") or int(dr.group(1)) < 8)) or v[1] == "store"):
+                    a = "%s\t%s,%s" % (op, dst, v[0])
+                    n["R80"] += 1
+                    src, sr = v[0], None
+            if dr:
+                kill(_ed_regs(dst))
+                if _ED_MEM.match(src):
+                    mir[(kind, int(dr.group(1)))] = (src, "load")
+                elif sr and (kind, int(sr.group(1))) in mir:
+                    mir[(kind, int(dr.group(1)))] = mir[(kind, int(sr.group(1)))]
+            elif _ED_MEM.match(dst):
+                killmem(dst)
+                if sr and (kind, int(sr.group(1))) not in mir:
+                    byte = bool(out) and out[-1].startswith("xorb")
+                    mir[(kind, int(sr.group(1)))] = (dst, "byte" if byte else "store")
+            else:
+                mir = {}
+            out.append(a)
+            i += 1
+            continue
+        if op not in _ED_NOWRITE and ops:
+            if _ed_regs(ops[0]):
+                kill(_ed_regs(ops[0]))
+                if op == "ex" and len(ops) == 2:
+                    kill(_ed_regs(ops[1]))
+            elif _ED_MEM.match(ops[0]):
+                killmem(ops[0])
+            elif ops[0].startswith("@") or "(" in ops[0]:
+                mir = {}
+        out.append(a)
+        i += 1
+    return "\n".join(out), n
 
 
 # ---------------------------------------------------------------- comparison
