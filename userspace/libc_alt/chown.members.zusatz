@@ -1,0 +1,10 @@
+# Hand-made corrections for chown.members.  chown uses isdigit(), i.e. the data-only member ctype_ (130 B at 14FE..1580);
+# members_auto adds it only for atof, so every data window behind getpwent was placed too far back.  Measured: "/etc/passwd" at 1154,
+# "null" of doprnt at 11AC, _iob at 11B2, _lastbuf at 1252, perror text at 1254, errlst table 1268..14FE, ctype table 14FE..1580.
+getpwent data=1160:1168 bss=19A8:214
+doprnt data=1168:11B2
+data data=11B2:1254 exp=__iob@11B2,__lastbu@1252
+perror data=1254:1268
+errlst data=1268:14FE exp=_sys_err@1268,_sys_ner@12AE
++ ctype_ 0F48 0F48 data=14FE:1580 exp=__ctype@14FE src=S
+sbrk data=1580:1582

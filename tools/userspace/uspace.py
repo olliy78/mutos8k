@@ -401,7 +401,7 @@ def c2_emu_s(s, aus=(), mkfs=False):
     differences of the own code (doc/userspace/init.md)."""
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
-         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0}
+         "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0}
     i = 0
     stored = {}         # R48: rN -> memory operand it was last stored to (word)
     bytemem = {}        # R12: rlN -> memory operand it was last stored to
@@ -560,6 +560,15 @@ def c2_emu_s(s, aus=(), mkfs=False):
             out += [a, "ld\tr2,r3", "ld\t%s,r2" % d40.group(1)]
             n["R47"] += 1
             i += 2
+            continue
+        # R65  `ld rN,#k ; ldl rr2,X ; xor r0,r0 ; ld r1,rN ; cpl rr2,rr0` (`s = 512; if (size < 512)`, long size): the shipped c2 reuses the register that holds k,
+        #      the original loads the constant again: `... ; ld r1,#k ; cpl rr2,rr0` (strip 1x; MODEL of the old c2, not a run of it)
+        m65 = re.match(r"ld\t(r\d+),#([^,]+)$", a)
+        if (m65 and "R65" not in aus and i + 4 < len(z) and z[i + 1].startswith("ldl\trr2,") and z[i + 2] == "xor\tr0,r0"
+                and z[i + 3] == "ld\tr1," + m65.group(1) and z[i + 4] == "cpl\trr2,rr0"):
+            out += [a, z[i + 1], z[i + 2], "ld\tr1,#" + m65.group(2), z[i + 4]]
+            n["R65"] += 1
+            i += 5
             continue
         # R64  `ldl MEM,rr4 ; testl rr4 ; jr eq L ; ldl rr2,rr4 ; ld r5,X ; xor r4,r4 ; cpl rr2,rr4 ; jr lt L2 ; ldl rr0,MEM ; cpl rr0,M` (`b = a[i]; if (b == 0) ..;
         #      if (b < x || b >= y)`, b a long local): the original works on the memory copy first and then on the loaded pair: `testl MEM ; jr eq L ; ldl rr2,MEM ;
