@@ -1,0 +1,7 @@
+# Hand-made correction for ps.members: 474 B doprnt variant, jump-table entry points 2 bytes later than members_auto assumed (as df, rm)
+doprnt code=0FC2,0FC8,0FDE
+# ps has its own BSS (the static `lasttty` of out2, 2 B at 57FA) between _environ and the libc BSS; members_auto assumes _environ right in front
+# of the libc BSS and put the commons 2 bytes too far back (the code's `ld r2,#%1FE+__sibuf` then gave 55F6 instead of 55F8).  Measured: crt0 `ld %57F8,r7`.
+common __sibuf 53F8 200 data
+common __sobuf 55F8 200 data
+extern _environ 57F8 2

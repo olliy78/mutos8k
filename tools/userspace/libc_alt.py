@@ -705,11 +705,13 @@ def zusatz_anwenden(txt, pfad):
     it is inserted in address order unless a line for MEMBER already exists."""
     if not os.path.isfile(pfad):
         return txt
-    zus, neu_zeilen = {}, []
+    zus, neu_zeilen, ersatz = {}, [], {}
     for z in open(pfad).read().split("\n"):
         if z.strip() and not z.startswith("#"):
             t = z.split()
-            if t[0] == "+":
+            if t[0] in ("common", "extern"):      # whole-line replacement of a generated `common`/`extern` line (same two first words)
+                ersatz[(t[0], t[1])] = z
+            elif t[0] == "+":
                 neu_zeilen.append(t[1:])
             else:
                 zus[t[0]] = dict(x.split("=", 1) for x in t[1:])
@@ -730,6 +732,8 @@ def zusatz_anwenden(txt, pfad):
     out = []
     for z in zeilen:
         t = z.split()
+        if len(t) > 1 and (t[0], t[1]) in ersatz:
+            z = ersatz[(t[0], t[1])]
         if t and t[0] in zus and len(t) > 2 and not t[0] in ("common", "extern"):
             opt = [x.split("=", 1) for x in t[3:]]
             keys = {k for k, _v in opt}
