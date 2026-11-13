@@ -1,0 +1,13 @@
+2BDA TMP
+2BE6 WRITE ERROR
+2C26 ?dr
+2C2A /tmp/eXXXXX
+2C36 Entering encrypting mode!
+2C50 ed.hup
+2C57 MEM?
+2C5C /bin/sh
+2C6C Input not tty
+2C7A Key:
+2C7F /usr/lib/makekey
+2C92 /lib/makekey
+2CA1 crypt: cannot generate key
