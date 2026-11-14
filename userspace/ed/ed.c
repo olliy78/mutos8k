@@ -231,9 +231,11 @@ commands()
 
 
 	case 'j':
-		if (addr2==0) {
-			addr1 = dot;
-			addr2 = dot+1;
+		/* Differs from V7: a single address (addr1==addr2) joins that line with the next one */
+		if (addr2==addr1) {
+			if (addr1==0)
+				addr1 = dot;
+			addr2 = addr1+1;
 		}
 		setdot();
 		newline();
@@ -1197,6 +1199,9 @@ move(cflag)
 		ad1 += delta;
 		adt += delta;
 	} else {
+		/* Differs from V7: moving a block to just before/after itself is a no-op */
+		if (adt==addr1 || adt==addr1-1)
+			return;
 		ad2 = addr2;
 		for (ad1 = addr1; ad1 <= ad2;)
 			*ad1++ &= ~01;
@@ -1729,13 +1734,14 @@ char	*keyp, *permp;
 		seed = 5*seed + buf[i%13];
 		random = seed % 65521;
 		k = 256-1 - i;
-		ic = (random&0377) % (k+1);
+		/* Differs from V7: the (int) casts make the two `%` below signed divisions (EXTS, not XOR) */
+		ic = ((int)random&0377) % (k+1);
 		random >>= 8;
 		temp = t1[k];
 		t1[k] = t1[ic];
 		t1[ic] = temp;
 		if(t3[k]!=0) continue;
-		ic = (random&0377) % k;
+		ic = ((int)random&0377) % k;
 		while(t3[ic]!=0) ic = (ic+1) % k;
 		t3[k] = ic;
 		t3[ic] = k;
