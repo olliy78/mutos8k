@@ -11,17 +11,19 @@ Dieses Projekt sammelt alles, um das System zu verstehen und aus Quellen wieder 
   **MUTOS baut seinen Kernel selbst** (`make`, `cc`, `as`, `ld` im Gast) und bootet ihn.
 * **`mutos_io`** (U880-Seite): rekonstruierte, kommentierte Quelle, die bytegleich zur Originaldatei baut.
 * **Werkzeugkette** (`cc`/`as`/`ld`, a.out- und Archivformat, ein eigenes `make`).
-* **Userspace**: ein minimales System ist komplett aus Quellen baubar -- Kernel, `mutos_io` und **33 Programme der
-  Originaldisketten** (alle 11 der Wurzeldiskette inkl. `init`, `sh`, `login`, `getty`, `mount`; dazu 22 von `cmd`, u. a. `cp`, `rm`, `mv`, `mkfs`,
-  `ncheck`, `icheck`), jeweils **ganzdatei bytegleich** mit dem Original (Stand 2026-11-11).  Zusätzlich 29 Programme **aus V7-Quellen**, die auf den
-  Disketten fehlen (u. a. `grep`, `sort`, `find`, `diff`, `tr`, `yacc`, V7-`make`); dafür gibt es kein Original, Beleg ist Bau + Gasttest.
+* **Userspace**: ein minimales System ist komplett aus Quellen baubar -- Kernel, `mutos_io` und **45 Programme der
+  Originaldisketten**, jeweils **ganzdatei bytegleich** mit dem Original: alle 11 der Wurzeldiskette (`init`, `sh`, `login`, `getty`, `mount` ...) und
+  alle 34 übrigen der `cmd`-Diskette (u. a. `cp`, `rm`, `mv`, `ed`, `ar`, `nm`, `ps`, `dd`, `mkfs`, `icheck`; `hex`, `convert` sind kein V7 und wurden aus dem
+  Binary rekonstruiert).  Gast-Regression aller 45 nach der letzten Zusammenführung: alle gleich (gemessen 2026-11-14).  Zusätzlich 29 Programme **aus V7-Quellen**,
+  die auf den Disketten fehlen (u. a. `grep`, `sort`, `find`, `diff`, `tr`, `yacc`, V7-`make`); dafür gibt es kein Original, Beleg ist Bau + Gasttest.
+  Offen: Toolchain (`cc`, `as`, `ld`, `c0`-`c2`) und `bin`-Diskette (`mt`, `tar`, `adb`).
 * **Disketten**: Originalabzüge und die Werkzeuge, die daraus lauffähige Lade-, Wurzel- und Datendisketten bauen.
 * Vergleich mit den Original-Quellen von UNIX V7 (`original/unix-v7/`): läuft mit; die Userspace-Quellen sind überwiegend V7-Text mit belegten Abweichungen.
 
 **Grenzen der Bytegleichheit** (Details: [`doc/userspace/README.md`](doc/userspace/README.md), Abschnitt „Stand und Aussagekraft"):
 
 * Der ausgelieferte `c2` (Peephole-Optimierer) wird nicht ersetzt, sondern durch Musterregeln **nachgebildet**
-  (Kernel K1-K6, Userspace R1-R64).  Bewiesen ist: C-Quelle + ausgelieferter Compiler + Regeln = Originalbytes; nicht, dass der alte `c2` genau so arbeitete.
+  (Kernel K1-K6, Userspace R1-R91).  Bewiesen ist: C-Quelle + ausgelieferter Compiler + Regeln = Originalbytes; nicht, dass der alte `c2` genau so arbeitete.
   Viele Regeln greifen nur an einer Stelle und sind schwach belegt.
 * Der libc-Teil der Programme stammt überwiegend aus dem Originalabbild (`userspace/libc_alt`); seine Gleichheit sagt nichts über die Herkunft aus.
 * Dass die Abweichungen vom V7-Text die MUTOS-Fassung sind, ist eine Annahme; gemessen ist nur, dass dieser Text die Originalbytes erzeugt.

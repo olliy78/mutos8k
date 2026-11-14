@@ -17,6 +17,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b1.md` | `cmd`-Diskette `/etc`: clri, mknod, dcheck (ganzdatei bytegleich), c2-Regeln R35-R39 |
 | `cmd_b2.md` | `/etc`: ncheck, icheck (ganzdatei bytegleich), c2-Regeln R42-R48 |
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
+| `cmd_s3b1.md` .. `cmd_s3b6.md` | `cmd`-Diskette, Stufe 3b: nm strip chown; dd pr passwd; ar; ps pstat; hex convert (kein V7, Quelle aus dem Binary rekonstruiert); ed (s3b3 Befund, s3b6 bytegleich, c2-Regeln R80-R91 nur fuer ed) |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -139,6 +140,34 @@ Dass die Abweichungen die MUTOS-Fassung sind, ist **Annahme**; gemessen ist nur,
 (`C2_AUS`), ist Annahme.  R60-R64 sind schwach belegt (1 bis 3 Stellen).  Behelfe: `who.members` von Hand (Glied `getgrgid` in `getpwuid` umbenannt, geht bei Neuerzeugung verloren),
 `cmp.members.zusatz`, `df.members.zusatz`, `rm.members.zusatz`.
 Gemessener Stolperstein: ein parallel gestarteter Lauf scheitert gelegentlich beim Emulator-Neubau (`dev.sh build failed`, GoogleTest-Ziele) -- das ist kein Befund zum Programm; Wiederholung einzeln.
+
+## Herkunft der Quellen: Diskette `cmd`, Stufe 3b (gemessen 2026-11-14)
+
+Zwoelf weitere Programme **ganzdatei bytegleich** (`alles NAME --c2emu --libc alt --ist neu_c2_s`).  Aussagekraft wie oben (Punkte 1, 2, 5).
+Damit sind alle 11 Programme der Wurzeldiskette und **alle uebrigen 34 der `cmd`-Diskette** ganzdatei bytegleich: **45 Programme** (`cat`, `ls` liegen auf beiden Disketten, gebaut ist je eine Fassung).
+**Regression nach der Zusammenfuehrung (gemessen 2026-11-14, Gast, sequentiell):** alle 45 Programme plus `sh` (`bau sh --c2emu --variante v7fix`, `cmp`) neu gebaut, **alle gleich**.
+Dabei fiel ein Zusammenfuehrungsfehler auf (R71 ohne `i += 2; continue`, `ar` 2 Differenzbloecke), behoben in `0c62003`, danach `ar` und `ed` erneut gemessen: gleich.
+
+| Programm | Datei (B) | Quelle | Neue c2-Regel | Doku |
+|----------|-----------|--------|---------------|------|
+| nm | 6028 | V7 `nm.c`, `A_MAGIC2` entfaellt, leere Funktion `swapw` (Name Annahme) | -- | `cmd_s3b1.md` |
+| strip | 4030 | V7, `A_MAGIC2` entfaellt | R65 (1 Stelle) | `cmd_s3b1.md` |
+| chown | 5522 | V7 unveraendert | -- | `cmd_s3b1.md` |
+| dd | 7296 | V7 unveraendert | R66, R67 (je 1) | `cmd_s3b2.md` |
+| passwd | 9140 | V7 unveraendert | R68, R69 (je 1) | `cmd_s3b2.md` |
+| pr | 8310 | V7 unveraendert | R70 (1) | `cmd_s3b2.md` |
+| ar | 10050 | V7 unveraendert | R71 (1) | `cmd_s3b3.md` |
+| hex | 4326 | **kein V7**, aus Listing/Zeichenketten rekonstruiert | -- (R2 aus) | `cmd_s3b5.md` |
+| convert | 4602 | **kein V7**, rekonstruiert (Dateisystem-Umsetzer MUTOS <-> PDP-11-Bytefolge; Funktion aus dem Code gelesen, nicht im Gast ausgefuehrt) | R72-R76 (nur bei `_convdir`) | `cmd_s3b5.md` |
+| ps | 7846 | **kein V7-Text**, MUTOS-Rekonstruktion (`mutosk.h` mit Kernel-Layouts) | R77 (1) | `cmd_s3b4.md` |
+| pstat | 6866 | V7-Geruest, sonst MUTOS-Rekonstruktion (enthaelt V7-Fehler `oatoi` `c <= 9`) | -- | `cmd_s3b4.md` |
+| ed | 11472 | V7 mit **3** Abweichungen: `move()` Ausstieg `adt==addr1 \|\| adt==addr1-1`; `j` mit einer Adresse verbindet n und n+1; `(int)random` in `crinit()` (Cast ist Annahme) | R80-R91 (29 Stellen, nur `ed`), R42/R45 aus | `cmd_s3b3.md`, `cmd_s3b6.md` |
+
+**`ed`:** wurde mit einem anderen c2-Stand uebersetzt (wie `sh`): R80 griffe in den anderen Programmen an 33 Stellen, deshalb wirken R80-R91 nur mit `ed=True`.
+Die `main()`-Schleife ist kein Quellunterschied (alle Schleifenformen ergeben dasselbe `.s`), sondern R90; R90/R91 sind beschriebene Einzelstellen.  Neu: Stufenbau in `uspace.py` fuer Quellen ab 20000 B (cpp/c0/c1/c2/as/ld einzeln, wegen `no space on dev 4/0` der `/tmp`-Platte).
+
+**Regelnummern:** Die Agenten vergaben parallel dieselben Nummern; bei der Zusammenfuehrung wurden sie neu vergeben (Zaehler in `uspace.c2_emu_s`, Tests und Dokumente angepasst).  `ps` und `pstat` schalten R1-R76 ab (`C2_AUS`).
+Die Regeln R65-R77 sind je an 1 bis 2 Stellen belegt, also schwach (siehe Punkt 2).  Behelfe von Hand: `ar/k.txt` (Eintrag `code 18F4` streichen), `ed.members` (Glied `fakcu` bei 283C), `*.members.zusatz`.
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
