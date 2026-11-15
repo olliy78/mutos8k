@@ -78,6 +78,16 @@ tests/          pytest; guest tests are marked `gast` and skip (exit 77 / pytest
 * Byte-identical where possible; where the old kernel `c2` cannot be reproduced, "functionally equal" plus a boot +
   work test (`tools/kernel/gesamtbau.py`) is the fallback, and the deviation is listed in `doc/kernel/c_rueckbau.md`.
 
+## Branch `mutos-plus` (this branch)
+
+Goal here is a **working, changeable system**, not byte-identity: the kernel is built entirely in the guest from checked-in sources,
+without host steps and without the c2 model, and must match the original *functionally* (boot, work tests, `ps`/`pstat`/`lp`, fixpoint
+of the self-build).  Plan: `doc/plan/47_mutos_plus.md`.
+* Merge `main` into this branch regularly; never merge this branch into `main`.  Work that concerns the original belongs on `main`.
+* Every deviation from the original is listed in `doc/plus/abweichungen.md`.
+* `kernel/asm/ref/` stays the untouched reference; editable assembler/data sources for the guest build go elsewhere (plan 47 P1).
+* Round-trip guards stay for unchanged parts; for changed parts functional guest tests replace byte-identity (plan 47 §2).
+
 ## Licence
 
 BSD 3-Clause (see LICENSE) for the original work of this project.  MUTOS 8000 is a UNIX V7 derivative; LICENSE lists the third-party sources
