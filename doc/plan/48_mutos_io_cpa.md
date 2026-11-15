@@ -1,6 +1,6 @@
 # Plan 48: `mutos_io` nach CP/A portieren
 
-Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan**; die Detailplanung der AP folgt nach C1.  Hervorgegangen aus Plan 46 (bis `5738a8e` auf `main`).
+Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan**; die Detailplanung der AP folgt nach C1.  Hervorgegangen aus Plan 46 (auf `main` geloescht in `5738a8e`).
 Aussagen sind *gemessen* (mit Fundstelle), *abgeleitet* (aus Quelle gelesen), *Angabe des Projektinhabers* oder *Annahme*.
 
 ## 1. Ziel

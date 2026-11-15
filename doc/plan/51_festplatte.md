@@ -1,6 +1,6 @@
 # Plan 51: Festplatte (GIDE) fuer MUTOS
 
-Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan.**  Hervorgegangen aus Plan 46 Teil B (bis `5738a8e` auf `main`); setzt Plan 48 und Plan 49 voraus.
+Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan.**  Hervorgegangen aus Plan 46 Teil B (auf `main` geloescht in `5738a8e`); setzt Plan 48 und Plan 49 voraus.
 
 ## 1. Ausgangslage
 

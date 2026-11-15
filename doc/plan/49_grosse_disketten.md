@@ -1,6 +1,6 @@
 # Plan 49: Groessere Disketten -- zweiseitig, im neuen `mutos_io` und im Kernel
 
-Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan.**  Hervorgegangen aus Plan 46 Teil A (bis `5738a8e` auf `main`); setzt Plan 48 voraus.
+Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan.**  Hervorgegangen aus Plan 46 Teil A (auf `main` geloescht in `5738a8e`); setzt Plan 48 voraus.
 Der dortige Weg ueber UDOS 5.0 entfaellt: das CP/A-BIOS kann zweiseitige Disketten bereits (*Angabe des Projektinhabers*; `biosdpb.mac` der GIDE-CP/A
 kennt 624- und 780-KB-Formate, abgeleitet).
 
