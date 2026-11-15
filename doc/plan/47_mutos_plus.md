@@ -1,6 +1,6 @@
 # Plan 47: Branch `mutos-plus` -- funktionsfaehiges, aenderbares MUTOS
 
-Stand 2026-11-15.  Gilt nur im Branch `mutos-plus`.  Vorlagen: Plan 41 (K8, K11), Plan 43 §15, Plan 46, `doc/kernel/gesamtbau.md`.
+Stand 2026-11-15.  Gilt nur im Branch `mutos-plus`.  Vorlagen: Plan 41 (K8, K11), Plan 43 §15, `doc/kernel/gesamtbau.md`.  Folgeplaene: 48 (`mutos_io` nach CP/A), 49 (groessere Disketten), 50 (RTC), 51 (Festplatte).
 Aussagen sind *gemessen* (mit Fundstelle), *abgeleitet* (aus Quelle gelesen, nicht im Lauf geprueft) oder *Annahme*.
 
 ## 1. Ziel
@@ -10,7 +10,7 @@ Aussagen sind *gemessen* (mit Fundstelle), *abgeleitet* (aus Quelle gelesen, nic
 1. **vollstaendig im Gast aus eingecheckten Quellen gebaut wird** (`make`, `cc`, `as`, `ld`, `dd` von den MUTOS-Disketten), ohne Host-Schritt
    und ohne das c2-Modell (`tools/kernel/c2_modell.py`, Plan 43 §15);
 2. **funktional dem Original entspricht** (Boot, Arbeitstests, `ps`/`pstat`/`lp`), aber nicht bytegleich sein muss;
-3. **Aenderungen traegt**, die im Original nicht enthalten sind: zuerst die fest eingetragenen Adressen (Abschnitt 4, P2), dann Plan 46
+3. **Aenderungen traegt**, die im Original nicht enthalten sind: zuerst die fest eingetragenen Adressen (Abschnitt 4, P2), dann die Plaene 48-51
    (groessere Datentraeger) und weitere Verbesserungen.
 
 ## 2. Regeln fuer den Branch
@@ -45,7 +45,7 @@ Aussagen sind *gemessen* (mit Fundstelle), *abgeleitet* (aus Quelle gelesen, nic
 | **P1** | **Eingecheckter Quellbaum fuer den Gastbau:** `low.s`, `shim.s`, BSS-Zuteilung und die `NAT_DATEN`-Anfangswerte einmal aus dem natuerlichen Bau uebernehmen und als editierbare Quellen ablegen (Vorschlag `kernel/plus/`: `low.s`, `daten.c` bzw. `.s`, `Makefile`); `abs.o` durch eine Quelle ersetzen (Probe: kann der Gast-`as` absolute globale Symbole? sonst eingechecktes Objekt als Behelf, vermerkt); Kopf mit `dd` im Gast abschneiden (cmd-Diskette einlegen).  Ein Hostskript bereitet nur noch die Datentraeger vor und startet den Gast. | Gastbau ohne Host-Schritt zwischen Quelle und Kernel; Boot bis `#`, Arbeitstests |
 | **P2** | **Fest eingetragene Adressen entfernen:** `low.s` `WV %888A` -> `WV _cf_x88a`; `cf_proctop` aus `proc[]`/`NPROC` statt 0x8A8C; weitere feste Zahlen in `low.s`/`conf.c`/`NAT_DATEN` suchen (Liste in `abweichungen.md`).  Das feste Auffuellfeld `pad` entfaellt; die BSS darf schwimmen, muss aber unter D256 enden (Pruefung bleibt). | `ps`, `pstat` liefern im Gast die richtige Tabelle (scheduler, init, sh, ps); Arbeitstests |
 | **P3** | **Funktionsnachweis und Fixpunkt:** Arbeitstests wie Stufe 2 (11, mit `ps`, `lp`); der selbstgebaute Kernel baut den Kernel erneut, `cmp` beider Kernel im Gast == gleich; Waechter als pytest (Marke `gast`, Exit/Skip 77 ohne Emulator) | `tests/test_plus_selbstbau.py` gruen |
-| **P4** | Plan 46 Teil A (zweiseitige Disketten, UDOS 5.0), danach Teil B (Festplatte GIDE); Detailplanung dort | je AP nach Plan 46 |
+| **P4** | Folgeplaene: 48 `mutos_io` nach CP/A, dann 49 groessere Disketten und 50 RTC (unabhaengig voneinander), zuletzt 51 Festplatte; Detailplanung dort | je AP nach dem jeweiligen Plan |
 | **P5** | Weitere Verbesserungen nach Bedarf (Kandidaten, *nicht entschieden*): `NBUF`, EM1024 (1 MB), `/etc/rc` mit Einhaengen, `/etc/mtab` | je Aenderung ein Funktionstest |
 
 Reihenfolge: P0 -> P1 -> P2 -> P3; P4 erst, wenn der Gastbau ohne Host-Schritt steht (jede spaetere Kernelaenderung soll diesen Weg nehmen).
@@ -54,4 +54,4 @@ Reihenfolge: P0 -> P1 -> P2 -> P3; P4 erst, wenn der Gastbau ohne Host-Schritt s
 
 1. Ort der editierbaren Kernelquellen fuer `low`/Daten (`kernel/plus/` vorgeschlagen) -- oder `kernel/c` direkt im Branch aendern?  Vorschlag: C-Quellen
    in `kernel/c` direkt (Merges von `main` bleiben so moeglich, Konflikte nur an geaenderten Stellen), Assembler und Daten neu unter `kernel/plus/`.
-2. Soll `mutos_io` (Plan 46 A2) seine bisherigen Varianten (`K8X512`) behalten, oder darf der Branch sie vereinfachen?
+2. ~~Varianten von `mutos_io` (`K8X512`) vereinfachen?~~  Erledigt durch Plan 48 §3.5: die UDOS-Fassung bleibt unveraendert, die CP/A-Fassung ist eine eigene Quelle.
