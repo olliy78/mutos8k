@@ -82,7 +82,7 @@ bis dahin als Übergang.  Der Rundlauf aus M2 (`build.py --check`) bleibt der Ma
 
 ## Nächster Schritt
 
-*(Stand 2026-10-27, durch den Nachtrag oben erledigt.  Weiterarbeit an `mutos_io`: Plan 46 Teil A2/B.)*
+*(Stand 2026-10-27, durch den Nachtrag oben erledigt.  Weiterarbeit an `mutos_io` mit Abweichungen vom Original: Branch `mutos-plus`, Plaene 48-51.)*
 
 M1 + M2 (rohe Quelle, bytegleicher Round-Trip) — erst danach lohnt das Kommentieren.  Danach M3 als
 Gegenprobe, dass der ganze Weg bis zur booteten Diskette trägt.
