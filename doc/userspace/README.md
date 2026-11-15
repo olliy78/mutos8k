@@ -178,7 +178,7 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | Gruppe | Programme (Ergebnis B) | Abweichungen vom V7-Text | Doku |
 |--------|------------------------|--------------------------|------|
 | E0 | basename, tee | keine (tee braucht `errno.h` aus V7) | `erg_e0.md` |
-| E1a | sleep, touch, yes, tty, sum, rev (`mesg`: **X**, baut, nicht getestet) | keine | `erg_e1a.md` |
+| E1a | sleep, touch, yes, tty, mesg, sum, rev (`mesg` Test nachgetragen 2026-11-15, stderr auf `/dev/console`) | keine | `erg_e1a.md` |
 | E1b | uniq, comm, split, tail, cal, look, nice, time, test | `time.c`: `<times.h>` statt `<sys/times.h>` | `erg_e1b.md` |
 | E2a | grep, fgrep, tr, join, du, file | grep, du, file: `<param.h>`/`<dir.h>` statt `<sys/..>` | `erg_e2a.md` |
 | E2b | sort, find, diff, diffh | find: `<dir.h>` statt `<sys/dir.h>` | `erg_e2b.md` |

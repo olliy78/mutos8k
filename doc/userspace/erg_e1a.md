@@ -10,17 +10,21 @@ Quelle: `original/unix-v7/usr/src/cmd/NAME.c`, **unveraendert** nach `userspace/
 | touch | B | 4652 B | Anlegen, `-c`, Inhalt bleibt, Meldung fuer fehlende Datei, `ls -t`-Reihenfolge vor/nach `touch` (Gastuhr laeuft) |
 | yes | B | 4188 B | erste Zeile mit `read` gelesen (y, no, "a b"); Referenz GNU yes 9.7 |
 | tty | B | 4714 B | nur Fall "kein Terminal" (`</dev/null`): "not a tty", Exit 1, `-s` still |
-| mesg | **X** (Bau gemessen: baut, 4894 B) | 4894 B | siehe unten |
+| mesg | **B** (nachgetragen 2026-11-15) | 4894 B | siehe unten |
 | sum | B | 5268 B | Pruefsumme gleich GNU `sum -r` 9.7; Blockzahl nach V7-Formel (BUFSIZ 512, durch den Test bestaetigt); Name bei mehreren Dateien; Stdin; Fehlerfall Exit 10 |
 | rev | B | 5152 B | Referenz util-linux rev 2.41.5 auf Dateien und Stdin; Fehlerfall Exit 1 |
 
 Erwartung und Herkunft je Programm: `userspace/ergaenzung/NAME/test/herkunft.txt`.  Alle sechs Tests liefen im Gast gleich (`erg.py alles`, 2026-11-10).
 
-## mesg: X (bewusst nicht getestet)
+## mesg: nachgetragen 2026-11-15 (zuerst X, nicht getestet)
 
 `mesg` ruft `ttyname(2)` auf (Standardfehlerausgabe).  Der Rahmen leitet stderr des Testskripts in eine Datei (`/tmp/aus.err`), also gibt es dort kein Terminal;
-`ttyname` liefert 0 und `stat(0, ...)` ist undefiniert.  Ein Test ueber das Konsolengeraet braucht Wissen ueber `/dev` des Gastes (nicht gemessen) und eine Aenderung des Rahmens.
-Gebaut ist `mesg` (Bau ohne Meldung), gelaufen ist es nicht.  Beim Test waere zu beachten: Handbuch (Exit 2 bei Fehler) und Quelltext (`exit(-1)` = 255) widersprechen sich.
+`ttyname` liefert 0 und `stat(0, ...)` ist undefiniert.  Deshalb blieb `mesg` zunaechst ungetestet (ohne `test/`, was `test_ergaenzung_ordner_vollstaendig` rot machte).
+
+Nachtrag: `/dev` des Gastes gemessen (`ls -l /dev` als Testskript, 2026-11-15): `console` (0,0) und `tty1` (0,1) mit `crw--w--w-`, dazu `tty` (1,0).
+Der Test lenkt bei jedem Aufruf stderr auf `/dev/console` um und vergleicht nur den Exit-Code (0 = y, 1 = n, 255 bei falschem Argument), die Meldung geht auf die Konsole.
+Folge abfrage/n/abfrage/y/abfrage/falsch: gleich der Erwartung (`erg.py alles mesg`, gemessen 2026-11-15).
+Handbuch (Exit 2 bei Fehler) und Quelltext (`exit(-1)` = 255) widersprechen sich; gemessen ist 255.
 
 ## Befunde und Grenzen
 

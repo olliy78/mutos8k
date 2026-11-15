@@ -1,0 +1,5 @@
+Erwartung aus dem V7-Quelltext mesg.c: ohne Argument Exit 0 bei Schreibrecht fuer andere (Modus & 02, "is y"), sonst 1 ("is n");
+"n" setzt 0600 und endet mit 1, "y" setzt 0622 und endet mit 0; falsches Argument exit(-1) = 255 (Handbuch sagt 2, Quelltext gilt).
+mesg sucht sein Terminal ueber ttyname(2); der Rahmen leitet stderr in eine Datei, daher lenkt jeder Aufruf stderr auf /dev/console um.
+Geprueft wird nur der Exit-Code (Meldungen gehen auf die Konsole). Ausgangszustand /dev/console crw--w--w- im Gast gemessen 2026-11-15 (ls -l /dev).
+Im Gast gemessen 2026-11-15: Ausgabe gleich der Erwartung (erg.py alles mesg).

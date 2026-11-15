@@ -1,0 +1,6 @@
+abfrage r=0
+n r=1
+abfrage r=1
+y r=0
+abfrage r=0
+falsch r=255
