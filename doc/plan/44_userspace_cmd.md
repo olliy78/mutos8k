@@ -1,6 +1,6 @@
 # Plan 44: Userspace der Disketten `cmd`, `bin`, `usr` (Fortsetzung H7)
 
-Stand 2026-11-10.  Vorlage: Plan 42 H7, Plan 43; Methode und Stolpersteine: `doc/userspace/README.md`, `doc/userspace/pipeline.md`.
+Stand 2026-11-10 (Plan).  *Nachtrag 2026-11-15:* Stufen 1-3 erledigt -- alle 34 Programme der `cmd`-Diskette (ohne `cat`, `ls`, die schon von der Wurzel kamen) **ganzdatei bytegleich (G)**, zusammen mit der Wurzeldiskette 45 Programme; Regression nach der Zusammenfuehrung alle gleich (`doc/userspace/README.md`, Abschnitte Stufe 1 bis 3b).  Offen: Stufen 4 und 5.  Vorlage: Plan 42 H7, Plan 43; Methode und Stolpersteine: `doc/userspace/README.md`, `doc/userspace/pipeline.md`.
 Ziel: jedes Programm der Disketten so zurueckbauen, dass der MUTOS-`cc -O -s` im Emulator-Gast aus `userspace/NAME/NAME.c` das
 Original erzeugt (V7-Text, wo er genuegt), mit demselben Beweisstandard wie bei den elf Programmen der Wurzeldiskette.
 Dieses Dokument ist als Arbeitsauftrag fuer Agenten geschrieben (Modell Sonnet): jeder Auftrag ist in sich abgeschlossen.
@@ -23,12 +23,12 @@ Behelfe (`libc_alt`, c2-Regeln mit einer Stelle) braucht die Ganzdatei-Bytegleic
 
 | Stufe | Inhalt | Stand |
 |-------|--------|-------|
-| 0 | Triage: je Programm der `cmd`-Diskette `holen`, `karte`, libc-Glieder (`NAME.namen`) | Agentenauftrag A0, Host, Sekunden |
-| 1 | Kleine Befehle: echo, pwd, rmdir, mkdir, chmod, kill, cp, ln, wc, size | Auftraege A1-A3 |
-| 2 | Dateisystemwerkzeuge `/etc`: clri, mknod, dcheck, ncheck, icheck, mkfs | spaeter; V7-Header `filsys.h`, `ino.h` lokal beilegen |
-| 3 | Mittlere/grosse Befehle: df, rm, mv, od, who, nm, strip, cmp, chown, dd, ps, pstat, pr, passwd, ar, ed, hex, convert | spaeter |
-| 4 | Toolchain `as`, `ld`, `cc`, `cpp`, `c0`, `c1`, `c2` (Ziel: Selbsthosting, Regeln des alten c2 klaeren) | spaeter, eigener Plan |
-| 5 | `bin`-Diskette: mt, tar, adb | zuletzt, niedrige Prioritaet |
+| 0 | Triage: je Programm der `cmd`-Diskette `holen`, `karte`, libc-Glieder (`NAME.namen`) | erledigt je Programm in den Auftraegen (Karten neben den Quellen); die Sammeltabelle `cmd_triage.md` wurde nicht angelegt |
+| 1 | Kleine Befehle: echo, pwd, rmdir, mkdir, chmod, kill, cp, ln, wc, size | **erledigt** 2026-11-10, alle G (`cmd_a1.md`-`cmd_a3.md`) |
+| 2 | Dateisystemwerkzeuge `/etc`: clri, mknod, dcheck, ncheck, icheck, mkfs | **erledigt** 2026-11-10, alle G (`cmd_b1.md`-`cmd_b3.md`; mkfs mit eigenen c2-Regeln R49-R59) |
+| 3 | Mittlere/grosse Befehle: df, rm, mv, od, who, nm, strip, cmp, chown, dd, ps, pstat, pr, passwd, ar, ed, hex, convert | **erledigt** 2026-11-14, alle G (`cmd_s3a.md`, `cmd_s3b1.md`-`cmd_s3b6.md`); `hex`, `convert`, `ps` sind kein V7 und aus Listing rekonstruiert; `ed` mit eigenem c2-Stand (R80-R91) |
+| 4 | Toolchain `as`, `ld`, `cc`, `cpp`, `c0`, `c1`, `c2` (Ziel: Selbsthosting, Regeln des alten c2 klaeren) | offen, eigener Plan |
+| 5 | `bin`-Diskette: mt, tar, adb | offen, niedrige Prioritaet |
 
 Anmerkung zu Stufe 4 (*gemessen* an `original/unix-v7/usr/src/cmd`): In V7 haben Einzeldatei-Befehle (`echo.c`, `cp.c` ...) kein eigenes `makefile`;
 das Skript `makeall` ruft je `*.c`/`*.s`/`*.y` `cmake` auf.  Mehrdatei-Programme (`sh`, `make`, `as`, `c`, `cpp`, `adb`, `awk`, `lex`, `yacc`, `sed` ...) sind
@@ -65,6 +65,8 @@ Unterverzeichnisse mit eigenem `makefile` und `*.h`.  Fuer die Toolchain (Selbst
 * Berichtsformat jedes Agenten (knapp): je Programm Aussage G/E/A/F, Bytezahlen, Quellherkunft (V7 unveraendert / Abweichungen), neue Regeln mit Stellenzahl, Branch, Commit-IDs.
 
 ## 6. Zusammenfuehrung (ich)
+
+*Nachtrag 2026-11-15:* fuer Stufen 1-3 durchgefuehrt (Merges `us-cmd-*`, Regelnummern bei der Zusammenfuehrung neu vergeben, Regression 45 Programme + `sh` gleich, Herkunftstabellen in `doc/userspace/README.md`).  `doc/herkunft/README.md` verweist seither auf den Userspace-Stand.
 
 1. Branches nacheinander nach `main` mergen; `PROGRAMME`-Konflikte von Hand loesen.
 2. Regressionslauf Bytegleichheit: alle elf Wurzelprogramme + alle neuen Programme mit den in der Dokumentation genannten Befehlen, `pytest tests/test_userspace_pipeline.py`.

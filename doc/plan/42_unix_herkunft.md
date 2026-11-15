@@ -1,6 +1,6 @@
 # Entwurf 42: Herkunft des MUTOS-Codes -- Vergleich mit UNIX V7 und UNIX System III
 
-Stand 2026-11-03.  Status: **Kernel-Herkunftsanalyse abgeschlossen (H0-H6, H8); Userspace (H7) offen.**  Ergebnis: `doc/herkunft/README.md`; Statustabelle in Abschnitt 4a.
+Stand 2026-11-03.  Status: **Kernel-Herkunftsanalyse abgeschlossen (H0-H6, H8).**  *Nachtrag 2026-11-15:* Userspace (H7) fuer die Disketten `root` und `cmd` erledigt (Plan 44), Rest offen.  Ergebnis: `doc/herkunft/README.md`; Statustabelle in Abschnitt 4a.
 (Ursprungsstand 2026-10-30: Plan, nur Quellen beschafft; der Text der Abschnitte 1-7 ist der Plan und wurde nicht umgeschrieben.)
 
 ## 1. Ziel
@@ -98,13 +98,13 @@ H1 und H2 zuerst; H3 beginnt mit den Modulen, die durch `kernel_namen.md` bereit
 | H6 | erledigt | Fremdherkunft: Hippe-Sammlung als naechster bekannter Verwandter, `fremd.md`; `tty2.c` geklaert |
 | H6b | erledigt (zusaetzlich) | Gegenprobe Abstammung (direkte Ableitung wahrscheinlich, gemeinsame Vorlage vermutet), `fremd.md` Abschnitt 8; Robotron-Umfeld/MUTOS1600 als Hypothese (Abschnitt 9) |
 | H6c, H6d | erledigt (zusaetzlich) | `tty2.c` und weitere Kernelquellen im Text der Hippe-Sammlung (`tty2.md`, Abschnitte "Nachzug H6d") |
-| H7 | **offen** | Userspace (`userspace/`, Best-of-Disketten: `cmd`, `libc`) gegen V7/Hippe/WEGA |
+| H7 | **teilweise erledigt** (Nachtrag 2026-11-15) | weitergefuehrt als Plan 44: alle 11 Programme der Wurzeldiskette und alle 34 uebrigen der `cmd`-Diskette ganzdatei bytegleich aus C, Herkunft je Programm (V7 unveraendert / mit Abweichungen / kein V7: `hex`, `convert`, `ps`, teils `pstat`, `stty`) in `doc/userspace/README.md`; `libc`: nur die in diese Programme gebundenen Glieder (`libc_alt`, `doc/userspace/libc_alt.md`).  **Offen:** Toolchain der `usr`-Diskette, `bin`-Diskette (`mt tar adb`), `libc.a` als Ganzes, WEGA-Vergleich |
 | H7-Speicher | erledigt (zusaetzlich) | Speicherverwaltung ohne MMU: `speicher.md` |
 | H8 | erledigt | Herkunftsvermerke in den Dateikoepfen (27 Module, 25 Header/Konfiguration), Gesamtbericht `doc/herkunft/README.md`, `CLAUDE.md`/README/LICENSE nachgezogen |
 | H8a | erledigt (zusaetzlich) | Z8001-Prozessorkontext, WEGA-`libc`-ABI: `z8001_kontext.md` |
 | H8b | erledigt (zusaetzlich) | Mailbox-Treiber, U880-Seite, `fd*` als umgebauter Bandtreiber: `mailbox_treiber.md` |
 
-Stand der Quellen: 218 von 230 Kernelfunktionen bytegleich aus C, Gesamtbau BYTEGLEICH 36 352 Byte (`doc/herkunft/README.md` Abschnitt 5).
+Stand der Quellen: 218 von 230 Kernelfunktionen bytegleich aus C, Gesamtbau BYTEGLEICH 36 352 Byte (`doc/herkunft/README.md` Abschnitt 5); mit dem c2-Modell 230 von 230 (Plan 43 §15, Nachtrag 2026-11-15).
 
 ## 4b. Beschluesse des Projektinhabers (Festhaltung)
 

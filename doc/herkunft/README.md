@@ -123,11 +123,11 @@ Die Funktionen, deren Abweichung sich als Quellform erwies, sind bytegleich; die
 ## 6. Offene Punkte
 
 * **Abstammung** direkt oder ueber gemeinsame Vorlage (4.2): weitere Staende der Linie (Vrije/Calgary, Hippe vor 1986), Kerneldatum von MUTOS, Hinweise der Beteiligten.
-* **Userspace (H7)**: `cmd`, `libc` und die Disketten sind noch nicht gegen V7/Hippe verglichen; die WEGA-`libc`-Uebereinstimmung ist bisher nur fuer die Systemaufruf-Huellen gemessen.
+* **Userspace (H7)** *(Nachtrag 2026-11-15)*: Wurzel- und `cmd`-Diskette erledigt -- 45 Programme ganzdatei bytegleich aus C, Herkunft je Programm in `doc/userspace/README.md` (Plan 44).  Offen: Toolchain (`usr`), `bin`-Diskette (`mt tar adb`), `libc.a` als Ganzes (bisher nur die gebundenen Glieder, `doc/userspace/libc_alt.md`); die WEGA-`libc`-Uebereinstimmung ist nur fuer die Systemaufruf-Huellen gemessen.
 * **Schutz Prozess gegen Kernel**, Stapelueberlauf und das Verhalten nichtsegmentierter Zugriffe im Gast: nicht gemessen (`speicher.md` Abschnitt 10).
 * **Mailbox**: Wiederholungs-/Fehlerpfade, Vektorzuordnung und die Floppy-Kette (`fd*`, nie ausgefuehrt) ungemessen; Z8001-Einzelschritt (NVI) und Paritaetsbits offen (`z8001_kontext.md`).
   *Stand AP H9 (`gastversuche.md`):* Vektorzuordnung, `rk`-Fehlerpfad (Status C2/C5, 3 Wiederholungen) und Floppy-Kette (F7, kein Haenger) gemessen; Einzelschritt: Mechanismus gemessen, aber ohne Befehlsfortschritt im Emulator (Verdacht Abtastzeitpunkt NVI nach `IRET`).  Weiter offen: Status `0xC8`, `lp`-/`fd`-Wiederholungen, Paritaetsbits, Speicherschutz/privilegierte Befehle/Stapelueberlauf (V1-V3, Abschnitt dort).
-* **Nahe Funktionen** (25, Abschnitt 5): Quellformen fuer `ssig`, `bmap`, `readi`, `malloc`/`mfree`, `ialloc` u. a. nicht gefunden; ob der Unterschied am Kernel-`c2` oder an der Quellform liegt, ist je Funktion offen.
+* **Nahe Funktionen** *(Nachtrag 2026-11-15: ueberholt)*: von 25 auf 12 gesunken, alle 12 mit gemessener `c2`-Ursache und mit dem c2-Modell bytegleich (Abschnitt 5, Plan 43 §14/§15).  Offen nur die Gegenprobe "Regeln K1-K6 ungebunden auf alle Module" (Plan 43 §15.1).
 * **Echtheit des System-III-Spiegels** gegen ein TUHS-Original; V7-Patches/Addenda sind nicht in `original/` (nur im Scratchpad geladen).
 * **MUTOS1600**-Quellen und Zilog-ZEUS: nicht gefunden.
 

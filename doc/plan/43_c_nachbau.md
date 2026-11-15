@@ -1,6 +1,6 @@
 # Entwurf 43: Die letzten 36 Kernelfunktionen bytegleich aus C
 
-Stand 2026-11-04.  Status: **geplant**, Bearbeitung in einer eigenen Sitzung.  Vorgänger: `41_kernel.md` (K7/K8), `42_unix_herkunft.md` (H3–H8).
+Stand 2026-11-04 (Plan), fortgeschrieben bis 2026-11-09.  Status (Nachtrag 2026-11-15): **abgeschlossen** -- 218 von 230 Funktionen bytegleich aus C (§14), mit dem c2-Modell 230 von 230 (§15); Entscheidung aus §5 als Mischung aus (a) und (c) gefallen (§15).  Offen bleibt nur die Gegenprobe am Ende von §15.1.  Vorgänger: `41_kernel.md` (K7/K8), `42_unix_herkunft.md` (H3–H8).
 
 ## 1. Ausgangslage (gemessen)
 

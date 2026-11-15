@@ -1,6 +1,11 @@
 # 41 — MUTOS-Kernel `mutos_1216`: Rückwärts durch die Werkzeugkette (Konzept)
 
-Stand 2026-10-27, Zweig `MUTOS8000`.  **Nur Konzept** — nichts umgesetzt, Entscheidungen des Anwenders stehen in §9 aus.
+Stand 2026-10-27, Zweig `MUTOS8000`.  Ursprünglich als Konzept geschrieben.
+
+**Nachtrag 2026-11-15: K0–K8 umgesetzt, K11 (Selbstbau) bis auf den Fixpunkt-Test; K9 nicht begonnen.**  Stand je AP in §6a (dort Nachtrag am Ende).  Kurz: der Kernel
+`mutos_1216` wird aus 29 Modulen im Gast bytegleich gebunden (K5); aus C sind **218 von 230** Funktionen bytegleich, mit dem Modell des älteren
+Kernel-`c2` (Regeln K1–K6) **alle 230** (Plan 43 §15); der Kernel entsteht im Gast mit `make`/`cc`/`as`/`ld` und bootet (`doc/kernel/gesamtbau.md`).
+Die Fortsetzung von K7 steht in Plan 43, die Herkunft (V7) in Plan 42.
 Bezug: Entwurf 39 (MUTOS auf dem A5120.16), Entwurf 40 (`mutos_io`, gleiche Methode für die U880-Seite).
 
 ## 0. Primärziel: MUTOS baut sich selbst (Anwender, 2026-10-27)
@@ -185,6 +190,18 @@ Linkkarte und Entscheidungen bei uns; Bau-Kollisionen beachten (Worktrees).
 | K8 | fertig (Mischbau + make-Bau im Gast bootet) | | **Gesamtbau aus C:** Stufe 1 (177 bytegleiche Funktionen aus C, Rest Assembler) **36 352 von 36 352 Byte bytegleich** und bootet; Stufe 2 **alle 227 Funktionen aus C** (nur `low`/mch.s Assembler), 34 376 B Text, **bootet bis `#`**, ls/cat/Pipes/`cc`/`a.out` laufen; BSS und Postfach an Originaladressen (Auffuellung); `gesamtbau.py`, `adressen.txt`, Waechter `py_mutos_gesamtbau` | | `gesamtbau.md` |
 | K6a | fertig | 10ea95b7 | Code 28 % -> 85 %, 235 Funktionen (207 mit `call csv`), `bdevsw`/`cdevsw`/`sysent`/Konfigworte belegt, Modulreihenfolge = WEGA-Linkreihenfolge (Hypothese); `kernel_struktur.md`, `cover` fuer U8001 im Debugger |
 
+**Nachtrag 2026-11-15 (Stand nach Plan 43, gemessen dort):**
+
+| AP | Stand | Nachweis |
+|----|-------|----------|
+| K7a–K7e | **abgeschlossen**: 218 von 230 Funktionen bytegleich aus C (`gesamtbau.py --uebersetzen --stufe 1 --boot`, BYTEGLEICH 36 352 B, 11 Arbeitstests); die 12 übrigen mit gemessener `c2`-Ursache, mit `--c2modell` (Regeln K1–K6) **230 von 230** | Plan 43 §14, §15; `doc/herkunft/README.md` §5; `tests/test_kernel_c2_modell.py` |
+| K8 | fertig, Stufe 2 nachgemessen 2026-11-04 (Sprungtabelle `ttyoutput`, Arbeitstests `ps`/`lp`) | `doc/kernel/gesamtbau.md`; `tests/test_mutos_gesamtbau.py` (statt `cli_mutos_kernel_bau`) |
+| K6 | fertig im Umfang von K6a/K6b; Namen und Kommentare der C-Quellen kommen seither aus V7/Hippe-Vorlagen (Plan 42 H3–H8), nicht aus der Karte | `kernel_namen.md`, Herkunftsköpfe in `kernel/c` |
+| K11 | **Selbstbau belegt** (2026-10-28): `make` im Gast übersetzt alle 31 C-Dateien, bindet, Kernel bootet bis `#`, neun Arbeitstests.  **Offen:** Fixpunkt-Test (§0), Wächter `cli_mutos_selbstbau`, Abschneiden des 16-B-Kopfes im Gast (`dd` von der cmd-Diskette statt Host) | `doc/kernel/gesamtbau.md` (Boot-Nachweis) |
+| K9 | nicht begonnen (optional) | -- |
+| K10 | fertig: `doc/kernel/kernel_struktur.md`, `CLAUDE.md`, `README.md` | |
+
+
 ## 7. Risiken
 
 * **Compiler/Kernel passen nicht zusammen:** der MUTOS-`cc` (Disketten, 1986/87) kann eine andere Version sein als die, die den Kernel erzeugt hat (bei WEGA vermutet).  Dann ist Stufe C nur „funktional gleich", nicht bytegleich — Stufe A bleibt gültig.  Früh messen (K1).
@@ -203,6 +220,8 @@ Linkkarte und Entscheidungen bei uns; Bau-Kollisionen beachten (Worktrees).
 * **Noch nicht eingesehen** (K0): Sourcetexte des WEGA-`uts` im Detail, `adb`-Handbuch, Z8000-Assembler-Syntax des MUTOS-`as`, MUTOS-Handbuch-Teile zu `cc`/`ld`.  Alles in diesem Entwurf, was darüber hinausgeht, ist Annahme und im Text als „vermutlich" gekennzeichnet.
 
 ## 9. Zu klären (Anwender)
+
+*Nachtrag 2026-11-15:* Frage 1 ist durch die Arbeit entschieden (bytegleich, für C mit `c2`-Modell als drittem, dokumentiertem Bauweg; Plan 43 §15).  Frage 7: parallel per Agenten (Projektregel, Plan 42 §4b/Plan 44 §3).  Die übrigen Fragen sind hier nicht als beantwortet festgehalten.
 
 1. **Maßstab:** bytegleich (Beweis) oder „funktional gleich" genügt? Empfehlung: bytegleich für A, Match-Quote für C.
 2. **Umfang des Abbilds:** nur `mutos_1216` (dieser Stand 1986) oder auch die andere Fassung (Foto `MUTOS8000_4_k.jpg`, ältere `mutos_io`-Fassung)? Sind weitere Kernelabzüge vorhanden?
