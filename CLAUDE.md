@@ -13,6 +13,8 @@ A5120.16 (A5120 with the EM064/EM256 extension board carrying a U8001 = Z8001). 
    into working binaries -- **self-hosting**: MUTOS builds its own kernel.  Byte-identity with the originals is the
    standard of proof wherever it is reachable.
 3. **Adapt** where useful (e.g. more buffers, the EM1024 1-MB board), always as a documented, tested variant.
+   Changes that give up byte-identity (fixed addresses, larger media, plan 46) live on the branch **`mutos-plus`**,
+   not on `main`; `main` stays the byte-identical reconstruction and is merged into `mutos-plus`, never the other way.
 4. **Compare with UNIX V7** (`original/unix-v7/`, to be loaded later) and, where possible, move the decompiled code
    back towards the original V7 source text.
 

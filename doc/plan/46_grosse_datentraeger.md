@@ -1,6 +1,6 @@
 # Plan 46: Groessere Datentraeger -- zweiseitige Disketten (Teil A) und Festplatte (Teil B)
 
-Stand 2026-11-10.  **Grobplan.**  Die detaillierte Ausplanung der Arbeitspakete (AP) folgt in einer eigenen Sitzung; die Ausplanung von Teil B erst nach Abschluss von Teil A.
+Stand 2026-11-10.  **Grobplan.**  *Nachtrag 2026-11-15:* wird nicht auf `main`, sondern im Branch `mutos-plus` umgesetzt (Plan 47 dort: funktionsfaehiges, aenderbares System statt Bytegleichheit).  Die detaillierte Ausplanung der Arbeitspakete (AP) folgt in einer eigenen Sitzung; die Ausplanung von Teil B erst nach Abschluss von Teil A.
 Beides sind **Varianten** im Sinn von CLAUDE.md Ziel 3 (dokumentiert, getestet), kein Rueckbau: die betroffenen Kernel-Funktionen sind danach nicht mehr bytegleich zum Original,
 das Original bleibt als Referenz erhalten (Ort der Varianten: `kernel/c/varianten`, Vorgehen in der Detailplanung festzulegen).  Aussagen sind *gemessen*, *Angabe des Projektinhabers* oder *Annahme*.
 
