@@ -1,0 +1,39 @@
+# part 1: objects of the first half of the C files (plan 47 P1.1)
+SRC = /mnt
+CFLAGS = -O -I$(SRC)
+
+objs1: alloc.o bio.o clock.o dev0.o fio.o iget.o lp.o machdep.o main.o malloc.o nami.o pipe.o prf.o rdwri.o rk.o sig.o
+	cat /dev/null
+
+alloc.o: $(SRC)/alloc.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/alloc.c
+bio.o: $(SRC)/bio.c $(SRC)/param.h
+	cc -O -Dusrseg=usegm -I$(SRC) -c $(SRC)/bio.c
+clock.o: $(SRC)/clock.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/clock.c
+dev0.o: $(SRC)/dev0.c $(SRC)/param.h
+	cc -I$(SRC) -c $(SRC)/dev0.c
+fio.o: $(SRC)/fio.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/fio.c
+iget.o: $(SRC)/iget.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/iget.c
+lp.o: $(SRC)/lp.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/lp.c
+machdep.o: $(SRC)/machdep.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/machdep.c
+main.o: $(SRC)/main.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/main.c
+malloc.o: $(SRC)/malloc.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/malloc.c
+nami.o: $(SRC)/nami.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/nami.c
+pipe.o: $(SRC)/pipe.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/pipe.c
+prf.o: $(SRC)/prf.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/prf.c
+rdwri.o: $(SRC)/rdwri.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/rdwri.c
+rk.o: $(SRC)/rk.c $(SRC)/param.h
+	cc -O -Dusrseg=usegm -I$(SRC) -c $(SRC)/rk.c
+sig.o: $(SRC)/sig.c $(SRC)/param.h
+	cc -O -I$(SRC) -c $(SRC)/sig.c

@@ -61,3 +61,12 @@ Aufruf: `python3 -I tools/plus/basis.py --boot` (Objekte aus `/tmp/mplus/p1_1/ob
    der letzte Block von `cfree` liegt auch im Original jenseits D256.  Massgeblich: Ende von `cfree` (Anfang + 800) <= D266.
 4. Mit 1.-2. liegt `cfree` 4 B zu hoch und ueberschriebe `cfreelist`.  Im Original ist zwischen BSS und D266 kein Byte frei.
 Folge fuer P1: die extrahierten Quellen brauchen 4 B Platz in der BSS.  Weg: Plan 47 §7 P1.3 (Nachtrag 2026-11-16).
+
+## 1.2 Bau aus `kernel/plus/` (P1.3, Vorgriff auf P1.5; gemessen 2026-11-16)
+
+Aufruf: `python3 -I tools/plus/basis.py --plus --arbeit /tmp/mplus/p1_3` (Quellen aus `kernel/plus`, `kernel/c`, `kernel/conf`, `kernel/h`; `NCLIST` 49, `_nested` benannt,
+`/bss.o` auf der Wurzel; Log `/tmp/mplus/p1_3/lauf.log`, 897 s Wanduhr, zwei Quelldisketten mit 184 852 B und 197 161 B).
+* `make1.log`/`make2.log` ohne Fehler, `lk` entsteht.  `lk`: text 34 652, data 19 198, **bss 0**; sha256 `9e0681c3b0d18b39938bb4166361cd60132ef3ec53346b4ee893b4beaff0486e`.
+* Text+Daten des Kernels = 34 652 + 19 198 - 17 560 (BSS-Nullen, Summe der Groessen in `bss.s` = 0x4498) = **8DC2** (36 290 B; Original 36 288 = 8DC0, +2 durch `ttyinput`).
+* BSS 8DC2..D25A, `_cfree` endet bei **D258** (Grenze D266, 14 B Reserve; `basis.grenze_pruefen`), danach `_nested` D258..D25A.  Kein Boot (P1.5).
+* `basis.py` brach nach dem Lauf in der Auswertung ab (bytes/str-Fehler in `bss_groessen`, danach behoben); die Zahlen oben sind aus dem gesicherten `lk` nachgerechnet.

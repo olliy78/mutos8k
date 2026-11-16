@@ -23,6 +23,7 @@ import gastlauf  # noqa: E402
 import rundlauf_gast  # noqa: E402
 
 KAPAZITAET = 239 * 1024     # free bytes of an empty 26x128 MFM disk (measured, doc/plus/gastbau.md)
+BSS_GRENZE = 0xD266         # `cfreelist` (first absolute symbol of abs.o) follows cfree directly in the original (gastbau.md 1.1)
 ASM = ["low.s", "bss.s", "shim.s", "abs.o"] + ["dn%d.s" % i for i in range(len(G.NAT_DATEN))]
 
 
@@ -86,6 +87,61 @@ def aufteilen(q):
     return disk1, disk2, d1c, d2c
 
 
+def bss_groessen(bss_s):
+    """bss.s text -> [(name, size)] in file order (G _name A[%SIZE B] lines)."""
+    if isinstance(bss_s, bytes):
+        bss_s = bss_s.decode("ascii")
+    return [(m.group(1), int(m.group(2), 16)) for m in re.finditer(r"^G\t(\w+)\tA\[%([0-9A-Fa-f]+) B\]", bss_s, re.M)]
+
+
+def anpassen(q):
+    """Plan 47 P1.3 changes of the natural-build sources (in place): `nested` gets a name in bss.s (it was an unnamed
+    common that ld put behind the BSS), the German Makefile comment is translated.  _cfree keeps %310 = 49 blocks (NCLIST 49)."""
+    b = q["bss.s"]
+    assert "_nested" not in b and re.search(r"^G\t_cfree\tA\[%310 B\]$", b, re.M)
+    b = b.replace("end bss", "! trap.c: int nested (was an unnamed common behind the BSS) !\nG\t_nested\tA[%2 B]\nend bss")
+    q["bss.s"] = b
+    mf = q["Makefile"]
+    mf = re.sub(r"^# Makefile fuer .*\n# Quellen und Header .*\n",
+                "# Makefile of the MUTOS kernel (plan 47).  Call in the guest:  cd /tmp; /mnt/make -f /mnt/Makefile\n"
+                "# Sources and headers are on /mnt (drive D), objects and result on /tmp (drive A), bss.o on the root.\n", mf, count=1, flags=re.M)
+    q["Makefile"] = mf
+    return q
+
+
+def grenze_pruefen(bss_s, ende):
+    """ende = start of the BSS (end of text+data).  The end of _cfree must not pass BSS_GRENZE.  -> (cfree_end, bss_end, ok)"""
+    pos = ende
+    cf = None
+    for n, g in bss_groessen(bss_s):
+        pos += g
+        if n == "_cfree":
+            cf = pos
+    return cf, pos, cf is not None and cf <= BSS_GRENZE
+
+
+def disketten_aus_plus(plus):
+    """Rebuild the two source disks from the checked-in sources: kernel/plus (assembler, abs.o, mk1, Makefile),
+    kernel/c, kernel/conf, kernel/h and userspace/make.  -> (disk1, disk2, d1c, d2c)"""
+    def lies(pfad, binaer=True):
+        return open(pfad, "rb" if binaer else "r").read()
+    mk = os.path.join(G.WURZEL, "userspace", "make")
+    base = {"make": lies(os.path.join(mk, "make.bin")), "make.fileinfo": lies(os.path.join(mk, "make.bin.fileinfo"), False)}
+    for h in sorted(os.listdir(G.HQUELLEN)):
+        if h.endswith(".h"):
+            base[h] = lies(os.path.join(G.HQUELLEN, h))
+    mk1 = lies(os.path.join(plus, "mk1"), False)
+    d1c = re.search(r"^objs1: (.*)$", mk1, re.M).group(1).replace(".o", "").split()
+    disk1, disk2 = dict(base), dict(base)
+    disk1["mk1"] = mk1
+    disk2["Makefile"] = lies(os.path.join(plus, "Makefile"), False)
+    for c in G.NAT_CDATEIEN:
+        (disk1 if c in d1c else disk2)[c + ".c"] = lies(G.cpfad(c))
+    for n in ASM:
+        disk2[n] = lies(os.path.join(plus, n))
+    return disk1, disk2, d1c, [c for c in G.NAT_CDATEIEN if c not in d1c]
+
+
 def laenge(d):
     return sum(len(v if isinstance(v, bytes) else v.encode("latin-1")) for v in d.values())
 
@@ -95,6 +151,7 @@ def main(argv=None):
     ap.add_argument("--arbeit", default="/tmp/mplus/p1_1")
     ap.add_argument("--nur-plan", action="store_true")
     ap.add_argument("--boot", action="store_true")
+    ap.add_argument("--plus", action="store_true", help="build from the checked-in kernel/plus sources (P1.3) instead of nat_quellen")
     ap.add_argument("--frist", type=int, default=6_000_000_000)
     a = ap.parse_args(argv)
     try:
@@ -102,9 +159,12 @@ def main(argv=None):
     except gast_as.Fehlt as e:
         print("skip: missing", e)
         return 77
-    welt = G.Welt(rundlauf_gast.kernel_holen(), os.path.join(a.arbeit, "obj"))
-    q, absnamen = G.nat_quellen(welt, a.arbeit)
-    d1, d2, c1, c2 = aufteilen(q)
+    if a.plus:
+        d1, d2, c1, c2 = disketten_aus_plus(os.path.join(G.WURZEL, "kernel", "plus"))
+    else:
+        welt = G.Welt(rundlauf_gast.kernel_holen(), os.path.join(a.arbeit, "obj"))
+        q, absnamen = G.nat_quellen(welt, a.arbeit)
+        d1, d2, c1, c2 = aufteilen(q)
     for i, (d, c) in enumerate(((d1, c1), (d2, c2)), 1):
         print("disk %d: %d files, %d bytes (limit %d), C: %s" % (i, len(d), laenge(d), KAPAZITAET, " ".join(c)))
         if laenge(d) + 1024 * len(d) // 2 > KAPAZITAET:      # rough block rounding
@@ -117,7 +177,7 @@ def main(argv=None):
     befehle = ["(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1", ("wechsel", 1),
                "(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make2.log 2>&1", "ls -l /tmp >/tmp/ls.log 2>&1", "df >/tmp/df.log 2>&1"]
     aus = {}
-    erg = gastlauf.lauf(os.path.join(a.arbeit, "gast_nat2"), [d1, d2], befehle, ["make1.log", "make2.log", "ls.log", "df.log", "lk"],
+    erg = gastlauf.lauf(os.path.join(a.arbeit, "gast_plus" if a.plus else "gast_nat2"), [d1, d2], befehle, ["make1.log", "make2.log", "ls.log", "df.log", "lk"],
                         ausfuehrbar=["make"], frist=a.frist, ausgabe=aus)
     print("guest run time (wall clock): %.0f s, log %s" % (aus["dauer"], aus["log"]))
     for n in ("make1.log", "make2.log", "ls.log", "df.log"):
@@ -131,12 +191,13 @@ def main(argv=None):
     magic, text, data, bss = struct.unpack(">4H", b[:8])
     print("lk: text %d data %d bss %d  sha256 %s" % (text, data, bss, hashlib.sha256(b).hexdigest()))
     voll = b[16:16 + text + data]
-    bsslen = G.BSS_BIS - G.BSS_VON
+    bsslen = sum(g for _, g in bss_groessen(d2["bss.s"]))     # the BSS is the tail of the data section (zeros)
     ist = voll[:len(voll) - bsslen]
     ende = len(ist)
-    print("kernel: text+data %d bytes (original %d); BSS from %04X to %04X (limit %04X)" % (ende, G.BSS_VON, ende, ende + bsslen, G.BSS_BIS))
-    if ende + bsslen > G.BSS_BIS:
-        print("ERROR: BSS reaches over the mailbox")
+    cf, bende, ok = grenze_pruefen(d2["bss.s"], ende)
+    print("kernel: text+data %d bytes (original %d); BSS from %04X to %04X, cfree ends at %04X (limit %04X)" % (ende, G.BSS_VON, ende, bende, cf or 0, BSS_GRENZE))
+    if not ok:
+        print("ERROR: cfree reaches over cfreelist (D266)")
         return 1
     ist = ist.ljust((ende + 511) // 512 * 512, b"\0")
     open(os.path.join(a.arbeit, "mutos_1216.nat"), "wb").write(ist)

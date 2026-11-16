@@ -9,17 +9,17 @@
  *           MUTOS constants); sureg 100% and estabur 55% are noise (empty / tiny function matched against any other); file similarity 34%
  *           (V7 prim.c), 8% (System III ureg.c).
  * Roundtrip: cc -O in the guest, per function against mutos_1216; see doc/herkunft/ureg.md.
- * Deviations: MUTOS cblock is 16 bytes (c_info[14], V7 8 bytes with c_info[6]) and NCLIST is 50 (V7 100): CROUND is 017.
+ * Deviations: MUTOS cblock is 16 bytes (c_info[14], V7 8 bytes with c_info[6]) and NCLIST is 49 (V7 100; plan 47 P1.3, room for ttyinput +2 and nested +2 below D266): CROUND is 017.
  *           sureg and estabur: see above.
  *
- * Data: cfree = CF46 (50 blocks of 16 bytes, BSS), cfreelist = D266, nchrdev = 8DD2, cdevsw = 8796. */
+ * Data: cfree = CF46 in the original (50 blocks of 16 bytes, BSS), cfreelist = D266, nchrdev = 8DD2, cdevsw = 8796. */
 #include "param.h"
 #include "systm.h"
 #include "dir.h"
 #include "user.h"
 #include "conf.h"
 
-#define NCLIST	50		/* MUTOS: V7 param.h has 100 */
+#define NCLIST	49		/* MUTOS original: 50, V7 param.h: 100 (plan 47 P1.3) */
 #define CBSIZE	14		/* MUTOS: V7 has 6 (8-byte cblock) */
 #define CROUND	017		/* MUTOS: V7 has 07 */
 struct cblock {
