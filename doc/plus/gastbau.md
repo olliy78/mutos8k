@@ -2,6 +2,18 @@
 
 Plan: `doc/plan/47_mutos_plus.md` §7.  Arbeitsordner der Messungen: `/tmp/mplus/<schritt>/`.
 
+## 0. Gastlauf mit Diskettenwechsel (`tools/plus/gastlauf.py`, P1.0)
+
+`lauf(arbeit, disketten, befehle, rueck, boot_hfe=None, ausfuehrbar=(), frist=...)`: `disketten` = Liste von `{name: bytes}` (je Eintrag eine
+26x128-MFM-Quelldiskette, Disk 0 wird als D/`/mnt` eingelegt); `befehle` = Shellbefehle oder `("wechsel", i)`.  Der Wechsel macht im Gast
+`cd /; /etc/umount /dev/rk3`, im Debugger `eject D` + `mount D d<i>.hfe`, im Gast `/etc/mount /dev/rk3 /mnt; cd /mnt`.  Jeder Schritt endet mit einer
+Marke (`cat fertigN`); die Marken des Umhaengens liegen auf A (`/tmp`), alle anderen auf jeder Quelldiskette.  Dateien bekommen mtime 1987.
+Ohne Emulator: `Fehlt` bzw. Exit 77 (`python3 -I tools/plus/gastlauf.py [arbeit]` fuehrt die Probe aus).
+
+Probe (gemessen 2026-11-16, Arbeitsordner `/tmp/mplus/p1_0/`, 26 s Wanduhr): Disk 1 `a.txt`, Disk 2 `b.txt`; `cat a.txt >/tmp/a`, Wechsel,
+`cat b.txt >/tmp/b`, `ls /mnt >/tmp/l` -> `/tmp/a` = `AAA`, `/tmp/b` = `BBB`, `/tmp/l` = `b.txt fertig1..fertig5` (ohne `a.txt`).  **Abnahme erreicht.**
+Das Umhaengen im laufenden Gast (Debugger `eject`/`mount` nach `umount`) funktioniert ohne Zusatzmassnahmen.
+
 ## 1. Ausgangsmessung des natuerlichen Baus
 
 **Stand 2026-11-16: BLOCKIERT (P1.1 nicht abgenommen).**  Das Uebersetzen im Gast gelingt, der natuerliche Bau scheitert aber vor dem

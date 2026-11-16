@@ -277,7 +277,7 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 
 | Schritt | Schreibt | Gastlauf | Stand | Datum | Commit |
 |---------|----------|----------|-------|-------|--------|
-| P1.0 | `tools/plus/gastlauf.py`, `doc/plus/gastbau.md` §0 | ~10 Min. | offen | | |
+| P1.0 | `tools/plus/gastlauf.py`, `doc/plus/gastbau.md` §0 | ~10 Min. | erledigt | 2026-11-16 | (Commit) |
 | P1.1 | `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 | ~25 Min. | blockiert (Quelldiskette D zu klein: 292 KB Quellen > 239 KB, siehe gastbau.md §1) | 2026-11-16 | |
 | P1.2 | `versuche/plus_sonden/`, `doc/plus/werkzeug_sonden.md` | ~10-20 Min. | offen | | |
 | P1.3 | `tools/plus/extrahieren.py`, `kernel/plus/*` | -- | offen | | |
