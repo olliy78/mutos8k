@@ -1,0 +1,11 @@
+--- lex t1.l
+rc=0
+--- cc lex.yy.c with libl
+rc=0
+--- scan < in.txt
+F(foo)W(bar) N(12)O(+)N(34) AW(abc)
+PP
+R(3.14) N(7) T(<tag>)?; ?<W(b)?> 
+ W(x)O(-)N(7)O(*)W(y)
+?@ W(end)
+rc=0

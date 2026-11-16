@@ -1,0 +1,6 @@
+foobar 12+34 abc
+#define X
+3.14 7 <tag>; <b> 
+/* comment
+spanning */ x-7*y
+@ end

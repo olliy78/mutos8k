@@ -1,0 +1,5 @@
+{
+ "header": [],
+ "flags": "-O -s",
+ "quelle": "original/unix-v7/usr/src/cmd/sed/ (sed0.c sed1.c sed.h)"
+}

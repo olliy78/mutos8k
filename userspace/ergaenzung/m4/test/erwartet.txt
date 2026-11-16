@@ -1,0 +1,81 @@
+--- m1: define, args, quoting, comment
+Hello, World! Hello, a, b!
+<x|y|> <x||> <p |q |r >
+abababab
+[]
+greet(World) greet
+appp
+# a comment with define(x,y) stays
+(unbalanced
+(nested (parens)) end
+--- m2: ifdef ifelse incr len index substr translit changequote
+defined undefined 
+eq ne 
+2 3 
+   3
+11 0
+2 3 -1
+ell llo h 
+hippo heo ABC
+42 0 100
+quoted `text' here y
+
+back
+--- m3: eval
+7 9 3 -3 1 1024 8
+1 0 1 0 1 0 1 0
+0 1 0 1 2 3 2000000000
+2 1
+120 5040
+5 4 3 2 1 
+--- m4: divert undivert divnum
+zero 0
+two
+
+one
+
+after
+
+0
+gone
+
+end
+--- m5: include sinclude
+before
+included text: z
+
+after  ZED
+
+included text: ZED
+last
+--- m6: nesting, rescan, 9 args, names
+A A A A
+123456789
+[] [] [  x  ]
+done
+x1 x_y a1b2
+Text with 'apostrophes' and "double quotes" and (parens), commas.
+--- stdin
+Hello, World! Hello, a, b!
+<x|y|> <x||> <p |q |r >
+abababab
+[]
+greet(World) greet
+appp
+# a comment with define(x,y) stays
+(unbalanced
+(nested (parens)) end
+--- two files, definitions persist
+first
+second first
+--- file then stdin (-)
+first
+second first
+--- unix predefined
+yes
+--- no newline at EOF (name at EOF)
+1|rc=0
+--- EOF in string
+abc|rc=1
+--- missing file
+|rc=1
