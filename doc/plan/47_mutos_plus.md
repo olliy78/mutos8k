@@ -102,19 +102,39 @@ Gemeinsame Fakten (gemessen bzw. abgeleitet, Stand 2026-11-15):
   (A `/tmp`, B `/usr`, C Wurzel, D `/mnt`); die cmd-Diskette selbst einzulegen ist nicht vorgesehen.
 * Zeitbedarf (gemessen, `doc/kernel/gesamtbau.md`): `--uebersetzen` ~4 Min., `make` im Gast 736 s, Boot + Arbeitstests einige Minuten.
 
+### P1.0 Gastlauf mit Diskettenwechsel (eingefuegt 2026-11-16)
+*Anlass (gemessen, `doc/plus/gastbau.md` §1):* die Quellen (C 228 KB + Header 49 KB + `make` 20 KB + Assembler) passen nicht mehr auf eine
+26x128-MFM-Diskette (239 KB frei); `/usr` (4 KB frei) und die Wurzel (40 KB frei) helfen nicht.  **Entscheidung:** keine Umformung der Quellen auf dem Host
+(Kommentare entfernen waere ein Host-Schritt zwischen Quelle und Kernel), sondern **zwei Quelldisketten, im Gastlauf gewechselt** -- wie an der echten Maschine.
+Die Objekte bleiben auf A (`/tmp`): rechnerisch Objekte 114 KB + `lk` ~55 KB + Kernel ~36-53 KB < 239 KB (abgeleitet aus P1.1-Objekten; messen).
+*Haengt ab von:* nichts.  *Gastlauf:* ja (Probe ~10 Min.).
+*Lesen:* `tools/kernel/gast_as.py` (`dbg_skript`, `gast_befehle`: Muster, nicht aendern), Abschnitt "Working in the guest" in `CLAUDE.md`.
+*Tun:* `tools/plus/gastlauf.py` (Englisch, Exit 77 ohne Emulator) mit `lauf(arbeit, disketten, befehle, rueck, boot_hfe=None, ausfuehrbar=(), frist=...)`:
+* `disketten` = Liste von {name: bytes} (eine Quelldiskette je Eintrag); jede wird als eigenes `.hfe` angelegt (Inodes reichlich, Dateien mtime 1987 setzen).
+* `befehle` = Liste von Schritten; ein Schritt ist entweder ein Shellbefehl (wie in `gast_befehle`, mit `cat fertigN`-Marke; die Marken-Dateien liegen
+  auf **jeder** Quelldiskette) oder `("wechsel", i)`: im Gast `cd /; /etc/umount /dev/rk3` (Prompt abwarten), im Debugger `eject D` + `mount D <diskette i>`,
+  im Gast `/etc/mount /dev/rk3 /mnt; cd /mnt`.
+* Boot, Einhaengen, PATH, `sync` am Ende und Rueckholen aus `tmp.hfe` wie `gast_as` (eigener Skriptgenerator, `gast_as.disk`/`disktool`/`pruefe_hilfsmittel` importieren).
+*Abnahme:* Probelauf: Diskette 1 mit `a.txt`, Diskette 2 mit `b.txt`; Befehle `cat a.txt >/tmp/a`, Wechsel, `cat b.txt >/tmp/b`, `ls /mnt >/tmp/l` -> `/tmp/a`, `/tmp/b`
+richtig, `/tmp/l` ohne `a.txt`.  Befund in `doc/plus/gastbau.md` §0.
+
 ### P1.1 Ausgangsmessung des natuerlichen Baus
-*Haengt ab von:* nichts.  *Gastlauf:* ja, ~25 Min.
-*Lesen:* `doc/kernel/gesamtbau.md` (Abschnitt "Natuerlicher Bau"), `tools/kernel/gesamtbau.py` (`natuerlich`, `nat_quellen`, `boot_pruefen`, `main`).
+*Haengt ab von:* P1.0.  *Gastlauf:* ja, ~25 Min.  (Erster Versuch 2026-11-16 mit `gesamtbau.py --natuerlich` blockiert: Platz, siehe P1.0.)
+*Lesen:* `doc/kernel/gesamtbau.md` (Abschnitt "Natuerlicher Bau"), `tools/kernel/gesamtbau.py` (`natuerlich`, `nat_quellen`, `boot_pruefen`, `main`), `doc/plus/gastbau.md` §0/§1.
 *Tun:*
-1. Im Hintergrund: `python3 tools/kernel/gesamtbau.py --arbeit /tmp/mplus/p1_1 --uebersetzen --natuerlich --boot >/tmp/mplus/p1_1.log 2>&1`.
-2. Aus dem Log und dem Arbeitsordner festhalten: Text/Daten aus dem `lk`-Kopf, Text+Daten des Kernels, BSS-Bereich, Ergebnis jedes Arbeitstests b1..b11
-   (b10 `ps` liefert erwartungsgemaess Unsinn), `sha256sum` von `lk` und `mutos_1216.nat`.
-*Schreibt:* `doc/plus/gastbau.md` (neu; Abschnitt "1. Ausgangsmessung").  Arbeitsordner `/tmp/mplus/p1_1/` **bleibt stehen** (P1.3 und P1.5 brauchen `obj/`, `lk`, `mutos_1216.nat`).
-*Abnahme:* Boot bis `#`, b1..b9 und b11 wie in `doc/kernel/gesamtbau.md` beschrieben; Messwerte mit Datum in `doc/plus/gastbau.md`.
-Weicht die Groesse von der Messung 2026-10-28 ab (C-Quellen haben sich seitdem geaendert): Wert notieren, kein Fehler, solange die BSS unter D256 endet.
+1. `tools/plus/basis.py`: `Welt(rundlauf_gast.kernel_holen(), "/tmp/mplus/p1_1/obj")` (Objekte von 2026-11-16 liegen dort), `nat_quellen` aufrufen, den Inhalt auf
+   zwei Disketten verteilen: Diskette 1 = Header + `make` + etwa die Haelfte der C-Dateien + `mk1` (Makefile, das nur deren Objekte baut);
+   Diskette 2 = Header + `make` + uebrige C-Dateien + `low.s`, `bss.s`, `dn*.s`, `shim.s`, `abs.o` + `Makefile` (baut den Rest und bindet `lk`; die Objekte
+   von Diskette 1 stehen darin ohne Regel, sie liegen schon in `/tmp`).  Regeln und `-D`-Abgleiche genau aus dem `nat_quellen`-Makefile uebernehmen.
+   Befehle: `(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1`, Wechsel, `(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make2.log 2>&1`, `ls -l /tmp >/tmp/ls.log 2>&1`.
+2. Host: aus `lk` wie `gesamtbau.natuerlich` den Kernel schneiden (`mutos_1216.nat`, nur hier in P1.1 als Bezug) und mit `gesamtbau.boot_pruefen` booten.
+3. Festhalten: Text/Daten aus dem `lk`-Kopf, Text+Daten des Kernels, BSS-Bereich, freier Platz auf A nach dem Bau (`ls.log`/`df` falls vorhanden), Ergebnis
+   b1..b11 (b10 `ps` erwartungsgemaess Unsinn), `sha256sum` von `lk` und `mutos_1216.nat`.
+*Schreibt:* `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 (Befund des ersten Versuchs bleibt stehen, Messung darunter).  `/tmp/mplus/p1_1/` **bleibt stehen**.
+*Abnahme:* Boot bis `#`, b1..b9 und b11 wie in `doc/kernel/gesamtbau.md`; Messwerte mit Datum.
 
 ### P1.2 Sonden der Werkzeugkette
-*Haengt ab von:* nichts (parallel zu P1.1).  *Gastlauf:* ja, ein bis zwei Laeufe zu ~10 Min.
+*Haengt ab von:* nichts (parallel zu P1.0/P1.1).  *Gastlauf:* ja, ein bis zwei Laeufe zu ~10 Min.
 *Lesen:* `doc/werkzeugkette/as_dialekt.md`, `doc/werkzeugkette/objformat.md`, `tools/kernel/gast_as.py` (`gast_assemblieren`, `gast_befehle`),
 `tools/kernel/objformat.py`, `userspace/dd/dd.c`, `userspace/cmp/cmp.c`.
 *Fragen (jede mit gemessenem Ergebnis beantworten):*
@@ -139,7 +159,7 @@ Weicht die Groesse von der Messung 2026-10-28 ab (C-Quellen haben sich seitdem g
 *Tun:*
 1. `tools/plus/extrahieren.py` (Englisch kommentiert): baut `Welt(rundlauf_gast.kernel_holen(), "/tmp/mplus/p1_1/obj")`, ruft `nat_quellen` in einem
    Arbeitsordner und schreibt nur die **nicht** aus `kernel/c`, `kernel/conf`, `kernel/h` stammenden Teile nach `kernel/plus/`:
-   `low.s`, `bss.s`, `dn0.s`..`dn3.s`, `shim.s`, `abs.o`, `Makefile`.  Ohne `--force` keine vorhandene Datei ueberschreiben (nach P1.3 sind die
+   `low.s`, `bss.s`, `dn0.s`..`dn3.s`, `shim.s`, `abs.o`, `mk1` und `Makefile` (Aufteilung auf zwei Quelldisketten wie in P1.1, `tools/plus/basis.py` wiederverwenden).  Ohne `--force` keine vorhandene Datei ueberschreiben (nach P1.3 sind die
    Dateien in `kernel/plus/` die Quelle und werden von Hand gepflegt; das Skript bleibt nur als Herkunftsbeleg).
 2. `kernel/plus/README.md` (Deutsch): Herkunft jeder Datei (erzeugt am Datum X aus Original-Abbild + Objekten von P1.1 durch `extrahieren.py`), ab jetzt
    von Hand gepflegt; Liste der `-D`-Namensabgleiche aus dem Makefile mit Grund (zwei C-Namen fuer eine Variable).
@@ -160,10 +180,10 @@ alle Dateien ASCII; `make -n` ist im Gast nicht noetig -- der Inhalt ist gleich 
 3. **Kernel-Datei im Gast:** Makefile-Ziel `mutos_1216: lk` mit zwei `dd`-Aufrufen nach P1.2 Frage 4 (Kopf 16 B weg, auf 512 B auffuellen).
    Standardziel des Makefiles wird `mutos_1216`.
 4. **`tools/plus/gastbau.py`** (Englisch, Exit 77 ohne Emulator):
-   * `quellen()`: Dateien fuer `/mnt` = `kernel/c/*.c` (ohne `varianten/`), `kernel/conf/*.c`, `kernel/h/*.h`, `kernel/plus/*` (ohne `README.md`),
-     `make` (+`make.fileinfo`) wie in `gesamtbau.natuerlich`, `dd` und `cmp` von der cmd-Diskette.  Pruefen, dass jede C-Datei des Makefiles dabei ist.
-   * `bauen(arbeit, boot_hfe=None, extra=None)`: `gast_as.gast_befehle` mit `(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make.log 2>&1` und
-     `ls -l /tmp >/tmp/ls.log 2>&1`, holt `make.log`, `ls.log`, `lk`, `mutos_1216`.  Der Host **prueft** nur (Kopf von `lk`: Ende der BSS < D256, `mutos_1216`
+   * `quellen()`: zwei Quelldisketten nach `kernel/plus/mk1` und `kernel/plus/Makefile` (welche C-Datei wohin, liest das Werkzeug aus den beiden Makefiles):
+     Header, `make` (+`make.fileinfo`) auf beide, `kernel/plus/*` (ohne `README.md`) und `dd`, `cmp` von der cmd-Diskette auf Diskette 2.  Pruefen, dass jede C-Datei aus `kernel/c`/`kernel/conf` genau einmal dabei ist.
+   * `bauen(arbeit, boot_hfe=None, extra=None)`: `tools/plus/gastlauf.lauf` mit `make -f /mnt/mk1`, Wechsel, `make -f /mnt/Makefile` (Logs `make1.log`, `make2.log`) und
+     `ls -l /tmp >/tmp/ls.log 2>&1`, holt Logs, `lk`, `mutos_1216`.  Der Host **prueft** nur (Kopf von `lk`: Ende der BSS < D256, `mutos_1216`
      vorhanden und Vielfaches von 512) und **veraendert keine Bytes**.
    * `boot(arbeit, kernel_bytes)`: ruft `gesamtbau.boot_pruefen` (Arbeitstests b1..b11).
    * Kommandozeile: `gastbau.py bauen --arbeit DIR`, `gastbau.py boot --arbeit DIR --kernel DATEI`, `gastbau.py alles --arbeit DIR` (bauen, dann booten).
@@ -233,7 +253,7 @@ welche Bereiche sich verschoben haben (Vergleich der `lk`-Koepfe und der Datenab
 *Haengt ab von:* P3.1.  *Gastlauf:* ja, zwei Laeufe, zusammen ~50 Min.
 *Tun:* in `tools/plus/gastbau.py` Befehl `fixpunkt --arbeit DIR`:
 1. Lauf 1: `bauen` mit dem Original-Kernel -> K1.
-2. Lauf 2: Ladediskette mit K1 (`gesamtbau.ladediskette`), Quellen wie in `bauen` plus K1 als `/mnt/k1`; Befehle: Bau (wie `bauen`), dann
+2. Lauf 2: Ladediskette mit K1 (`gesamtbau.ladediskette`), Quellen wie in `bauen` plus K1 als `/mnt/k1` auf Diskette 2 (Platz pruefen; sonst K1 auf Diskette 1 und vor dem Wechsel nach `/tmp/k1` kopieren); Befehle: Bau (wie `bauen`), dann
    `cmp /tmp/mutos_1216 /mnt/k1 >/tmp/cmp.log 2>&1 && ls -l /tmp/mutos_1216 >/tmp/gleich 2>&1`, danach die Arbeitstests aus P3.1 im selben Lauf.
 3. Host holt K2, `cmp.log`, `gleich` und vergleicht K1/K2 zusaetzlich selbst.
 *Abnahme:* `cmp.log` leer, `gleich` vorhanden, K1 == K2 auf dem Host, `bewerten` ohne Fehlschlag.  Erwartung (abgeleitet): `cc`/`as`/`ld` sind Nutzerprogramme,
@@ -253,11 +273,12 @@ Dazu: `doc/plus/gastbau.md` Schluss (Aufrufe, Laufzeiten), §8 dieses Plans, `do
 
 ## 8. Ablauf und Stand
 
-Wellen (innerhalb einer Welle parallel): **1:** P1.1, P1.2 -- **2:** P1.3 -- **3:** P1.4, P2.1 -- **4:** P1.5 -- **5:** P2.2 -- **6:** P2.3 -- **7:** P3.1 -- **8:** P3.2 -- **9:** P3.3.
+Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **2:** P1.3 -- **3:** P1.4, P2.1 -- **4:** P1.5 -- **5:** P2.2 -- **6:** P2.3 -- **7:** P3.1 -- **8:** P3.2 -- **9:** P3.3.
 
 | Schritt | Schreibt | Gastlauf | Stand | Datum | Commit |
 |---------|----------|----------|-------|-------|--------|
-| P1.1 | `doc/plus/gastbau.md` §1 | ~25 Min. | blockiert (Quelldiskette D zu klein: 292 KB Quellen > 239 KB, siehe gastbau.md §1) | 2026-11-16 | |
+| P1.0 | `tools/plus/gastlauf.py`, `doc/plus/gastbau.md` §0 | ~10 Min. | offen | | |
+| P1.1 | `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 | ~25 Min. | blockiert (Quelldiskette D zu klein: 292 KB Quellen > 239 KB, siehe gastbau.md §1) | 2026-11-16 | |
 | P1.2 | `versuche/plus_sonden/`, `doc/plus/werkzeug_sonden.md` | ~10-20 Min. | offen | | |
 | P1.3 | `tools/plus/extrahieren.py`, `kernel/plus/*` | -- | offen | | |
 | P1.4 | `tools/plus/gastbau.py`, `kernel/plus/*` | (Fehlersuche) | offen | | |
