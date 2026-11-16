@@ -49,6 +49,7 @@ Es gibt **kein Original**, gegen das man vergleichen koennte.  Die Beweisstandar
 | E3 | Entwicklungswerkzeuge: `yacc` (zuerst), dann `make` (V7, `gram.y`), `egrep`, `bc`, `dc`, `lex`, `m4`, `sed`, `ranlib`, `tsort` | `make` = Selbsthosting; `yacc` schaltet `.y` frei; *Stand: `yacc` B (Groessenklasse `SMALL`, `erg_e3a.md`), V7-`make` als `vmake` B (`erg_e3b.md`); tsort ranlib dc expr egrep bc B (`erg_e3c.md`), sed m4 lex B (`erg_e3d.md`), 2026-11-16; E3 damit vollstaendig* |
 | E4 | Systemverwaltung: `su newgrp chgrp mail write wall update cron at ac restor dump quot` | haengt von Kernel und Konfiguration ab (utmp, acct), je Programm klaeren; *Stand: offen* |
 | E5 | Rest nach Bedarf: `awk`, `ratfor`, `units`, `ptx`, `crypt`, ... | gross oder Gleitkomma; *Stand: offen* |
+| E6 | **Disketten `v7erg1`/`v7erg2`** (eingeplant 2026-11-16, nach Plan 52 W0) | siehe Abschnitt 8 |
 
 `make`: V7-`make` (Verzeichnis `make/`, 8 `.c` + `gram.y`, Mehrdatei) neben unserem `userspace/make`; Vergleich beider ist ein eigener Auftrag.  *Nachtrag 2026-11-15:* gebaut als `userspace/ergaenzung/vmake`, `gram.c` im Gast mit dem MUTOS-`yacc` erzeugt; Unterschiede zu `userspace/make` in `erg_e3b.md`.
 
@@ -82,3 +83,25 @@ bereiten Quelle und Test vor und benutzen sie, sobald der Branch `us-erg-e0` den
   * `python3 -I tools/userspace/erg.py alles NAME...` -- bau + test fuer mehrere Programme, Ergebniszeile je Programm (B/T/N, siehe Abschnitt 5).
 * **Gast:** wie Plan 44 (Laufwerk A leeres `/tmp`, `usr` fuer `cc`, Quelle auf `/mnt`); Platten nur als Kopien; Gast-Zeit 1987.
 * **Pytest:** `tests/test_erg.py` sammelt alle `userspace/ergaenzung/*/test` (Marke `gast`, Skip ohne Emulator); jeder Programmagent traegt nichts in diese Datei ein, sie findet die Ordner selbst.
+
+## 8. E6: Ergaenzungsdisketten (Auftrag des Projektinhabers 2026-11-16)
+
+**Ausgangslage (gemessen 2026-11-16):** 39 Ergaenzungsordner gebaut (`userspace/ergaenzung/*/work/bau/*.bin`), zusammen 373014 B.  Eine Diskette im `cmd`-Format
+hat 494 Bloecke zu 512 B (`tools/disks/bauangaben_cmd.yaml`), also unter 253 KB vor Inodes und Verzeichnissen: **eine Diskette reicht nicht.**
+
+**Entscheidung:** zwei Disketten, beide im Gast unter **`/v7`** eingehaengt (je eine zur Zeit), mit `bin/` und `lib/` darunter:
+
+* `v7erg1` -- Alltagswerkzeuge (E0-E2: `basename tee sleep touch yes tty mesg sum rev uniq comm split tail cal look nice time test grep fgrep sort find diff diffh tr join du file expr`)
+* `v7erg2` -- Entwicklungswerkzeuge (E3: `yacc lex m4 sed dc bc egrep vmake ranlib tsort`) mit `lib/yaccpar`, `lib/ncform`, `lib/libl.a`, `lib/lib.b`
+* Aufteilung nach gemessener Groesse pruefen; passt eine Gruppe nicht, Programme verschieben, nicht weglassen.
+
+**Arbeitspunkte:**
+1. Bauangaben `tools/disks/bauangaben_v7erg1.yaml`/`_v7erg2.yaml` nach Vorbild `bauangaben_cmd.yaml`, Bau ueber `tools/disks/bau_alle.py` (nur aus `userspace/ergaenzung/*/work/bau`, vorher `erg.py bau` aller Programme), Datum 1987.
+2. Feste Pfade einheitlich auf `/v7/lib` bzw. `/v7/bin` umstellen, je Stelle `/* Differs from V7: ... */`: `yacc` (`yaccpar`, bisher Arbeitsverzeichnis), `lex` (`ncform`, bisher Arbeitsverzeichnis; `-ll` -> `/v7/lib/libl.a`), `bc` (`dc`: `/v7/bin/dc` vor `/bin/dc`, `/usr/bin/dc`; der `execvp`-Rueckfall aus E3c entfaellt, wenn der Test die Diskette unter `/v7` einhaengt), `bc -l` (`/v7/lib/lib.b`), `diff -h` (`/v7/lib/diffh`).
+   Fuer die Tests muss der Rahmen (`erg.py`) die Programme dann unter `/v7` bereitstellen statt nur auf `/mnt` -- vorher klaeren, ob das die bestehenden Tests aendert (alle 38 erneut laufen lassen).
+3. `libl.a` mit dem Gast-`ar` (und `ranlib`) aus den V7-libl-Quellen bauen; `lex`-Test auf `-ll` umstellen.
+4. Abnahme: beide Disketten booten nicht selbst, sondern werden im Gast eingehaengt; Gast-Test je Diskette: `ls -l /v7/bin`, ein Aufruf je Programm aus `/v7/bin` (Kurzfassung der Programmtests), `yacc`/`lex`-Kette ueber `/v7/lib`.
+5. Doku `doc/userspace/erg_e6.md`, Stand in Abschnitt 4 und `doc/userspace/README.md`.
+
+**Offen:** `look` braucht `/usr/dict/words` (nicht vorhanden; Woerterliste aus V7 `original/unix-v7/usr/dict` beilegen, falls vorhanden und Platz reicht).
+
