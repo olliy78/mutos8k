@@ -1,0 +1,8 @@
+# Bauangaben der V7-Ergaenzungsdiskette v7erg2 (Plan 45 E6; Mountpunkt /v7 mit bin/ und lib/).  Gebaut von bau_v7erg.py.
+# Nur "schluessel: wert", ein Wert je Zeile; bin/lib sind Listen (Leerzeichen).
+fs: mutos8k_26x128_fm
+fs_mfm: mutos8k_26x128_mfm
+inodes: 48
+bloecke: 494
+bin: yacc lex m4 sed dc bc egrep vmake ranlib tsort
+lib: yaccpar ncform libl.a lib.b

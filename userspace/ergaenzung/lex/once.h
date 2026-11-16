@@ -54,8 +54,8 @@ char *pushptr pushc;
 char *slptr slist;
 
 # if (unix || ibm)
-/* Differs from V7: ncform is read from the current directory (the usr disk of the guest is full, no /usr/lib/lex). */
-char *cname "ncform";
+/* Differs from V7: ncform is read from /v7/lib (the V7 supplement disk; the usr disk of the guest is full, no /usr/lib/lex). */
+char *cname "/v7/lib/ncform";
 char *ratname "/usr/lib/lex/nrform";
 # endif
 

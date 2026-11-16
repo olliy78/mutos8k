@@ -52,3 +52,7 @@ cat <<'MARK'
 --- cat b.txt | diff a.txt -
 MARK
 cat b.txt | diff a.txt -
+cat <<'MARK'
+--- diff -h e.txt g.txt
+MARK
+diff -h e.txt g.txt

@@ -6,8 +6,8 @@
 
 	/* location of the parser text file */
 	/* Differs from V7: PARSER was "/usr/lib/yaccpar".  The usr disk of the guest is full, so the
-	   parser skeleton is looked up in the current directory (copy it there first).  Cause: disk space. */
-# define PARSER "yaccpar"
+	   parser skeleton lives on the V7 supplement disk mounted at /v7.  Cause: disk space. */
+# define PARSER "/v7/lib/yaccpar"
 
 	/* basic size of the Yacc implementation */
 	/* Differs from V7: SMALL instead of MEDIUM, see dextern (64 KB segment of the Z8000). */
