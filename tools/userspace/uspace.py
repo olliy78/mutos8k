@@ -419,7 +419,60 @@ def c2_tar_s(s):
     return "\n".join(z), n
 
 
-def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False):
+def c2_cc_s(s):
+    """Rules R93-R96: measured on `usr/bin/cc` and `usr/bin/ld` ONLY (doc/userspace/wk_w13.md); c2_emu_s(..., cc=True) applies these and
+    nothing else (the Werkzeugkette programs are shipped-c2 output except the forms below; the older rules R1-R91 destroy them).
+    MODEL of the old c2, not a run of it.
+      R93  `ld r3,@r2 ; ld MEM,r3 ; push @sp,r3`  ->  `push @sp,MEM`   (value just stored is pushed from memory)
+      R94  `cp VAR,#k` (VAR = frame variable `..(FP)` or register variable r8..r13, no mirror in r2)  ->  `ld r2,VAR ; cp r2,#k`
+      R95  `cp VAR,#k` while r2 mirrors VAR (after `ld VAR,r2` or an R94 load; kept over cp/test/jr)  ->  `cp r2,#k`
+      R96  `test r2` -> `test MEM` where r2 no longer holds the value of MEM that the shipped c2 assumed: (a) `ld M1,r2 ; ld M2,r2 ; test r2`
+           -> `test M2`, (b) after an R94 load that replaced r2's earlier mirror MEM -> `test MEM`."""
+    z = s.split("\n")
+    out = []
+    n = {"R93": 0, "R94": 0, "R95": 0, "R96": 0}
+    mir = None      # memory operand mirrored in r2
+    stale = None    # earlier mirror of r2 destroyed by an R94 load
+    var = re.compile(r"(-?%[0-9A-F]+\(FP\)|r(?:8|9|1[0-3]))$")
+    for i, a in enumerate(z):
+        m = re.match(r"cp\t([^,]+),#(.+)$", a)
+        if (a.startswith("ld\t") and i >= 1 and re.match(r"ld\t(-?%[0-9A-F]+\(FP\)|_\w+),r3$", a) and z[i - 1] == "ld\tr3,@r2"
+                and i + 1 < len(z) and z[i + 1] == "push\t@SP,r3"):
+            z[i + 1] = "push\t@SP," + a.split(",")[0][3:]
+            n["R93"] += 1
+        if m and var.match(m.group(1)) and m.group(2) != "-%1":
+            if mir == m.group(1):
+                out.append("cp\tr2,#" + m.group(2))
+                n["R95"] += 1
+            else:
+                out += ["ld\tr2," + m.group(1), "cp\tr2,#" + m.group(2)]
+                n["R94"] += 1
+                stale = stale or (mir if mir and mir != m.group(1) else None)
+                mir = m.group(1)
+            continue
+        if a == "test\tr2":
+            if stale:
+                out.append("test\t" + stale)
+                n["R96"] += 1
+                continue
+            if i >= 2 and re.match(r"ld\t[^,r@][^,]*,r2$", z[i - 1]) and re.match(r"ld\t[^,r@][^,]*,r2$", z[i - 2]):
+                out.append("test\t" + z[i - 1].split(",")[0][3:])
+                n["R96"] += 1
+                continue
+        out.append(a)
+        mm = re.match(r"ld\t([^,]+),r2$", a)
+        if mm and not mm.group(1).startswith("@") and not re.match(r"r\d", mm.group(1)):
+            mir, stale = mm.group(1), None
+        elif re.match(r"(cp|test|jr|jp)\t", a) or a.startswith("jp\t"):
+            pass
+        elif re.match(r"ld\tr2,(-?%[0-9A-F]+\(FP\)|r(?:8|9|1[0-3]))$", a):
+            mir, stale = a.split(",")[1], None
+        else:
+            mir = stale = None
+    return "\n".join(out), n
+
+
+def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False, cc=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -442,6 +495,8 @@ def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False):
     differences of the own code (doc/userspace/init.md)."""
     if tar:
         return c2_tar_s(s)
+    if cc:
+        return c2_cc_s(s)
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
          "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0, "R70": 0, "R71": 0, "R77": 0}

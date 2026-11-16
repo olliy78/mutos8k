@@ -75,8 +75,8 @@ PROGRAMME = {
     "mt": ("bin", "mt", "userspace/mt/mt.c", []),   # not V7: doc/userspace/cmd_s5.md
     "tar": ("bin", "tar", "userspace/tar/tar.c", [V7INC + "sys/dir.h"]),   # not V7: doc/userspace/cmd_s5.md
     "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
-    "cc": ("usr", "bin/cc", "userspace/cc", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
-    "ld": ("usr", "bin/ld", "userspace/ld", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "cc": ("usr", "bin/cc", "userspace/cc/cc.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "ld": ("usr", "bin/ld", "userspace/ld/ld.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
@@ -241,12 +241,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar")
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name in ("cc", "ld"))
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar")
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar", name in ("cc", "ld"))
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
