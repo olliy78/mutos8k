@@ -1,0 +1,3 @@
+# Hand-made correction for tar.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see hex.members.zusatz).
+doprnt code=2514,251A,2530
+ctime exp=_ctime@2E7A,_localti@2E92,_gmtime@2FC4,_asctime@315E,_dysize@3284

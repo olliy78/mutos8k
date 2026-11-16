@@ -1,0 +1,51 @@
+39D4 /tmp/tarXXXXXX
+39E4 /dev/mt0
+3A54 :":.:6:>w
+3BB7 sort +0 -1 +1nr 
+3BC8  -o 
+3BCD sort +0 -1 +1nr %s -o %s; awk '$1 != prev {print; prev=$1}' %s >%sX;mv %sX %s
+3C3B %lo
+3C3F %lo
+3CC7 %6o
+3CCB a %s 
+3D03 a %s 
+3D15 %6o
+3DDA  linked to %s
+3DEA %3d/%1d
+3DF2 %7D
+3DF6  %-12.12s %-4.4s 
+3E0B /bin/mkdir
+3E16 mkdir
+3E1C /usr/bin/mkdir
+3E2B mkdir
+3E31 /mnt/bin/mkdir
+3E40 mkdir
+3E46 mkdir
+3E4C mkdir
+3E6B %6o 
+3E70 %6o 
+3E75 %6o 
+3E7A %11lo 
+3E81 %11lo 
+3E88 %c 
+3E8C %s: 
+3E91 %s %lo
+3E98 /bin/pwd
+3EA1 pwd
+3EA5 /usr/bin/pwd
+3EB2 pwd
+3EB6 /mnt/bin/pwd
+3EC3 pwd
+3EC7 pwd
+3ECB pwd
+3F9C /bin/sh
+405F f% 
+4067 g%8
+406B c%J
+407B u%0
+4094 null
+413A A:/bin/sh
+4144 PATH
+4149 :/bin:/usr/bin
+4196 SunMonTueWedThuFriSat
+41AC JanFebMarAprMayJunJulAugSepOctNovDec

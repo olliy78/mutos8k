@@ -837,8 +837,8 @@ def teile_zerlegen(name, libc, alt_archiv, log=print):
     # errlst.o when perror is (sys_errlist)
     order = [m.name.decode()[:-2] for m in O.Archiv.lesen(libc).mitglieder]
     names = {x[3] for x in out}
-    for dn, need in (("data", "flsbuf"), ("errlst", "perror"), ("ctype_", "atof")):
-        if need in names:
+    for dn, need in (("data", "flsbuf"), ("errlst", "perror"), ("ctype_", "atof"), ("ctype_", "doscan")):
+        if need in names and dn not in names:
             o = alt.get(dn) or ship[dn]
             pos = next((i for i, x in enumerate(out) if x[3] in order and order.index(x[3]) > order.index(dn)), len(out))
             ref = out[pos - 1][2] if pos else 0
