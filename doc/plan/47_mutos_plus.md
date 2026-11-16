@@ -195,6 +195,9 @@ alle Dateien ASCII; `make -n` ist im Gast nicht noetig -- der Inhalt ist gleich 
      vorhanden und Vielfaches von 512) und **veraendert keine Bytes**.
    * `boot(arbeit, kernel_bytes)`: ruft `gesamtbau.boot_pruefen` (Arbeitstests b1..b11).
    * Kommandozeile: `gastbau.py bauen --arbeit DIR`, `gastbau.py boot --arbeit DIR --kernel DATEI`, `gastbau.py alles --arbeit DIR` (bauen, dann booten).
+5. **Vorgezogen aus P2 (Fund 3 von P2.1, `doc/plus/feste_adressen.md`):** `kernel/plus/dn1.s` belegt `_max_pro` mit der Zahl A154 (`&proc[2]` des Originals);
+   im Gastbau liegt `proc` bei A11E.  Ohne Korrektur zeigt `max_proc` mitten in `proc[1]` (fork/wait/exit laufen falsch).  Durch einen Verweis ersetzen
+   (`WV %38+_proc` o. ae., vorher im Gast pruefen, dass `ld` den Zusatzwert richtig verschiebt; sonst gleich `daten.c` aus P2.2 vorziehen).
 *Schreibt:* `tools/plus/gastbau.py`, `kernel/plus/Makefile`, `kernel/plus/abs.s` bzw. README, `kernel/plus/bss.s`.
 *Abnahme:* siehe P1.5 (dieser Schritt wird mit P1.5 zusammen committet, wenn er allein nicht pruefbar ist).
 
