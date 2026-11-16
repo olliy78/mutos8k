@@ -1,0 +1,47 @@
+0CD2 eof
+0CD6 fsf
+0CDA bsf
+0CDE fsr
+0CE2 bsr
+0CE6 rewind
+0CED offline
+0D21 /dev/nrmt0
+0D3F %s %d 
+0D46 failed
+0D92 null
+0E39 8Unknown error
+0E95 #Error 0
+0E9E Not owner
+0EA8 No such file or directory
+0EC2 No such process
+0ED2 Interrupted system call
+0EEA I/O error
+0EF4 No such device or address
+0F0E Arg list too long
+0F20 Exec format error
+0F32 Bad file number
+0F42 No children
+0F4E No more processes
+0F60 Not enough core
+0F70 Permission denied
+0F82 Bad address
+0F8E Block device required
+0FA4 Mount device busy
+0FB6 File exists
+0FC2 Cross-device link
+0FD4 No such device
+0FE3 Not a directory
+0FF3 Is a directory
+1002 Invalid argument
+1013 File table overflow
+1027 Too many open files
+103B Not a typewriter
+104C Text file busy
+105B File too large
+106A No space left on device
+1082 Illegal seek
+108F Read-only file system
+10A5 Too many links
+10B4 Broken pipe
+10C0 Argument too large
+10D3 Result too large
