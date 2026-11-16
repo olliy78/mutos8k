@@ -103,5 +103,5 @@ hat 494 Bloecke zu 512 B (`tools/disks/bauangaben_cmd.yaml`), also unter 253 KB 
 4. Abnahme: beide Disketten booten nicht selbst, sondern werden im Gast eingehaengt; Gast-Test je Diskette: `ls -l /v7/bin`, ein Aufruf je Programm aus `/v7/bin` (Kurzfassung der Programmtests), `yacc`/`lex`-Kette ueber `/v7/lib`.
 5. Doku `doc/userspace/erg_e6.md`, Stand in Abschnitt 4 und `doc/userspace/README.md`.
 
-**Offen:** `look` braucht `/usr/dict/words` (nicht vorhanden; Woerterliste aus V7 `original/unix-v7/usr/dict` beilegen, falls vorhanden und Platz reicht).
+**Offen:** `look` braucht `/usr/dict/words` (im Gast nicht vorhanden).  V7 hat `original/unix-v7/usr/dict/words` (196513 B, gemessen): passt nicht zusaetzlich auf eine Diskette mit Programmen; allenfalls eigene Datendiskette, sonst `look` nur mit Dateiargument.
 
