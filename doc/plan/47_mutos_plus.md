@@ -282,6 +282,20 @@ der laufende Kernel beeinflusst ihre Ausgabe nicht.  Sind K1 und K2 verschieden,
 Dazu: `doc/plus/gastbau.md` Schluss (Aufrufe, Laufzeiten), §8 dieses Plans, `doc/plus/abweichungen.md` Spalte Pruefung auf *gemessen* mit Verweis auf den Test.
 *Abnahme:* `python3 -m pytest -q tests/test_plus_selbstbau.py` gruen (schnell); `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` gruen (einmal gemessen, Datum im Dokument).
 
+### P3.4 Kernelbau mit dem V7-`make` (eingefuegt 2026-11-17, Wunsch des Projektinhabers)
+*Anlass:* auf `main` liegt das V7-`make` als Ergaenzung `userspace/ergaenzung/vmake` (Plan 45 E3b, `doc/userspace/erg_e3b.md`; 28 820 B, `gram.c` im Gast mit
+dem MUTOS-`yacc` erzeugt).  Damit kommt im Kernelbau kein Eigenbau-Werkzeug mehr vor (bisher `userspace/make`, Eigenbau).
+*Haengt ab von:* P3.3 und dem Merge von `main` (30cfc71).  *Gastlauf:* ja, Bau ~15 Min., Fixpunkt ~30 Min.
+*Lesen:* `doc/userspace/erg_e3b.md` (Bau, Unterschiede zum Eigenbau, bekannte Luecken: kein `$(X:.c=.o)`), `tools/userspace/erg.py`, `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §6/§7.
+*Tun:*
+1. `vmake` als Gastprogramm bereitstellen: vorhandenes Bauergebnis nutzen oder mit `tools/userspace/erg.py` (nur aufrufen, nicht aendern) im Gast bauen.
+   Ob das Programm eingecheckt wird (wie `userspace/make/make.bin`) oder je Lauf gebaut, entscheidet der Platz- und Zeitbedarf; Begruendung in `doc/plus/gastbau.md`.
+2. `tools/plus/gastbau.py`: Auswahl des `make` (Vorgabe danach `vmake`; Eigenbau per Option weiter moeglich).  `kernel/plus/Makefile` und `mk1` nur aendern, wenn `vmake`
+   sie nicht versteht (Befund dokumentieren); Kopfkommentar "Call in the guest" anpassen.
+3. Platz pruefen: `vmake` ist ~9 KB groesser als der Eigenbau; Quelldisketten und A (`/tmp`) sind knapp (P1.5, P3.2).
+*Abnahme:* (a) `gastbau.py alles` mit `vmake`: `mutos_1216` bytegleich zum Kernel aus P2.3/P3.2 (sha256 `a0e2a9c5...e97e25`), `bewerten` ohne Fehlschlag;
+(b) **Langtest** `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` mit `vmake` einmal gruen (holt den in P3.3 offenen Lauf nach).
+
 ## 8. Ablauf und Stand
 
 Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **2:** P1.3 -- **3:** P1.4, P2.1 -- **4:** P1.5 -- **5:** P2.2 -- **6:** P2.3 -- **7:** P3.1 -- **8:** P3.2 -- **9:** P3.3.
@@ -299,4 +313,5 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 | P2.3 | `kernel/plus/low.s`, `kernel/conf/conf.c`, `abweichungen.md` | ~25 Min. | erledigt 2026-11-16 | gastbau.md §3/§4 | |
 | P3.1 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §5, `abweichungen.md` | ~15 Min. | erledigt (`bewerten` fehlerfrei mit P2.3- und Original-Kernel; ttyinput nicht ausloesbar, abgeleitet) | 2026-11-16 | s. git log |
 | P3.2 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §6 | ~50 Min. | erledigt (K1 == K2, `cmp.log` leer; dritte Quelldiskette, Lauf 2 mit K1 aus Lauf 1 wiederholt, gastbau.md §6) | 2026-11-17 | s. git log |
+| P3.4 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §8, ggf. `kernel/plus/Makefile` | ~45 Min. | offen | | |
 | P3.3 | `tests/test_plus_selbstbau.py`, Doku | (Langtest) | erledigt (Schnelltests gruen; Langtest nicht neu gelaufen, Referenz P3.2-Messung, gastbau.md §7) | 2026-11-17 | s. git log |
