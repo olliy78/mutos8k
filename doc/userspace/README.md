@@ -18,6 +18,8 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b2.md` | `/etc`: ncheck, icheck (ganzdatei bytegleich), c2-Regeln R42-R48 |
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
 | `cmd_s3b1.md` .. `cmd_s3b6.md` | `cmd`-Diskette, Stufe 3b: nm strip chown; dd pr passwd; ar; ps pstat; hex convert (kein V7, Quelle aus dem Binary rekonstruiert); ed (s3b3 Befund, s3b6 bytegleich, c2-Regeln R80-R91 nur fuer ed) |
+| `cmd_s5.md` | `bin`-Diskette, Stufe 5: mt, tar (ganzdatei bytegleich), adb (A, nicht rekonstruiert); c2-Regel R92 nur fuer tar |
+| `wk_w0.md` | Werkzeugkette (Plan 52) W0: Triage cc ld as cpp c0 c1 c2, libc.a, crt0 |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -168,6 +170,18 @@ Die `main()`-Schleife ist kein Quellunterschied (alle Schleifenformen ergeben da
 
 **Regelnummern:** Die Agenten vergaben parallel dieselben Nummern; bei der Zusammenfuehrung wurden sie neu vergeben (Zaehler in `uspace.c2_emu_s`, Tests und Dokumente angepasst).  `ps` und `pstat` schalten R1-R76 ab (`C2_AUS`).
 Die Regeln R65-R77 sind je an 1 bis 2 Stellen belegt, also schwach (siehe Punkt 2).  Behelfe von Hand: `ar/k.txt` (Eintrag `code 18F4` streichen), `ed.members` (Glied `fakcu` bei 283C), `*.members.zusatz`.
+
+## Herkunft der Quellen: Diskette `bin`, Stufe 5 (gemessen 2026-11-16/17)
+
+| Programm | Datei (B) | Quelle | c2 | Ergebnis |
+|----------|-----------|--------|----|----------|
+| mt | 4342 | **kein V7** (V7 hat kein `mt.c`), aus dem Binary rekonstruiert | ohne Regeln (`alles mt --libc alt --ist neu`; das c2-Modell wuerde es zerstoeren) | G |
+| tar | 17000 | Text nach `original/sys3/cmd/tar.c` als **Vergleichsquelle** (die V7-Quelle von `tar` liegt hier nicht vor), 8 markierte Abweichungen | R92 (1 Stelle, nur `tar`) | G |
+| adb | 27770 | etwa die Haelfte V7 (`message.c`-Texte), dazu ein Z8000-Disassembler (Meldung `kein code %x`) ohne Quelle | -- | **A** (nicht rekonstruiert, `--check` Ueberlappung 28) |
+
+Dass MUTOS-`tar` dem System-III-Text entspricht, ist durch die Bytegleichheit gemessen; ob die gemeinsame Vorlage ein V7-`tar` war, ist *Annahme*.  Das ist keine Ergaenzung aus System III (Grundsatz Plan 45), sondern der Rueckbau eines vorhandenen MUTOS-Programms.
+Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan` gebunden ist; `--check` liest `karte_extra.txt`.
+**Regression nach dem Merge (gemessen 2026-11-17, Gast, sequentiell, `main` 82033fb..1826100):** alle 47 G-Programme (`alles NAME --c2emu --libc alt --ist neu_c2_s`; `getty`, `sync` mit Disketten-libc; `mt` wie oben) plus `sh` (`bau sh --c2emu --variante v7fix`, `cmp`): **alle gleich**.
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
