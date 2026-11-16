@@ -1,0 +1,30 @@
+# cpp: own functions (csv entries and call targets in 0030..26CC) <-> V7 (tools/userspace/wk_w0.py zuordnung)
+# addr size  v7-function  class  score  notes   (assignment by order + features, evidence not proof)
+0030    56  cpp.c:sayline          V7 gleich        3.0  
+0068   106  cpp.c:dump             V7 abweichend    0.1  V7-Zeichenkette fehlt: ' || c==''') stopc=c | libc-Aufrufe +{} -{'flsbuf': 1}
+00D2   550  cpp.c:refill           V7 abweichend    9.0  libc-Aufrufe +{'exit': 1, 'close': 1} -{}
+02F8  1438  cpp.c:cotoken          V7 abweichend    0.1  libc-Aufrufe +{} -{'flsbuf': 4, 'op': 1} | eigene Aufrufe 22/21
+0896    58  cpp.c:skipbl           V7 gleich        1.3  
+08D0   340  cpp.c:unfill           V7 abweichend   10.2  libc-Aufrufe +{'exit': 1} -{} | eigene Aufrufe 5/6
+0A24   694  cpp.c:doincl           V7 abweichend   14.1  V7-Zeichenkette fehlt: ') {    inctype=0;   | libc-Aufrufe +{'exit': 1, 'open': 1} -{'intss': 1, 'strcat': 1} | eigene Aufrufe 11/13
+0CDA    60  cpp.c:equfrm           V7 gleich        2.8  
+0D16  1148  cpp.c:dodef            V7 abweichend   15.2  V7-Zeichenkette fehlt: ' || *pin=='''       | libc-Aufrufe +{'strcmp': 1} -{} | eigene Aufrufe 14/12
+1192   620  cpp.c:control          V7 abweichend    9.1  V7-Zeichenkette fehlt:  IF not implemented, | libc-Aufrufe +{} -{'yyparse': 1} | eigene Aufrufe 17/20
+13FE   162  cpp.c:stsym            V7 gleich        0.7  
+14A0    50  cpp.c:ppsym            V7 gleich        1.3  
+14D2   126  cpp.c:pperror          V7 abweichend    8.8  V7-Zeichenkette fehlt: *%c*   "%s", line 
+1550    26  cpp.c:yyerror          V7 gleich        1.1  
+156A    48  cpp.c:ppwarn           V7 gleich        1.1  
+159A   208  cpp.c:lookup           V7 abweichend    6.5  libc-Aufrufe +{'exit': 1} -{}
+166A   150  cpp.c:slookup          V7 gleich        1.3  
+1700   764  cpp.c:subst            V7 abweichend   10.5  Zeichenkette nur im Binary: "%s"
+19FC    64  cpp.c:copy             V7 gleich        0.4  
+1A3C    40  cpp.c:strdex           V7 gleich        0.4  
+1A64    54  cpp.c:yywrap           V7 gleich        0.2  
+1A9A  1340  cpp.c:main             V7 abweichend   66.8  Zeichenkette nur im Binary: U8000 | V7-Zeichenkette fehlt:  "'`/\;  "'`\; *src; BTL$CLIB; SYS3.C.; cc/include; gcos; ib | libc-Aufrufe +{'open': 1, 'exit': 2} -{'setjmp': 1, 'inquire': 2, 'freopen': 1, 'toupper': 1, 'fclose': 1, 'setbuf': 1, 'intss': 1} | eigene Aufrufe 25/36
+1FD6   624  yylex.c:yylex          V7 gleich*      11.2   | eigene Aufrufe 5/8
+2246   210  yylex.c:tobinary       V7 gleich        4.1  
+2318   948  -                      nicht V7         0.0  
+----  V7 function without binary counterpart: cpp.c:stsym (4 lines)
+----  V7 function without binary counterpart: cpp.c:trmdir (9 lines)
+# summary: V7 abweichend 11 (7334 B), V7 gleich 12 (978 B), V7 gleich* 1 (624 B), nicht V7 1 (948 B); V7 functions 26, without counterpart 2

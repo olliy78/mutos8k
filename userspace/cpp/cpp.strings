@@ -1,0 +1,63 @@
+349D T%s: argument mismatch
+34BF token too long
+34CE %s: unterminated macro call
+34EA %s: too much pushback
+3500 no space
+3509 token too long
+3518 bad include syntax
+352B Unreasonable include nesting
+3548 no space
+3553 Can't find include file %s
+356E too much defining
+3580 illegal macro name
+3593 %s: missing )
+35A1 bad formal: %s
+35B0 too many formals: %s
+35C5 %s redefined
+35D2 If-less endif
+35E0 If-less else
+35ED undefined control
+3602 %s: 
+3607 %d: 
+360E too many defines
+361F %s: macro recursion
+3636 "%s"
+363B %s: actuals too long
+3651 _ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+3691 0123456789.
+369E "'/\
+36A4 "'\
+36B2 too many -D options, ignoring %s
+36D3 too many -U options, ignoring %s
+36F4 excessive -I file (%s) ignored
+3713 unknown flag %s
+3723 No source file %s
+3737 Can't create %s
+3747 extraneous name %s
+375A /usr/include
+3767 define
+376E undef
+3774 include
+377C else
+3781 endif
+3787 ifdef
+378D ifndef
+3797 line
+379C unix
+37A1 U8000
+37A7 __LINE__
+37B0 __FILE__
+37B9 command line
+3E1D +-*/%<>&^|?:!~(),
+3E2F defined
+3E3A Illegal character %c in preprocessor if
+3E62 Illegal number %s
+3E88 yacc stack overflow
+3E9C syntax error
+3F0B x)*
+3F0F f)6
+3F13 e)0
+3F17 g)N
+3F1B c)`
+3F2B u)F
+3F44 null

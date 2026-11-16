@@ -1,0 +1,17 @@
+1714 /usr/lib/c0
+1728 /usr/lib/c1
+173C /usr/lib/c2
+1750 /usr/lib/cpp
+176C /usr/lib/crt0.o
+177C Too many DIUC options
+1792 Too many source files
+17A8 Too many object/library files
+17C6 /usr/lib/mcrt0.o
+17D7 /tmp/ctm0XXXXXX
+17E7 cc: cannot create temp
+1803 cpp
+181E /usr/bin/as
+1833 -lc
+1837 /usr/bin/ld
+1870 no space for file names
+18CC null

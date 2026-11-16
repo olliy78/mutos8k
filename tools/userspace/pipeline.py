@@ -75,6 +75,13 @@ PROGRAMME = {
     "mt": ("bin", "mt", "userspace/mt/mt.c", []),   # not V7: doc/userspace/cmd_s5.md
     "tar": ("bin", "tar", "userspace/tar/tar.c", [V7INC + "sys/dir.h"]),   # not V7: doc/userspace/cmd_s5.md
     "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
+    "cc": ("usr", "bin/cc", "userspace/cc", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "ld": ("usr", "bin/ld", "userspace/ld", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c2": ("usr", "lib/c2", "userspace/c2", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
 }
