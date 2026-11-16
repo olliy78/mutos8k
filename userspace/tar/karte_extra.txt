@@ -1,1 +1,5 @@
 ohne 2536
+ohne 00C8
+ohne 010C
+ohne 01B6
+ohne 021E

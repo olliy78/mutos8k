@@ -1,0 +1,363 @@
+53F4 not in write mode
+5488 x"= "^i
+550B :%8t
+5510 =%8t
+5517 %8t
+5520 no floating operations
+554D %.8s:%8t
+5556 no floating operations
+556D %8m
+5577 :%8t
+557F %-8u
+5584 %-16U
+558A %-8o
+558F %-8x
+5594 %-16X
+559A %-24Y
+55A0 %-8q
+55A5 %-16Q
+55AB %-8o
+55B0 %-16O
+55B6 %-8d
+55BB %-16D
+55C1 no floating operations
+55D8 /bin/sh
+55E8 @%c
+562E bad modifier
+563C bad command
+5648 symbol not found
+565A automatic variable not found
+5678 c routine not found
+568C cannot locate value
+56A0 no breakpoint set
+56B2 unexpected ')'
+56C2 address expected
+56D4 no process
+56E0 bad variable
+56EE text address not found
+5706 data address not found
+571E odd address
+572A too many breakpoints
+5740 bad a68 frame
+574E bad a68 link
+575C address wrap around
+5770 unexpected `='
+5780 wait error: process disappeared!
+57A2 process terminated
+57B6 try again
+57C0 syntax error
+57CE newline expected
+57E0 bkpt: command too long
+57F8 bad file format
+5808 not enough space for symbols
+5826 filename too long
+5838 cannot open
+5844 bad core magic number
+585A dbjnz
+5957 C`!
+5961 C`'
+596B C`-
+5975 C`4
+597F C`9
+5989 C`?
+5993 C`E
+599D _`L
+59A7 Q`O
+59B1 R`V
+59BB Q`]
+59C5 R`c
+59CF S`i
+59E3  `s
+59ED !`w
+59F7 "`z
+5B73 +a#
+5B7D )a&
+5B87 +a)
+5B91 +a-
+5B9B )a1
+5BB9 =a?
+5BC3 >aC
+5BCD BaG
+5BD7 BaK
+5BE1 BaO
+5BEB BaT
+5F42  F N ~ ` F
+5F4D flags
+5F53 fcw
+5F57 refresh
+5F5F psapseg
+5F67 psap
+5F6C nspseg
+5F73 nsp
+5F77 user
+5F88 inv
+5F8C fov
+5F9A inx
+5FA2 nan
+5FB4 ule
+5FC1 ult
+5FCC ugt
+5FD0 nov
+5FDA uge
+5FE0 halt
+5FE5 mset
+5FEA mres
+5FEF iret
+5FF4 mbit
+5FF9 nop
+6003 ret
+6007 setflg
+600E resflg
+6015 comflg
+601C trib
+6021 trtib
+6027 trirb
+602D trtirb
+6034 trdb
+6039 trtdb
+603F trdrb
+6045 trtdrb
+604F ldctlb
+6056 ldctlb
+605D ldctl
+6063 ldctl
+6069 mreq
+606E djnz
+6073 ldb
+607A calr
+607F cpi
+6083 cpsi
+6088 cpir
+608D cpsir
+6093 cpd
+6097 cpsd
+609C cpdr
+60A1 cpsdr
+60A7 sini
+60AC outi
+60B1 souti
+60B7 ind
+60BB sind
+60C0 outd
+60C5 soutd
+60CB ini
+60CF ldi
+60D3 ldd
+60D7 res
+60DB set
+60DF bit
+60E6 sin
+60EA out
+60EE sout
+60F6 out
+60FA ldr
+60FE ldr
+6102 ldar
+6107 ldrl
+610C ldrl
+6117 lda
+611B ldl
+611F ldl
+6129 lda
+612D ldl
+6131 ldl
+6135 call
+613A ldps
+613F ldm
+6143 ldm
+6147 sdl
+614B sda
+614F sdal
+6154 sdll
+6159 com
+615D neg
+6161 test
+6166 tset
+616B clr
+616F testl
+6175 dab
+6179 extsb
+617F extsl
+6185 exts
+6190 sll
+6194 slll
+6199 sla
+619D slal
+61A8 rlc
+61AC rrc
+61B0 push
+61B8 cpl
+61BC addl
+61C1 pop
+61C5 subl
+61CA ldl
+61CE popl
+61D3 multl
+61D9 mult
+61DE divl
+61E3 div
+61E7 pushl
+61ED push
+61F2 ldl
+61F6 ldk
+61FA res
+61FE set
+6202 bit
+6206 inc
+620A dec
+620E tcc
+6212 add
+6216 sub
+621D and
+6221 xor
+622B lda
+6232 adc
+6236 sbc
+623A rrdb
+623F rldb
+6247 fsetmode
+6250 fldbcd
+6257 fldiq
+625D fldtl
+6263 fldtq
+6269 fclr
+626E fldil
+6274 fldctl
+627B fsettrap
+6284 frestrap
+628D fabs
+6292 fcp
+6296 fcpf
+629B fcpx
+62A0 fcpfx
+62A6 fint
+62AB fsqr
+62B0 fldm
+62B5 fcpz
+62BA fremstep
+62C3 fld
+62C7 fadd
+62CC fsub
+62D1 fmul
+62D6 fdiv
+62DB fneg
+62E0 fcpzx
+663C clearsig
+6645 exit
+664A fork
+664F read
+6654 write
+665A open
+665F close
+6665 wait
+666A creat
+6670 link
+6675 unlink
+667C exec
+6681 chdir
+6687 time
+668C mknod
+6692 chmod
+6698 chown
+669E break
+66A4 stat
+66A9 seek
+66AE getpid
+66B5 mount
+66BB umount
+66C2 setuid
+66C9 getuid
+66D0 stime
+66D6 ptrace
+66DD alarm
+66E3 fstat
+66E9 pause
+66EF utime
+66F5 stty
+66FA gtty
+66FF access
+6706 nice
+670B ftime
+6711 sync
+6716 kill
+6724 dup
+6728 pipe
+672D times
+6733 profil
+673D setgid
+6744 getgid
+674B signal
+6761 ioctl
+6773 exece
+6779 umask
+677F chroot
+678D f%d
+6791 @SP
+6795 @FP
+6799 @r%d
+679E nvi,vi
+67A8 nvi
+67AC #%x
+67B2 %x(FP)
+67B9 %x(r%d)
+67C1 r%d(#
+67C7 %x)
+67CB r%d(r%d)
+67D4 def %x
+67E4 #%x
+685A no floating operations
+687C %d: killed
+6887 breakpoint%8t
+6895 stopped at%8t
+691C =4=^ps
+692C r13
+6930 r12
+6934 r11
+6938 r10
+695B hangup
+6962 interrupt
+696C quit
+6971 illegal instruction
+6985 trace/BPT
+698F IOT
+6993 EMT
+6997 floating exception
+69AA killed
+69B1 bus error
+69BB memory fault
+69C8 bad system call
+69D8 broken pipe
+69E4 alarm call
+69EF terminated
+6A0C ? map
+6A12 / map
+6A31 no floating operations
+6A48 %.8s(
+6A51 ,%x
+6A58 %8t%.8s:%8t
+6A77 %8X:%8t%-8x,%-8x,%-8x
+6A8D  ? 
+6A91 %8t
+6A95 %8t"
+6A9A %8targs:%8t
+6AA6 %8t%x
+6AD0 %-8.8d
+6AD7 %8t
+6AE8 b1 = %-16Q
+6AF3 e1 = %-16Q
+6AFE f1 = %-16Q
+6B0A b2 = %-16Q
+6B15 e2 = %-16Q
+6B20 f2 = %-16Q
+6B2B %s%8t%x%8t
+6B36 :%8t
+6B83 cannot set breakpoint: 
+6B9D  - core dumped
+6BB2 a.out
+6BB8 core
+6BDC %.8s
+6BE1 +%x
+6BE8 %.8s
+6BED +%x
+6C2C SunMonTueWedThuFriSat
+6C42 JanFebMarAprMayJunJulAugSepOctNovDec

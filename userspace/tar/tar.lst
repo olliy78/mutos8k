@@ -1,7 +1,3 @@
-; Marke mitten im Befehl: L00C8 EQU %C8
-; Marke mitten im Befehl: L010C EQU %10C
-; Marke mitten im Befehl: L01B6 EQU %1B6
-; Marke mitten im Befehl: L021E EQU %21E
 L0000:
 0000  21F6                  LD R6,@R15
 0002  A1F7                  LD R7,R15

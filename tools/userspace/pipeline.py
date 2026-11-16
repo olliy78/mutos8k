@@ -300,7 +300,7 @@ def check(name):
     platte, pf, _q, _h = info(name)
     k, raw = U.holen(ar, name, platte, pf)
     libc = U.libc_archiv(ar)
-    an = U.analysieren(ar, name, raw, k, libc, hand_namen(name), log=lambda *x: None)
+    an = U.analysieren(ar, name, raw, k, libc, hand_namen(name), log=lambda *x: None, extra=extra_karte(name))
     fehler = []
     if len(raw) != k[1] + k[2]:
         fehler.append("image length != text+data")
