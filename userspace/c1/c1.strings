@@ -1,0 +1,200 @@
+75E2 <=@A>?DEBC=<A@?>EDCB
+76FA Arg count
+7706 Missing temp file
+771A Can't create %s
+7817 Missing temp file
+7829 Warning: possibly too much data
+7880 compiler botch: call
+78D9 @SP,
+78F5 Illegal operation on structure
+7914 No code table for op: %s
+792D No code table for op %d
+7945 @SP
+7949 #%%
+7952 f%d
+7956 rr0
+795A rh0
+7961 rh%d
+7966 rq4
+796A rq0
+796E Register overflow: simplify expression
+7998 #%%%x
+79C2 Unimplemented structure assignment
+7A27 WV 
+7AB9 floating to large for long
+7AD7 r%d
+7ADB rr%d
+7AE0 rr%d
+7AE5 f%d
+7AE9 rl%d
+7AEE byte-operation on register greater 8
+7B13 r%d
+7C88 #%%%lx
+7C8F #%%%x
+7C95 #%%%x
+7C9D L%d
+7CA1 (FP)
+7CA6 @FP
+7CAA (r%d)
+7CB0 @r%d
+7CB5 Compiler error: pname
+7CCB illegal indirection
+7CDF pname called illegally
+7CF6 Illegal use of register
+7D0E L%d
+7D12 %.8s
+7D1A No match' for op %d
+7D2E Register overflow for longs: simplify expression
+7DC4 Duplicate case (%d)
+7DD8 pow2 botch
+7E47 %d: 
+7E4C %%%x
+7E51 Stack overflow botch
+7E66 Intermediate file error
+7E87 BV 
+7E8B %%%x
+7F3D Expression input botch
+7FBF Binary expression botch
+8059 Illegal structure operation
+8075 unimplemented structure assignment
+80B6 Illegal indirection
+810A Floating %% not defined
+8122 Unimplemented field operator
+813F Divide check
+814C C error: const
+815B Divide check
+8168 Divide check
+8175 Out of space-- c1
+83B8 clr
+83C0 test
+83C6 add
+83CA sub
+83CE inc
+83D2 dec
+83D6 mul
+83DA div
+83DE sra
+83E2 sda
+83E6 sla
+83EA sdl
+83EE srl
+83F2 sll
+83FA and
+8402 set
+8406 res
+840A xor
+840E neg
+8412 com
+8416 sdal
+8443 ule
+844B ugt
+8459 uge
+846A !nop
+8616 field select
+8623 int->ptr
+862C ptr->int
+8635 long->ptr
+863F field assign
+864C >> unsigned
+8658 << unsigned
+8664 name
+8669 short constant
+8678 string
+867F float
+8685 double
+868C long constant
+869A long constant
+86A8 >>= unsigned
+86B5 <<= unsigned
+86C2 indirection
+86CE ++pre
+86D4 --pre
+86DA ++post
+86E1 --post
+86E8 !un
+870F int->double
+871B double->int
+8730 double->long
+873D long->double
+874A integer->long
+8758 long->integer
+8779 <=p
+8780 >=p
+8793 >>=
+8797 <<=
+87A6 bitset
+87AD bitclr
+87B4 bitset=
+87BC bitclr=
+87C4 bittest
+87CC load byte register
+87ED call
+87F2 call
+87F7 goto
+87FC jump cond
+8806 branch cond
+8812 set nregs
+881C load value
+8827 >>unsigned
+8832 <<unsigned
+883D int->char
+8847 force register
+885A =structure
+8865 = (struct setup)
+8876 >>=unsigned
+8882 <<=unsigned
+88AF jcB
+88BB Sc$
+88BF Tc$
+88D3 cc4
+88DB (dR
+88DF )dR
+88EB *eB
+88EF +eB
+88F7 ,eB
+892B Kfx
+892F Lfx
+893B Mf@
+893F Nf@
+8943 Of@
+8947 fc,
+8985 *eB
+8989 +eB
+898D Pg8
+89B9 thV
+89C7 "i,
+89CB #i,
+89CF $i,
+89D3 %i,
+89D7 &i,
+89DB (i,
+89DF )i,
+89E3 *i,
+89E7 +i,
+89EB -i,
+89EF .i,
+89F3 /i,
+89F7 0i,
+89FB 1i,
+89FF <h~
+8A03 =h~
+8A07 >h~
+8A0B ?h~
+8A0F @h~
+8A13 Ah~
+8A17 Bh~
+8A1B Ch~
+8A1F Dh~
+8A23 Eh~
+8A27 Uhj
+8A2D jiX
+8A31 :i@
+8A35 4iH
+8A39 9iP
+8A49 xl,
+8A4D fl8
+8A51 el2
+8A55 glP
+8A59 clb
+8A69 ulH
+8A82 null

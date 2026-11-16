@@ -1,0 +1,40 @@
+# ld: own functions (csv entries and call targets in 0030..19AC) <-> V7 (tools/userspace/wk_w0.py zuordnung)
+# addr size  v7-function  class  score  notes   (assignment by order + features, evidence not proof)
+0030    62  ld.c:delexit           V7 gleich        5.8  
+006E   610  ld.c:main              V7 abweichend   17.3  V7-Zeichenkette fehlt: -v: arg missing | libc-Aufrufe +{} -{'atoi': 1} | eigene Aufrufe 11/15
+02D0   244  ld.c:endload           V7 abweichend    1.8  libc-Aufrufe +{} -{'atoi': 1}
+03C4   308  ld.c:load1arg          V7 gleich        9.5  
+04F8   110  ld.c:step              V7 gleich        1.1  
+0566   138  ld.c:ldrand            V7 gleich        1.2  
+05F0    56  ld.c:add               V7 gleich        1.0  
+0628   482  ld.c:load1             V7 gleich       16.1  
+080A   548  ld.c:middle            V7 gleich       15.4  
+0A2E    78  ld.c:ldrsym            V7 gleich        9.4  
+0A7C   286  ld.c:setupout          V7 abweichend    3.1  libc-Aufrufe +{} -{'mktemp': 1} | eigene Aufrufe 8/7
+0B9A   150  ld.c:tcreat            V7 gleich        9.6  
+0C30   166  ld.c:load2arg          V7 gleich        3.5  
+0CD6   578  ld.c:load2             V7 gleich       15.6  
+0F18   434  ld.c:load2td           V7 abweichend    4.0  Zeichenkette nur im Binary: CALLR : illegal destination; CALLR : out of range
+10CA   228  ld.c:finishout         V7 gleich        9.4  
+11AE   100  ld.c:copy              V7 gleich        3.4  
+1212    66  ld.c:mkfsym            V7 gleich        1.0  
+1254   118  ld.c:mget              V7 gleich        0.9  
+12CA    38  ld.c:mput              V7 gleich        0.7  
+12F0   304  ld.c:dseek             V7 gleich        6.6  
+1420    18  ld.c:half              V7 gleich        0.2  
+1432   110  ld.c:get               V7 gleich        1.0  
+14A0   424  ld.c:getfile           V7 gleich       12.5  
+1648   134  ld.c:lookup            V7 gleich        0.1  
+16CE    36  ld.c:slookup           V7 gleich        1.0  
+16F2   134  ld.c:enter             V7 gleich        4.1  
+1778   102  ld.c:symreloc          V7 gleich        0.0  
+17DE   110  ld.c:error             V7 gleich        9.5  
+184C    62  ld.c:lookloc           V7 gleich        3.9  
+188A   114  ld.c:readhdr           V7 gleich        4.1  
+18FC    54  ld.c:eq                V7 gleich        0.3  
+1932    46  ld.c:putw              V7 gleich        1.1  
+1960    76  ld.c:flush             V7 gleich        6.5  
+----  V7 function without binary counterpart: ld.c:record (16 lines)
+----  V7 function without binary counterpart: ld.c:restore (18 lines)
+----  V7 function without binary counterpart: ld.c:cp8c (10 lines)
+# summary: V7 abweichend 4 (1574 B), V7 gleich 30 (4950 B); V7 functions 37, without counterpart 3

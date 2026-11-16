@@ -1,0 +1,75 @@
+# c0: own functions (csv entries and call targets in 0030..4A10) <-> V7 (tools/userspace/wk_w0.py zuordnung)
+# addr size  v7-function  class  score  notes   (assignment by order + features, evidence not proof)
+0030   334  c00.c:main             V7 gleich       12.5  
+017E   264  c00.c:lookup           V7 gleich        6.4  
+0286    72  c00.c:findkw           V7 gleich       -0.0  
+02CE  1422  c00.c:symbol           V7 abweichend   11.9  V7-Zeichenkette fehlt: ') {    sp = filenam | libc-Aufrufe +{} -{'filbuf': 4} | eigene Aufrufe 23/28
+085C   696  c00.c:getnum           V7 gleich        3.5  
+0B14    32  c00.c:subseq           V7 gleich        0.9  
+0B34   174  c00.c:putstr           V7 abweichend    3.3  V7-Zeichenkette fehlt: ')) >= 0) {   if (nc; );  }  outcode(; , BDATA);    outcode; | eigene Aufrufe 6/3
+0BE2   120  c00.c:getcc            V7 abweichend    3.4  Zeichenkette nur im Binary: No character constant | eigene Aufrufe 3/2
+0C5A   448  c00.c:mapch            V7 abweichend    3.4  libc-Aufrufe +{} -{'filbuf': 1}
+0E1A  1270  c00.c:tree             V7 gleich*      17.8   | eigene Aufrufe 24/27
+1310   116  c00.c:xprtype          V7 gleich        0.9  
+1384    52  c00.c:copnum           V7 gleich        1.0  
+13B8  1916  c01.c:build            V7 gleich*      21.7   | eigene Aufrufe 48/51
+1B34   112  c01.c:convert          V7 gleich        4.2  
+1BA4    84  c01.c:setype           V7 gleich        0.8  
+1BF8    72  c01.c:chkfun           V7 gleich        1.1  
+1C40   116  c01.c:disarray         V7 gleich        1.1  
+1CB4    54  c01.c:chkw             V7 gleich        4.1  
+1CEA    42  c01.c:lintyp           V7 gleich       -0.2  
+1D14   106  c01.c:error            V7 gleich        8.9  
+1D7E    90  c01.c:block            V7 gleich        1.0  
+1DD8    36  c01.c:nblock           V7 gleich        1.0  
+1DFC    46  c01.c:cblock           V7 gleich        0.8  
+1E2A    50  c01.c:fblock           V7 gleich        0.8  
+1E5C    78  c01.c:gblock           V7 gleich        6.4  
+1EAA    44  c01.c:chklval          V7 gleich        3.9  
+1ED6   392  c01.c:fold             V7 gleich        3.7  
+205E    54  c01.c:conexp           V7 gleich        3.9  
+2094   676  c02.c:extdef           V7 gleich       22.1  
+2338   278  c02.c:cfunc            V7 gleich       10.1  
+244E   788  c02.c:cinit            V7 gleich*      18.7   | eigene Aufrufe 25/26
+2762   250  c02.c:strinit          V7 gleich*       6.6   | eigene Aufrufe 9/10
+285C    38  c02.c:setinit          V7 gleich        3.9  
+2882  1194  c02.c:statement        V7 gleich*      27.4   | eigene Aufrufe 69/79
+2D2C   270  c02.c:forstmt          V7 gleich*       0.5   | eigene Aufrufe 18/19
+2E3A    60  c02.c:pexpr            V7 gleich        3.8  
+2E76   162  c02.c:pswitch          V7 gleich        4.0  
+2F18   278  c02.c:funchead         V7 gleich*       3.5   | eigene Aufrufe 7/8
+302E    26  c02.c:blockhead        V7 gleich*      -0.0   | eigene Aufrufe 1/2
+3048   416  c02.c:blkend           V7 abweichend    3.0  Zeichenkette nur im Binary: names %.8s and %.8s conflict | libc-Aufrufe +{'strncmp': 1} -{} | eigene Aufrufe 5/4
+31E8    74  c02.c:prste            V7 gleich*       2.7   | eigene Aufrufe 0/1
+3232    30  c02.c:errflush         V7 gleich        0.8  
+3250    88  c03.c:declist          V7 gleich        1.0  
+32A8   436  c03.c:getkeywords      V7 gleich       12.9  
+345C   588  c03.c:strdec           V7 gleich        7.0  
+36A8   236  c03.c:declare          V7 gleich        1.0  
+3794  1528  c03.c:decl1            V7 gleich*      18.7   | eigene Aufrufe 33/34
+3D8C    82  c03.c:pushdecl         V7 gleich        1.0  
+3DDE    80  c03.c:cpysymb          V7 gleich        0.1  
+3E2E   428  c03.c:getype           V7 gleich        6.8  
+3FDA    18  c03.c:typov            V7 gleich        4.0  
+3FEC   206  c03.c:align            V7 gleich        6.9  
+40BA    28  c03.c:decsyn           V7 gleich        4.0  
+40D6    26  c03.c:redec            V7 gleich        4.1  
+40F0   100  c03.c:goodreg          V7 gleich        1.1  
+4154    52  c04.c:decref           V7 gleich        3.9  
+4188    32  c04.c:incref           V7 gleich        0.4  
+41A8    48  c04.c:cbranch          V7 gleich        4.2  
+41D8   118  c04.c:rcexpr           V7 gleich*       3.3   | eigene Aufrufe 2/4
+424E   504  c04.c:treeout          V7 gleich*      15.4   | eigene Aufrufe 15/21
+4446    26  c04.c:branch           V7 gleich        1.1  
+4460    26  c04.c:label            V7 gleich        1.1  
+447A    60  c04.c:plength          V7 gleich        0.9  
+44B6   214  c04.c:length           V7 gleich        9.8  
+458C    22  c04.c:rlength          V7 gleich        1.0  
+45A2   126  c04.c:simplegoto       V7 gleich        1.0  
+4620    28  c04.c:nextchar         V7 gleich        0.9  
+463C   124  c04.c:spnextchar       V7 gleich       -0.4  
+46B8    24  c04.c:chconbrk         V7 gleich        4.0  
+46D0    90  c04.c:dogoto           V7 gleich        1.2  
+472A   116  c04.c:doret            V7 gleich*       0.5   | eigene Aufrufe 6/7
+479E   626  c04.c:outcode          V7 abweichend    5.9  libc-Aufrufe +{} -{'flsbuf': 11, 'ferror': 1} | eigene Aufrufe 8/2
+# summary: V7 abweichend 6 (3206 B), V7 gleich 53 (7374 B), V7 gleich* 13 (8332 B); V7 functions 72, without counterpart 0

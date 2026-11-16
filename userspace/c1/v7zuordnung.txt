@@ -1,0 +1,77 @@
+# c1: own functions (csv entries and call targets in 0030..57CE) <-> V7 (tools/userspace/wk_w0.py zuordnung)
+# addr size  v7-function  class  score  notes   (assignment by order + features, evidence not proof)
+0030   342  c10.c:main             V7 abweichend   14.6  V7-Zeichenkette fehlt: .globl fltused ; .globl .data  | libc-Aufrufe +{'printf': 5} -{}
+0186   536  c10.c:match            V7 gleich        1.1  
+039E  2048  c10.c:rcexpr           V7 abweichend   12.9  V7-Zeichenkette fehlt: mov r%d,-(sp) ; mov%c r%d,%c(sp) ; tst%c r%d  | libc-Aufrufe +{'printf': 7} -{} | eigene Aufrufe 36/26
+0B9E  2682  c10.c:cexpr            V7 abweichend    3.6  Zeichenkette nur im Binary: #%%; #%%%x; @SP; f%d; rh%d; rh0; rq0; rq4; rr0 | V7-Zeichenkette fehlt: ':   p = p2->tr1;   ; );     else      pri; );     goto loop | libc-Aufrufe +{'printf': 1} -{'flsbuf': 7} | eigene Aufrufe 41/31
+1618   184  c10.c:reorder          V7 gleich        1.1  
+16D0   692  c10.c:sreorder         V7 gleich        1.1  
+1984   158  c10.c:delay            V7 gleich        1.0  
+1A22   106  c10.c:sdelay           V7 gleich        1.0  
+1A8C    80  c10.c:ncopy            V7 gleich        0.9  
+1ADC    98  c10.c:chkleaf          V7 gleich        1.1  
+1B3E   260  c10.c:comarg           V7 abweichend    5.1  V7-Zeichenkette fehlt: L%d:mov -(r0),-(sp) ; mov $%o,r1 ; mov -(r%d),-(sp) ; mov r% | libc-Aufrufe +{} -{'printf': 1} | eigene Aufrufe 12/13
+1C42    50  c10.c:strfunc          V7 gleich        0.9  
+1C74   648  c10.c:doinit           V7 abweichend    1.4  Zeichenkette nur im Binary: WV  | V7-Zeichenkette fehlt: %o ; %o; %o ; %o; %o; %o; %o ; .byte ; Illegal initializati | libc-Aufrufe +{'printf': 2} -{'flsbuf': 1} | eigene Aufrufe 10/2
+1EFC   106  -                      nicht V7         0.0  
+1F66   194  -                      nicht V7         0.0  
+2028   220  -                      nicht V7         0.0  
+2104   210  c10.c:movreg           V7 abweichend    2.2  Zeichenkette nur im Binary: byte-operation on register greater 8; f%d; rl%d; rr%d | V7-Zeichenkette fehlt: mov r%d,r%d mov r%d,; mov%c r%d,r%d  | libc-Aufrufe +{'printf': 3} -{}
+21D6    38  -                      nicht V7         0.0  
+21FC    44  -                      nicht V7         0.0  
+2228   118  -                      nicht V7         0.0  
+229E    86  c11.c:max              V7 gleich        0.6  
+22F4    26  -                      nicht V7         0.0  
+230E   160  c11.c:degree           V7 gleich        1.0  
+23AE   672  c11.c:pname            V7 abweichend   13.0  Zeichenkette nur im Binary: #%%%lx; #%%%x; (FP); @FP; @r%d; illegal indirection | V7-Zeichenkette fehlt: $%o; %c(r%d); (r%d)%c | libc-Aufrufe +{} -{'printf': 3, 'flsbuf': 3} | eigene Aufrufe 13/8
+264E    18  c11.c:regerr           V7 gleich        4.0  
+2660    60  c11.c:pbase            V7 abweichend    7.1  libc-Aufrufe +{} -{'printf': 1}
+269C    60  c11.c:xdcalc           V7 gleich        0.8  
+26D8   196  c11.c:dcalc            V7 gleich        0.1  
+279C   138  c11.c:notcompat        V7 gleich        0.1  
+2826   200  c11.c:prins            V7 gleich*       6.0   | eigene Aufrufe 2/1
+28EE    78  c11.c:isfloat          V7 gleich        0.2  
+293C   176  c11.c:oddreg           V7 abweichend    0.2  Zeichenkette nur im Binary: Register overflow for longs: simplify expression | eigene Aufrufe 2/1
+29EC    50  c11.c:arlength         V7 gleich       -0.2  
+2A1E   594  c11.c:pswitch          V7 abweichend    2.1  V7-Zeichenkette fehlt: .text ; jbr L%d ; sub $%o,r0  | libc-Aufrufe +{} -{'printf': 3} | eigene Aufrufe 6/4
+2C70    54  c11.c:breq             V7 abweichend    2.7  V7-Zeichenkette fehlt: cmp r0,$%o ; jeq L%d ; tst r0 
+2CA6   108  c11.c:sort             V7 gleich        3.8  
+2D12   156  c11.c:ispow2           V7 gleich*       0.3   | eigene Aufrufe 0/1
+2DAE    60  -                      nicht V7         0.0  
+2DEA   250  c11.c:pow2             V7 gleich        3.9  
+2EE4   136  -                      nicht V7         0.0  
+2F6C   636  c11.c:cbranch          V7 abweichend   -0.0  V7-Zeichenkette fehlt: cfcc  | libc-Aufrufe +{} -{'printf': 1} | eigene Aufrufe 13/16
+31E8   296  c11.c:branch           V7 abweichend    1.8  V7-Zeichenkette fehlt: jbr | libc-Aufrufe +{'printf': 3} -{}
+3310    22  c11.c:longrel          V7 abweichend    1.3  V7-Zeichenkette fehlt: ashc $0,r%d  | eigene Aufrufe 0/6
+3326    46  c11.c:label            V7 gleich        2.9  
+3354   114  c11.c:error            V7 abweichend    4.8  libc-Aufrufe +{} -{'flsbuf': 1} | eigene Aufrufe 1/0
+33C6    80  c11.c:psoct            V7 abweichend    2.5  Zeichenkette nur im Binary: %%%x | V7-Zeichenkette fehlt: %c%o | eigene Aufrufe 1/0
+3416  2068  c11.c:getree           V7 abweichend   13.9  Zeichenkette nur im Binary: %%%x; BV  | V7-Zeichenkette fehlt: %.8s: ~~%s: ; %o; %o ; .=.+%o ; .bss ; .bss L%d:.=.+2 .text; | libc-Aufrufe +{} -{'atof': 2, 'printf': 10} | eigene Aufrufe 84/81
+3C2A    46  -                      nicht V7         0.0  
+3C58    82  -                      nicht V7         0.0  
+3CAA    40  -                      nicht V7         0.0  
+3CD2   120  c11.c:geti             V7 gleich       -0.0  
+3D4A   100  c11.c:outname          V7 gleich       -0.4  
+3DAE   384  c11.c:strasg           V7 abweichend    7.7  V7-Zeichenkette fehlt: .bss L%d:.=.+%o .tex; L%d:mov (r1)+,(r0)+ ; mov $%o,r2 ; mov | libc-Aufrufe +{} -{'printf': 3} | eigene Aufrufe 12/13
+3F2E    84  c11.c:setype           V7 gleich        1.0  
+3F82    52  c11.c:decref           V7 gleich        3.9  
+3FB6    32  c11.c:incref           V7 gleich        0.4  
+3FD6  1454  c12.c:optim            V7 gleich*       3.4   | eigene Aufrufe 25/33
+4584  1656  c12.c:unoptim          V7 gleich*       0.3   | eigene Aufrufe 15/24
+4BFC   378  c12.c:lvfield          V7 gleich*       3.6   | eigene Aufrufe 9/7
+4D76   840  c12.c:acommute         V7 gleich*       0.7   | eigene Aufrufe 21/22
+50BE   414  c12.c:distrib          V7 gleich*       0.3   | eigene Aufrufe 3/5
+525C    28  c12.c:squash           V7 gleich        0.1  
+5278   244  c12.c:const            V7 gleich*       6.1   | eigene Aufrufe 1/2
+536C   378  c12.c:lconst           V7 gleich*       3.2   | eigene Aufrufe 2/3
+54E6   384  c12.c:insert           V7 gleich        1.1  
+5666    78  c12.c:tnode            V7 gleich        0.9  
+56B4    42  c12.c:tconst           V7 gleich        0.9  
+56DE    88  c12.c:getblk           V7 gleich        6.4  
+5736    22  c12.c:islong           V7 gleich        0.0  
+574C    46  c12.c:isconstant       V7 gleich        0.1  
+577A    84  c12.c:hardlongs        V7 gleich*       0.0   | eigene Aufrufe 1/2
+----  V7 function without binary counterpart: c11.c:collcon (17 lines)
+----  V7 function without binary counterpart: c11.c:xlongrel (20 lines)
+----  V7 function without binary counterpart: c11.c:popstk (16 lines)
+# summary: V7 abweichend 18 (11346 B), V7 gleich 31 (4170 B), V7 gleich* 10 (5804 B), nicht V7 12 (1110 B); V7 functions 62, without counterpart 3

@@ -1,0 +1,13 @@
+# cc: own functions (csv entries and call targets in 0030..0B52) <-> V7 (tools/userspace/wk_w0.py zuordnung)
+# addr size  v7-function  class  score  notes   (assignment by order + features, evidence not proof)
+0030  2090  cc.c:main              V7 abweichend   19.2  Zeichenkette nur im Binary: /tmp/ctm0XXXXXX; /usr/bin/as; /usr/bin/ld; /usr/lib/c0; /usr | V7-Zeichenkette fehlt: -B overwrites earlie; -f overwrites earlie; -l2; -lfpsim; -t | libc-Aufrufe +{'close': 1, 'unlink': 4} -{'setbuf': 1, 'exit': 1, 'strcpy': 4, 'strcat': 4, 'access': 1} | eigene Aufrufe 39/36
+085A    18  cc.c:idexit            V7 gleich        0.8  
+086C    90  cc.c:dexit             V7 gleich        3.4  
+08C6   150  cc.c:error             V7 abweichend    1.2  libc-Aufrufe +{} -{'flsbuf': 1} | eigene Aufrufe 1/0
+095C    78  cc.c:getsuf            V7 gleich        0.1  
+09AA    54  cc.c:setsuf            V7 gleich        0.9  
+09E0   162  cc.c:callsys           V7 gleich        3.4  
+0A82    96  cc.c:copy              V7 abweichend    2.7  libc-Aufrufe +{} -{'malloc': 2} | eigene Aufrufe 3/2
+0AE2    88  cc.c:nodup             V7 gleich        0.9  
+0B3A    24  cc.c:cunlink           V7 gleich        2.5  
+# summary: V7 abweichend 3 (2336 B), V7 gleich 7 (514 B); V7 functions 10, without counterpart 0

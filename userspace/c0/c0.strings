@@ -1,0 +1,136 @@
+5CE8 int
+5CEC char
+5CF1 float
+5CF7 double
+5CFE struct
+5D05 long
+5D0A unsigned
+5D13 union
+5D19 short
+5D1F auto
+5D24 extern
+5D2B static
+5D32 register
+5D3B goto
+5D40 return
+5D4A while
+5D50 else
+5D55 switch
+5D5C case
+5D61 break
+5D67 continue
+5D73 default
+5D7B for
+5D7F sizeof
+5D86 typedef
+5D8E enum
+5D93 Arg count
+5D9F Can't find %s
+5DB1 Can't create temp
+5DC7 Symbol table overflow
+5DDD Illegal #
+5DE7 Illegal #
+5DF1 Warning: %c= operator assumed
+5E0F Nonterminated comment
+5E25 Unknown character
+5E37 Number syntax
+5E45 BNB
+5E56 No character constant
+5E6C Long character constant
+5E84 Nonterminated string
+5E99 %.8s undefined; func. %.8s
+5EB4 (Warning only)
+5EC3 Expression overflow
+5ED7 expression overflow
+5EEB Expression syntax
+5F48  . " 4 (Disallowed conversion
+5F66 Illegal conditional
+5F7A Call of non-function
+5F8F Illegal indirection
+5FA3 Illegal lvalue
+5FB2 Illegal structure ref
+5FC8 Incompatible structures
+5FE0 Illegal conversion
+5FF3 Illegal conversion
+6006 Illegal type of operand
+601E %s:
+6022 %d: 
+6029 Out of space
+6036 Lvalue required
+6046 Divide check
+6053 Constant required
+60BA Illegal storage class
+60D4 Inappropriate parameters
+60ED BSBBSBN
+60F6 BSN
+60FD BBS
+6103 Too many }'s
+6110 External definition syntax
+612B BBS
+6134 Compound statement required
+6150 BNB
+6157 No auto. aggregate initialization
+6179 0-length row: %.8s
+618C No strings in automatic
+61A4 No field initialization
+61BC Illegal enum constant for %.8s
+61E2 Too many initializers: %.8s
+61FE Undefined structure initialization
+6221 Too many structure initializers
+6248 %s multiply defined
+625C Unexpected EOF
+626B Missing '}'
+6277 Case not in switch
+628A Switch table overflow
+62A0 Default not in switch
+62B6 More than 1 'default'
+62CC Inappropriate 'else'
+62E1 Unknown keyword
+62F1 Statement syntax
+6302 Statement syntax
+6313 BNN
+631C Not an argument: %.8s
+6332 names %.8s and %.8s conflict
+634F %.8s undefined
+635E BSN
+63AA Conflict in storage class
+63C4 Type clash
+63CF Misplaced 'unsigned'
+63E4 Misplaced 'long'
+63F5 Bad structure/union/enum name
+6413 %.8s redeclared
+6423 Bad func. storage class
+643B Warning: structure redeclaration
+645C Too many structure members
+6477 BBN
+647D BBNBN
+6485 Illegal enumeration %.8s
+649E Rank too large
+64AD Null dimension
+64BC Type is too complicated
+64D4 Field too long
+64E3 Bad type for field
+64F6 Declaration syntax
+6509 %.8s redeclared
+652A Illegal indirection
+653E BNNN
+6543 B1N0
+6550 Illegal use of type name
+6569 BNN
+6571 BNNN
+6576 BNN
+657A BNF
+657E BNNN
+6583 BNNN
+6588 Illegal use of type
+65A5 BNN
+65AF Undefined structure
+65C3 Compiler error (length)
+65DB Warning: very large data structure
+65FE Break/continue error
+6613 Write error on temp
+6627 Botch in outcode
+67CB cM"
+67CF sLb
+67D3 lLb
+67F4 null
