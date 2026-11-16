@@ -1,0 +1,5 @@
+{
+ "header": [],
+ "flags": "-O -s",
+ "quelle": "original/unix-v7/usr/src/cmd/egrep.y (yacc-generated egrep.c, see tools/userspace/erg_yacc.py)"
+}

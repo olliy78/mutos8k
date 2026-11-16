@@ -1,0 +1,6 @@
+Erwartung: GNU grep 3.11 auf dem Host (/usr/bin/grep -E, LC_ALL=C; der Shell-Alias ugrep wurde NICHT benutzt), jede Befehlszeile einzeln im Verzeichnis mit den Eingaben
+ausgefuehrt, Ausgabe + Exit-Status ("rc=N") -- ein Python-Hilfsskript erzeugt befehle.sh und erwartet.txt aus derselben Fallliste.
+Uebersetzung V7 -> GNU: -s (V7: "no output is produced, only status", original/unix-v7/usr/man/man1/grep.1) = -q.
+Eingaben g1.txt g2.txt pat.txt sind Kopien aus userspace/ergaenzung/grep/test/eingabe.
+Nur Faelle, in denen V7-egrep und GNU gleich arbeiten.  Nicht getestet: -b (V7 Blocknummer zu 512 Byte, GNU Byte-Offset), Zeilen ueber 350/1024 Zeichen,
+{n,m}-Intervalle und Rueckbezuege (nicht in V7-egrep), Fehlermeldungstexte (nur stdout wird verglichen), Muster mit Sonderzeichen in Klassen ([]a], [a\]).
