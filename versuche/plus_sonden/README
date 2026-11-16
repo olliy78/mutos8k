@@ -1,0 +1,9 @@
+Sonden fuer Plan 47 P1.2 (Werkzeugkette im Gast).  Befunde: doc/plus/werkzeug_sonden.md.
+
+sonde_p1_2.py   erzeugt die Probequellen (a*, b*, mix, ldsym, ...), fuehrt sie in EINEM Gastlauf
+                mit as/ld/dd/cmp aus und druckt die Objektkoepfe/Symbole.  Exit 77 ohne Emulator.
+                  python3 -I versuche/plus_sonden/sonde_p1_2.py [arbeit]    (voll, ~2 h Wanduhr!)
+                  P12_KURZ=1 ...   nur a1,a6,b1,b3,b4 + mix + ldsym (ca. 1 h)
+                  P12_KURZ=2 ...   nur mix + ldsym + die Variante ldsymp/mixusp (ld-Symbole mit
+                                   Wert-0-Externs, `X name PR`); NICHT gemessen (Lauf abgebrochen)
+Beachte: Externvereinbarungen (`X ...`) muessen VOR `G name PR` stehen (sonst syntax error).

@@ -290,7 +290,7 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 |---------|----------|----------|-------|-------|--------|
 | P1.0 | `tools/plus/gastlauf.py`, `doc/plus/gastbau.md` §0 | ~10 Min. | erledigt | 2026-11-16 | (Commit) |
 | P1.1 | `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 | ~25 Min. | gemessen (Bau ok; Kernel 4 B zu gross fuer die BSS, Boot verschoben nach P1.5, gastbau.md §1.1) | 2026-11-16 | |
-| P1.2 | `versuche/plus_sonden/`, `doc/plus/werkzeug_sonden.md` | ~10-20 Min. | offen | | |
+| P1.2 | `versuche/plus_sonden/`, `doc/plus/werkzeug_sonden.md` | ~10-20 Min. | erledigt (Frage 3 teilweise: Wert-0-Bezug nicht gemessen) | 2026-11-16 | s. git log |
 | P1.3 | `tools/plus/extrahieren.py`, `kernel/plus/*` | -- (ein Vorgriffslauf, 897 s, gastbau.md §1.2) | erledigt | 2026-11-16 | (Commit) |
 | P1.4 | `tools/plus/gastbau.py`, `kernel/plus/*` | (Fehlersuche) | offen | | |
 | P1.5 | `doc/plus/gastbau.md` §2 | ~25 Min. | offen | | |
