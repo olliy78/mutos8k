@@ -291,7 +291,7 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 | P1.3 | `tools/plus/extrahieren.py`, `kernel/plus/*` | -- (ein Vorgriffslauf, 897 s, gastbau.md §1.2) | erledigt | 2026-11-16 | (Commit) |
 | P1.4 | `tools/plus/gastbau.py`, `kernel/plus/*` | (Fehlersuche) | offen | | |
 | P1.5 | `doc/plus/gastbau.md` §2 | ~25 Min. | offen | | |
-| P2.1 | `doc/plus/feste_adressen.md` | -- | erledigt (3 V-Funde, alle gemessen falsch im Bau aus `kernel/plus`) | 2026-11-16 | (Commit) |
+| P2.1 | `doc/plus/feste_adressen.md` | -- | erledigt (3 V-Funde, alle gemessen falsch im Bau aus `kernel/plus`) | 2026-11-16 | a3b9ca4 |
 | P2.2 | `kernel/plus/daten.c`, Makefile, README, `abweichungen.md` | ~25 Min. | offen | | |
 | P2.3 | `kernel/plus/low.s`, `kernel/conf/conf.c`, `abweichungen.md` | ~25 Min. | offen | | |
 | P3.1 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §5, `abweichungen.md` | ~15 Min. | offen | | |
