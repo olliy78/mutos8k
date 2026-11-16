@@ -27,7 +27,7 @@ Behelfe (`libc_alt`, c2-Regeln mit einer Stelle) braucht die Ganzdatei-Bytegleic
 | 1 | Kleine Befehle: echo, pwd, rmdir, mkdir, chmod, kill, cp, ln, wc, size | **erledigt** 2026-11-10, alle G (`cmd_a1.md`-`cmd_a3.md`) |
 | 2 | Dateisystemwerkzeuge `/etc`: clri, mknod, dcheck, ncheck, icheck, mkfs | **erledigt** 2026-11-10, alle G (`cmd_b1.md`-`cmd_b3.md`; mkfs mit eigenen c2-Regeln R49-R59) |
 | 3 | Mittlere/grosse Befehle: df, rm, mv, od, who, nm, strip, cmp, chown, dd, ps, pstat, pr, passwd, ar, ed, hex, convert | **erledigt** 2026-11-14, alle G (`cmd_s3a.md`, `cmd_s3b1.md`-`cmd_s3b6.md`); `hex`, `convert`, `ps` sind kein V7 und aus Listing rekonstruiert; `ed` mit eigenem c2-Stand (R80-R91) |
-| 4 | Toolchain `as`, `ld`, `cc`, `cpp`, `c0`, `c1`, `c2` (Ziel: Selbsthosting, Regeln des alten c2 klaeren) | offen, eigener Plan |
+| 4 | Toolchain `as`, `ld`, `cc`, `cpp`, `c0`, `c1`, `c2` (Ziel: Selbsthosting, Regeln des alten c2 klaeren) | offen, eigener Plan: `52_werkzeugkette.md` (2026-11-16) |
 | 5 | `bin`-Diskette: mt, tar, adb | offen, niedrige Prioritaet |
 
 Anmerkung zu Stufe 4 (*gemessen* an `original/unix-v7/usr/src/cmd`): In V7 haben Einzeldatei-Befehle (`echo.c`, `cp.c` ...) kein eigenes `makefile`;
