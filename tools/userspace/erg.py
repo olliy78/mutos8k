@@ -5,7 +5,7 @@
   python3 -I tools/userspace/erg.py alles NAME...               # bau + test per program, result line B/T/N
 
 Program directory: userspace/ergaenzung/NAME/ with NAME.c (or several *.c / *.h), erg.json
-({"header": [...relative to original/unix-v7/usr/include], "dateien": [extra files of the folder without .c/.h suffix, optional], "frist": [guest cycle limit of the build, default 20e9; dc needs more, optional], "werkzeuge": [helper programs for the test: ergaenzung program or bin/NAME of the cmd disk, optional], "flags": "-O -s", "quelle": "..."}) and test/
+({"header": [...relative to original/unix-v7/usr/include], "dateien": [extra files of the folder without .c/.h suffix, optional], "werkzeuge": [helper programs for the test: ergaenzung program or bin/NAME of the cmd disk, optional], "flags": "-O -s", "quelle": "..."}) and test/
 (befehle.sh, erwartet.txt, optional eingabe/*, herkunft.txt).  There is no original to compare with: the proof is
 "builds" plus "output equals the expectation".  Exit: 0 ok, 1 difference / no build, 77 emulator or disk missing.
 
@@ -82,8 +82,7 @@ def bau(name, parallel=4):
         raise SystemExit("program name %r too long (at most 9 characters: NAME.err2 must fit 14)" % name)
     q, koepfe = quellen(name)
     ar = pfad(name, "work")
-    erg = U.gast_bauen(os.path.join(ar, "bau"), {name: q}, koepfe, flags=konfig(name)["flags"], parallel=parallel,
-                       frist=konfig(name).get("frist", 20_000_000_000))
+    erg = U.gast_bauen(os.path.join(ar, "bau"), {name: q}, koepfe, flags=konfig(name)["flags"], parallel=parallel)
     r = erg[name]
     os.makedirs(os.path.join(ar, "bau"), exist_ok=True)
     pb = os.path.join(ar, "bau", name + ".bin")
