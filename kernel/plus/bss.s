@@ -4,6 +4,7 @@ constant
 	G	:= global
 	A	:= array
 	B	:= byte
+$SECTION BSS_B
 G	_usegm	A[%2 B]
 G	L8DC2	A[%2 B]
 G	_runrun	A[%2 B]
@@ -74,4 +75,5 @@ G	_slpque	A[%80 B]
 G	_cfree	A[%310 B]
 ! trap.c: int nested (was an unnamed common behind the BSS) !
 G	_nested	A[%2 B]
+$SDEFAULT
 end bss

@@ -137,8 +137,9 @@ def disketten_aus_plus(plus):
     disk2["Makefile"] = lies(os.path.join(plus, "Makefile"), False)
     for c in G.NAT_CDATEIEN:
         (disk1 if c in d1c else disk2)[c + ".c"] = lies(G.cpfad(c))
-    for n in ASM:
-        disk2[n] = lies(os.path.join(plus, n))
+    for n in sorted(os.listdir(plus)):      # abs.s, bss.s, low.s, shim.s, dn*.s (P1.4: abs.o became abs.s)
+        if n not in ("README.md", "mk1", "Makefile"):
+            disk2[n] = lies(os.path.join(plus, n))
     return disk1, disk2, d1c, [c for c in G.NAT_CDATEIEN if c not in d1c]
 
 

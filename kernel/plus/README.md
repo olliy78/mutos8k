@@ -4,19 +4,19 @@ Plan 47 P1.3.  Diese Dateien sind die **nicht-C-Teile** des natuerlichen Kernelb
 die C-Quellen und Header liegen weiter in `kernel/c`, `kernel/conf`, `kernel/h`.  Erzeugt am 2026-11-16 **einmalig** aus dem
 Original-Abbild `mutos_1216` und den Objekten von P1.1 (`/tmp/mplus/p1_1/obj/`) durch `tools/plus/extrahieren.py` (Aufteilung auf zwei
 Quelldisketten durch `tools/plus/basis.py`).  **Ab jetzt von Hand gepflegt**; `extrahieren.py` bleibt nur als Herkunftsbeleg
-(`extrahieren.py --force --ziel <Wegwerfordner>` erzeugt dieselben Bytes, gemessen 2026-11-16).
+(`extrahieren.py --force --ziel <Wegwerfordner>` erzeugte am 2026-11-16 dieselben Bytes; seit P1.4 nicht mehr: `abs.o` -> `abs.s`, `bss.s`, `dn1.s`, `Makefile` sind von Hand geaendert).
 
 | Datei | Inhalt | Herkunft |
 |-------|--------|----------|
 | `low.s` | Assemblerteil `low` (Vektoren, Trap-Eintritt, Start; Text 0000..0674 + Daten bis 875A) | z8kdis des Originals, Modul `low` |
 | `shim.s` | Hilfsroutinen, die der Gast-`cc` erwartet | `gesamtbau.SHIM` |
-| `dn0.s`..`dn3.s` | initialisierte Daten des Kernels (`NAT_DATEN`, ab 875A) | z8kdis, Module `dn0`..`dn3` |
-| `bss.s` | BSS (Nullen im Datenabschnitt, `G _name A[%n B]`) | z8kdis, Modul `bss`; plus `_nested` (unten) |
-| `abs.o` | Objektdatei mit den absoluten Symbolen (`cfreelist` D266 usw.), **binaer** | `gesamtbau.nat_abs` |
+| `dn0.s`..`dn3.s` | initialisierte Daten des Kernels (`NAT_DATEN`, ab 875A); `dn1.s`: `max_proc` = `WV %38+_proc` (= `&proc[2]`, P1.4, vorher die Zahl A154) | z8kdis, Module `dn0`..`dn3` |
+| `bss.s` | BSS als echter BSS-Abschnitt (`$SECTION BSS_B` ... `$SDEFAULT`, `G _name A[%n B]`; ab P1.4, vorher Nullen im Datenabschnitt) | z8kdis, Modul `bss`; plus `_nested` (unten) |
+| `abs.s` | die absoluten Symbole (`_cfreeli` D266 ... `_mapbusy` D584, `_u` FC00), je Symbol `$ABS %adr` / `G` / `_name L` / `_name:` (ab P1.4; ersetzt das Objekt `abs.o` von `gesamtbau.nat_abs`) | Symbole und Werte des alten `abs.o` (`objformat.py nm`) |
 | `mk1` | Makefile fuer Diskette 1 (baut die erste Haelfte der C-Dateien `alloc`..`sig`) | `basis.aufteilen` |
-| `Makefile` | Makefile fuer Diskette 2 (Rest, `low/shim/dn*`, `/bss.o`, bindet `lk`) | `basis.aufteilen` |
+| `Makefile` | Makefile fuer Diskette 2 (Rest, `low/shim/dn*/abs/bss`, bindet `lk`; Standardziel `mutos_1216` = `lk` ohne Kopf per zwei `dd`-Aufrufe, auf 512 B aufgefuellt) | `basis.aufteilen`, P1.4 |
 
-Alle Dateien ausser `abs.o` sind reines ASCII.  Der `as` kennt `! ... !`-Kommentare (`doc/werkzeugkette/as_dialekt.md`), die Quellen
+Alle Dateien sind reines ASCII.  Der `as` kennt `! ... !`-Kommentare (`doc/werkzeugkette/as_dialekt.md`), die Quellen
 tragen aber (bis auf die Zeile zu `_nested`) keine; die Erklaerungen stehen hier.
 
 ## Aufteilung auf zwei Quelldisketten
@@ -48,8 +48,9 @@ Diff gegenueber der Ausgabe von `nat_quellen` (gemessen 2026-11-16, `diff` der A
   `nested` +2); die BSS darf nicht ueber D266 (`cfreelist`) reichen.  Mit 49 Bloecken endet `cfree` 12 B unter D266.
   `cfree[]` ist eine Common-Variable, `bss.s` gibt ihr nur Platz und Namen; die Laenge in `bss.s` entspricht `NCLIST*16` (784), nicht dem
   Originalwert 800 (`%320`) -- ein Block weniger fuer tty und Drucker.
-* `Makefile`: Kopfkommentar englisch; `/bss.o` auf der Wurzel statt `bss.o` auf A (Platz: `bss.o` besteht aus 36 KB Nullen, A faellt sonst voll, `gastbau.md` §1.1);
-  die Regeln der ersten Haelfte stehen in `mk1`.  Das ist ein Provisorium bis P1.4 die BSS als echte BSS erzeugt.
-* Sonst (low, shim, dn0..dn3, abs.o) bytegleich zu `nat_quellen`.
+* `Makefile`: Kopfkommentar englisch; die Regeln der ersten Haelfte stehen in `mk1`.  (Das Provisorium `/bss.o` auf der Wurzel entfiel mit P1.4:
+  `bss.o` ist jetzt ein echter BSS-Abschnitt ohne Nullen und liegt wieder auf A.)
+* Sonst (low, shim, dn0, dn2, dn3) bytegleich zu `nat_quellen`.
+* P1.4: `abs.o` -> `abs.s`; `bss.s` in `$SECTION BSS_B`; `dn1.s` `max_proc` als Verweis; `Makefile` mit Ziel `mutos_1216`.
 
 Die BSS-Grenzpruefung (Ende von `_cfree` <= D266, nicht D256) steht in `tools/plus/basis.py` (`grenze_pruefen`).

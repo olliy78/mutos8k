@@ -22,5 +22,6 @@ E
 end _p_dn1
 I
 _max_pro:
-	BV %A1;BV %54
+	! &proc[2]: proc is 28 bytes per entry, so +%38 !
+	WV %38+_proc
 end dn1
