@@ -1,0 +1,6 @@
+{
+ "header": [],
+ "werkzeuge": ["ar"],
+ "flags": "-O -s",
+ "quelle": "original/unix-v7/usr/src/cmd/ranlib.c"
+}
