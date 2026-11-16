@@ -1,0 +1,8 @@
+Kein Referenzwerkzeug auf dem Host (das MUTOS-Archivformat ist ein eigenes: big-endian, ar_size 32 Bit, siehe doc/werkzeugkette/objformat.md); die Erwartung
+stammt aus dem V7-Text (original/unix-v7/usr/src/cmd/ranlib.c, Handbuch original/unix-v7/usr/man/man1/ranlib.1) und ist je Zeile nachgerechnet:
+* "members before/after": ranlib fuegt __.SYMDEF als erstes Mitglied ein (ar rlb, neu) bzw. ersetzt es (ar rl, zweiter Lauf); ar t listet es.
+* Tabelle: je externem, definiertem Symbol 12 Byte (Name 8 Byte NUL-aufgefuellt, Offset 32 Bit big-endian) in Symbolreihenfolge: _fa, _ga (in a.o), _fb (in b.o).
+  Offset a.o = 2 (Magic) + 26 (Kopf __.SYMDEF) + 36 (3 x 12) = 64 = 0x40 (stash: cloc + offdelta).  Offset b.o = 0x40 + 26 + 248 (Groesse a.o, gemessen mit ls -l im Gast) = 0x152.
+* "link": cc -s -o m m.o lib.a loest fb aus dem Archiv auf, m gibt fb=22 aus.
+* nicht-Archiv / fehlende Datei: Meldungen auf stderr ("not archive: m.c", "nm: cannot open nonexistent", Text steht so in der V7-Quelle), Exit-Status immer 0 (exit(0) am Ende von main).
+Nicht getestet: Archive mit Mitgliedern ohne Symbole ("no name list"), Tabellenueberlauf (700 Eintraege), ar-Fehler.

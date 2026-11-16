@@ -1,0 +1,123 @@
+--- expr 2 + 3
+5
+rc=0
+--- expr 10 - 4
+6
+rc=0
+--- expr 6 '*' 7
+42
+rc=0
+--- expr 17 / 5
+3
+rc=0
+--- expr 17 % 5
+2
+rc=0
+--- expr '(' 2 + 3 ')' '*' 4
+20
+rc=0
+--- expr 2 + 3 '*' 4
+14
+rc=0
+--- expr 100 / 7 / 2
+7
+rc=0
+--- expr 2 '*' 3 '*' 4 - 1
+23
+rc=0
+--- expr 3 '<' 5
+1
+rc=0
+--- expr 5 '<' 3
+0
+rc=1
+--- expr abc '=' abc
+1
+rc=0
+--- expr abc '!=' abd
+1
+rc=0
+--- expr 5 '>' 3
+1
+rc=0
+--- expr 5 '>=' 5
+1
+rc=0
+--- expr 10 '>' 9
+1
+rc=0
+--- expr abc '<' abd
+1
+rc=0
+--- expr 7 '==' 7
+1
+rc=0
+--- expr 0 '|' 7
+7
+rc=0
+--- expr 0 '|' 0
+0
+rc=1
+--- expr 5 '|' 7
+5
+rc=0
+--- expr 5 '&' 0
+0
+rc=1
+--- expr 5 '&' 7
+5
+rc=0
+--- expr abc : 'a\(.*\)'
+bc
+rc=0
+--- expr hello : '.*'
+5
+rc=0
+--- expr hello : 'h'
+1
+rc=0
+--- expr hello : 'e'
+0
+rc=1
+--- expr hello : 'hel\(l\)o'
+l
+rc=0
+--- expr length hello
+5
+rc=0
+--- expr substr hello 2 3
+ell
+rc=0
+--- expr substr hello 1 1
+h
+rc=0
+--- expr substr abc 2 10
+bc
+rc=0
+--- expr index hello l
+3
+rc=0
+--- expr index hello xyz
+0
+rc=1
+--- expr match hello 'h.*'
+5
+rc=0
+--- expr 0
+0
+rc=1
+--- expr ''
+
+rc=1
+--- expr 42
+42
+rc=0
+--- expr 2 +
+rc=2
+--- expr a + 1
+rc=2
+--- expr 
+rc=2
+--- V7 quirk: expr 3 '<=' 5 (LEQ tests i>=0)
+0
+rc=1

@@ -1,0 +1,22 @@
+--- chain (file argument)
+a
+b
+c
+d
+rc=0
+--- dag from stdin, duplicates and self pair
+main
+parse
+lex
+io
+rc=0
+--- single node
+solo
+--- cycle (stdout only, message on stderr)
+x
+y
+rc=0
+--- odd data
+rc=1
+--- missing file
+rc=1

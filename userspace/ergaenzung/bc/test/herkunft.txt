@@ -1,0 +1,8 @@
+Erwartung: GNU bc 1.07.1 auf dem Host (bc -q DATEI </dev/null, LC_ALL=C, BC_LINE_LENGTH=70), je Eingabedatei; ein Python-Hilfsskript erzeugt befehle.sh und erwartet.txt.
+Die Eingaben benutzen nur Syntax, die V7-bc (original/unix-v7/usr/man/man1/bc.1) und GNU bc gleich lesen (einbuchstabige Namen, define/auto/return, while/for/if ohne else,
+scale/ibase/obase, sqrt/length/scale, Felder, Kommentare, quit).  Der Test prueft die ganze Kette: bc (Uebersetzer) -> Pipe -> dc (der Ergaenzung, "werkzeuge": ["dc"] in erg.json).
+Nicht getestet: -l (Mathebibliothek /usr/lib/lib.b gibt es im Gast nicht), -c (reine dc-Ausgabe), else/Funktionen mit Feldparametern, Zeilenumbruch langer Zahlen,
+Fehlermeldungstexte (syntax error), die alten Zuweisungen =+ =- (V7 anders als GNU).
+V7-Eigenheit "quirk": bei ungerader Stellenzahl (scale=5) druckt dc.c tenot() eine fuehrende 0 ("0.33333" statt ".33333"; GNU bc: ".33333"), weil die Ziffernpaare
+byteweise gespeichert sind und das oberste Byte "03" als "0." ausgegeben wird.  Erwartung dort aus dc.c abgeleitet (Zeilen 1298-1302), nicht von GNU; das Gast-Ergebnis stimmt damit ueberein.
+Die scale-Faelle mit GNU-Vergleich benutzen deshalb gerade Stellenzahlen (scale=4, 10, 2).

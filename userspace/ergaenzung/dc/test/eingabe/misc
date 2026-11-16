@@ -1,0 +1,10 @@
+5 sa 7 sb la lb * p
+3 d * p
+1 2 3 zp
+c zp
+[hello world]p
+[[yes]p]sa 3 5 >a 5 3 >a 4 4 =a 4 5 =a
+12345Zp
+[1+p]sa 5 lax
+c 1 2 3 f
+c f

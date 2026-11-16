@@ -1,0 +1,6 @@
+Erwartung: GNU coreutils expr 9.7 auf dem Host (/usr/bin/expr, LC_ALL=C), jeder Fall einzeln mit Ausgabe und Exit-Status ("rc=N") in einer Shell ausgefuehrt
+(Erzeugung durch ein Python-Hilfsskript, das dieselben Befehlszeilen wie befehle.sh benutzt).  Nur Faelle, in denen V7-expr und GNU gleich arbeiten.
+Ausnahme am Ende: "V7 quirk" -- in original/unix-v7/usr/src/cmd/expr.y rel() steht `case LEQ: i = i>=0;` (Fehler im V7-Text, richtig waere <=); der Rest der
+Erwartung ("0", Exit 1) ist aus dieser Zeile abgeleitet, nicht von GNU.
+Nicht getestet (V7 und GNU weichen ab): negative Zahlen als Argument (V7 arith(): "non-numeric argument"), Fehlermeldungstexte (nur stdout wird verglichen, Exit-Status 2 stimmt),
+Division durch 0, Ausdruecke mit mehr als einem \( \) (V7: "Too many '\('s").

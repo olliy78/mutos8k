@@ -1,0 +1,5 @@
+chain, dag: GNU coreutils tsort 9.7 auf dem Host (tsort <datei>), Eingaben so gewaehlt, dass die Ordnung eindeutig ist (V7 und GNU gleich).
+cycle: Ausgabe "x y" von Hand aus original/unix-v7/usr/src/cmd/tsort.c abgeleitet (findloop liefert x, danach y); GNU ordnet Zyklen anders und
+  wurde nicht verglichen.  Die Meldung "cycle in reverse order" geht auf stderr (nicht verglichen).  Exit 0 bei Zyklus (V7 meldet nur).
+solo: ein Paar gleicher Namen "markiert nur das Vorkommen" (V7-Handbuch original/unix-v7/usr/man/man1/tsort.1), Ausgabe "solo".
+odd, missing file: exit(1) laut Quelle (error()); GNU gibt ebenfalls Exit 1 (geprueft: Exit-Wert, nicht der Text).
