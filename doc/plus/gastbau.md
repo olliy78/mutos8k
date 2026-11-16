@@ -125,3 +125,19 @@ Zeilen fuer scheduler, init, sh, ps wie in `doc/kernel/gesamtbau.md` "Stufe 1". 
 
 **Abnahme P2.2/P2.3: erreicht.**
 
+
+## 5. P3.1: Arbeitstests und automatische Bewertung (gemessen 2026-11-16)
+
+`tools/plus/gastbau.py`: `TESTS` = `gesamtbau.BOOTTEST` (b1..b11) + `pstat -p` (`pp`), `pstat -i` (`pi`), `pstat -f` (`pf`); `bewerten(name, text)` gibt die Liste der Fehlschlaege zurueck
+(b1 `.profile`, b2 `init`, b3/b7 `return a + 1`, b4 leer, b5 `t.o`, b7 `e1` 35 B, b8 `summe = 5050` genau zweimal, b9 `prf.o` mit 1600 B, b10 eine Zeile mit `sh` und eine mit `ps`,
+b11 `/dev/lp`, `pp` mindestens drei belegte Eintraege (Zeilen `LOC S ...` mit vierstelliger Hex-Adresse); ueberall: kein `not found`, `core`, `cannot`, `error`, `No space`).
+`pi`/`pf` werden nur auf "Ausgabe vorhanden, kein Fehlertext" geprueft.  `boot_pruefen` ist nicht kopiert: `boot()` ruft `gast_as.gast_befehle` mit `TESTS` und den Dateien aus `testdateien()` auf
+(`t.c`, `t2.c`, `prf.c`, alle Header, `ps`, `pstat` von der cmd-Diskette).
+
+Aufruf: `python3 -I tools/plus/gastbau.py boot --arbeit DIR --kernel F` (Exit 1 bei einem Fehlschlag).
+* Kernel P2.3 (`/tmp/mplus/p2_3/mutos_1216`, Arbeitsordner `/tmp/mplus/p3_1/neu2`, 98 s): `bewerten: no failure`.  `pstat -p`: 4 Prozesse, `proc` ab **A11E** (A11E, A13A, A156, A172), `pstat -i`: 8 Inodes, `pstat -f`: 3 offene Dateien.
+* Gegenprobe Original-Kernel (`mutos_1216` aus `a5120_mutos8000_boot_udos_k5601.hfe` per `k1520disktool get`, `/tmp/mplus/p3_1/alt2`, 96 s): ebenfalls `no failure`; `proc` ab **A11C** (A11C, A138, A154, A170).  Die Bewertung ist also nicht zu streng.
+* Erster Lauf beider Kernel: b9 scheiterte (`Can't find include file param.h`), weil `testdateien` die Header vergessen hatte (Fehler der Testliste, nicht des Kernels; der Lauf zeigt, dass `bewerten` das erkennt).
+* `ttyinput` (Abweichung #1): *nicht ausgeloest*, *abgeleitet*: der Unterschied liegt auf dem Zweig `(c == CPAGE) && tp->t_length` (`kernel/c/tty2.c:444`, Taste ^P im Nicht-RAW-Betrieb).  `t_length` ist 0, solange kein Programm
+  per `TIOCSETA` (`tty2.c:283-290`) eine Seitenlaenge setzt; die Gast-Befehle bringen kein `stty` mit, es braeuchte ein eigenes C-Programm mit `ioctl`.  Der Unterschied ist zudem nur indirekt sichtbar (`t_xstate` wird von keinem
+  Werkzeug angezeigt; `pstat -t` wurde nicht versucht, und der Original-Kernel rechnet mit dem alten Inhalt von `r2`).  Nicht billig, deshalb nicht gemessen.

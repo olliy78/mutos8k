@@ -8,6 +8,7 @@ The host only CHECKS (lk header, end of BSS, kernel file length) and never chang
   python3 -I tools/plus/gastbau.py bauen --arbeit DIR            build in the guest
   python3 -I tools/plus/gastbau.py boot  --arbeit DIR --kernel F boot F, run the work tests b1..b11
   python3 -I tools/plus/gastbau.py alles --arbeit DIR            build, compare with the host cut, boot
+  python3 -I tools/plus/gastbau.py fixpunkt --arbeit DIR         build with the original kernel (K1), then boot K1, build again (K2), K1 == K2?
 Exit 77 without the emulator.
 """
 import argparse
@@ -96,19 +97,25 @@ def lk_pruefen(lk, bss_s):
     return text, data, bss, cf, bende
 
 
-def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000):
-    """Build in the guest.  extra = list of additional shell commands (run after the build, on the source disk 2).
+BAU_BEFEHLE = ["(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1", ("wechsel", 1),
+               "(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make2.log 2>&1",
+               "ls -l /tmp >/tmp/ls.log 2>&1"]
+
+
+def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000, d1_extra=None, d2_extra=None, rueck_extra=()):
+    """Build in the guest.  extra = list of additional shell commands (run after the build; strings or ("wechsel", i)).
+    d1_extra/d2_extra: additional files for source disk 1/2.  rueck_extra: additional names to fetch from /tmp.
     Returns {name: bytes|None} with make1.log make2.log ls.log lk mutos_1216 and the dict key '_dauer'."""
     d1, d2, c1, c2 = quellen(arbeit)
+    d1.update(d1_extra or {})
+    d2.update(d2_extra or {})
     for i, d in enumerate((d1, d2), 1):
         print("disk %d: %d files, %d bytes" % (i, len(d), basis.laenge(d)))
-    befehle = ["(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1", ("wechsel", 1),
-               "(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make2.log 2>&1",
-               "ls -l /tmp >/tmp/ls.log 2>&1"] + list(extra or [])
+    befehle = BAU_BEFEHLE + list(extra or [])
     aus = {}
     erg = gastlauf.lauf(os.path.join(arbeit, "gast"), [d1, d2], befehle,
-                        ["make1.log", "make2.log", "ls.log", "lk", "mutos_1216"], boot_hfe=boot_hfe,
-                        ausfuehrbar=["make", "dd", "cmp"], frist=frist, ausgabe=aus)
+                        ["make1.log", "make2.log", "ls.log", "lk", "mutos_1216"] + list(rueck_extra),
+                        boot_hfe=boot_hfe, ausfuehrbar=["make", "dd", "cmp", "ps", "pstat"], frist=frist, ausgabe=aus)
     print("guest run time (wall clock): %.0f s, log %s" % (aus["dauer"], aus["log"]))
     for n in ("make1.log", "make2.log", "ls.log"):
         print("---", n)
@@ -148,14 +155,148 @@ def pruefen(erg):
     return fehler
 
 
-def boot(arbeit, kernel_bytes):
-    """Boot the kernel and run the work tests b1..b11 (gesamtbau.boot_pruefen)."""
-    return G.boot_pruefen(os.path.join(arbeit, "boot"), kernel_bytes)
+# work tests: gesamtbau.BOOTTEST (b1..b11) plus pstat (P3.1).  pstat reads the kernel tables through /dev/mem.
+TESTS = list(G.BOOTTEST) + [
+    ("pp", "pstat -p >/tmp/pp 2>&1"),
+    ("pi", "pstat -i >/tmp/pi 2>&1"),
+    ("pf", "pstat -f >/tmp/pf 2>&1"),
+]
+
+
+def testdateien(arbeit):
+    """Files the work tests need in the current directory (/mnt): t.c, t2.c, prf.c, the kernel headers, ps, pstat (the last two from the cmd disk)."""
+    q = {"t.c": "int f(a)\nint a;\n{\n\treturn a + 1;\n}\n",
+         "t2.c": "main()\n{\n\tint i, s;\n\ts = 0;\n\tfor (i = 1; i <= 100; i++)\n\t\ts += i;\n"
+                 "\tprintf(\"summe = %d\\n\", s);\n}\n",
+         "prf.c": open(G.cpfad("prf"), "rb").read()}
+    for h in sorted(os.listdir(G.HQUELLEN)):        # prf.c includes param.h, systm.h, buf.h
+        if h.endswith(".h"):
+            q[h] = open(os.path.join(G.HQUELLEN, h), "rb").read()
+    q.update(_cmd_programme(arbeit, ("ps", "pstat")))
+    return q
+
+
+def _zeilen(text):
+    return [z for z in text.replace("\r", "").split("\n") if z.strip()]
+
+
+def bewerten(name, text):
+    """Automatic judgement of one work test output (str).  -> list of failures (empty = ok)."""
+    f = []
+    if text is None:
+        return ["%s: no output file" % name]
+    if re.search(r"not found|\bcore\b|cannot|can't|No space|error", text, re.I):
+        f.append("%s: error text in the output" % name)
+    z = _zeilen(text)
+    if name != "b4" and not z:         # b4 = `cc -c t.c`: silent on success
+        f.append("%s: empty output" % name)
+    if name == "b1" and not re.search(r"\.profile", text):
+        f.append("b1: no .profile in ls -l /")
+    elif name == "b2" and not re.search(r"^init$", text, re.M):
+        f.append("b2: no init in ls /etc")
+    elif name in ("b3", "b7") and not re.search(r"return a \+ 1", text):
+        f.append("%s: cat of t.c missing" % name)
+    elif name == "b4" and z:
+        f.append("b4: cc -c t.c printed something")
+    elif name == "b5" and not re.search(r"\bt\.o\b", text):
+        f.append("b5: no t.o")
+    elif name == "b7" and not re.search(r"\b35\b.*/tmp/e1", text):
+        f.append("b7: e1 is not 35 bytes")
+    elif name == "b8" and len(re.findall(r"summe = 5050", text)) != 2:
+        f.append("b8: summe = 5050 not exactly twice")
+    elif name == "b9" and not re.search(r"\b1600\b.*\bprf\.o\b", text):
+        f.append("b9: no prf.o with 1600 bytes")
+    elif name == "b10":
+        if not any(re.search(r"\bsh\b", l) for l in z):
+            f.append("b10: no sh line in ps")
+        if not any(re.search(r"\bps\b", l) for l in z):
+            f.append("b10: no ps line in ps")
+    elif name == "b11" and not re.search(r"/dev/lp", text):
+        f.append("b11: no /dev/lp in ls -l")
+    elif name == "pp":
+        n = sum(1 for l in z if PSTAT_P_BELEGT.search(l))
+        if n < 3:
+            f.append("pp: pstat -p lists %d occupied entries (< 3)" % n)
+    return f
+
+
+# pstat -p line of an occupied process-table entry: `LOC S F ...` with LOC = 4 hex digits (measured 2026-11-16, doc/plus/gastbau.md 5)
+PSTAT_P_BELEGT = re.compile(r"^[0-9A-F]{4}\s+\d")
+
+
+def boot(arbeit, kernel_bytes, frist=20_000_000_000):
+    """Boot the kernel, run the work tests (TESTS) in the guest, judge them (bewerten).  -> True when no failure."""
+    lade = G.ladediskette(arbeit, kernel_bytes)
+    aus = {}
+    erg = gast_as.gast_befehle(os.path.join(arbeit, "boot"), testdateien(arbeit), [b for _, b in TESTS], [n for n, _ in TESTS],
+                               frist=frist, ausgabe=aus, boot_hfe=lade, schirm=True, ausfuehrbar=["ps", "pstat"])
+    print("boot test run time (wall clock): %.0f s, log %s" % (aus["dauer"], aus["log"]))
+    return auswerten(erg)
+
+
+def auswerten(erg):
+    """Print and judge the test outputs in erg.  -> True when no failure."""
+    fehler = []
+    for n, b in TESTS:
+        v = erg.get(n)
+        print("--- %s  (%s)" % (b, "missing" if v is None else "ok"))
+        t = None if v is None else v.decode("latin-1")
+        if t is not None:
+            print(t.rstrip())
+        fehler += bewerten(n, t)
+    for x in fehler:
+        print("FAILURE:", x)
+    print("bewerten: %s" % ("no failure" if not fehler else "%d failure(s)" % len(fehler)))
+    return not fehler
+
+
+def fixpunkt(arbeit):
+    """P3.2: run 1 builds K1 with the original kernel; run 2 boots K1, builds K2 and compares K2 with K1 in the guest and on the host.
+    K1 sits on source disk 1 (disk 2 has no room: 210 KB + 36 KB > 239 KB); the work tests run on disk 2 (cwd /mnt).
+    -> True when cmp.log is empty, gleich exists, K1 == K2 and bewerten finds no failure."""
+    os.makedirs(arbeit, exist_ok=True)
+    print("=== run 1: build with the original kernel")
+    e1 = bauen(os.path.join(arbeit, "lauf1"))
+    f = pruefen(e1)
+    for x in f:
+        print("FAILURE:", x)
+    if f:
+        return False
+    k1 = e1["mutos_1216"]
+    lade = G.ladediskette(os.path.join(arbeit, "lade_k1"), k1)
+    print("=== run 2: boot K1, build, cmp with K1, work tests")
+    extra = ["cp /mnt/cmp /tmp/cmp", ("wechsel", 0),
+             "/tmp/cmp /tmp/mutos_1216 /mnt/k1 >/tmp/cmp.log 2>&1 && ls -l /tmp/mutos_1216 >/tmp/gleich 2>&1",
+             "rm -f /tmp/*.o", ("wechsel", 1)] + [b for _, b in TESTS]
+    e2 = bauen(os.path.join(arbeit, "lauf2"), boot_hfe=lade, extra=extra, d1_extra={"k1": k1},
+               d2_extra=testdateien(arbeit), rueck_extra=["cmp.log", "gleich"] + [n for n, _ in TESTS])
+    ok = not pruefen(e2)
+    k2 = e2.get("mutos_1216")
+    cmplog, gleich = e2.get("cmp.log"), e2.get("gleich")
+    print("cmp.log: %s; gleich: %s" % ("missing" if cmplog is None else "%d bytes" % len(cmplog), "missing" if gleich is None else gleich.decode("latin-1").strip()))
+    if cmplog:
+        print(cmplog.decode("latin-1"))
+        ok = False
+    if gleich is None:
+        ok = False
+    if k2 is None:
+        print("FAILURE: K2 not produced")
+        return False
+    print("K1 sha256 %s (%d B)\nK2 sha256 %s (%d B)" % (hashlib.sha256(k1).hexdigest(), len(k1), hashlib.sha256(k2).hexdigest(), len(k2)))
+    if k1 != k2:
+        ok = False
+        m = [i for i in range(min(len(k1), len(k2))) if k1[i] != k2[i]]
+        print("FAILURE: K1 != K2: %d differing bytes (length %d/%d); first offsets: %s" % (
+            len(m) + abs(len(k1) - len(k2)), len(k1), len(k2), " ".join("%04X" % i for i in m[:20])))
+    if not auswerten(e2):
+        ok = False
+    print("FIXPUNKT:", "ja" if ok else "NEIN")
+    return ok
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=("bauen", "boot", "alles"))
+    ap.add_argument("cmd", choices=("bauen", "boot", "alles", "fixpunkt"))
     ap.add_argument("--arbeit", required=True)
     ap.add_argument("--kernel")
     a = ap.parse_args(argv)
@@ -163,6 +304,8 @@ def main(argv=None):
         gast_as.pruefe_hilfsmittel()
         if a.cmd == "boot":
             return 0 if boot(a.arbeit, open(a.kernel, "rb").read()) else 1
+        if a.cmd == "fixpunkt":
+            return 0 if fixpunkt(a.arbeit) else 1
         erg = bauen(a.arbeit)
         f = pruefen(erg)
         for x in f:
