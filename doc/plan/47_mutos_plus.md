@@ -298,5 +298,5 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 | P2.2 | `kernel/plus/daten.c`, Makefile, README, `abweichungen.md` | ~25 Min. | erledigt 2026-11-16 | gastbau.md §3/§4 | |
 | P2.3 | `kernel/plus/low.s`, `kernel/conf/conf.c`, `abweichungen.md` | ~25 Min. | erledigt 2026-11-16 | gastbau.md §3/§4 | |
 | P3.1 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §5, `abweichungen.md` | ~15 Min. | erledigt (`bewerten` fehlerfrei mit P2.3- und Original-Kernel; ttyinput nicht ausloesbar, abgeleitet) | 2026-11-16 | s. git log |
-| P3.2 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §6 | ~50 Min. | offen | | |
+| P3.2 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §6 | ~50 Min. | erledigt (K1 == K2, `cmp.log` leer; dritte Quelldiskette, Lauf 2 mit K1 aus Lauf 1 wiederholt, gastbau.md §6) | 2026-11-17 | s. git log |
 | P3.3 | `tests/test_plus_selbstbau.py`, Doku | (Langtest) | offen | | |

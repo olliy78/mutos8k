@@ -102,18 +102,19 @@ BAU_BEFEHLE = ["(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1", ("wechse
                "ls -l /tmp >/tmp/ls.log 2>&1"]
 
 
-def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000, d1_extra=None, d2_extra=None, rueck_extra=()):
+def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000, d3=None, rueck_extra=()):
     """Build in the guest.  extra = list of additional shell commands (run after the build; strings or ("wechsel", i)).
-    d1_extra/d2_extra: additional files for source disk 1/2.  rueck_extra: additional names to fetch from /tmp.
+    d3: files of an optional third source disk (reached with ("wechsel", 2)).  rueck_extra: additional names to fetch from /tmp.
     Returns {name: bytes|None} with make1.log make2.log ls.log lk mutos_1216 and the dict key '_dauer'."""
     d1, d2, c1, c2 = quellen(arbeit)
-    d1.update(d1_extra or {})
-    d2.update(d2_extra or {})
     for i, d in enumerate((d1, d2), 1):
         print("disk %d: %d files, %d bytes" % (i, len(d), basis.laenge(d)))
     befehle = BAU_BEFEHLE + list(extra or [])
     aus = {}
-    erg = gastlauf.lauf(os.path.join(arbeit, "gast"), [d1, d2], befehle,
+    disks = [d1, d2] + ([d3] if d3 else [])
+    if d3:
+        print("disk 3: %d files, %d bytes" % (len(d3), basis.laenge(d3)))
+    erg = gastlauf.lauf(os.path.join(arbeit, "gast"), disks, befehle,
                         ["make1.log", "make2.log", "ls.log", "lk", "mutos_1216"] + list(rueck_extra),
                         boot_hfe=boot_hfe, ausfuehrbar=["make", "dd", "cmp", "ps", "pstat"], frist=frist, ausgabe=aus)
     print("guest run time (wall clock): %.0f s, log %s" % (aus["dauer"], aus["log"]))
@@ -250,26 +251,34 @@ def auswerten(erg):
     return not fehler
 
 
-def fixpunkt(arbeit):
+def fixpunkt(arbeit, k1_datei=None):
     """P3.2: run 1 builds K1 with the original kernel; run 2 boots K1, builds K2 and compares K2 with K1 in the guest and on the host.
-    K1 sits on source disk 1 (disk 2 has no room: 210 KB + 36 KB > 239 KB); the work tests run on disk 2 (cwd /mnt).
+    Neither source disk has room for K1 and the test files (a disk holds ~230 KB with the file system overhead, disk 1 is at 207 KB,
+    disk 2 at 233 KB), so a THIRD disk carries k1, cmp, the test files and the headers; the work tests run on it (cwd /mnt).
+    k1_datei: use that file as K1 instead of run 1 (only to repeat run 2 with the same K1; the test and the plan do the full fixpunkt).
     -> True when cmp.log is empty, gleich exists, K1 == K2 and bewerten finds no failure."""
     os.makedirs(arbeit, exist_ok=True)
-    print("=== run 1: build with the original kernel")
-    e1 = bauen(os.path.join(arbeit, "lauf1"))
-    f = pruefen(e1)
-    for x in f:
-        print("FAILURE:", x)
-    if f:
-        return False
-    k1 = e1["mutos_1216"]
+    if k1_datei:
+        k1 = open(k1_datei, "rb").read()
+        print("=== run 1 skipped: K1 = %s (%d B, sha256 %s)" % (k1_datei, len(k1), hashlib.sha256(k1).hexdigest()))
+    else:
+        print("=== run 1: build with the original kernel")
+        e1 = bauen(os.path.join(arbeit, "lauf1"))
+        f = pruefen(e1)
+        for x in f:
+            print("FAILURE:", x)
+        if f:
+            return False
+        k1 = e1["mutos_1216"]
     lade = G.ladediskette(os.path.join(arbeit, "lade_k1"), k1)
     print("=== run 2: boot K1, build, cmp with K1, work tests")
-    extra = ["cp /mnt/cmp /tmp/cmp", ("wechsel", 0),
-             "/tmp/cmp /tmp/mutos_1216 /mnt/k1 >/tmp/cmp.log 2>&1 && ls -l /tmp/mutos_1216 >/tmp/gleich 2>&1",
-             "rm -f /tmp/*.o", ("wechsel", 1)] + [b for _, b in TESTS]
-    e2 = bauen(os.path.join(arbeit, "lauf2"), boot_hfe=lade, extra=extra, d1_extra={"k1": k1},
-               d2_extra=testdateien(arbeit), rueck_extra=["cmp.log", "gleich"] + [n for n, _ in TESTS])
+    d3 = testdateien(arbeit)
+    d3["k1"] = k1
+    d3.update(_cmd_programme(arbeit, ("cmp",)))
+    extra = [("wechsel", 2),
+             "cmp /tmp/mutos_1216 /mnt/k1 >/tmp/cmp.log 2>&1 && ls -l /tmp/mutos_1216 >/tmp/gleich 2>&1",
+             "rm -f /tmp/*.o"] + [b for _, b in TESTS]
+    e2 = bauen(os.path.join(arbeit, "lauf2"), boot_hfe=lade, extra=extra, d3=d3, rueck_extra=["cmp.log", "gleich"] + [n for n, _ in TESTS])
     ok = not pruefen(e2)
     k2 = e2.get("mutos_1216")
     cmplog, gleich = e2.get("cmp.log"), e2.get("gleich")
@@ -299,13 +308,14 @@ def main(argv=None):
     ap.add_argument("cmd", choices=("bauen", "boot", "alles", "fixpunkt"))
     ap.add_argument("--arbeit", required=True)
     ap.add_argument("--kernel")
+    ap.add_argument("--k1", help="fixpunkt: use this file as K1 instead of building it (repeat run 2 only)")
     a = ap.parse_args(argv)
     try:
         gast_as.pruefe_hilfsmittel()
         if a.cmd == "boot":
             return 0 if boot(a.arbeit, open(a.kernel, "rb").read()) else 1
         if a.cmd == "fixpunkt":
-            return 0 if fixpunkt(a.arbeit) else 1
+            return 0 if fixpunkt(a.arbeit, a.k1) else 1
         erg = bauen(a.arbeit)
         f = pruefen(erg)
         for x in f:

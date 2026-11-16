@@ -141,3 +141,22 @@ Aufruf: `python3 -I tools/plus/gastbau.py boot --arbeit DIR --kernel F` (Exit 1 
 * `ttyinput` (Abweichung #1): *nicht ausgeloest*, *abgeleitet*: der Unterschied liegt auf dem Zweig `(c == CPAGE) && tp->t_length` (`kernel/c/tty2.c:444`, Taste ^P im Nicht-RAW-Betrieb).  `t_length` ist 0, solange kein Programm
   per `TIOCSETA` (`tty2.c:283-290`) eine Seitenlaenge setzt; die Gast-Befehle bringen kein `stty` mit, es braeuchte ein eigenes C-Programm mit `ioctl`.  Der Unterschied ist zudem nur indirekt sichtbar (`t_xstate` wird von keinem
   Werkzeug angezeigt; `pstat -t` wurde nicht versucht, und der Original-Kernel rechnet mit dem alten Inhalt von `r2`).  Nicht billig, deshalb nicht gemessen.
+
+## 6. P3.2: Fixpunkt des Selbstbaus (gemessen 2026-11-16/17)
+
+Aufruf: `python3 -I tools/plus/gastbau.py fixpunkt --arbeit DIR` (Lauf 1: Bau mit dem Original-Kernel -> K1; Lauf 2: Boot mit K1 auf der Ladediskette, Bau -> K2, im Gast
+`cmp /tmp/mutos_1216 /mnt/k1 >/tmp/cmp.log && ls -l ... >/tmp/gleich`, danach `TESTS` aus §5; der Host vergleicht K1/K2 zusaetzlich selbst).
+
+**Abweichung vom Plan (Platz):** K1 passt weder auf Diskette 1 noch auf Diskette 2 (Versuch `/tmp/mplus/p3_2/lauf2`: `put` meldet `Kein Platz mehr auf dem Datentraeger` schon bei Diskette 1 mit 221 204 B Nutzdaten;
+eine Diskette fasst wegen Indirektbloecken und Blockrundung nur etwa 230 KB).  Deshalb eine **dritte Quelldiskette** (29 Dateien, 107 672 B: `k1`, `cmp`, Header, `t.c`, `t2.c`, `prf.c`, `ps`, `pstat`):
+`wechsel 2` nach dem Bau, `cmp`, `rm -f /tmp/*.o`, dann die Arbeitstests mit cwd `/mnt` auf dieser Diskette.
+
+Messung (zwei Teilmessungen, **ein Gesamtlauf wurde nicht in einem Aufruf gemessen**):
+* Lauf 1 (`/tmp/mplus/p3_2/lauf1`, Original-Kernel, 815 s): `lk` text 34 652 / data 1 638 / bss 17 560, sha256 `edf4bc86...918bdf`; K1 = 36 352 B, sha256 `a0e2a9c519470477e681803bce34dc7bd4e835ec5ef231e31c81405c9ed97e25`
+  (derselbe Kernel wie P2.3 und der Host-Schnitt).
+* Lauf 2 (`/tmp/mplus/p3_2b`, `fixpunkt --k1 <K1 aus Lauf 1>`, Boot mit K1, 831 s Gast + Arbeitstests): `lk` identisch (sha256 wie oben), K2 sha256 `a0e2a9c5...e97e25` = K1, **`cmp.log` 0 B, `gleich` vorhanden**
+  (`-rw-rw-r-- 1 root 36352 ... /tmp/mutos_1216`), Host: K1 == K2, `bewerten: no failure` (`pstat -p` 4 Prozesse ab A11E).
+* `--k1` (Lauf 1 ueberspringen) wurde nur benutzt, weil der erste Versuch von Lauf 2 am Platz scheiterte; Lauf 1 war schon fertig, die Quellen und Lauf-1-Code unveraendert.
+  Der Langtest (`tests/test_plus_selbstbau.py -k lang`) ruft `fixpunkt` ohne `--k1`; er wurde **nicht** erneut gelaufen, die Messung oben ist seine Referenz.
+
+**Abnahme P3.2: erreicht** (`cmp.log` leer, `gleich` vorhanden, K1 == K2, kein Fehlschlag bei `bewerten`).  Der neue Kernel aendert die Ausgabe von `cc`/`as`/`ld` nicht (Erwartung bestaetigt).
