@@ -1,0 +1,364 @@
+--- s/foo/FOO/ b.txt
+alpha beta
+FOO bar foo
+Hello World
+  indented line
+abcabcabc
+end. fin.
+--- s/o/0/g
+alpha beta
+f00 bar f00
+Hell0 W0rld
+  indented line
+abcabcabc
+end. fin.
+--- s/x/y/ nth-less: first only
+Alpha beta
+foo bAr foo
+Hello World
+  indented line
+Abcabcabc
+end. fin.
+--- -n 3,5p
+three
+four
+five
+--- -n $p
+ten
+--- 2,4d
+one
+five
+six
+seven
+eight
+nine
+ten
+--- regex range /^f/,/^s/d
+one
+two
+three
+seven
+eight
+nine
+ten
+--- -n /e$/p
+one
+three
+five
+nine
+--- 3!d
+three
+--- 2q
+one
+two
+--- -n /three/,$p
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+--- y/abc/xyz/
+xlphx yetx
+foo yxr foo
+Hello World
+  indented line
+xyzxyzxyz
+end. fin.
+--- backrefs
+alpha beta
+foo bar foo
+Hello World
+  indented line
+bacbacbac
+end. fin.
+--- & in replacement
+(a)lph(a) b(e)t(a)
+f(o)(o) b(a)r f(o)(o)
+H(e)ll(o) W(o)rld
+  (i)nd(e)nt(e)d l(i)n(e)
+(a)bc(a)bc(a)bc
+(e)nd. f(i)n.
+--- star
+<a>lph<a> bet<a>
+foo b<a>r foo
+Hello World
+  indented line
+<abc><abc><abc>
+end. fin.
+--- anchors and dot
+[alp]ha b[eta]
+[foo] bar [foo]
+[Hel]lo Wo[rld]
+[  i]ndented l[ine]
+[abc]abc[abc]
+[end]. f[in.]
+--- -e twice
+1
+2
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+--- -n with p flag
+onE
+thrEE
+fivE
+sEvEn
+Eight
+ninE
+tEn
+--- a text
+one
+two
+three
+after three
+four
+five
+six
+seven
+eight
+nine
+ten
+--- i text
+HEAD
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+--- c text
+one
+two
+three
+four
+CHANGED
+six
+seven
+eight
+nine
+ten
+--- c on range
+one
+RANGE
+five
+six
+seven
+eight
+nine
+ten
+--- a multi-line text
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+line1
+line2
+--- = line numbers
+16
+--- = with p
+5
+five
+--- N join
+one+two
+three+four
+five+six
+seven+eight
+nine+ten
+--- $!N;P;D
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+--- G double space
+alpha beta
+
+foo bar foo
+
+Hello World
+
+  indented line
+
+abcabcabc
+
+end. fin.
+
+--- tac
+ten
+nine
+eight
+seven
+six
+five
+four
+three
+two
+one
+--- H x
+,one,two,three,four,five,six,seven,eight,nine,ten
+--- hold g
+two
+--- n
+two
+four
+six
+eight
+ten
+--- branch b label
+one two three four five six seven eight nine ten
+--- t loop
+alpha beta
+foo bar foo
+Hello World
+  indented line
+abcabcabc
+end. fin.
+--- t with s flag
+1
+Two
+Three
+four
+five
+six
+seven
+eighT
+nine
+Ten
+--- b to end
+one !
+two
+three
+four !
+five !
+six !
+seven !
+eight
+nine !
+ten
+--- two files, line numbers continue
+eight
+nine
+ten
+alpha beta
+foo bar foo
+--- two files $
+end. fin.
+--- stdin
+two
+nine
+--- -f script
+alpha beta
+FOO bar foo
+Hello World
+  indented line
+abcabcabc
+end. fin.
+appended
+--- -f and -e accumulate
+ALPHA beta
+FOO bar foo
+Hello World
+  indented line
+abcabcabc
+end. fin.
+appended
+--- r file
+one
+two
+three
+ADDED
+four
+five
+six
+seven
+eight
+nine
+ten
+--- w file
+one
+three
+five
+seven
+eight
+nine
+ten
+--- s///w
+Two
+Three
+eighT
+Ten
+--- { } group with !
+one
+five
+seven
+eight
+nine
+ten
+--- # n first line
+five
+--- different delimiter
+on<e>
+Two
+Thr<e>e
+four
+fiv<e>
+six
+s<e>ven
+<e>ighT
+nin<e>
+T<e>n
+--- P and \n in RE
+two
+--- empty regex = last
+THree
+--- special: \. and [.]
+alpha beta
+foo bar foo
+Hello World
+  indented line
+abcabcabc
+end! fin?
+--- class range
+#lph# #et#
+foo ##r foo
+Hello World
+  indented line
+#########
+end. fin.
+--- neg class
+alpha_beta
+foo_bar_foo
+_ello__orld
+__indented_line
+abcabcabc
+end__fin_
+--- no match: unchanged
+ten
+--- exit codes: q
+rc=0
+--- l command
+tab>-here\01ctl
+plain

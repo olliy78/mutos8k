@@ -1,0 +1,8 @@
+Erwartung: GNU sed 4.9 auf dem Host (LC_ALL=C, /usr/bin/sed), `sh befehle.sh` im Verzeichnis mit den Eingaben ausgefuehrt; Abschnitt "l command" ausgenommen.
+Nur Faelle, in denen V7-sed und GNU gleich arbeiten (Befehle nach dem V7-Handbuch original/unix-v7/usr/man/man1/sed.1: a b c d D g G h H i l n N p P q r s t w x y ! : = { }, Optionen -n -e -f).
+Ausgelassen (V7 anders oder nicht vorhanden): -i -r -s, s-Flag N/I, \+ \? \| \{ \}, a/i/c in einer Zeile, Zeilen > 4000 Zeichen, w /dev/stdout.
+"l command": V7-Format aus dem Quelltext sed1.c (Tabelle trans[]): Tab = ">" BS "-" (Ueberdruck, im Quelltext ">^H-"), Steuerzeichen als zweistellige Oktalzahl mit Backslash (\01), kein "$" am Zeilenende;
+GNU druckt \t, \001 und "$" -- daher kein GNU-Vergleich, Erwartung "tab>BS-here\01ctl" / "plain" von Hand aus dem Quelltext.
+V7-Verhalten mit GNU-Uebereinstimmung, aus der Quelle bestaetigt: ';' trennt Befehle (sed0.c fcomp, comploop); `D` startet den Zyklus ohne neue Eingabe (jflag, lb1 = ptrspace).
+V7-Besonderheit (gemessen, Gast-Meldung `Label too long`): Marke bei b/t/: reicht bis Zeilenende (hoechstens 8 Zeichen), `;` beendet sie nicht -- die Tests setzen nach b/t/: einen Zeilenumbruch (GNU akzeptiert beides).
+V7-Besonderheit (aus sed1.c, im Gast beobachtet): sflag wird nur von `t` zurueckgesetzt, nicht beim Lesen einer neuen Zeile (Handbuch sagt anders); ein erfolgreiches s in einem frueheren Zyklus laesst das naechste `t` springen.  GNU setzt je Zyklus zurueck.  Der Test vermeidet das (nach `t` nur y, kein s).
