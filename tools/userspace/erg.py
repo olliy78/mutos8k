@@ -5,7 +5,7 @@
   python3 -I tools/userspace/erg.py alles NAME...               # bau + test per program, result line B/T/N
 
 Program directory: userspace/ergaenzung/NAME/ with NAME.c (or several *.c / *.h), erg.json
-({"header": [...relative to original/unix-v7/usr/include], "dateien": [extra files of the folder without .c/.h suffix, optional], "flags": "-O -s", "quelle": "..."}) and test/
+({"header": [...relative to original/unix-v7/usr/include], "dateien": [extra files of the folder without .c/.h suffix, optional], "werkzeuge": [helper programs for the test: ergaenzung program or bin/NAME of the cmd disk, optional], "flags": "-O -s", "quelle": "..."}) and test/
 (befehle.sh, erwartet.txt, optional eingabe/*, herkunft.txt).  There is no original to compare with: the proof is
 "builds" plus "output equals the expectation".  Exit: 0 ok, 1 difference / no build, 77 emulator or disk missing.
 
@@ -60,6 +60,22 @@ def quellen(name):
     return {f: open(os.path.join(d, f), encoding="latin-1").read() for f in cs}, koepfe
 
 
+def werkzeuge(name):
+    """Helper programs the test needs (erg.json "werkzeuge": ["ar", ...]) -> {name: bytes}.
+    A program of userspace/ergaenzung/ with a finished build wins (bc needs dc), else bin/NAME of the original
+    cmd disk (ar, nm, ...) -- the guest of the test has only the root and usr disks."""
+    r = {}
+    for w in konfig(name).get("werkzeuge", []):
+        pb = pfad(w, "work", "bau", w + ".bin")
+        if os.path.isdir(pfad(w)):
+            if not os.path.isfile(pb) and not bau(w)[0]:
+                raise SystemExit("%s: helper %s does not build" % (name, w))
+            r[w] = open(pb, "rb").read()
+        else:
+            r[w] = U.platte_holen("cmd", "bin/" + w, os.path.join(pfad(name), "work", "_werkzeug"))
+    return r
+
+
 def bau(name, parallel=4):
     """Guest build; writes work/bau/NAME.bin and NAME.err.  Returns (ok, messages)."""
     if len(name) > 9:
@@ -94,7 +110,9 @@ def test(name):
         ok, _ = bau(name)
         if not ok:
             return 2
+    wz = werkzeuge(name)
     q = {name: open(pb, "rb").read(), "befehle.sh": open(os.path.join(td, "befehle.sh"), "rb").read()}
+    q.update(wz)
     ein = os.path.join(td, "eingabe")
     eingaben = sorted(os.listdir(ein)) if os.path.isdir(ein) else []
     for f in eingaben:
@@ -103,7 +121,7 @@ def test(name):
     befehle.append("cd /tmp;PATH=/mnt:/bin:/usr/bin sh /mnt/befehle.sh >/tmp/aus.txt 2>/tmp/aus.err;cd /mnt")
     ar = pfad(name, "work", "test")
     aus = {}
-    r = gast_as.gast_befehle(ar, q, befehle, ["aus.txt", "aus.err"], frist=FRIST, ausgabe=aus, ausfuehrbar=(name,))
+    r = gast_as.gast_befehle(ar, q, befehle, ["aus.txt", "aus.err"], frist=FRIST, ausgabe=aus, ausfuehrbar=(name,) + tuple(wz))
     ist = (r.get("aus.txt") or b"").decode("latin-1")
     with open(os.path.join(ar, name + ".ist"), "w") as f:
         f.write(ist)

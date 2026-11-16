@@ -1,0 +1,138 @@
+--- egrep apple g1.txt
+apple crumble
+last line apple
+rc=0
+--- egrep 'apple|banana' g1.txt
+banana split
+apple crumble
+last line apple
+rc=0
+--- egrep '^a' g1.txt
+apple crumble
+ab*c literal
+aXXc and abbbc
+rc=0
+--- egrep 'e$' g1.txt
+Apple pie
+apple crumble
+last line apple
+-v is not an option here
+rc=0
+--- egrep 'ab*c' g1.txt
+aXXc and abbbc
+rc=0
+--- egrep 'a(b|X)+c' g1.txt
+aXXc and abbbc
+rc=0
+--- egrep 'ap+le' g1.txt
+apple crumble
+last line apple
+rc=0
+--- egrep '[a-c]an' g1.txt
+banana split
+rc=0
+--- egrep '[^a-z ]' g1.txt
+Apple pie
+Banana bread
+-v is not an option here
+ab*c literal
+aXXc and abbbc
+rc=0
+--- egrep 'ba?nana' g1.txt
+banana split
+rc=0
+--- egrep '^$' g1.txt
+
+rc=0
+--- egrep '(an)*a' g1.txt
+banana split
+cherry tart
+apple crumble
+Banana bread
+grape jelly
+last line apple
+-v is not an option here
+ab*c literal
+aXXc and abbbc
+rc=0
+--- egrep -v apple g1.txt
+Apple pie
+banana split
+cherry tart
+Banana bread
+grape jelly
+
+-v is not an option here
+ab*c literal
+aXXc and abbbc
+rc=0
+--- egrep -c apple g1.txt
+2
+rc=0
+--- egrep -n apple g1.txt
+4:apple crumble
+8:last line apple
+rc=0
+--- egrep -n -v apple g1.txt
+1:Apple pie
+2:banana split
+3:cherry tart
+5:Banana bread
+6:grape jelly
+7:
+9:-v is not an option here
+10:ab*c literal
+11:aXXc and abbbc
+rc=0
+--- egrep apple g1.txt g2.txt
+g1.txt:apple crumble
+g1.txt:last line apple
+g2.txt:second file apple
+rc=0
+--- egrep -c apple g1.txt g2.txt
+g1.txt:2
+g2.txt:1
+rc=0
+--- egrep -l apple g1.txt g2.txt
+g1.txt
+g2.txt
+rc=0
+--- egrep -h apple g1.txt g2.txt
+apple crumble
+last line apple
+second file apple
+rc=0
+--- egrep -n banana g1.txt g2.txt
+g1.txt:2:banana split
+g2.txt:3:banana again
+rc=0
+--- egrep -e -v g1.txt
+-v is not an option here
+rc=0
+--- egrep -f pat.txt g1.txt g2.txt
+g1.txt:banana split
+g1.txt:cherry tart
+g2.txt:banana again
+rc=0
+--- egrep -s apple g1.txt
+rc=0
+--- egrep -s zebra g1.txt
+rc=1
+--- egrep zebra g1.txt
+rc=1
+--- egrep apple nonexistent
+rc=2
+--- egrep apple <g1.txt
+apple crumble
+last line apple
+rc=0
+--- egrep -c e <g1.txt
+8
+rc=0
+--- egrep Apple g1.txt
+Apple pie
+rc=0
+--- egrep 'a|b|c' g2.txt
+second file apple
+banana again
+rc=0

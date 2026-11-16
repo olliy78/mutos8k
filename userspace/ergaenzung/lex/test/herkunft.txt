@@ -1,0 +1,10 @@
+Auf dem Host sind weder lex noch flex installiert -- es gibt KEINE Referenzimplementierung zum Vergleich.
+Die Erwartung ist von Hand aus der V7-Dokumentation (original/unix-v7/usr/man/man1/lex.1, Lesk-Schmidt "Lex" in den V7-Handbuechern, falls vorhanden)
+und aus dem Quelltext des Treibers (usr/lib/lex/ncform) abgeleitet, Zeile fuer Zeile VOR dem Gastlauf; der erste Gastlauf stimmte (bis auf ein von Hand vergessenes
+Leerzeichen am Zeilenende und die Dateinamen-Ausgabe von `cc` bei mehreren Dateien, beides Fehler der Erwartung bzw. des Skripts, nicht des Programms).
+Geprueft wird die ganze Kette im Gast: lex t1.l -> lex.yy.c (V7-lex, MUTOS-cc) -> cc lex.yy.c + libl-Quellen -> ./scan < in.txt.
+Die libl-Quellen (lex/lib: main.c yywrap.c yyless.c reject.c) und der Treiber ncform sind unveraenderte V7-Dateien (test/eingabe, Kopien); allprint.c wird nur mit LEXDEBUG gebraucht.
+Abgedeckt: Definitionen (D [0-9], {D}), Startbedingung (%Start, BEGIN, <CMT>), ^ und $, Trailing Context (/), Wiederholung + * ?, Zeichenklassen mit Negation und Bereich,
+kuerzester-Rang bei gleicher Laenge (foo[a-z]* vor [a-z]+), laengste Uebereinstimmung (3.14 gegen 3), ECHO, yytext, yyless (libl), REJECT (libl reject.c), main/yywrap (libl).
+Nicht getestet: -v/-n/-f/-t, Zeichen >= 128, mehrere Dateien, %{ %}-Block im Regelteil, yymore, input()/unput(), %p/%n/%a/%e-Tabellengroessen, grosse Spezifikationen
+(SMALL-Grenzen: NSTATES 300, NTRANS 1500, MAXPOS 1500, TREESIZE 600, NOUTPUT 1500).

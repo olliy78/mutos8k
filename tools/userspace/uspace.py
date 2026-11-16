@@ -404,7 +404,22 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
     return erg
 
 
-def c2_emu_s(s, aus=(), mkfs=False, ed=False):
+def c2_tar_s(s):
+    """Rule R92: measured on `bin/tar` ONLY (doc/userspace/cmd_s5.md); c2_emu_s(..., tar=True) applies this and nothing else
+    (tar was compiled by a c2 that matches the shipped one everywhere but one jump).  R92: `test _rflag ; jp eq L ; test _cflag ;
+    jr eq L2 ; jp L` (same target L as the first jp; main(), case 'b': `if (rflag && !cflag) goto noupdate;`) -> the `jp eq` becomes `jr eq` (distance 252 B fits a jr;
+    the shipped c2 estimates it as too far).  One site, named by its shape."""
+    z = s.split("\n")
+    n = {"R92": 0}
+    for i in range(1, len(z) - 3):
+        if (z[i].startswith("jp\teq\tL") and z[i - 1] == "test\t_rflag" and z[i + 1] == "test\t_cflag"
+                and z[i + 2].startswith("jr\teq\tL") and z[i + 3] == "jp\t" + z[i].split("\t")[2]):
+            z[i] = "jr" + z[i][2:]
+            n["R92"] += 1
+    return "\n".join(z), n
+
+
+def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -425,6 +440,8 @@ def c2_emu_s(s, aus=(), mkfs=False, ed=False):
     R5/R6 = R8 / R5+R9 here.)
     Returns (new text, {rule: count}).  Assembling the result with the guest `as` shows whether the rules explain ALL
     differences of the own code (doc/userspace/init.md)."""
+    if tar:
+        return c2_tar_s(s)
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
          "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0, "R70": 0, "R71": 0, "R77": 0}

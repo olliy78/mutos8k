@@ -1,0 +1,9 @@
+Es gibt kein dc auf dem Host.  Erwartung je Abschnitt:
+* int, scale (Zahlen): GNU bc 1.07.1 auf dem Host (bc -q, z. B. "scale=20;1/3", "scale=10;sqrt(2)", "scale=2;10/3*3", "scale=3;12.5+0.5", "-7%2"); die
+  Skripte pruefen die Werte beim Erzeugen gegen bc (Python-Hilfsskript im Auftrag, nicht im Repo).  Ganze Zahlen zusaetzlich gegen Python (2**100, 100!).
+* base, misc, err: aus dem V7-Handbuch original/unix-v7/usr/man/man1/dc.1 und der Quelle original/unix-v7/usr/src/cmd/dc/dc.c abgeleitet:
+  o/i/I/O (Basen), z (Stapeltiefe; in "misc" liegen davor 35 und 9 auf dem Stapel, "1 2 3 zp" ergibt also 5 -- die erste Erwartung "3" war ein Fehler des Testautors, nicht des Programms), Z (Ziffernzahl), [..]p (Zeichenkette), >x und =x (Vergleich "oberstes Element OP zweites", wie im Handbuchbeispiel la 10 >y),
+  f (Stapel von oben nach unten; "empty stack" bei leerem Stapel, dc.c Zeile 345), Meldungen "stack empty" (EMPTY-Makro, dc.h), "divide by 0" (dc.c), "sqrt of neg number" (dc.c).
+* fact: Beispiel aus dc.1 (die ersten zehn n!), Werte gegen Python math.factorial.
+* fact100: 100! gegen Python; dc bricht Ausgaben nach 70 Ziffern mit "\" + Zeilenende um (dc.c: ll = 70, Makro OUTC in dc.h).
+Nicht getestet: ! (Systembefehl), ? (Eingabe), Arrays (; :, nur fuer bc), Q, q in Makros, Speichererschoepfung.

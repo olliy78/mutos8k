@@ -72,6 +72,9 @@ PROGRAMME = {
     "hex": ("cmd", "bin/hex", "userspace/hex/hex.c", []),   # not V7: doc/userspace/cmd_s3b5.md
     "convert": ("cmd", "bin/convert", "userspace/convert/convert.c",
                 [V7INC + "sys/" + h for h in ("param.h", "ino.h", "filsys.h", "fblk.h", "dir.h")]),   # not V7: doc/userspace/cmd_s3b5.md
+    "mt": ("bin", "mt", "userspace/mt/mt.c", []),   # not V7: doc/userspace/cmd_s5.md
+    "tar": ("bin", "tar", "userspace/tar/tar.c", [V7INC + "sys/dir.h"]),   # not V7: doc/userspace/cmd_s5.md
+    "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
 }
@@ -231,12 +234,12 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed")
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar")
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed")
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar")
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
@@ -297,7 +300,7 @@ def check(name):
     platte, pf, _q, _h = info(name)
     k, raw = U.holen(ar, name, platte, pf)
     libc = U.libc_archiv(ar)
-    an = U.analysieren(ar, name, raw, k, libc, hand_namen(name), log=lambda *x: None)
+    an = U.analysieren(ar, name, raw, k, libc, hand_namen(name), log=lambda *x: None, extra=extra_karte(name))
     fehler = []
     if len(raw) != k[1] + k[2]:
         fehler.append("image length != text+data")

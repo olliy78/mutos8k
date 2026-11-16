@@ -1,0 +1,11 @@
+Auf dem Host ist kein m4 installiert (weder GNU noch BSD) -- es gibt KEINE Referenzimplementierung zum Vergleich.
+Alle Erwartungen sind von Hand aus dem V7-Handbuch (original/unix-v7/usr/man/man1/m4.1) und dem V7-Quelltext (m4.c, m4y.y) abgeleitet,
+Zeile fuer Zeile durchgerechnet VOR dem Gastlauf (Rueckwaertsableitung ohne Gast-Ausgabe).  Nur Fassungen der Befehle, deren Wirkung eindeutig ist.
+Zwei Erwartungen wurden nach dem ersten Lauf korrigiert, weil die Handrechnung den Quelltext falsch gelesen hatte (keine Aenderung am Programm):
+ * m9: `ifdef(`unix', `unix is defined', ...)` -- der Ersatztext wird erneut gelesen, und `unix` ist selbst ein Makro mit leerem Wert; V7 gibt " is defined".
+   Der Test fragt jetzt `yes`/`no`.
+ * "EOF in string": die Zeichen eines Strings werden schon waehrend des Lesens ausgegeben (putchr in der lquote-Schleife, m4.c), erst dann kommt die Meldung "m4: EOF in string"
+   (stderr) und Exit 1: stdout "abc".
+V7-Besonderheiten, die der Test abbildet: ifelse mit mehr als vier Argumenten (doif), eval mit ^ und ** (m4y.y), 32-Bit-Rechnung (100000*20000 = 2000000000),
+Leerzeichen am Ende der Argumente bleiben (nur fuehrende werden ueberlesen), `include` mit Pushback (cur_ip), divert-Dateien /tmp/m4aXXXXX (mktemp), Exit 1 bei Fehler.
+Nicht getestet: shift (V7: "not yet implemented"), maketemp, syscmd, errprint, dumpdef (stderr), $0, Argumentueberlauf, changequote mit Mehrzeichen.

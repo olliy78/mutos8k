@@ -1,6 +1,6 @@
 # Plan 45: V7-Ergaenzungen -- Befehle, die auf den MUTOS-Disketten fehlen
 
-Stand 2026-11-10 (Plan).  *Nachtrag 2026-11-15:* E0-E3b teilweise umgesetzt, **29 Programme mit Ergebnis B** (Stand je Stufe in Abschnitt 4, Uebersicht `doc/userspace/README.md` "Ergaenzungen aus V7").  Vorlage: Plan 44 (Rueckbau vorhandener Programme).  Hier geht es um das Gegenteil: Programme, die **nicht** auf den Originaldisketten
+Stand 2026-11-10 (Plan).  *Nachtrag 2026-11-15:* E0-E3b teilweise umgesetzt, **29 Programme mit Ergebnis B** (*Nachtrag 2026-11-16:* E3c/E3d, jetzt 38) (Stand je Stufe in Abschnitt 4, Uebersicht `doc/userspace/README.md` "Ergaenzungen aus V7").  Vorlage: Plan 44 (Rueckbau vorhandener Programme).  Hier geht es um das Gegenteil: Programme, die **nicht** auf den Originaldisketten
 liegen, aus den V7-Quellen (`original/unix-v7/usr/src/cmd`) mit dem MUTOS-`cc` fuer MUTOS bauen und als **Ergaenzung** (nicht als Original) fuehren.
 Auftrag des Projektinhabers (2026-11-10): fehlende V7-Programme wie `make`, `yacc`, `bc`, `egrep` aus V7 nachbauen und ergaenzen.
 
@@ -44,9 +44,9 @@ Es gibt **kein Original**, gegen das man vergleichen koennte.  Die Beweisstandar
 | Stufe | Programme | Begruendung |
 |-------|-----------|-------------|
 | E0 | Rahmen: `userspace/ergaenzung/`, Pipeline-Modus ohne Original (nur `bau` + Funktionstest), Test-Skelett, Diskette `v7erg` | Voraussetzung, ein Agent; *Stand 2026-11-15: Rahmen `tools/userspace/erg.py` und `tests/test_erg.py` fertig, Nachweis basename, tee (B), `erg_e0.md`; Diskette `v7erg` noch nicht gebaut* |
-| E1 | Kleine Einzeldatei-Befehle: `basename tee sleep touch yes tty mesg sum rev uniq comm split tail cal look nice time test` | wenig libc, einfache Tests; *Stand: alle B (`erg_e1a.md`, `erg_e1b.md`), nur `mesg` X (baut, im Rahmen nicht testbar: stderr ist kein Terminal)* |
-| E2 | Alltagswerkzeuge: `grep fgrep sort find diff (diffh) tr join du file expr` | grosser Nutzen; `expr` braucht `yacc` (E3); *Stand: grep fgrep sort find diff diffh tr join du file B (`erg_e2a.md`, `erg_e2b.md`); `expr` offen (`yacc` ist inzwischen da)* |
-| E3 | Entwicklungswerkzeuge: `yacc` (zuerst), dann `make` (V7, `gram.y`), `egrep`, `bc`, `dc`, `lex`, `m4`, `sed`, `ranlib`, `tsort` | `make` = Selbsthosting; `yacc` schaltet `.y` frei; *Stand: `yacc` B (Groessenklasse `SMALL`, `erg_e3a.md`), V7-`make` als `vmake` B (`erg_e3b.md`); offen egrep bc dc lex m4 sed ranlib tsort* |
+| E1 | Kleine Einzeldatei-Befehle: `basename tee sleep touch yes tty mesg sum rev uniq comm split tail cal look nice time test` | wenig libc, einfache Tests; *Stand: alle B (`erg_e1a.md`, `erg_e1b.md`); `mesg` erst X, Test nachgetragen 2026-11-15 (stderr auf `/dev/console`)* |
+| E2 | Alltagswerkzeuge: `grep fgrep sort find diff (diffh) tr join du file expr` | grosser Nutzen; `expr` braucht `yacc` (E3); *Stand: grep fgrep sort find diff diffh tr join du file B (`erg_e2a.md`, `erg_e2b.md`); `expr` B (E3c, `erg_e3c.md`)* |
+| E3 | Entwicklungswerkzeuge: `yacc` (zuerst), dann `make` (V7, `gram.y`), `egrep`, `bc`, `dc`, `lex`, `m4`, `sed`, `ranlib`, `tsort` | `make` = Selbsthosting; `yacc` schaltet `.y` frei; *Stand: `yacc` B (Groessenklasse `SMALL`, `erg_e3a.md`), V7-`make` als `vmake` B (`erg_e3b.md`); tsort ranlib dc expr egrep bc B (`erg_e3c.md`), sed m4 lex B (`erg_e3d.md`), 2026-11-16; E3 damit vollstaendig* |
 | E4 | Systemverwaltung: `su newgrp chgrp mail write wall update cron at ac restor dump quot` | haengt von Kernel und Konfiguration ab (utmp, acct), je Programm klaeren; *Stand: offen* |
 | E5 | Rest nach Bedarf: `awk`, `ratfor`, `units`, `ptx`, `crypt`, ... | gross oder Gleitkomma; *Stand: offen* |
 
