@@ -72,6 +72,7 @@ PROGRAMME = {
     "hex": ("cmd", "bin/hex", "userspace/hex/hex.c", []),   # not V7: doc/userspace/cmd_s3b5.md
     "convert": ("cmd", "bin/convert", "userspace/convert/convert.c",
                 [V7INC + "sys/" + h for h in ("param.h", "ino.h", "filsys.h", "fblk.h", "dir.h")]),   # not V7: doc/userspace/cmd_s3b5.md
+    "mt": ("bin", "mt", "userspace/mt/mt.c", []),   # not V7: doc/userspace/cmd_s5.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
 }
