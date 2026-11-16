@@ -160,3 +160,11 @@ Messung (zwei Teilmessungen, **ein Gesamtlauf wurde nicht in einem Aufruf gemess
   Der Langtest (`tests/test_plus_selbstbau.py -k lang`) ruft `fixpunkt` ohne `--k1`; er wurde **nicht** erneut gelaufen, die Messung oben ist seine Referenz.
 
 **Abnahme P3.2: erreicht** (`cmp.log` leer, `gleich` vorhanden, K1 == K2, kein Fehlschlag bei `bewerten`).  Der neue Kernel aendert die Ausgabe von `cc`/`as`/`ld` nicht (Erwartung bestaetigt).
+
+## 7. P3.3: Waechter und Aufrufe (2026-11-17)
+
+* Schnell, immer: `python3 -m pytest -q tests/test_plus_selbstbau.py` (7 Tests: Makefile-Quellen vorhanden, jede C-Datei gebaut und gelinkt, keine `dn*.s`/`abs.o`, `WV _cf_x88a`, `&max_proc` im Code von `conf.c`,
+  ASCII in `kernel/plus` ohne README, V-Funde als erledigt, `bewerten` trennt gut/schlecht).  Der Test importiert `tools/plus/gastbau.py` (und damit das als historisch gekennzeichnete `basis.py`) nur fuer `bewerten`; `basis.py` selbst ist von veralteten Bezuegen nur durch Kennzeichnung bereinigt.
+* Lang: `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` (Marke `gast`, ~30 Min.; im Hintergrund starten).  **Nicht als Test gelaufen**; Referenz ist die Messung in §6
+  (Lauf 1 815 s + Lauf 2 831 s Gast; Boot + Tests je ~90 s).
+* Aufrufe: `gastbau.py bauen|boot|alles|fixpunkt --arbeit DIR`.  Laufzeiten: Gastbau ~14 Min., Boot + Arbeitstests ~1,5 Min., Fixpunkt ~30 Min.

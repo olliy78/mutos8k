@@ -1,5 +1,11 @@
 """Plan 47 P1.1: baseline measurement of the natural kernel build, with two source disks.
 
+HISTORICAL (P1.1/P1.3 tool).  The current build is tools/plus/gastbau.py.  Of this module gastbau.py (and nothing else) still uses
+the helpers `bss_groessen`, `grenze_pruefen`, `laenge`, `BSS_GRENZE` and the names `G`, `gast_as`, `gastlauf`.  The rest -- `aufteilen`,
+`anpassen`, `ASM` (names `dn*.s`, `abs.o` of the P1.1 layout), `main` -- describes the state before P1.4 (dn*.s -> daten.c in P2.2,
+abs.o -> abs.s in P1.4) and is kept only as the record of the P1.1/P1.3 measurements (doc/plus/gastbau.md 1).  The fast tests do
+not import this module.
+
 The sources of the natural build (gesamtbau.nat_quellen) no longer fit on one disk (239 KB).  They are split over two
 disks; the guest builds half of the C files with `mk1`, then the disk is changed (gastlauf.lauf) and the Makefile of
 disk 2 builds the rest and links `lk`.  The kernel image is cut from `lk` on the host exactly like gesamtbau.natuerlich
@@ -24,6 +30,7 @@ import rundlauf_gast  # noqa: E402
 
 KAPAZITAET = 239 * 1024     # free bytes of an empty 26x128 MFM disk (measured, doc/plus/gastbau.md)
 BSS_GRENZE = 0xD266         # `cfreelist` (first absolute symbol of abs.o) follows cfree directly in the original (gastbau.md 1.1)
+# historical: file names of the P1.1 layout (see the module docstring)
 ASM = ["low.s", "bss.s", "shim.s", "abs.o"] + ["dn%d.s" % i for i in range(len(G.NAT_DATEN))]
 
 
@@ -137,7 +144,7 @@ def disketten_aus_plus(plus):
     disk2["Makefile"] = lies(os.path.join(plus, "Makefile"), False)
     for c in G.NAT_CDATEIEN:
         (disk1 if c in d1c else disk2)[c + ".c"] = lies(G.cpfad(c))
-    for n in sorted(os.listdir(plus)):      # abs.s, bss.s, low.s, shim.s, dn*.s (P1.4: abs.o became abs.s)
+    for n in sorted(os.listdir(plus)):      # abs.s, bss.s, low.s, shim.s, daten.c (P1.4: abs.o became abs.s; P2.2: dn*.s became daten.c)
         if n not in ("README.md", "mk1", "Makefile"):
             disk2[n] = lies(os.path.join(plus, n))
     return disk1, disk2, d1c, [c for c in G.NAT_CDATEIEN if c not in d1c]
