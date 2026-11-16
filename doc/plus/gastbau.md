@@ -39,3 +39,25 @@ legen alles auf eine 239-KB-Diskette.  Moegliche Wege (Empfehlung: erster):
    dadurch nicht; Pruefung: Objekte bytegleich zu `/tmp/mplus/p1_1/obj/`).  Reicht rechnerisch nur, wenn der Rest unter 239 KB faellt (Annahme, ungemessen).
 2. Aufteilen auf zwei Disketten (D und eine weitere); alle vier Laufwerke sind aber belegt (A `/tmp`, B `/usr`, C Wurzel, D `/mnt`).
 3. Eine groessere Diskette fuer D (`--blocks`/anderes `--fs`), sofern der Emulator ein passendes Format fuer `rk3` kennt (ungeprueft).
+
+### 1.1 Zweiter Versuch mit Diskettenwechsel (`tools/plus/basis.py`, gemessen 2026-11-16)
+
+Aufruf: `python3 -I tools/plus/basis.py --boot` (Objekte aus `/tmp/mplus/p1_1/obj/`, `nat_quellen` auf zwei Quelldisketten verteilt, Gastlauf mit `gastlauf.lauf`).
+* Disk 1: 41 Dateien, 184 852 B (Header, `make`, `mk1`, C-Dateien `alloc`..`sig`); Disk 2: 46 Dateien, 197 015 B (Header, `make`, `Makefile`, `slp`..`sysent`,
+  `low/bss/shim/dn*.s`, `abs.o`).  Beide passen.
+* Lauf 1 (907 s): `ld:bss.o: output error` -- A (`/tmp`) voll.  `bss.o` besteht aus 35 948 B Nullen (BSS als Daten), `lk` 53 864 B, dazu Zwischendateien von `ld`.
+* Lauf 2: `bss.o` nach `/mnt` -> `no space on dev 4/3`.
+* Lauf 3 (1028 s, Log `/tmp/mplus/p1_1_basis3.log`): `as -u -o /bss.o` auf die **Wurzel** (40 KB frei) -> `make` und `ld` laufen durch.
+  `lk`: text 34 652, data 19 196, **bss 2**; sha256 `8dce008cf1605283c8b94e12a6b82a4436f221394aa6a81d131398aff7a6d60d`.
+  Kernel Text+Daten 36 290 B (Original 36 288), BSS 8DC2..D258 -> `basis.py` bricht mit "BSS reaches over the mailbox" ab; kein Boot.
+
+**Ursachen (abgeleitet aus Objekten und Karte, 2026-11-16):**
+1. Text 34 652 statt 34 650: der Fehler des Original-`c2` in `ttyinput` kostet das Original ein Wort, unser `cc` erzeugt es (Abweichung #1, `doc/herkunft/tty2.md`).
+   Seit Plan 43 ist der uebrige Text bytegleich lang; am 2026-10-28 war der natuerliche Text noch 266 B kuerzer und liess Platz.
+2. `bss 2`: `int nested;` in `kernel/c/trap.c` ist ein Common (2 B), das in `bss.s` keinen Namen hat (Original: 88E0); `ld` legt es hinter die BSS.
+   (`_cfreeli` ist ebenfalls ein Common, wird aber von `abs.o` definiert.)
+3. Die Grenze **D256 ist zu eng gezogen, die echte Grenze ist D266**: `cfree` (50 x 16 = 800 B, `kernel/c/ureg.c`) liegt im Original bei CF46..D266,
+   unmittelbar danach `cfreelist` (D266, erstes absolutes Symbol in `abs.o`).  `bss.s` (z8kdis bis `BSS_BIS` = D256) deklariert `_cfree` nur mit 784 B (`%310`);
+   der letzte Block von `cfree` liegt auch im Original jenseits D256.  Massgeblich: Ende von `cfree` (Anfang + 800) <= D266.
+4. Mit 1.-2. liegt `cfree` 4 B zu hoch und ueberschriebe `cfreelist`.  Im Original ist zwischen BSS und D266 kein Byte frei.
+Folge fuer P1: die extrahierten Quellen brauchen 4 B Platz in der BSS.  Weg: Plan 47 §7 P1.3 (Nachtrag 2026-11-16).

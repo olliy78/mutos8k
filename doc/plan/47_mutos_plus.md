@@ -168,6 +168,14 @@ richtig, `/tmp/l` ohne `a.txt`.  Befund in `doc/plus/gastbau.md` §0.
 *Abnahme:* ein zweiter Lauf von `extrahieren.py --force` in einen Wegwerfordner erzeugt dieselben Bytes wie die eingecheckten Dateien (`diff -r`);
 alle Dateien ASCII; `make -n` ist im Gast nicht noetig -- der Inhalt ist gleich dem von P1.1, also bereits gemessen.
 
+**Nachtrag 2026-11-16 (aus P1.1, `doc/plus/gastbau.md` §1.1):** beim Uebernehmen zusaetzlich
+4. `bss.s`: `_cfree` mit voller Laenge `%320` (800 B) statt `%310`; die BSS-Grenzpruefung (in `basis.py`/`gastbau.py`) gilt fuer **D266** (`cfreelist`), nicht D256.
+5. Platz fuer die 4 B (ttyinput +2, Common `nested` +2): `NCLIST` in `kernel/c/ureg.c` 50 -> 49 und `_cfree` in `bss.s` entsprechend `%310` (784 B).
+   Das gibt 16 B frei, 12 B Reserve.  Abweichung in `doc/plus/abweichungen.md` eintragen (Grund: Platz bis D266; Wirkung: ein Clist-Block weniger fuer tty/Drucker).
+   `nested` bekommt in `bss.s` einen Namen (`G _nested A[%2 B]`, Lage egal), damit `lk` bss 0 meldet.
+6. `bss.o` darf nicht auf A entstehen (Platz, §1.1): bis P1.4 sie als echte BSS erzeugt, `as -u -o /bss.o` (Wurzel) wie in `basis.py`.
+*Abnahme* von P1.3 dann: Inhalt gleich `nat_quellen` bis auf die Punkte 4-6 (Diff im README belegt).
+
 ### P1.4 Gastbau-Werkzeug und Kernel ohne Host-Schritt
 *Haengt ab von:* P1.2, P1.3.  *Gastlauf:* nur zur Fehlersuche.
 *Lesen:* `doc/plus/werkzeug_sonden.md`, `kernel/plus/README.md`, `tools/kernel/gast_as.py` (`gast_befehle`), `tools/kernel/gesamtbau.py` (`natuerlich`,
@@ -194,7 +202,7 @@ alle Dateien ASCII; `make -n` ist im Gast nicht noetig -- der Inhalt ist gleich 
 *Haengt ab von:* P1.4.  *Gastlauf:* ja, ~25 Min.
 *Tun:* `python3 tools/plus/gastbau.py alles --arbeit /tmp/mplus/p1_5 >/tmp/mplus/p1_5.log 2>&1` im Hintergrund.
 *Abnahme:*
-1. `mutos_1216` aus dem Gast ist **bytegleich** zu `/tmp/mplus/p1_1/mutos_1216.nat` (gleiche Quellen, gleiche Werkzeuge).  Bei BSS-als-Nullen (P1.4 Punkt 2, zweiter Fall):
+1. Bytegleichheit mit P1.1 entfaellt (P1.1 lieferte keinen bootbaren Kernel, P1.3 Punkt 4-6 aendern die Lage).  Stattdessen: `mutos_1216` aus dem Gast == der Kernel, den der Host aus demselben `lk` schneidet (Kopf ab, BSS-Nullen ab, auf 512 gerundet).  Bei BSS-als-Nullen (P1.4 Punkt 2, zweiter Fall):
    die ersten `len(mutos_1216.nat)` Byte gleich, der Rest Null.  Jede andere Abweichung ist ein Befund (nicht weitermachen).
 2. Boot bis `#`, b1..b9 und b11 wie P1.1.
 3. `doc/plus/gastbau.md` Abschnitt "2. Gastbau ohne Host-Schritt": Aufruf, Messwerte, Laufzeit.  `doc/kernel/gesamtbau.md` nicht aendern (gehoert zu `main`).
@@ -278,7 +286,7 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 | Schritt | Schreibt | Gastlauf | Stand | Datum | Commit |
 |---------|----------|----------|-------|-------|--------|
 | P1.0 | `tools/plus/gastlauf.py`, `doc/plus/gastbau.md` §0 | ~10 Min. | erledigt | 2026-11-16 | (Commit) |
-| P1.1 | `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 | ~25 Min. | blockiert (Quelldiskette D zu klein: 292 KB Quellen > 239 KB, siehe gastbau.md §1) | 2026-11-16 | |
+| P1.1 | `tools/plus/basis.py`, `doc/plus/gastbau.md` §1 | ~25 Min. | gemessen (Bau ok; Kernel 4 B zu gross fuer die BSS, Boot verschoben nach P1.5, gastbau.md §1.1) | 2026-11-16 | |
 | P1.2 | `versuche/plus_sonden/`, `doc/plus/werkzeug_sonden.md` | ~10-20 Min. | offen | | |
 | P1.3 | `tools/plus/extrahieren.py`, `kernel/plus/*` | -- | offen | | |
 | P1.4 | `tools/plus/gastbau.py`, `kernel/plus/*` | (Fehlersuche) | offen | | |
