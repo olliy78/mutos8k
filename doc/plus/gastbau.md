@@ -70,3 +70,30 @@ Aufruf: `python3 -I tools/plus/basis.py --plus --arbeit /tmp/mplus/p1_3` (Quelle
 * Text+Daten des Kernels = 34 652 + 19 198 - 17 560 (BSS-Nullen, Summe der Groessen in `bss.s` = 0x4498) = **8DC2** (36 290 B; Original 36 288 = 8DC0, +2 durch `ttyinput`).
 * BSS 8DC2..D25A, `_cfree` endet bei **D258** (Grenze D266, 14 B Reserve; `basis.grenze_pruefen`), danach `_nested` D258..D25A.  Kein Boot (P1.5).
 * `basis.py` brach nach dem Lauf in der Auswertung ab (bytes/str-Fehler in `bss_groessen`, danach behoben); die Zahlen oben sind aus dem gesicherten `lk` nachgerechnet.
+
+## 2. Gastbau ohne Host-Schritt (`tools/plus/gastbau.py`, P1.4/P1.5)
+
+Aufruf: `python3 -I tools/plus/gastbau.py alles --arbeit /tmp/mplus/p1_5b >/tmp/mplus/p1_5b.log 2>&1` (`bauen`: nur Bau + Pruefung; `boot --kernel F`: nur Boot und b1..b11).
+Quellen: `kernel/plus` (mk1, Makefile, `abs.s`, `bss.s`, `low.s`, `shim.s`, `dn0..3.s`), `kernel/c`, `kernel/conf`, `kernel/h`, `make`, dazu `dd`/`cmp` von der cmd-Diskette auf Diskette 2.
+Der Host prueft nur (lk-Kopf, Ende der BSS, Laenge der Kernel-Datei) und vergleicht `mutos_1216` aus dem Gast mit dem Schnitt desselben `lk`; er veraendert kein Byte.
+
+Aenderungen gegenueber P1.3 (gemessen im selben Lauf):
+* `abs.o` -> `abs.s` (`$ABS %adr` / `G` / `_name L` / `_name:`).  Pruefung: Objekt aus dem Gast-`as` (`/tmp/mplus/p1_5_abs/abs.o`, Einzelprobe) hat per `objformat.py nm` dieselben 12 Symbole,
+  Typen und Werte wie das alte `abs.o` (`diff` leer; `_cfreeli` D266 ... `_u` FC00).
+* `bss.s` in `$SECTION BSS_B` ... `$SDEFAULT`: `lk` meldet **text 34 652, data 1 638, bss 17 560** (vorher data 19 198, bss 0); `bss.o` ist 856 B (vorher 36 KB), `/bss.o` auf der Wurzel entfaellt.
+* `dn1.s`: `_max_pro` = `WV %38+_proc` statt der Zahl A154 (der Gast-`ld` verschiebt den Zusatzwert richtig: Kernel bootet, fork/exec/pipe laufen, b1..b9, b11).
+  *Nicht direkt gemessen:* der Zahlenwert im Kernel (`lk` ist gestrippt); abgeleitet: `_proc` A11E + 38 = A156 (= `&proc[2]`).
+* Makefile-Standardziel `mutos_1216: lk` mit **einer Pipe** aus den zwei `dd`-Aufrufen (`dd if=lk ibs=16 skip=1 obs=512 | dd of=mutos_1216 bs=512 conv=sync`).
+  Die Variante mit Zwischendatei `lk.body` (zwei getrennte Aufrufe, `werkzeug_sonden.md` Frage 4) scheiterte im ersten Lauf: `write: No space left on device` auf A
+  (Objekte, `lk` und `lk.body`; `mutos_1216` kam mit 33 280 statt 36 352 B an, `ls.log` fehlte).  Die Pipe ist in P1.2 als gleichwertig gemessen.
+
+Messwerte (2026-11-16, Arbeitsordner `/tmp/mplus/p1_5b/`, Log `/tmp/mplus/p1_5b.log`):
+* `lk`: text 34 652, data 1 638, bss 17 560; sha256 `dedf3ac26e1bf9505c3bbfbc4c18d2422b07d43ef26d8404836ad2632e11d973`.
+* Kernel: Text+Daten 36 290 B = **8DC2**; BSS 8DC2..**D25A**, `_cfree` endet bei **D258** (Grenze D266, 14 B Reserve).
+* `mutos_1216` aus dem Gast: 36 352 B (71 x 512), sha256 `3c2c232dec59053e8bb054ff2c49d03d69ab97753acf6f3aa6dd31f121c6d44c`, **bytegleich** zum Host-Schnitt aus demselben `lk` (Kopf ab, auf 512 gerundet).
+* Boot bis `#`, Arbeitstests **b1..b9 und b11 bestanden** (b8 `summe = 5050` zweimal, b9 `prf.o` 1600 B, b11 ohne Fehler).  b10 `ps`: nur die Kopfzeilen, keine Prozesszeilen
+  (erwartet: `cf_proctop`/0x23C zeigen noch nach P2.3).
+* Laufzeit: Gastbau 852 s (erster Lauf, gleiche Quellen bis auf das Makefile-Ziel); Gesamtlauf `alles` 15 Min. 26 s, davon Boot + Tests 79 s.
+* Nebenbefund: `df` gibt es im Gast nicht; `ls.log` zeigt A mit allen Objekten, `lk` 36 306 B, `mutos_1216` 36 352 B.
+
+**Abnahme P1.5: erreicht** (alle drei Punkte).
