@@ -4,17 +4,17 @@ Plan 47 P1.3.  Diese Dateien sind die **nicht-C-Teile** des natuerlichen Kernelb
 die C-Quellen und Header liegen weiter in `kernel/c`, `kernel/conf`, `kernel/h`.  Erzeugt am 2026-11-16 **einmalig** aus dem
 Original-Abbild `mutos_1216` und den Objekten von P1.1 (`/tmp/mplus/p1_1/obj/`) durch `tools/plus/extrahieren.py` (Aufteilung auf zwei
 Quelldisketten durch `tools/plus/basis.py`).  **Ab jetzt von Hand gepflegt**; `extrahieren.py` bleibt nur als Herkunftsbeleg
-(`extrahieren.py --force --ziel <Wegwerfordner>` erzeugte am 2026-11-16 dieselben Bytes; seit P1.4 nicht mehr: `abs.o` -> `abs.s`, `bss.s`, `dn1.s`, `Makefile` sind von Hand geaendert).
+(`extrahieren.py --force --ziel <Wegwerfordner>` erzeugte am 2026-11-16 dieselben Bytes; seit P1.4 nicht mehr: `abs.o` -> `abs.s`, `bss.s`, `Makefile` sind von Hand geaendert).
 
 | Datei | Inhalt | Herkunft |
 |-------|--------|----------|
 | `low.s` | Assemblerteil `low` (Vektoren, Trap-Eintritt, Start; Text 0000..0674 + Daten bis 875A) | z8kdis des Originals, Modul `low` |
 | `shim.s` | Hilfsroutinen, die der Gast-`cc` erwartet | `gesamtbau.SHIM` |
-| `dn0.s`..`dn3.s` | initialisierte Daten des Kernels (`NAT_DATEN`, ab 875A); `dn1.s`: `max_proc` = `WV %38+_proc` (= `&proc[2]`, P1.4, vorher die Zahl A154) | z8kdis, Module `dn0`..`dn3` |
+| `daten.c` | initialisierte Daten des Kernels (P2.2; ersetzt `dn0.s`..`dn3.s`): `regloc[8]`, `max_proc = &proc[2]`, `icode[26]` + `szicode`, `cf_8c94` (4), `conptr = conlog`, `nlp` (1); Werte aus den `dn*.s`, Originaladressen im Kommentar.  `icode` als `char`-Array mit Bytewerten (Maschinencode) und Zeichen fuer `"/etc/init"` -- sauber ausdrueckbar, kein Sonderweg.  Linkreihenfolge wie vorher (hinter `sysent.o`, vor `bss.o`) | `dn0`..`dn3` des z8kdis-Auszugs |
 | `bss.s` | BSS als echter BSS-Abschnitt (`$SECTION BSS_B` ... `$SDEFAULT`, `G _name A[%n B]`; ab P1.4, vorher Nullen im Datenabschnitt) | z8kdis, Modul `bss`; plus `_nested` (unten) |
 | `abs.s` | die absoluten Symbole (`_cfreeli` D266 ... `_mapbusy` D584, `_u` FC00), je Symbol `$ABS %adr` / `G` / `_name L` / `_name:` (ab P1.4; ersetzt das Objekt `abs.o` von `gesamtbau.nat_abs`) | Symbole und Werte des alten `abs.o` (`objformat.py nm`) |
 | `mk1` | Makefile fuer Diskette 1 (baut die erste Haelfte der C-Dateien `alloc`..`sig`) | `basis.aufteilen` |
-| `Makefile` | Makefile fuer Diskette 2 (Rest, `low/shim/dn*/abs/bss`, bindet `lk`; Standardziel `mutos_1216` = `lk` ohne Kopf per zwei `dd`-Aufrufe, auf 512 B aufgefuellt) | `basis.aufteilen`, P1.4 |
+| `Makefile` | Makefile fuer Diskette 2 (Rest, `low/shim/abs/bss`, `daten.c`, bindet `lk`; Standardziel `mutos_1216` = `lk` ohne Kopf per zwei `dd`-Aufrufe, auf 512 B aufgefuellt) | `basis.aufteilen`, P1.4 |
 
 Alle Dateien sind reines ASCII.  Der `as` kennt `! ... !`-Kommentare (`doc/werkzeugkette/as_dialekt.md`), die Quellen
 tragen aber (bis auf die Zeile zu `_nested`) keine; die Erklaerungen stehen hier.
@@ -54,3 +54,5 @@ Diff gegenueber der Ausgabe von `nat_quellen` (gemessen 2026-11-16, `diff` der A
 * P1.4: `abs.o` -> `abs.s`; `bss.s` in `$SECTION BSS_B`; `dn1.s` `max_proc` als Verweis; `Makefile` mit Ziel `mutos_1216`.
 
 Die BSS-Grenzpruefung (Ende von `_cfree` <= D266, nicht D256) steht in `tools/plus/basis.py` (`grenze_pruefen`).
+
+* P2.2/P2.3: `dn0.s`..`dn3.s` -> `daten.c`; `low.s` Wort bei 0x23C = `WV _cf_x88a`; `conf.c` `cf_proctop = &max_proc`.  Gegenueber P1.5b sind im Kernel genau 4 Byte anders (`gastbau.md` §3).

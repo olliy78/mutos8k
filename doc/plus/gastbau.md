@@ -97,3 +97,31 @@ Messwerte (2026-11-16, Arbeitsordner `/tmp/mplus/p1_5b/`, Log `/tmp/mplus/p1_5b.
 * Nebenbefund: `df` gibt es im Gast nicht; `ls.log` zeigt A mit allen Objekten, `lk` 36 306 B, `mutos_1216` 36 352 B.
 
 **Abnahme P1.5: erreicht** (alle drei Punkte).
+
+## 3. P2.2/P2.3: `daten.c` und Verweise (gemessen 2026-11-16, `/tmp/mplus/p2_3/`, Log `/tmp/mplus/p2_3.log`)
+
+Aufruf: `python3 -I tools/plus/gastbau.py alles --arbeit /tmp/mplus/p2_3 >/tmp/mplus/p2_3.log 2>&1` (Gastbau 823 s, Boot + Tests 81 s).
+* `dn0.s`..`dn3.s` entfallen, `kernel/plus/daten.c` (Regel `daten.o`, im Link an der Stelle von `dn0..dn3`).  Keine `-D`-Namensabgleiche fuer `daten.c`; die sieben Namen
+  (`regloc max_proc icode szicode cf_8c94 conptr nlp`) kollidieren mit keinem der Abgleiche (`usrseg/backup/cf_a620/cf_a628/cf_ceac`).  `icode` ist `char icode[26]` (Maschinencode als Bytewerte, Zeichenkette als Zeichen).
+* `low.s`: `WV _cf_x88a` (keine Deklaration noetig: `low.s` benutzt undefinierte Namen wie `_trapent` unmittelbar, `as` macht sie extern).  `conf.c`: `cf_proctop = (struct proc *)&max_proc` (`proc.h` ist eingebunden).
+* Platz: Diskette 2 209 919 B (vorher 197 161 + Aenderungen), Diskette 1 unveraendert 184 852 B; beide passen, Aufteilung unveraendert.
+* `lk`: **text 34 652, data 1 638, bss 17 560** (wie P1.5b, sha256 `edf4bc8689d629cf41f5e5d5a855b5510d348198f4a974a69fb5421305918bdf`); Kernel Text+Daten 8DC2, BSS 8DC2..**D25A**, `_cfree` endet D258.
+* `mutos_1216` aus dem Gast: 36 352 B, sha256 `a0e2a9c519470477e681803bce34dc7bd4e835ec5ef231e31c81405c9ed97e25`, **bytegleich** zum Host-Schnitt aus demselben `lk`.
+* Vergleich mit P1.5b (`/tmp/mplus/p1_5b/mutos_1216`): **genau 4 Byte verschieden**: Offset 0x23C/0x23D (`888A` -> `8C5A`, Adresse `cf_x88a`) und 0x8C94/0x8C95 (`cf_proctop` `8A8C` -> `8D9E`, Adresse `max_proc`).  Alles andere, auch der Datenabschnitt von `daten.o`, ist bytegleich zu den `dn*.s`-Modulen (abgeleitet aus dem Vergleich; die Verschiebung des Offsets 0x8C94 ist `cf_proctop`, nicht `cf_8c94`).
+
+## 4. Abnahme P2.2/P2.3
+
+Boot bis `#`, **b1..b9 und b11 bestanden**, **b10 `ps` zeigt die Prozesstabelle** (vorher nur die Kopfzeilen):
+
+```
+tty owner     pid status      size cptime     command
+--- -----     --- ------      ---- ------ --- -------
+% -             0 SLP*runout    0k  13:20 97% system scheduler 
+  ->            1 slp proc[01] 64k   0:01     /etc/init 
+C -             2 slp*proc[02] 64k   0:03     -sh  
+  ->           49 RUN*         64k   0:01  2% ps
+```
+Zeilen fuer scheduler, init, sh, ps wie in `doc/kernel/gesamtbau.md` "Stufe 1".  `pstat -p` nicht versucht (Ausbau der Testliste ist P3.1).
+
+**Abnahme P2.2/P2.3: erreicht.**
+

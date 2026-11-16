@@ -81,4 +81,4 @@ int *cf_nlist[22] = {				/* 888C */
 	(int *)&rrkbuf, (int *)&cf_a464, (int *)inode, (int *)&swapdev, (int *)&swplo, (int *)&cf_ceac
 };
 int cf_x8b8[6] = { 0, 0, 0, 0, 0, 0 };		/* 88B8 */
-struct proc *cf_proctop = (struct proc *)0x8A8C;	/* 88C4 */
+struct proc *cf_proctop = (struct proc *)&max_proc;	/* 88C4; ps reads the ADDRESS of max_proc from nlist[28] (a name, not 0x8A8C: it moves with the build) */

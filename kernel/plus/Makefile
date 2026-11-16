@@ -4,7 +4,7 @@
 # Two dd calls in a pipe (an intermediate file does not fit on drive A, measured 2026-11-16: no space left).
 SRC = /mnt
 CFLAGS = -O -I$(SRC)
-OBJS = low.o shim.o abs.o alloc.o bio.o clock.o dev0.o fio.o iget.o lp.o machdep.o main.o malloc.o nami.o pipe.o prf.o rdwri.o rk.o sig.o slp.o subr.o sys1.o sys2.o sys3.o sys4.o text.o trap.o tty.o tty2.o ureg.o conf.o sysent.o dn0.o dn1.o dn2.o dn3.o bss.o
+OBJS = low.o shim.o abs.o alloc.o bio.o clock.o dev0.o fio.o iget.o lp.o machdep.o main.o malloc.o nami.o pipe.o prf.o rdwri.o rk.o sig.o slp.o subr.o sys1.o sys2.o sys3.o sys4.o text.o trap.o tty.o tty2.o ureg.o conf.o sysent.o daten.o bss.o
 
 mutos_1216: lk
 	/mnt/dd if=lk ibs=16 skip=1 obs=512 | /mnt/dd of=mutos_1216 bs=512 conv=sync
@@ -44,11 +44,5 @@ conf.o: $(SRC)/conf.c $(SRC)/param.h
 	cc -O -Dcf_a620=ipc -Dcf_a628=buffers -Dcf_ceac=rfdbuf -I$(SRC) -c $(SRC)/conf.c
 sysent.o: $(SRC)/sysent.c $(SRC)/param.h
 	cc -O -I$(SRC) -c $(SRC)/sysent.c
-dn0.o: $(SRC)/dn0.s
-	as -u -o dn0.o $(SRC)/dn0.s
-dn1.o: $(SRC)/dn1.s
-	as -u -o dn1.o $(SRC)/dn1.s
-dn2.o: $(SRC)/dn2.s
-	as -u -o dn2.o $(SRC)/dn2.s
-dn3.o: $(SRC)/dn3.s
-	as -u -o dn3.o $(SRC)/dn3.s
+daten.o: $(SRC)/daten.c $(SRC)/param.h $(SRC)/proc.h
+	cc -O -I$(SRC) -c $(SRC)/daten.c

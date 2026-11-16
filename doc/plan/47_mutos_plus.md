@@ -295,8 +295,8 @@ Wellen (innerhalb einer Welle parallel): **1:** P1.0, P1.2 -- **1b:** P1.1 -- **
 | P1.4 | `tools/plus/gastbau.py`, `kernel/plus/*` | (Fehlersuche) | erledigt (mit P1.5 abgenommen; dd als Pipe, abs.s, BSS-Abschnitt, max_proc als Verweis) | 2026-11-16 | s. git log |
 | P1.5 | `doc/plus/gastbau.md` §2 | ~25 Min. | erledigt (Kernel aus dem Gast == Host-Schnitt, b1..b9, b11 ok; 15 Min.) | 2026-11-16 | s. git log |
 | P2.1 | `doc/plus/feste_adressen.md` | -- | erledigt (3 V-Funde, alle gemessen falsch im Bau aus `kernel/plus`) | 2026-11-16 | a3b9ca4 |
-| P2.2 | `kernel/plus/daten.c`, Makefile, README, `abweichungen.md` | ~25 Min. | offen | | |
-| P2.3 | `kernel/plus/low.s`, `kernel/conf/conf.c`, `abweichungen.md` | ~25 Min. | offen | | |
+| P2.2 | `kernel/plus/daten.c`, Makefile, README, `abweichungen.md` | ~25 Min. | erledigt 2026-11-16 | gastbau.md §3/§4 | |
+| P2.3 | `kernel/plus/low.s`, `kernel/conf/conf.c`, `abweichungen.md` | ~25 Min. | erledigt 2026-11-16 | gastbau.md §3/§4 | |
 | P3.1 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §5, `abweichungen.md` | ~15 Min. | offen | | |
 | P3.2 | `tools/plus/gastbau.py`, `doc/plus/gastbau.md` §6 | ~50 Min. | offen | | |
 | P3.3 | `tests/test_plus_selbstbau.py`, Doku | (Langtest) | offen | | |

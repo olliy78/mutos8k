@@ -18,6 +18,8 @@ fest (abgeleitet); Aenderung nur noetig, wenn `low.s` Code hinzubekommt oder ver
 
 ## 1. V-Funde
 
+**Alle drei erledigt (P2.2/P2.3, 2026-11-16, `gastbau.md` §3/§4):** Zeile 1 `WV _cf_x88a`, Zeile 2 `&max_proc`, Zeile 3 `max_proc = &proc[2]` (P1.4 im Assembler, P2.2 in `daten.c`).
+
 | Stelle | Wert | Klasse | Bedeutung | Aenderung (Schritt) |
 |--------|------|--------|-----------|---------------------|
 | `kernel/plus/low.s:147` | `WV %888A` | V | Wort bei 0x23C: Adresse von `cf_x88a` (`conf.c`); `ps`/`pstat` lesen dort ein Wort `w` und ab `w+2` die 29 Worte (`ps.c:137-141`, `pstat.c:103-107`) | `WV _cf_x88a`; `G`/`X`-Deklaration `_cf_x88a L` wie die Externen am Modulanfang (P2.3 Punkt 1) |
