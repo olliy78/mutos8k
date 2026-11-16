@@ -21,7 +21,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
-| `erg_e3a.md`, `erg_e3b.md` | Ergaenzungen aus V7: yacc (verkleinert, SMALL), vmake (V7 make) |
+| `erg_e3a.md`, `erg_e3b.md`, `erg_e3c.md` | Ergaenzungen aus V7: yacc (verkleinert, SMALL), vmake (V7 make); tsort ranlib dc expr egrep bc |
 | `erg_e2a.md`, `erg_e2b.md` | Ergaenzungen aus V7 (Plan 45): grep fgrep tr join du file; sort find diff diffh |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
@@ -184,8 +184,9 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | E2b | sort, find, diff, diffh | find: `<dir.h>` statt `<sys/dir.h>` | `erg_e2b.md` |
 | E3a | yacc | `files`: `yaccpar` im Arbeitsverzeichnis statt `/usr/lib` (usr-Platte voll); `dextern`: Groessenklasse `SMALL` statt `MEDIUM` (MEDIUM = 78314 B, ueber 64 KB), MEMSIZE 4000 | `erg_e3a.md` |
 | E3b | vmake (V7 make) | `files.c`: `<dir.h>`, `A_MAGIC2` auf `A_MAGIC1`; `gram.y` unveraendert, `gram.c` im Gast mit dem MUTOS-yacc erzeugt (`tools/userspace/vmake_gram.py`) | `erg_e3b.md` |
+| E3c | tsort, ranlib, dc, expr, egrep, bc | ranlib: `A_MAGIC2` ergaenzt; dc: `dc.c` in drei Dateien geteilt (Ganzes: Zyklusgrenze bzw. `symbol table overflow` in `as`), `#define interdata` und `register int cc` in `cond()` (`char` ohne Vorzeichen), ohne `-O`; bc: `execvp("dc")`-Rueckfall (Gast hat `dc` nicht in `/bin`, `/usr/bin`), ohne `-O` (`c2` bricht ab); expr, egrep, bc: `.c` aus unveraendertem `.y` mit dem Gast-yacc (`tools/userspace/erg_yacc.py`) | `erg_e3c.md` |
 
-Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 B im Gast (E0 bis E3b).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 B im Gast (E0 bis E3b).  E3c (2026-11-16): 6 weitere B, nach dem Merge auf `main` wiederholt (`erg.py alles` yacc tsort ranlib dc expr egrep bc tty grep: alle B), zusammen **35**.  Rahmen: `erg.json`-Schluessel `werkzeuge` (Hilfsprogramme auf `/mnt`, z. B. `dc` fuer `bc`, `ar` fuer `ranlib`).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
 E2: `file` erkennt keine Z8000-Programme (MUTOS-Magic E807, V7 kennt nur 0407/0410/0411); `diff -h` ist im Gast nicht testbar (`/usr/lib/diffh` fest, `usr`-Platte voll);
 `find` hat keine Host-Referenz (Erwartung = Gastausgabe, von Hand gegen das Handbuch geprueft); `du` nur Dateizweig getestet.
