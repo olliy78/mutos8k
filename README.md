@@ -14,8 +14,8 @@ Dieses Projekt sammelt alles, um das System zu verstehen und aus Quellen wieder 
 * **Userspace**: ein minimales System ist komplett aus Quellen baubar -- Kernel, `mutos_io` und **45 Programme der
   Originaldisketten**, jeweils **ganzdatei bytegleich** mit dem Original: alle 11 der Wurzeldiskette (`init`, `sh`, `login`, `getty`, `mount` ...) und
   alle 34 übrigen der `cmd`-Diskette (u. a. `cp`, `rm`, `mv`, `ed`, `ar`, `nm`, `ps`, `dd`, `mkfs`, `icheck`; `hex`, `convert` sind kein V7 und wurden aus dem
-  Binary rekonstruiert).  Gast-Regression aller 45 nach der letzten Zusammenführung: alle gleich (gemessen 2026-11-14).  Zusätzlich 35 Programme **aus V7-Quellen**,
-  die auf den Disketten fehlen (u. a. `grep`, `sort`, `find`, `diff`, `tr`, `yacc`, V7-`make`, `dc`, `bc`); dafür gibt es kein Original, Beleg ist Bau + Gasttest.
+  Binary rekonstruiert).  Gast-Regression aller 45 nach der letzten Zusammenführung: alle gleich (gemessen 2026-11-14).  Zusätzlich 38 Programme **aus V7-Quellen**,
+  die auf den Disketten fehlen (u. a. `grep`, `sort`, `find`, `diff`, `tr`, `yacc`, V7-`make`, `dc`, `bc`, `sed`, `m4`, `lex`); dafür gibt es kein Original, Beleg ist Bau + Gasttest.
   Offen: Toolchain (`cc`, `as`, `ld`, `c0`-`c2`) und `bin`-Diskette (`mt`, `tar`, `adb`).
 * **Disketten**: Originalabzüge und die Werkzeuge, die daraus lauffähige Lade-, Wurzel- und Datendisketten bauen.
 * Vergleich mit den Original-Quellen von UNIX V7 (`original/unix-v7/`): läuft mit; die Userspace-Quellen sind überwiegend V7-Text mit belegten Abweichungen.
