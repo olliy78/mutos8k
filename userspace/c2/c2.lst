@@ -4781,7 +4781,9 @@ L3000:
 3008  81D2                  ADD R2,R13
 300A  6121 48BA             LD R1,L48BA(R2)
 300E  1E18                  JP @R1
-3010  8BBC E602             DW %8BBC,%E602
+L3010:
+3010  8BBC                  CP R12,R11
+3012  E602                  JR Z,L3018
 L3014:
 3014  8922                  XOR R2,R2
 3016  E8D6                  JR L2FC4
@@ -5684,8 +5686,12 @@ L3896:
 3896  2EA8                  LDB @R10,RL0
 3898  A9A0                  INC R10,#1
 389A  9E08                  RET
-389C  5F00 394C E827 5F00   DW %5F00,%394C,%E827,%5F00
-38A4  394C E824             DW %394C,%E824
+L389C:
+389C  5F00 394C             CALL L394C
+38A0  E827                  JR L38F0
+L38A2:
+38A2  5F00 394C             CALL L394C
+38A6  E824                  JR L38F0
 L38A8:
 38A8  A9B0                  INC R11,#1
 38AA  8D94                  TEST R9
@@ -5695,7 +5701,10 @@ L38A8:
 L38B2:
 38B2  5F00 394C             CALL L394C
 38B6  E81C                  JR L38F0
-38B8  21DD 97DC 5E08 3782   DW %21DD,%97DC,%5E08,%3782
+L38B8:
+38B8  21DD                  LD R13,@R13
+38BA  97DC                  POP R12,@R13
+38BC  5E08 3782             JP L3782
 L38C0:
 38C0  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
 38C6  97D0                  POP R0,@R13

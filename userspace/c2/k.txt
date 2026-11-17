@@ -79,7 +79,6 @@ code 3862
 code 38A8
 code 38C0
 code 38D2
-code 394C
 name 358E _freopen
 name 35B0 _fprintf
 name 35E4 _printf
@@ -128,3 +127,9 @@ code 304C
 code 3052
 code 3058
 code 305E
+code 3010
+code 22FC
+code 2572
+code 389C
+code 38A2
+code 38B8
