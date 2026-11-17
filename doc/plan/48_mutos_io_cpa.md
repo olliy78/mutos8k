@@ -320,6 +320,27 @@ und was sich in C2-C5 je nach Ausgang aendert.
 | E8 | Startmedium (§3.10) | C1.8 | (a) CP/A-Bootdiskette in A:, Wechsel in der Bedienmaske; (b) Start von GIDE | (a) | (b) erst Plan 51 P6 |
 | E9 | Ablage der CP/A-Variante (O3) | C1.8 | (a) Konfiguration in diesem Repo, Bau ueber eine Kopie der Workbench; (b) eigene Variante in der Workbench (Projektinhaber pflegt sie dort) | (a) | (b): C5 haengt von einem Workbench-Stand ab |
 
+### Vorlagen aus C1.9 (Stand 2026-11-17; ausfuehrlich mit Belegen in `doc/plus/cpa_analyse.md` §6, Abweichungen vom Plan dort §7)
+
+Nicht entschieden; Empfehlung = Vorschlag an den Projektinhaber.  Kuerzel `c1_n` = `doc/plus/cpa/c1_n_*.md`.
+
+* **E1 Plattenweg.**  Optionen (a) Standard-Einspruenge, (b) `diskio` (D2CB-Leiste), (c) eigener FDC-Treiber.  Messwerte: alle Saetze gleich (root_fm/mfm 2002/2002, 8x512 2528/2528, GIDE 1280/1280), 198 602 Takte je 512 B (`c1_6` §1, §5);
+  **aber** nur mit inverser CP/A-Skew-Tabelle ab Spur `OFF` (2 oder 0 je Diskette), Schreiben `C = 0,0,0,1`; `SETSEC = ID` waere bei 824 von 2002 Saetzen falsch (`c1_6` §3, §4).  **Empfehlung (a).**  Folge: Wurzel-Umzug entfaellt; C3.3 mit der Regel aus `c1_6` §4.
+* **E2 Interrupts.**  Optionen (a) Vektoren in die CP/A-Tabelle, (b) Maschine uebernehmen.  Messwerte: 0 Tickverluste bei READ/CONOUT/WRITE, groesste Verspaetung 0,68 ms, BIOS liest/schreibt richtig (`c1_7` §2); frei F700-F7CF, CTC-Kanal 0/1 (`c1_5` §8):
+  CTC F7FA, PIO A32 F7EA/F7EC, SIO F730-F73E.  Nicht gemessen: voller `ISR_ANFRAGE` neben `READ`.  **Empfehlung (a).**
+* **E3 Lage.**  Optionen (a) 9000H behalten + Stapel unter BIOS, (b) `.COM` ab 0100H, (c) andere feste Lage.  Messwerte: BIOS 2 Floppy CB00, **4 Floppy CA00**, nur 152 B ueber C968 (`c1_8` §4, §5); B936-C8B5 frei (`c1_4` §5).
+  **Empfehlung (a) mit Stapel in B936-C8B5** (`SP` = C8B6; Annahme, in C3 zu pruefen); die Planbedingung ist nur mit dieser Verlegung erfuellt.
+* **E4 Lader.**  Optionen (a) ein `M8KBOOT.COM`, (b) Kernel-Lader + `mutos_io` als eigenes `.COM`.  Messwerte: `LOAD16` ein Dateidienst, EM-Init und 4-KB-`LDIR` durch Fenster 0000-3FFF, **startet den U8001 nicht** (`udos_lader` §1.3 a-d, Zweig `plan48-udos`, Merge ausstehend).
+  **Empfehlung (a).**  Folge: `M8KBOOT K` muss den U8001 selbst starten (C2.3), Fenster 4000-7FFF, Lesepuffer ab 8000H.
+* **E5 Laufwerke.**  Optionen (a) 4-Floppy-Variante, (b) 2 Floppy + GIDE.  Messwerte: gebaut und gebootet, A:-D:, GIDE E:-L:, RTC D5H, `@OS.COM` reproduzierbar (`c1_8` §2, §4).  **Empfehlung (a)**; Anforderung des Projektinhabers erfuellt.
+* **E6 Konsole/Tastatur.**  Optionen (a) Ausgabe BIOS, Tastatur eigenes Pollen im ISR; (b) alles ueber BIOS, `CONST` in der Hauptschleife; (c) alles selbst; **(d, neu)** Ausgabe `CONOUT` aus der Hauptschleife, Tastatur `CONST`/`CONIN` im 50-Hz-ISR.
+  Messwerte: BIOS pollt 5CH/5DH selbst, zwei Leser stehlen Zeichen (`c1_5` §4); (d) gemessen: 4/4 Tasten, +0,9..2,5 % Laufzeit (`c1_7` §2); (a) braeuchte `tim5of`, dann steht die Uhr (abgeleitet).  Keine Statuszeile im BIOS, nur Uhr.
+  **Empfehlung (d)** (weicht vom Plan-Vorschlag (a) ab).  Nicht gemessen: `CONOUT` im ISR, lange Tastenfolgen, Umlaute/Steuercodes.
+* **E7 Drucker/tty1.**  Optionen (a) BIOS `LIST` mit IOBYTE 80H (LPT), (b) `IFSSPR`-Kern in `mutos_io`, (c) weglassen.  Messwerte: LPT = 5EH/5FH, 7 Bit, ungerade Paritaet, 9600 Bd = `IFSSPR` (`c1_5` §5, `udos_lader` §2.4); Emulator zeigt Zeichen nur am Port; `LIST` selbst ungemessen.
+  **Empfehlung (a), vorlaeufig**, Pruefung in C4.1 (Port, TAB, NUL nach CR); Zeilen `[0003H]` streichen, `0003H := 80H`.
+* **E8 Startmedium.**  Optionen (a) CP/A-Bootdiskette in A: + Wechsel, (b) GIDE.  Messwerte: Boot von A: (§2.1); Neuanmeldung nach Wechsel noetig (`c1_6` §7); GIDE heisst bei 4 Floppys E:.  **Empfehlung (a)**; (b) Plan 51 P6.
+* **E9 Ablage der Variante.**  Optionen (a) im Repo (`mutos_io/cpa/system/`), (b) in der Workbench.  Messwerte: Bau ohne Oberflaeche ~10 s, SHA-1 `97bbdca9...` (`c1_8` §2, §6).  **Empfehlung (a)**; mit O3 (§11) schon so entschieden.
+
 **Ergebnis:** *(nach C1.9 eintragen: Datum, Entscheidung je Zeile, Verweis)*
 
 ## 9. C2-C5 (vorlaeufig, fuer die Empfehlungen E1a, E2a, E3a, E4a, E5a, E6a, E7a, E8a)
@@ -399,14 +420,14 @@ Wellen (innerhalb einer Welle parallel):
 | Schritt | Schreibt | Gastlauf | Dauer (Schaetzung) | Stand | Datum | Commit |
 |---------|----------|----------|--------------------|-------|-------|--------|
 | C1.1 | `tools/plus/cpa.py`, `versuche/plus_cpa/`, `tests/test_plus_cpa.py`, `doc/plus/cpa/c1_1_werkzeug.md` | Sekunden | 2 h | erledigt (probe: HALLO, EM256ADR/EM16ABL gleich unter GIDE-CP/A und normalem CP/A, 9 s; M80/LINKMT unterscheiden >= 7 Zeichen) | 2026-11-17 | s. git log |
-| C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | offen | | |
-| C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | offen | | |
+| C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | auf Zweig `plan48-udos` fertig (Merge nach `main` ausstehend) | 2026-11-17 | `c3c8fad` (Zweig `plan48-udos`) |
+| C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | auf Zweig `plan48-udos` fertig (Merge nach `main` ausstehend) | 2026-11-17 | `63e61e1`, `9ec23d4` (Zweig `plan48-udos`) |
 | C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.4" |
 | C1.5 | `doc/plus/cpa/c1_5_bios.md` | Sekunden | 3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.5" |
 | C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | fertig (alle Saetze gleich bei root_fm/mfm/8x512 und GIDE; Regel SETSEC: Tabelle ab OFF, Schreiben C=0,0,0,1) | 2026-11-17 | Betreff "Plan 48 C1.6" |
 | C1.7 | `versuche/plus_cpa/itest.mac`, `itest.py`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | erledigt (keine Tickverluste, groesste Verspaetung 0,68 ms; BIOS liest/schreibt mit Fremd-ISR richtig; E2 (a), E6 Tastatur ueber BIOS `CONST`) | 2026-11-17 | s. git log |
 | C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | erledigt | 2026-11-17 | 7f41132 |
-| C1.9 | `doc/plus/cpa_analyse.md`, §8-§10 | -- | 1-2 h | offen | | |
+| C1.9 | `doc/plus/cpa_analyse.md`, §8-§10 | -- | 1-2 h | Vorlage fertig, Entscheidung offen (Punkt 1 Merge entfaellt vorerst: C1.2/C1.3 liegen auf Zweig `plan48-udos`, Merge nach `main` steht aus; Punkt 4 nach der Entscheidung) | 2026-11-17 | Betreff "Plan 48 C1.9" |
 | C2.1-C2.3 | `mutos_io/cpa/m8kboot.mac`, `build.py`, `tools/plus/cpa_disk.py` | Minuten | 1 Tag | vorlaeufig | | |
 | C3.1-C3.3 | `mutos_io/cpa/mutoscpa.mac` | Minuten | 1-2 Tage | vorlaeufig | | |
 | C4.1-C4.2 | `mutos_io/cpa/mutoscpa.mac`, `doc/plus/cpa/c4_*` | ~5 Min. je Lauf | 1 Tag | vorlaeufig | | |
