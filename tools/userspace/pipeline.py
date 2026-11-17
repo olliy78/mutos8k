@@ -13,6 +13,7 @@ NAME.strings) next to the sources.  Exit 77 when the emulator project or a disk 
 """
 import argparse
 import os
+import re
 import shutil
 import sys
 
@@ -92,6 +93,7 @@ PROGRAMME = {
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
 # ld: R32 (1 site, symreloc) and R43 (1 site, getfile) would add an XORB the original does not have (measured, doc/userspace/wk_w13.md)
 C2_AUS = {"ld": {"R32", "R43"},
+          "cpp": {"R42"},       # one site in dodef keeps `test r3`, doc/userspace/wk_w2.md
          "sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
@@ -199,6 +201,10 @@ def quelle_lesen(p):
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
         elif f.endswith(".h"):
             koepfe[f] = open(os.path.join(p, f), "rb").read()
+    # a .c file that another .c of the directory #includes (cpp: cpy.c includes yylex.c, as in V7) is not a module of its own
+    for f in list(dat):
+        if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):
+            koepfe[f] = dat.pop(f).encode("latin-1")
     return dat, koepfe
 
 
@@ -246,6 +252,9 @@ def cmd_bau(name, a):
                     zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc")
                     if name == "ld":
                         zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
+                        cnt.update(c3)
+                    if name == "cpp":       # R101-R129, doc/userspace/wk_w2.md
+                        zwei[n + "_c2"][fn], c3 = U.c2_cpp_s(zwei[n + "_c2"][fn])
                         cnt.update(c3)
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
