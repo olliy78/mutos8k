@@ -92,7 +92,7 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 
 ## 7. Stand
 
-*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  In Arbeit: W2 `cpp`, W4 `c0` (Regelbereiche R101-R129 bzw. R130-R169).
+*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  W4 `c0` **G** (`wk_w4.md`).  W2 `cpp` **A** (`wk_w2.md`): 13 Restbloecke sind Codeanordnung des alten c2 -- G erst mit der c2-Quelle (W5).  Der Gast-yacc erzeugt die cpp-Tabellen wortgleich (gutes Zeichen fuer W7 `as`).  In Arbeit: W5 `c2` (Regeln R170-R199), W8 `libc.a` (R200-R229).
 
 ## 8. Naechster Schritt (urspruenglich)
 

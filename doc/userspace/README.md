@@ -21,6 +21,8 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_s5.md` | `bin`-Diskette, Stufe 5: mt, tar (ganzdatei bytegleich), adb (A, nicht rekonstruiert); c2-Regel R92 nur fuer tar |
 | `wk_w0.md` | Werkzeugkette (Plan 52) W0: Triage cc ld as cpp c0 c1 c2, libc.a, crt0 |
 | `wk_w13.md` | Werkzeugkette W1/W3: cc, ld (ganzdatei bytegleich), c2-Regeln R93-R100 nur fuer cc/ld; Stufenbau in drei Gastbefehlen |
+| `wk_w2.md` | Werkzeugkette W2: cpp (A, 13 Restbloecke Codeanordnung); Gast-yacc erzeugt die cpp-Tabellen wortgleich; c2-Regeln R101-R112 nur fuer cpp |
+| `wk_w4.md` | Werkzeugkette W4: c0 (ganzdatei bytegleich), c2-Regeln R130-R133 nur fuer c0; Gleitkommaglieder fltpr/ecvt in libc_alt |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -191,9 +193,11 @@ Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan`
 |----------|-----------|--------|----|----------|
 | cc | 6536 | V7 `cc.c`; `main` mit MUTOS-Pfaden (`/usr/lib`, `/usr/bin`), Optionen auf `S o O p E P c D I U C` gekuerzt, weitere markierte Abweichungen (`wk_w13.md`) | R93-R96 (2-7 Stellen, nur `cc`) | G |
 | ld | 10726 | V7 `ld.c` ohne Overlay-Verwaltung und `-n`, Z8000-Magics, CALLR-Relokation in `load2td` aus dem Listing (Namen *Annahme*) | R32/R43 aus, R97-R100 (je 1-2 Stellen, nur `ld`) | G |
+| c0 | 26826 | V7 `c00.c`-`c05.c`, `c0.h`: mehr `register`-Variablen (R8-R13), `HSHSIZ` 420, `STAUTO` -12, neue Globale `regmin` (Name *Annahme*), `getcc` nur ein Zeichen, Namenskonflikt-Pruefung in `blkend` u. a. (`wk_w4.md`) | R130-R133 (1-3 Stellen, nur `c0`) | G |
+| cpp | 16382 | V7 `cpp.c`, `cpy.y`, `yylex.c` mit 3 Abweichungen (`unix`/`U8000` fest definiert, `symsiz` 500, `enterf==1`); `cpy.c` vom Gast-yacc, Tabellen wortgleich | R101-R112, R42 aus | **A**: 3268/3323 Befehle gleich, 13 Bloecke Codeanordnung (vermutlich `comjump`/`codemove` des alten c2), Text 90 B kuerzer |
 
 Triage aller Passe: `wk_w0.md` (V7-`yacc` erzeugt die Tabellen von `cpp` wortgleich; `as` ist kein V7).
-**Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
+**Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  Nach W2: ed tar cc ld sh gleich, `cpy.c`/`bc.c` mit dem Gast-yacc neu erzeugt = eingecheckt, `bc` B.  **Nach W4 (c0, mit `libc_alt.py`-Aenderung fuer Gleitkommaglieder), gemessen 2026-11-17:** alle 47 Originalprogramme, `cc`, `ld`, `c0` (`--ist neu_c2`) und `sh` gleich (51 von 51).  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
