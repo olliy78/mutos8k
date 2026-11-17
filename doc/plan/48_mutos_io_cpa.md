@@ -422,3 +422,14 @@ Wellen (innerhalb einer Welle parallel):
 | O4 | Haelt der Plan an "Kernel unveraendert" fest, auch wenn C1 einen kleinen Kernel-Eingriff naheliegend macht (z. B. Einheiten > 4 erst in Plan 49)? | ja | Abnahme bleibt eindeutig (Original-Kernel und P3.4-Kernel laufen beide) |
 | O5 | Wird der Emulator gebraucht und fehlt etwas (z. B. `keys ... wait`, Abdeckung, `em msg`; `analyse.md` §11): Wunsch an das Emulatorprojekt melden statt Behelf? | melden, Behelf nur, wenn er im Schritt billig ist | CLAUDE.md: Hardware-/Werkzeugaenderungen gehoeren nach `a5120emu` |
 | O6 | Abnahmeumfang C4: reicht `bewerten` (Plan 47 P3.1), oder auch der Selbstbau-Fixpunkt ueber CP/A? | `bewerten` Pflicht, Fixpunkt optional in C5.2 | Fixpunkt kostet ~30 Min. Gastlauf und haengt am Platz der Quelldisketten, nicht an `mutos_io` |
+
+**Entscheidungen des Projektinhabers (2026-11-17):**
+* **O1:** `main`.  Umsetzung: C1.2/C1.3 arbeiten in einem eigenen Worktree auf einem Zweig von `main` (nicht im Checkout `~/projects/mutos8k`, dort arbeiten andere
+  Sitzungen); den Merge nach `main` und danach nach `mutos-plus` macht die leitende Sitzung.
+* **O2, O3:** wie empfohlen (Workbench nur als Kopie unter `/tmp/mplus/`; Konfiguration der Variante in diesem Repo, `mutos_io/cpa/system/`, Bau ueber
+  `tools/plus/cpa_system.py` in frischer Kopie, Pruefung von Workbench-Stand und SHA-1, Exit 77 ohne Workbench; Entwurf in `doc/plus/cpa/c1_8_vier_floppy.md` §2).
+* **O4:** wie empfohlen (Kernel bleibt in Plan 48 unveraendert).
+* **O5:** abweichend von der Empfehlung: fehlende Emulator-/Debugger-Faehigkeiten legen Agenten **direkt im Emulatorprojekt** als Merkposten ab
+  (`~/projects/a5120emu/doc/merkposten/<thema>.md`, nur Doku, kein Code, kein Commit dort -- die Datei bleibt fuer den Projektinhaber uncommittet liegen);
+  Verweis im Befund.  Einen Behelf hier nur, wenn er billig ist.
+* **O6:** wie empfohlen (C4: `bewerten` Pflicht; Fixpunkt ueber CP/A optional in C5.2).
