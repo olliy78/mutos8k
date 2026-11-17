@@ -308,7 +308,8 @@ char **argv;
 				bflag = 1;
 				break;
 			case 'h':
-				execv("/usr/lib/diffh",args);
+				/* Differs from V7: diffh path was "/usr/lib/diffh" (supplement disk at /v7). */
+				execv("/v7/lib/diffh",args);
 				mesg("cannot find diffh",empty);
 				done();
 			}

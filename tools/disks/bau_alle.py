@@ -68,9 +68,15 @@ def main(argv=None):
                     help="Ordner mit best_<rolle>.zip (Vorgabe disks/original/) oder ausgepackte Ordner best_<rolle>/")
     ap.add_argument("--nur-daten", action="store_true", help="nur die zwoelf Datendisketten (cmd, usr, bin, cc1, cc2, nroff; FM und MFM)")
     ap.add_argument("--ueberschreiben", action="store_true", help="vorhandene Disketten ersetzen")
+    ap.add_argument("--v7erg", action="store_true",
+                    help="stattdessen die Ergaenzungsdisketten v7erg1/v7erg2 (FM und MFM, Plan 45 E6) bauen: bau_v7erg.py; "
+                         "nicht in der Standardliste, weil sie die gebauten Ergaenzungen (erg.py bau) brauchen")
     a = ap.parse_args(argv)
 
     ordner = os.path.abspath(a.ziel_ordner)
+    if a.v7erg:
+        import bau_v7erg
+        return bau_v7erg.main(["--ziel-ordner", ordner] + (["--ueberschreiben"] if a.ueberschreiben else []))
     ziele = [os.path.join(ordner, n) for _, n in ([] if a.nur_daten else LADEDISKETTEN + WURZELN)] + \
             [os.path.join(ordner, n) for n in datendisketten()] + \
             [os.path.join(ordner, n) for n in ([] if a.nur_daten else DISK_SATZ)]

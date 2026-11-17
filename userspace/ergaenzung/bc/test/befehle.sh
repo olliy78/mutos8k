@@ -38,3 +38,7 @@ cat <<'M'
 --- standard input
 M
 bc <arith
+cat <<'M'
+--- bc -l
+M
+bc -l mathlib </dev/null

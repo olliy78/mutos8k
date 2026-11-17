@@ -54,7 +54,8 @@ def _lauf(args, **kw):
     return r.returncode, r.stdout.decode("latin-1")
 
 
-def dbg_skript(arbeit, teile, kommando=">asm.out;as %s.s >/tmp/%s.err 2>&1;cat asm.out >/tmp/%s.o", frist=3_000_000_000, schirm=False):
+def dbg_skript(arbeit, teile, kommando=">asm.out;as %s.s >/tmp/%s.err 2>&1;cat asm.out >/tmp/%s.o", frist=3_000_000_000, schirm=False,
+               mnt="/mnt"):
     """Skript fuer k1520dbg.  Je Teil ein Befehl, danach `cat fertigN` (eigene Marke ENDE<N>, eindeutig)."""
     z = []
     z.append("# erzeugt von gast_as.py -- nicht von Hand aendern")
@@ -72,11 +73,11 @@ def dbg_skript(arbeit, teile, kommando=">asm.out;as %s.s >/tmp/%s.err 2>&1;cat a
     z.append("g 100000000")
     z.append("keys /etc/mount\\s/dev/rk1\\s/usr\\r")
     z.append("g 30000000")
-    z.append("keys /etc/mount\\s/dev/rk3\\s/mnt\\r")
+    z.append("keys /etc/mount\\s/dev/rk3\\s%s\\r" % mnt)
     z.append("g 30000000")
     z.append("keys /etc/mount\\s/dev/rk0\\s/tmp\\r")
     z.append("g 30000000")
-    z.append("keys cd\\s/mnt\\r")
+    z.append("keys cd\\s%s\\r" % mnt)
     z.append("g 26000000")
     z.append("keys PATH=/bin:/usr/bin:.\\r")
     z.append("g 26000000")
@@ -162,22 +163,30 @@ def gast_assemblieren(arbeit, teile, ausgabe=None, kommando=">asm.out;as %s.s >/
     return erg
 
 
-def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=()):
+def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=(), mnt="/mnt", quelle_hfe=None):
     """Allgemeiner Gastlauf (AP K5): `quellen` {name: bytes|str} kommen auf die Quelldiskette D (im Gast /mnt = Arbeitsordner),
     `befehle` laufen nacheinander in der Shell (Rueckmeldung je Befehl ueber eine Marke), danach werden die Dateien
     `rueck` aus /tmp (eigene leere Diskette A) geholt.  Rueckgabe {name: bytes oder None}.
-    Befehle schreiben ihre Meldungen selbst nach /tmp/<name> (`>/tmp/x.err 2>&1`)."""
+    Befehle schreiben ihre Meldungen selbst nach /tmp/<name> (`>/tmp/x.err 2>&1`).
+    `mnt`: mount point of drive D (default /mnt; plan 45 E6 uses /v7).  Every command must end in `mnt` (the runner
+    appends `cat fertigN`).  Keys of `quellen` may contain "/" (bin/NAME, lib/NAME): subdirectories of the disk.
+    A mount point other than /mnt is created on the (copied) root disk first.
+    `quelle_hfe`: an existing disk image for drive D (copied; `quellen` and the end markers are put onto the copy)
+    instead of a freshly created one (plan 45 E6 acceptance of v7erg1/v7erg2)."""
     pruefe_hilfsmittel()
     arbeit = os.path.abspath(arbeit)
     os.makedirs(arbeit, exist_ok=True)
     for ziel, quelle in PLATTEN.items():
         shutil.copyfile(disk(quelle), os.path.join(arbeit, ziel))
+    if mnt != "/mnt":   # the mount point must exist on the root disk copy
+        _lauf([disktool(), "mkdir", os.path.join(arbeit, "root.hfe"), mnt.lstrip("/")])
     if boot_hfe:        # K8: eigene Ladediskette (mit dem selbst gebauten Kernel) statt der Auslieferung
         shutil.copyfile(boot_hfe, os.path.join(arbeit, "boot.hfe"))
     q = os.path.join(arbeit, "q")
     shutil.rmtree(q, ignore_errors=True)
     os.makedirs(q)
     for n, t in quellen.items():
+        os.makedirs(os.path.dirname(os.path.join(q, n)), exist_ok=True)
         with open(os.path.join(q, n), "wb") as f:
             f.write(t if isinstance(t, bytes) else t.encode("latin-1"))
     for i in range(1, len(befehle) + 1):
@@ -192,11 +201,16 @@ def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dat
     rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "tmp.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes", "200"])
     if rc:
         raise RuntimeError("create tmp: " + o)
-    rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "quelle.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes",
-                   str(len(quellen) + len(befehle) + 40)])
-    if rc:
-        raise RuntimeError("create quelle: " + o)
+    if quelle_hfe:
+        shutil.copyfile(quelle_hfe, os.path.join(arbeit, "quelle.hfe"))
+    else:
+        rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "quelle.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes",
+                       str(len(quellen) + len(befehle) + 40)])
+        if rc:
+            raise RuntimeError("create quelle: " + o)
     dateien = [os.path.join(q, f) for f in sorted(os.listdir(q)) if not f.endswith(".fileinfo")]    # Angabendateien holt `put` selbst
+    if any(os.path.isdir(f) for f in dateien):      # subdirectories (bin/, lib/): `put` takes the whole folder alone, its content lands in /
+        dateien = [q]
     for i in range(0, len(dateien), 20):
         rc, o = _lauf([disktool(), "put", os.path.join(arbeit, "quelle.hfe")] + dateien[i:i + 20])
         if rc:
@@ -205,7 +219,7 @@ def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dat
         _lauf([disktool(), "attr", os.path.join(arbeit, "quelle.hfe"), n, "--mode", "0755", "--mtime", "536457600"])
     skript = os.path.join(arbeit, "lauf.dbg")
     with open(skript, "w") as f:
-        f.write(dbg_skript(arbeit, befehle, "%s", frist, schirm))
+        f.write(dbg_skript(arbeit, befehle, "%s", frist, schirm, mnt))
     log = os.path.join(arbeit, "lauf.log")
     t0 = time.time()
     with open(log, "w") as lf:

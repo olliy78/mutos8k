@@ -8,7 +8,7 @@ R
 cat <<'MARK'
 --- cc lex.yy.c with libl
 MARK
-cc -s -o scan lex.yy.c main.c yywrap.c yyless.c reject.c >/dev/null
+cc -s -o scan lex.yy.c /v7/lib/libl.a >/dev/null
 cat <<R
 rc=$?
 R

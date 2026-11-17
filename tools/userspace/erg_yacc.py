@@ -4,7 +4,7 @@
 
 Needs userspace/ergaenzung/yacc/work/bau/yacc.bin (python3 -I tools/userspace/erg.py bau yacc).
 For every NAME the file userspace/ergaenzung/NAME/NAME.y (V7 text, unchanged) is run through yacc in one guest session
-(cd /tmp; cat /mnt/yaccpar >yaccpar; yacc NAME.y; y.tab.c -> NAME.c); NAME.c is stored behind a header comment.
+(cd /tmp; yacc NAME.y with /v7/lib/yaccpar; y.tab.c -> NAME.c); NAME.c is stored behind a header comment.
 Same method as tools/userspace/vmake_gram.py (doc/userspace/erg_e3b.md), which handles gram.y of vmake.
 """
 import os
@@ -34,16 +34,16 @@ def main(namen):
         yb = os.path.join(ERG, "yacc", "work", "bau", "yacc.bin")
         if not os.path.isfile(yb):
             raise SystemExit("yacc.bin missing: python3 -I tools/userspace/erg.py bau yacc")
-        q = {"yacc": open(yb, "rb").read(), "yaccpar": open(os.path.join(ERG, "yacc", "yaccpar"), "rb").read()}
-        befehle = ["cat /mnt/yaccpar >/tmp/yaccpar;cd /mnt"]
+        q = {"bin/yacc": open(yb, "rb").read(), "lib/yaccpar": open(os.path.join(ERG, "yacc", "yaccpar"), "rb").read()}
+        befehle = ["cd /v7"]
         rueck = []
         for n in namen:
             q[n + ".y"] = open(os.path.join(ERG, ziele[n], n + ".y"), "rb").read()
-            befehle.append("cat /mnt/%s.y >/tmp/%s.y;cd /tmp;PATH=/mnt:/bin:/usr/bin yacc %s.y >/tmp/%s.yerr 2>&1;cat y.tab.c >/tmp/%s.c;cd /mnt"
+            befehle.append("cat /v7/%s.y >/tmp/%s.y;cd /tmp;PATH=/v7/bin:/bin:/usr/bin yacc %s.y >/tmp/%s.yerr 2>&1;cat y.tab.c >/tmp/%s.c;cd /v7"
                            % (n, n, n, n, n))
             rueck += [n + ".c", n + ".yerr"]
         r = gast_as.gast_befehle(os.path.join(ERG, ziele[namen[0]], "work", "yacc"), q, befehle, rueck,
-                                 frist=3_000_000_000, ausgabe={}, ausfuehrbar=("yacc",))
+                                 frist=3_000_000_000, ausgabe={}, ausfuehrbar=("bin/yacc",), mnt="/v7")
         rc = 0
         for n in namen:
             err = (r.get(n + ".yerr") or b"").decode("latin-1").replace("\r", "")

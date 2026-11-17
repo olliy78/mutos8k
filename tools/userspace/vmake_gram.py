@@ -3,7 +3,7 @@
   K1520EMU=... python3 -I tools/userspace/vmake_gram.py
 
 Needs userspace/ergaenzung/yacc/work/bau/yacc.bin (python3 -I tools/userspace/erg.py bau yacc).
-Guest: cd /tmp; cat /mnt/yaccpar >yaccpar; yacc gram.y (yaccpar must be in the cwd, see doc/userspace/erg_e3a.md);
+Guest: cd /tmp; yacc gram.y (yaccpar from /v7/lib, see doc/userspace/erg_e6.md);
 the y.tab.c that comes back is stored as gram.c behind a header comment.
 """
 import os
@@ -27,13 +27,13 @@ def main():
         yb = os.path.join(ERG, "yacc", "work", "bau", "yacc.bin")
         if not os.path.isfile(yb):
             raise SystemExit("yacc.bin missing: python3 -I tools/userspace/erg.py bau yacc")
-        q = {"yacc": open(yb, "rb").read(),
-             "yaccpar": open(os.path.join(ERG, "yacc", "yaccpar"), "rb").read(),
+        q = {"bin/yacc": open(yb, "rb").read(),
+             "lib/yaccpar": open(os.path.join(ERG, "yacc", "yaccpar"), "rb").read(),
              "gram.y": open(os.path.join(ERG, "vmake", "gram.y"), "rb").read(),
              "defs": open(os.path.join(ERG, "vmake", "defs"), "rb").read()}
-        befehle = ["cat /mnt/yaccpar >/tmp/yaccpar;cat /mnt/gram.y >/tmp/gram.y;cd /tmp;PATH=/mnt:/bin:/usr/bin yacc gram.y >/tmp/yacc.err 2>&1;cd /mnt"]
+        befehle = ["cat /v7/gram.y >/tmp/gram.y;cd /tmp;PATH=/v7/bin:/bin:/usr/bin yacc gram.y >/tmp/yacc.err 2>&1;cd /v7"]
         r = gast_as.gast_befehle(os.path.join(ERG, "vmake", "work", "gram"), q, befehle, ["y.tab.c", "yacc.err"],
-                                 frist=3_000_000_000, ausgabe={}, ausfuehrbar=("yacc",))
+                                 frist=3_000_000_000, ausgabe={}, ausfuehrbar=("bin/yacc",), mnt="/v7")
         err = (r.get("yacc.err") or b"").decode("latin-1")
         print("yacc messages: %r" % err)
         if not r.get("y.tab.c"):

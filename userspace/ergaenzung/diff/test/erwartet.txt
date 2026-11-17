@@ -103,3 +103,10 @@ rc=1
 > seven and a half
 10a11
 > eleven
+--- diff -h e.txt g.txt
+5c5
+< x5
+---
+> y5
+20d19
+< x20

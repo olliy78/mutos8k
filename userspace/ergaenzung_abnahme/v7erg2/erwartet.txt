@@ -1,0 +1,50 @@
+--- names in /v7/bin and /v7/lib
+
+/v7/bin:
+bc
+dc
+egrep
+lex
+m4
+ranlib
+sed
+tsort
+vmake
+yacc
+
+/v7/lib:
+lib.b
+libl.a
+ncform
+yaccpar
+--- dc, bc, bc -l
+5
+1024
+2.7182818284
+--- sed, egrep
+peAr
+Apple
+bAnAnA
+Apple
+pear
+banana
+--- m4
+hello world
+--- tsort
+a
+b
+c
+--- vmake
+pear
+apple
+banana
+apple
+--- ranlib (no ar on this disk: error message only; function tested in erg test)
+not archive: t1.txt
+--- yacc chain: yacc calc.y, cc, run (yaccpar from /v7/lib)
+3
+14
+20
+11
+--- lex chain: lex, cc with /v7/lib/libl.a, run (ncform from /v7/lib)
+W(abc) N(12) +W(x)
