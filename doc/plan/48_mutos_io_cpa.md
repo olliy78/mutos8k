@@ -405,7 +405,7 @@ Wellen (innerhalb einer Welle parallel):
 | C1.5 | `doc/plus/cpa/c1_5_bios.md` | Sekunden | 3 h | offen | | |
 | C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | offen | | |
 | C1.7 | `versuche/plus_cpa/itest.mac`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | offen | | |
-| C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | offen | | |
+| C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | erledigt | 2026-11-17 | 7f41132 |
 | C1.9 | `doc/plus/cpa_analyse.md`, §8-§10 | -- | 1-2 h | offen | | |
 | C2.1-C2.3 | `mutos_io/cpa/m8kboot.mac`, `build.py`, `tools/plus/cpa_disk.py` | Minuten | 1 Tag | vorlaeufig | | |
 | C3.1-C3.3 | `mutos_io/cpa/mutoscpa.mac` | Minuten | 1-2 Tage | vorlaeufig | | |
