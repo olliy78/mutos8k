@@ -1,0 +1,8 @@
+# Hand-made correction for c0.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see cc.members.zusatz).
+doprnt code=4CEC,4CF2,4D08
+# fltpr entry points (V7 fltpr.s order pgen, pfloat, pscien; the doprnt calls of the original go to 4D9C / 4DC6 / 4E3A)
+fltpr exp=pgen@4D9C,pfloat@4DC6,pscien@4E3A,sign@67FA,decpt@67FC
+# commons of the original: references 9356 (x4) and 9556 (x2) are the buffer starts; _environ at 9756 (crt0 `LD B+2E9C`)
+common __sibuf 9356 200 data
+common __sobuf 9556 200 data
+extern _environ 9756 2

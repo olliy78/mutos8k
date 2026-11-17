@@ -1,0 +1,11 @@
+# LOAD16: Kopfsektor der Kerneldatei (128 B, gelesen nach 51CBH) und Zustand beim Eintritt in mutos_io.  Plan 48 C1.2.
+#   tools/emu.py dbg --em em256 --laufwerke K5601,K5601,K5601 @DISK:a5120_mutos8000_boot_udos_k5601.hfe@ -x versuche/dbg/load16_kopf.dbg
+g 80000000
+b 0x5091
+keys BOOT\sMUTOS\r
+g 400000000
+d 0x51CB 128
+d 0x0FB4 2
+d 0x0FBA 4
+d 0x5199 16
+q

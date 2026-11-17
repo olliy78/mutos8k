@@ -1,0 +1,408 @@
+; ==========================================================================
+; ifsspr - UDOS printer driver "IFSS" for the A5120 (SIO A32 channel B)
+; ==========================================================================
+; Original UDOS file IFSSPR (type P1, 768 bytes at EB00H, 05.03.1985) of the MUTOS 8000
+; boot disk.  The boot script MUTOS runs "ACTIVATE $IFSSPR" before LOAD16 and mutos_io.
+; ACTIVATE puts the file at EB00H and calls it ONCE with command 0 (install, measured,
+; doc/mutos_io/udos_lader.md section 2); afterwards mutos_io calls EB00H for every /dev/lp job
+; (mutos_io 91D9, CALL 0EB00H; parameter block AUF1 = A567H in IY).
+;
+; Reconstructed from the disk image (z80_disasm2 + karte) and commented by hand;
+; must assemble byte-identical (python3 mutos_io/udos/build.py --check).
+; The twin PIOPR (parallel printer on PIO A31) is the same program with another
+; hardware layer (piopr.mac); keep both comments in step.
+;
+; ---- Interface (IY = parameter block, all facts measured with mutos_io or read from code) ----
+;   IY+0   unit number          (stored by command 04, compared by the write commands)
+;   IY+1   command; bit 0 = "asynchronous": return to the caller at once, the end of the
+;          job is reported through the callback IY+6/7 (mutos_io: 0FH = write, async)
+;          bit 0 clear: wait here until IY+10 has bit 7 set
+;          00 install  (hooks the interrupt slots, programs the SIO; sets IY+10 = 80H)
+;          02 no-op, status 80H
+;          04 open/reserve (owner unit := IY+0, column := 0); busy -> status D6H
+;          06 close (owner := none), status 80H
+;          44 remove   (restores the old vector slot 0FF0H, clears bit 7 of 0FDBH)
+;          0E write text   (stop after BC bytes; byte FFH ends the text; TAB is expanded)
+;          10 write line   (like 0E, but also ends after the first CR)
+;          48 write binary (every byte goes out unchanged, no FFH/TAB/CR handling)
+;          other -> status C1H
+;   IY+2/3 buffer address       IY+4/5 byte count in, bytes processed out
+;   IY+6/7 callback "job done"  (asynchronous jobs, status without bit 6)
+;   IY+8/9 callback "error"     (status with bit 6; 0 = use IY+6/7 instead)
+;   IY+10  status: 00 running, 80H ok, 49H CR seen with 0FDBH bit 1 clear (see CHKCR),
+;          C1H bad command, C2H timeout, CBH foreign unit, D6H busy
+;
+; ---- Hooks into the UDOS nucleus (IM 2 slots, I = 0FH) ----
+;   0FE4H = system CTC (K2526) channel 2 (vector E4H)  -> TMOISR  (job time-out)
+;   0FF0H = SIO A32 ch B transmit-empty (vector F0H)    -> TXISR   (next character)
+;   0FF4H = SIO A32 ch B receive         (F4H)          -> RXISR   (XON/XOFF handshake)
+;   0FF6H = SIO A32 ch B special receive (F6H)          -> EIRETI  (ignored)
+;   0FDBH = UDOS flag byte, OR 8FH at install; bits 0 and 1 are polled by the CR code.
+; ---- Hardware (A5120 K8025: doc/design/06_k8025_ass.md in the emulator project) ----
+;   5EH/5FH SIO A32 channel B data/control = main printer, current loop (IFSS)
+;   58H     CTC A34 channel 0 = baud clock of A32 (time constant 1, 9600 baud x16)
+;   0EH     system CTC (K2526) channel 2 = job time-out timer (TC C0H, prescaler 256)
+; ---- Time-out ----------------------------------------------------------------
+;   TMOCNT (2 bytes) is loaded with 03E8H; TMOISR counts the low byte down and, each
+;   time it wraps to 0, the high byte; at high byte = 0 it resumes the job like a
+;   transmit interrupt, and the job code then sees TMOCNT = 0 and ends with C2H.
+;   That is 232 + 2 * 256 = 744 timer ticks (time per tick: assumption, not measured).
+; ---- Coroutine trick ------------------------------------------------------------
+;   PUTCH does not return to its caller: it POPs the return address into CONTIN, sends
+;   the byte and RETurns to the caller of the driver.  The next transmit interrupt
+;   (TXISR) rebuilds the registers HL/BC/DE/A from the SAVExx cells, pushes CONTIN and
+;   RETurns "into" the interrupted job code, which goes on after its CALL PUTCH.  The
+;   next PUTCH returns to ISRRET (pushed by TXISR), which saves the registers again.
+; ==========================================================================
+	.Z80
+
+; ---- ports and system cells ----
+SIOBD	EQU	5EH		; SIO A32 channel B data
+SIOBC	EQU	5FH		; SIO A32 channel B control
+CTCBAU	EQU	58H		; CTC A34 channel 0 (baud clock)
+CTCTMO	EQU	0EH		; system CTC channel 2 (time-out)
+VCTC2	EQU	0FE4H		; IM 2 slot: CTC channel 2
+VTXB	EQU	0FF0H		; IM 2 slot: SIO B transmit empty
+VRXB	EQU	0FF4H		; IM 2 slot: SIO B receive
+VSPB	EQU	0FF6H		; IM 2 slot: SIO B special receive
+UDFLAG	EQU	0FDBH		; UDOS flag byte
+TABSTP	EQU	24C4H		; UDOS tab stop table (one byte per column, non-zero = stop)
+
+; N filler bytes FFH
+FILLFF	MACRO	N
+	REPT	N
+	DB	0FFH
+	ENDM
+	ENDM
+
+	CSEG
+	.PHASE	0EB00H
+SEGEB00:
+ENTRY:	JR	DISPAT
+	DB	'PRINTER V4 1184 MP'
+
+; ---- command dispatcher; IY = parameter block ----
+DISPAT:	LD	A,(IY+1)
+	RES	0,A			; drop the asynchronous bit
+	CP	00H
+	JR	Z,CMDINI
+	CP	02H
+	JR	Z,SETOK
+	CP	04H
+	JR	Z,CMDOPN
+	CP	06H
+	JR	Z,CMDCLS
+	CP	44H
+	JR	Z,CMDREM
+	CP	0EH
+	JR	Z,DSP1			; (JR Z skips the next CP; Z stays set)
+	CP	10H
+DSP1:	JR	Z,DSP2
+	CP	48H
+DSP2:	JR	Z,CMDWRT
+	LD	A,0C1H			; bad command
+SETSTA:	LD	(IY+10),A
+	RET
+
+; ---- 00: install ----
+CMDINI:	LD	HL,0000H
+	LD	(JOBPTR),HL		; no job active
+	LD	HL,(VTXB)
+	LD	(OLDVEC),HL		; remember the old transmit slot
+	LD	HL,TXISR
+	LD	(VTXB),HL
+	LD	HL,TMOISR
+	LD	(VCTC2),HL
+	LD	A,(UDFLAG)
+	OR	8FH
+	LD	(UDFLAG),A
+	CALL	HWINIT			; slots F4/F6 and the SIO
+	JR	CMDCLS
+
+; ---- 04: open ----
+CMDOPN:	LD	A,(OWNFLG)
+	OR	A
+	LD	A,0D6H			; busy
+	JR	NZ,SETSTA
+	LD	(OWNFLG),A		; A is non-zero here (D6H)
+	LD	A,(IY+0)
+	LD	(OWNUNT),A
+	LD	HL,COLUMN
+	LD	(HL),00H
+	JR	SETOK
+
+; ---- 06: close ----
+CMDCLS:	XOR	A
+	LD	(OWNFLG),A
+	JR	SETOK
+
+; ---- 44: remove ----
+CMDREM:	LD	HL,UDFLAG
+	RES	7,(HL)
+	LD	HL,(OLDVEC)
+	LD	(VTXB),HL
+SETOK:	LD	(IY+10),80H
+	RET
+
+; ---- 0E / 10 / 48: write ----
+CMDWRT:	LD	A,(OWNFLG)
+	OR	A
+	JR	Z,BUSYWT		; not open: accept any unit
+	LD	A,(OWNUNT)
+	CP	(IY+0)
+	LD	A,0CBH			; foreign unit
+	JP	NZ,SETSTA
+BUSYWT:	LD	HL,(JOBPTR)		; wait until the previous job is over
+	LD	A,H
+	OR	L
+	JR	NZ,BUSYWT
+	BIT	0,(IY+1)
+	JR	NZ,STRTJB		; asynchronous: start and return
+	CALL	STRTJB
+DONEWT:	BIT	7,(IY+10)		; synchronous: wait for status bit 7
+	JR	Z,DONEWT
+	RET
+
+; start a job: HL = buffer, BC = count, DE = bytes done
+STRTJB:	LD	L,(IY+2)
+	LD	H,(IY+3)
+	LD	(SAVEHL),HL
+	LD	L,(IY+4)
+	LD	H,(IY+5)
+	LD	A,H
+	OR	L
+	JR	Z,SETOK			; count 0: ready at once
+	LD	(SAVEBC),HL
+	LD	HL,0000H
+	LD	(SAVEDE),HL
+	LD	(JOBPTR),IY
+	LD	(IY+10),00H		; running
+	CALL	TXON			; enable the transmitter interrupt
+	LD	A,0B7H			; CTC 2: timer, interrupt on, prescaler 256, TC follows, reset
+	OUT	(CTCTMO),A
+	LD	A,0C0H			; time constant 192
+	OUT	(CTCTMO),A
+	LD	HL,03E8H
+	LD	(TMOCNT),HL		; time-out counter
+	XOR	A
+	CALL	PUTCH			; send a NUL to start the chain; the job code continues
+					; here after the first transmit (or time-out) interrupt
+	LD	A,37H			; CTC 2 again, interrupt off
+	OUT	(CTCTMO),A
+	LD	A,0C0H
+	OUT	(CTCTMO),A
+	PUSH	HL
+	LD	HL,(TMOCNT)
+	LD	A,H
+	OR	L
+	POP	HL
+	LD	A,0C2H			; time-out
+	JR	Z,ENDSTA
+CHARLP:	LD	A,(IY+1)
+	RES	0,A
+	CP	48H
+	LD	A,(HL)			; next byte
+	JR	Z,DOCHAR		; binary: send as it is
+	CP	0FFH
+	JR	NZ,CHKTAB
+ENDINC:	INC	DE			; the terminator counts
+ENDOK:	LD	A,80H
+ENDSTA:	LD	(IY+10),A		; end of the job: status, bytes done, no job active
+	LD	(IY+5),D
+	LD	(IY+4),E
+	LD	HL,0000H
+	LD	(JOBPTR),HL
+	CALL	TXOFF
+	RET				; leaves the coroutine: returns to the ISR frame
+
+CHKTAB:	CP	09H
+	JR	Z,TABEXP
+DOCHAR:	CALL	PUTCH
+	PUSH	HL
+	LD	HL,COLUMN
+	INC	(HL)
+	POP	HL
+	CP	0DH
+	JR	NZ,NXTCHR
+	XOR	A			; after a CR send NULs until UDFLAG bit 0 is set
+CRPAD:	CALL	PUTCH
+	LD	A,(UDFLAG)
+	BIT	0,A
+	LD	A,00H
+	JR	Z,CRPAD
+	LD	A,(UDFLAG)
+	BIT	1,A
+	SET	1,A
+	LD	(UDFLAG),A
+	LD	A,49H			; bit 1 was clear: report 49H once, ending the job
+	JR	Z,ENDSTA
+	XOR	A
+	LD	(COLUMN),A
+	LD	A,(IY+1)
+	RES	0,A
+	CP	10H
+	JR	Z,ENDINC		; "write line" ends after the CR
+NXTCHR:	INC	HL
+	DEC	BC
+	INC	DE
+	LD	A,C
+	OR	B
+	JR	NZ,CHARLP
+	JR	ENDOK
+
+; TAB: blanks up to the next stop of the UDOS tab table
+TABEXP:	LD	A,20H
+	CALL	PUTCH
+	PUSH	HL
+	PUSH	BC
+	LD	HL,COLUMN
+	INC	(HL)
+	LD	C,(HL)
+	LD	B,00H
+	LD	HL,TABSTP
+	ADD	HL,BC
+	LD	A,(HL)
+	AND	A
+	POP	BC
+	POP	HL
+	JR	Z,TABEXP
+	JR	NXTCHR
+
+; ---- interrupt: system CTC 2 = time-out tick ----
+TMOISR:	PUSH	AF
+	LD	A,(TMOCNT)
+	DEC	A
+	LD	(TMOCNT),A
+	JR	NZ,TMOEX
+	LD	A,(TMOCNT+1)
+	DEC	A
+	LD	(TMOCNT+1),A
+	JR	Z,TMOGO
+TMOEX:	POP	AF
+	EI
+	RETI
+TMOGO:	POP	AF			; time-out: continue the job like TXISR
+
+; ---- interrupt: SIO B transmit empty = next character ----
+TXISR:	EI
+	PUSH	HL
+	PUSH	AF
+	PUSH	IY
+	PUSH	IX
+	PUSH	DE
+	PUSH	BC
+	LD	HL,ISRRET
+	PUSH	HL
+	LD	HL,(CONTIN)
+	PUSH	HL
+	LD	IY,(JOBPTR)
+	LD	(IY+10),00H
+	LD	HL,(SAVEHL)
+	LD	BC,(SAVEBC)
+	LD	DE,(SAVEDE)
+	LD	A,(SAVEA)
+	RET				; resume the job code behind its last CALL PUTCH
+ISRRET:	LD	(SAVEA),A		; the job code reaches here at its next PUTCH or at its end
+	LD	(SAVEDE),DE
+	LD	(SAVEBC),BC
+	LD	(SAVEHL),HL
+	POP	BC
+	POP	DE
+	POP	IX
+	LD	A,(IY+10)
+	OR	A
+	JR	NZ,ISRERR		; status set: the job is over
+ISREXI:	POP	IY
+	POP	AF
+	POP	HL
+	RETI
+ISRERR:	BIT	6,(IY+10)
+	JR	Z,ISRCB
+	LD	H,(IY+9)		; error: callback IY+8/9 if given
+	LD	L,(IY+8)
+	LD	A,H
+	OR	L
+	JR	NZ,ISRJMP
+ISRCB:	BIT	0,(IY+1)
+	JR	Z,ISREXI		; synchronous job: nobody to call
+	LD	L,(IY+6)
+	LD	H,(IY+7)
+ISRJMP:	POP	IY
+	POP	AF
+	EX	(SP),HL			; HL = old HL again, callback address on the stack
+	RETI				; RETI "returns" into the callback
+
+; ---- variables (FFH in the file; INSTALL clears JOBPTR) ----
+TMOCNT:	DB	0FFH,0FFH		; time-out counter
+OWNUNT:	DB	0FFH			; unit that opened the printer
+OWNFLG:	DB	0FFH			; non-zero = open
+COLUMN:	DB	0FFH			; print column (for TAB), cleared by open
+SAVEA:	DB	0FFH
+SAVEHL:	DW	0FFFFH
+SAVEBC:	DW	0FFFFH
+SAVEDE:	DW	0FFFFH
+JOBPTR:	DW	0FFFFH			; parameter block of the running job, 0 = none
+CONTIN:	DW	0FFFFH			; continuation address saved by PUTCH
+OLDVEC:	DW	0FFFFH			; old content of slot 0FF0H
+
+	DB	'CD IFSS V4 1184 MP'
+
+; ---- hardware layer (IFSSPR: SIO A32 channel B) ----
+; install: SIO slots F4/F6, program CTC 0 (baud) and SIO channel B from INITBL
+HWINIT:	LD	HL,RXISR
+	LD	(VRXB),HL
+	LD	HL,EIRETI
+	LD	(VSPB),HL
+	LD	HL,INITBL
+	LD	BC,0C58H		; B = 12 bytes, C = port 58H (CTC 0)
+	OUTI				; 07H: timer, TC follows
+	OUTI				; 01H: time constant 1 (9600 baud x16)
+	LD	C,SIOBC
+	OTIR				; 10 bytes to SIO B control (see INITBL)
+	RET
+; transmitter interrupt on (WR1 = 1EH: rx int on all characters, status affects vector,
+; tx int on; from the SIO data sheet, not measured)
+TXON:	LD	A,01H
+	OUT	(SIOBC),A
+	LD	A,1EH
+	OUT	(SIOBC),A
+	RET
+; WR1 = 0: no interrupts
+TXOFF:	LD	A,01H
+	OUT	(SIOBC),A
+	LD	A,00H
+	OUT	(SIOBC),A
+	RET
+; send A to the printer (does not return to the caller, see "Coroutine trick")
+PUTCH:	POP	IX
+	LD	(CONTIN),IX
+	OUT	(SIOBD),A
+	RET
+; receive interrupt: XOFF (13H) stops the transmitter interrupt, any other character
+; (XON) restarts it and sends a NUL to get the chain going
+RXISR:	PUSH	AF
+	IN	A,(SIOBD)
+	CP	13H
+	JR	Z,RXOFF
+	CALL	TXON
+	LD	A,00H
+	OUT	(SIOBD),A
+	JR	RXEND
+RXOFF:	LD	A,01H
+	OUT	(SIOBC),A
+	LD	A,1CH			; WR1 = 1CH: transmitter interrupt off, receive stays on
+	OUT	(SIOBC),A
+RXEND:	POP	AF
+EIRETI:	EI
+	RETI
+; init table: 07H,01H -> CTC 58H; then to SIO B control:
+;   18H reset, 18H reset, WR4 = 4DH (x16, 2 stop bits, parity on), WR3 = 41H (rx 7 bit, enable),
+;   WR5 = 28H (tx 7 bit, enable), WR2 = F0H (interrupt vector base); the last two bytes
+;   (01H,1EH) are not sent here, TXON sends them
+INITBL:	DB	07H,01H,18H,18H,04H,4DH,03H,41H,05H,28H,02H,0F0H,01H,1EH
+SEGEB00E:
+	REPT	(80H-(($-SEGEB00) AND 7FH)) AND 7FH
+	DB	0FFH
+	ENDM
+	.DEPHASE
+	END

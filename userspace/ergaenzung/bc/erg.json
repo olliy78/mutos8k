@@ -1,6 +1,11 @@
 {
  "header": [],
- "werkzeuge": ["dc"],
+ "werkzeuge": [
+  "dc"
+ ],
  "flags": "-s",
- "quelle": "original/unix-v7/usr/src/cmd/bc.y (yacc-generated bc.c, see tools/userspace/erg_yacc.py)"
+ "quelle": "original/unix-v7/usr/src/cmd/bc.y (yacc-generated bc.c, see tools/userspace/erg_yacc.py)",
+ "lib": [
+  "lib.b"
+ ]
 }

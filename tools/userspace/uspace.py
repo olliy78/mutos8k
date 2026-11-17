@@ -298,13 +298,15 @@ def stufen_befehl(name, lib, nur_s):
     truncates the files it consumed (`>file`; there is no `rm` on the guest PATH, the commands disk is not mounted), which frees the blocks.
     Errors go to NAME.err (NAME.err2 for the -S run).  Result: /tmp/NAME (linked by `cc -s -o` like the one-step cc) or /tmp/NAME.s."""
     e = name + (".err2" if nur_s else ".err")
-    r = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci",
-         "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5"]
+    # Three guest commands, each ending in /mnt: one line longer than ca. 250 characters is damaged by the guest tty (a character is
+    # lost, the chain silently does not run: measured with ld, 22 KB source + libc_alt archive, 2026-11-17).
+    a = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci", "cd /mnt"]
+    b = ["cd /tmp", "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5", "cd /mnt"]
+    c = []
     if not nur_s:
-        r += ["/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
-              "cc -s -o %s %s.o%s >>%s 2>&1" % (name, name, lib, e), ">%s.o" % name]
-    r.append("cd /mnt")
-    return ";".join(r)
+        c = ["cd /tmp", "/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
+             "cc -s -o %s %s.o%s >>%s 2>&1" % (name, name, lib, e), ">%s.o" % name, "cd /mnt"]
+    return [";".join(x) for x in (a, b, c) if x]
 
 
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
@@ -335,13 +337,13 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             # passes are run by hand and each pass deletes its inputs (same commands as cc.c, cc -O only; USERSPACE_STUFEN=1 forces it).
             stufen = (not ist_s) and "-O" in flags.split() and (len(text) > STUFEN_AB or os.environ.get("USERSPACE_STUFEN") == "1")
             if stufen:
-                befehle = [stufen_befehl(name, lib, False)]
+                befehle = stufen_befehl(name, lib, False)
             else:
                 befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 if stufen:
-                    befehle.append(stufen_befehl(name, lib, True))
+                    befehle += stufen_befehl(name, lib, True)
                 else:
                     befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
                 rueck += [name + ".s", name + ".err2"]
@@ -419,7 +421,260 @@ def c2_tar_s(s):
     return "\n".join(z), n
 
 
-def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False):
+def c2_cc_s(s):
+    """Rules R93-R96: measured on `usr/bin/cc` and `usr/bin/ld` ONLY (doc/userspace/wk_w13.md); c2_emu_s(..., cc=True) applies these and
+    nothing else (the Werkzeugkette programs are shipped-c2 output except the forms below; the older rules R1-R91 destroy them).
+    MODEL of the old c2, not a run of it.
+      R93  `ld r3,@r2 ; ld MEM,r3 ; push @sp,r3`  ->  `push @sp,MEM`   (value just stored is pushed from memory)
+      R94  `cp VAR,#k` (VAR = frame variable `..(FP)` or register variable r8..r13, no mirror in r2)  ->  `ld r2,VAR ; cp r2,#k`
+      R95  `cp VAR,#k` while r2 mirrors VAR (after `ld VAR,r2` or an R94 load; kept over cp/test/jr)  ->  `cp r2,#k`
+      R96  `test r2` -> `test MEM` where r2 no longer holds the value of MEM that the shipped c2 assumed: (a) `ld M1,r2 ; ld M2,r2 ; test r2`
+           -> `test M2`, (b) after an R94 load that replaced r2's earlier mirror MEM -> `test MEM`."""
+    z = s.split("\n")
+    out = []
+    n = {"R93": 0, "R94": 0, "R95": 0, "R96": 0}
+    mir = None      # memory operand mirrored in r2
+    stale = None    # earlier mirror of r2 destroyed by an R94 load
+    var = re.compile(r"(-?%[0-9A-F]+\(FP\)|r(?:8|9|1[0-3]))$")
+    for i, a in enumerate(z):
+        m = re.match(r"cp\t([^,]+),#(.+)$", a)
+        if (a.startswith("ld\t") and i >= 1 and re.match(r"ld\t(-?%[0-9A-F]+\(FP\)|_\w+),r3$", a) and z[i - 1] == "ld\tr3,@r2"
+                and i + 1 < len(z) and z[i + 1] == "push\t@SP,r3"):
+            z[i + 1] = "push\t@SP," + a.split(",")[0][3:]
+            n["R93"] += 1
+        if m and var.match(m.group(1)) and m.group(2) != "-%1":
+            if mir == m.group(1):
+                out.append("cp\tr2,#" + m.group(2))
+                n["R95"] += 1
+            else:
+                out += ["ld\tr2," + m.group(1), "cp\tr2,#" + m.group(2)]
+                n["R94"] += 1
+                stale = stale or (mir if mir and mir != m.group(1) else None)
+                mir = m.group(1)
+            continue
+        if a == "test\tr2":
+            if stale:
+                out.append("test\t" + stale)
+                n["R96"] += 1
+                continue
+            if i >= 2 and re.match(r"ld\t[^,r@][^,]*,r2$", z[i - 1]) and re.match(r"ld\t[^,r@][^,]*,r2$", z[i - 2]):
+                out.append("test\t" + z[i - 1].split(",")[0][3:])
+                n["R96"] += 1
+                continue
+        out.append(a)
+        mm = re.match(r"ld\t([^,]+),r2$", a)
+        if mm and not mm.group(1).startswith("@") and not re.match(r"r\d", mm.group(1)):
+            mir, stale = mm.group(1), None
+        elif re.match(r"(cp|test|jr|jp)\t", a) or a.startswith("jp\t"):
+            pass
+        elif re.match(r"ld\tr2,(-?%[0-9A-F]+\(FP\)|r(?:8|9|1[0-3]))$", a):
+            mir, stale = a.split(",")[1], None
+        else:
+            mir = stale = None
+    return "\n".join(out), n
+
+
+def c2_cpp_s(s):
+    """Rules R101-R129 for `usr/lib/cpp` ONLY (doc/userspace/wk_w2.md), applied after c2_emu_s (standard model R1-R91).  MODEL of the old c2.
+      R101  two consecutive stores of one register variable to globals, `ld M1,rV ; ld M2,rV` (V7 `outp = inp = p;`), and the form the
+            standard model makes of it, `ld r2,rV ; ld M1,r2 ; ld M2,rV`  ->  `ld r2,rV ; ld M1,r2 ; ld M2,r2` (both stores through r2)
+      R102  byte store of an immediate, `ldb DST,#k`  ->  the constant is loaded first: `ldk rT,#k ; ldb DST,rlT` (`ld` instead of `ldk`
+            for k > 15); rT = r3 when DST uses r2 (`@r2`), else r2.
+      R104  `inc rV,#1 ; ldk/ld rT,#k ; ldb @r2,rlT` (post-increment store `*p++ = k`) where r2 was not loaded from rV right before (after the
+            R101 chain, after a `jr cc`): the original reloads the pointer, `ld r2,rV` is inserted before the `inc`
+      R105  `ld r2,rV ; ld _M,r2 ; cp rV,X`  ->  `cp r2,X`   (`eob(inp = --p)`)
+      R106  `ld r2,@rK ; ld rV,r2 ; test rV`  ->  `test r2`   (exception to R5: the pointed-to int is assigned and tested, `while (sp->name)`)
+      R102b a second `ldb @r2,#k` with the same k directly after the first one (only `ld r2,rV`/`inc rV` between) does not load the constant again
+      R107  after R4's `ld r0,M ; cp r0,#k ; jcc L` the fall-through path takes the tested value from r0: `ld r2,M` -> `ld r2,r0`
+            (refill, `fretop<MAXFRE`); with the value just stored from r2 (`ld M,r2 ; ld r0,M ; cp r0,#k ; jcc L ; sla r2,#1`, yyparse
+            `yyn = yypact[..]+1`) the test is `ld r0,r2 ; cp r0,#k ; jcc L ; ld r2,r0 ; sla r2,#1`
+      R108  `sla r4,#1 ; sub r2,r4`  ->  `sla r4,#1 ; ld r3,r4 ; sub r2,r3`   (yyparse `yypv -= yyr2[yyn]`, 2 sites)
+      R109  `ld r13,r9 ; ld r2,r13`  ->  `ld r13,r9 ; ld r2,r9`   (yyparse `yyps = yyp`-like copy; the standard model's R1 form is wrong here, 1 site)
+      R111  `ld r2,r10 ; ld r3,r2` -> `ld r3,r10` (lookup `c %= symsiz` hash; the standard model's R5 form is wrong here, 1 site)
+      R112  `call _strdex ; inc SP,#4 ; ld rV,r2 ; test rV` -> `test r2` (main, `if (p = strdex(*cp2, '='))`; the read() result in refill keeps `test r10`, 1 site)
+      R110  in cotoken: the FIRST `Lx: inc r13,#1 ; jr Ly` -> `jp Ly` (1 site: the original's layout puts the target further away, its c2 chose JP; the same shape
+            in main/slookup stays `jr`; without this the assembler rejects the jr after R104 grew the code)
+      R103  switch jump on a char value, `ld r2,r3 ; cp r2,#k ; jp ugt L ; add r2,r3 ; ld r1,Ltab(r2)`  ->  `add r2,r2` (as for an int switch)"""
+    z = s.split("\n")
+    n = {"R101": 0, "R102": 0, "R103": 0, "R104": 0, "R105": 0, "R106": 0, "R107": 0, "R108": 0, "R109": 0, "R110": 0, "R111": 0, "R112": 0}
+    out = []
+    i = 0
+    g = r"_\w+$"
+    fn = ""
+    cst = None      # (register, k) of the constant the last R102 store loaded, still valid
+    while i < len(z):
+        a = z[i]
+        if a.startswith("~~"):
+            fn = a[2:].rstrip(":")
+        if a == "ld\tr3,r2" and out and out[-1] == "ld\tr2,r10":
+            out.append("ld\tr3,r10")
+            n["R111"] += 1
+            i += 1
+            continue
+        m = re.match(r"test\t(r(?:8|9|1[0-3]))$", a)
+        if (m and len(out) >= 3 and out[-1] == "ld\t%s,r2" % m.group(1) and out[-2] == "inc\tSP,#%4" and out[-3] == "call\t_strdex"):
+            out.append("test\tr2")
+            n["R112"] += 1
+            i += 1
+            continue
+        if (fn == "cotoken" and n["R110"] == 0 and re.match(r"jr\tL\d+$", a) and i >= 2 and z[i - 1] == "inc\tr13,#%1" and re.match(r"L\d+:$", z[i - 2])):
+            out.append("jp" + a[2:])
+            n["R110"] += 1
+            i += 1
+            continue
+        if (a == "test\t" + (z[i - 1].split(",")[0].split("\t")[1] if i and z[i - 1].startswith("ld\tr") else "?") and i >= 2
+                and re.match(r"ld\tr(?:8|9|1[0-3]),r2$", z[i - 1]) and re.match(r"ld\tr2,@r\d+$", z[i - 2])):
+            out.append("test\tr2")
+            n["R106"] += 1
+            i += 1
+            continue
+        if (a.startswith("cp\tr") and i >= 2 and re.match(r"ld\t_\w+,r2$", z[i - 1]) and re.match(r"ld\tr2,r(?:8|9|1[0-3])$", z[i - 2])
+                and a.split(",")[0] == "cp\t" + z[i - 2].split(",")[1]):
+            out.append("cp\tr2," + a.split(",", 1)[1])
+            n["R105"] += 1
+            i += 1
+            continue
+        if a == "sub\tr2,r4" and out and out[-1] == "sla\tr4,#%1":
+            out += ["ld\tr3,r4", "sub\tr2,r3"]
+            n["R108"] += 1
+            i += 1
+            continue
+        if a == "ld\tr2,r13" and out and out[-1] == "ld\tr13,r9":
+            out.append("ld\tr2,r9")
+            n["R109"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr2,(_\w+)$", a)
+        if m and len(out) >= 3 and out[-3] == "ld\tr0," + m.group(1) and out[-2].startswith("cp\tr0,#") and re.match(r"j[rp]\t\w+\tL\w+$", out[-1]):
+            out.append("ld\tr2,r0")
+            n["R107"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr0,(-%[0-9A-F]+\(FP\))$", a)
+        if (m and out and out[-1] == "ld\t%s,r2" % m.group(1) and i + 3 < len(z) and z[i + 1].startswith("cp\tr0,#")
+                and re.match(r"j[rp]\t\w+\tL\w+$", z[i + 2]) and z[i + 3] == "sla\tr2,#%1"):
+            out += ["ld\tr0,r2", z[i + 1], z[i + 2], "ld\tr2,r0"]
+            n["R107"] += 1
+            i += 3
+            continue
+        if (a == "add\tr2,r3" and i >= 3 and z[i - 3] == "ld\tr2,r3" and z[i - 1].startswith("jp\tugt\t") and z[i - 2].startswith("cp\tr2,#")
+                and i + 1 < len(z) and z[i + 1].startswith("ld\tr1,L")):
+            out.append("add\tr2,r2")
+            n["R103"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr2,(r(?:8|9|1[0-3]))$", a)
+        if (m and i + 2 < len(z) and re.match(r"ld\t%s,r2$" % g[:-1] + "$", z[i + 1]) and z[i + 2].startswith("ld\t_")
+                and z[i + 2].endswith("," + m.group(1)) and re.match(r"ld\t_\w+,r(?:8|9|1[0-3])$", z[i + 2])):
+            out += [a, z[i + 1], z[i + 2][:-len(m.group(1))] + "r2"]
+            n["R101"] += 1
+            i += 3
+            continue
+        m = re.match(r"ld\t(_\w+),(r(?:8|9|1[0-3]))$", a)
+        m2 = re.match(r"ld\t(_\w+),(r(?:8|9|1[0-3]))$", z[i + 1]) if i + 1 < len(z) else None
+        if m and m2 and m.group(2) == m2.group(2) and m.group(1) != m2.group(1):
+            out += ["ld\tr2," + m.group(2), "ld\t%s,r2" % m.group(1), "ld\t%s,r2" % m2.group(1)]
+            n["R101"] += 1
+            i += 2
+            continue
+        m = re.match(r"inc\t(r(?:8|9|1[0-3])),#%1$", a)
+        if m and i + 1 < len(z) and re.match(r"ldb\t@r2,#%[0-9A-F]+$", z[i + 1]) and not (out and out[-1] == "ld\tr2," + m.group(1)):
+            out.append("ld\tr2," + m.group(1))
+            n["R104"] += 1
+            out.append(a)
+            i += 1
+            continue
+        m = re.match(r"ldb\t([^,]+),#%([0-9A-F]+)$", a)
+        if m:
+            t = "3" if "r2" in m.group(1) else "2"
+            k = int(m.group(2), 16)
+            if cst != (t, k):
+                out.append(("ldk\tr%s,#%%%s" if k <= 15 else "ld\tr%s,#%%%s") % (t, m.group(2)))
+            out.append("ldb\t%s,rl%s" % (m.group(1), t))
+            cst = (t, k)
+            n["R102"] += 1
+            i += 1
+            continue
+        if not (re.match(r"ld\tr2,r\d+$", a) or re.match(r"inc\tr\d+,#%1$", a)):
+            cst = None
+        out.append(a)
+        i += 1
+    return "\n".join(out), n
+
+
+def c2_ld_s(s):
+    """Rules R97-R100: measured on `usr/bin/ld` ONLY (doc/userspace/wk_w13.md); applied AFTER c2_emu_s (R45 switched off for ld).  MODEL of the old
+    c2, not a run of it.
+      R97  `sub r2,rN ; ld MEM,r2 ; jr mi,L`  ->  `test r2` inserted before the `jr` (mget(), 2 sites; the shipped c2 drops the redundant test)
+      R98  `xorb rhN,rhN ; xor r2,r2 ; div rr2,#k` (hash switch on a char, main(), 1 site)  ->  `ld r2,rN ; ld rN,r2` inserted before the `xor`
+      R100 `ld LOCAL,r3 ; ld r2,r3` -> `ld r2,LOCAL` (ldrand(), `sp = *pp; sp->stype` with sp a stack local, first site only: the old c2 reloads the local)
+      R99  `mult rr4,#%C ; ld r13,r5 ; add r13,#X ; ld MEM,r13 ; ld @r2,r13`  ->  copies through r3 (enter(), 1 site):
+           `ld r3,r5 ; ld r13,r3 ; add r13,#X ; ld r3,r13 ; ld MEM,r3 ; ld @r2,r3`"""
+    z = s.split("\n")
+    out = []
+    n = {"R97": 0, "R98": 0, "R99": 0, "R100": 0}
+    i = 0
+    while i < len(z):
+        a = z[i]
+        if (a == "sub\tr2,r12" and i + 2 < len(z) and re.match(r"ld\t[^,]+,r2$", z[i + 1]) and z[i + 2].startswith("jr\tmi\t")):
+            out += [a, z[i + 1], "test\tr2"]
+            n["R97"] += 1
+            i += 2
+            continue
+        m = re.match(r"xorb\trh(\d),rh\1$", a)
+        if m and m.group(1) == "3" and i + 2 < len(z) and z[i + 1] == "exts\trr2" and re.match(r"div\trr2,#%3$", z[i + 2]):
+            out += [a, "ld\tr2,r3", "ld\tr3,r2", "xor\tr2,r2"]       # R45 has turned `xor r2,r2` into `exts rr2`: main() keeps the xor
+            n["R98"] += 1
+            i += 2
+            continue
+        if (a.startswith("ld\t-%") and a.endswith(",r3") and i + 1 < len(z) and z[i + 1] == "ld\tr2,r3" and n["R100"] == 0):
+            out += [a, "ld\tr2," + a.split(",")[0][3:]]            # ldrand(): `sp = *pp` then sp is reloaded from the local
+            n["R100"] = 1
+            i += 2
+            continue
+        if (a == "mult\trr4,#%C" and i + 4 < len(z) and z[i + 1] == "ld\tr13,r5" and z[i + 2].startswith("add\tr13,#")
+                and re.match(r"ld\t[^,@]+,r13$", z[i + 3]) and z[i + 4] == "ld\t@r2,r13"):
+            out += [a, "ld\tr3,r5", "ld\tr13,r3", z[i + 2], "ld\tr3,r13", z[i + 3].replace(",r13", ",r3"), "ld\t@r2,r3"]
+            n["R99"] += 1
+            i += 5
+            continue
+        out.append(a)
+        i += 1
+    return "\n".join(out), n
+
+
+def c2_c0_s(s):
+    """Rules R130-R133: measured on `usr/lib/c0` ONLY (doc/userspace/wk_w4.md); c2_emu_s(..., c0=True) applies these and nothing else
+    (c0 was compiled by a c2 that matches the shipped one except the forms below).  MODEL of the old c2, not a run of it.
+      R130 `inc SP,#%A ; push @SP,r2`  ->  `inc SP,#%8 ; ld @SP,r2`   (the merge of the cleanup with the next push of the call result; the
+           shipped c2 does it for the other counts but not for 10; 3 sites: `build` (twice, `cinit`..), `statement`, `dogoto`)
+      R131 `cp r9,#%8 ; jp ne,La ; cp @r13,#%5A ; jp eq,Lb`  ->  `jr eq,Lb`  (tree: `o==8 ... *op==...` test; 1 site)
+      R132 `cp r2,#%3 ; jp eq,La ; cp r2,#%7 ; jp eq,Lb ; jp Lc`  ->  `jr eq,Lb ; jr Lc`  (tree, switch on the operator; 1 site)
+      R133 `cp r2,#%16 ; jp eq,La ; cp r2,#%17 ; jp eq,Lb ; cp r2,#%19`  ->  `jr eq,Lb`  (treeout; 1 site)
+    The jump forms are the old c2's span estimate (the jump is within the range of `jr`); named by their shape, one site each."""
+    z = s.split("\n")
+    n = {"R130": 0, "R131": 0, "R132": 0, "R133": 0}
+    for i in range(len(z)):
+        if z[i] == "inc\tSP,#%A" and i + 1 < len(z) and z[i + 1] == "push\t@SP,r2":
+            z[i], z[i + 1] = "inc\tSP,#%8", "ld\t@SP,r2"
+            n["R130"] += 1
+        if (z[i] == "cp\t@r13,#%5A" and i >= 2 and z[i - 2] == "cp\tr9,#%8" and i + 1 < len(z)
+                and z[i + 1].startswith("jp\teq\tL")):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            n["R131"] += 1
+        if (z[i] == "cp\tr2,#%7" and i >= 2 and z[i - 2] == "cp\tr2,#%3" and z[i - 1].startswith("jp\teq\tL") and i + 2 < len(z)
+                and z[i + 1].startswith("jp\teq\tL") and re.match(r"jp\tL", z[i + 2])):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            z[i + 2] = "jr" + z[i + 2][2:]
+            n["R132"] += 1
+        if (z[i] == "cp\tr2,#%17" and i >= 2 and z[i - 2] == "cp\tr2,#%16" and z[i - 1].startswith("jp\teq\tL") and i + 2 < len(z)
+                and z[i + 1].startswith("jp\teq\tL") and z[i + 2] == "cp\tr2,#%19"):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            n["R133"] += 1
+    return "\n".join(z), n
+
+
+def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False, cc=False, c0=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -442,6 +697,10 @@ def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False):
     differences of the own code (doc/userspace/init.md)."""
     if tar:
         return c2_tar_s(s)
+    if cc:
+        return c2_cc_s(s)
+    if c0:
+        return c2_c0_s(s)
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
          "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0, "R70": 0, "R71": 0, "R77": 0}

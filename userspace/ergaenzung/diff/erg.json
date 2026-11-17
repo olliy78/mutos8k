@@ -1,5 +1,8 @@
 {
  "header": [],
  "flags": "-O -s",
- "quelle": "original/unix-v7/usr/src/cmd/diff.c"
+ "quelle": "original/unix-v7/usr/src/cmd/diff.c",
+ "lib": [
+  "diffh"
+ ]
 }

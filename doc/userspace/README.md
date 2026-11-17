@@ -18,10 +18,16 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_b2.md` | `/etc`: ncheck, icheck (ganzdatei bytegleich), c2-Regeln R42-R48 |
 | `cmd_b3.md` | `/etc`: mkfs (ganzdatei bytegleich), c2-Regeln R49-R59 (nur mkfs) |
 | `cmd_s3b1.md` .. `cmd_s3b6.md` | `cmd`-Diskette, Stufe 3b: nm strip chown; dd pr passwd; ar; ps pstat; hex convert (kein V7, Quelle aus dem Binary rekonstruiert); ed (s3b3 Befund, s3b6 bytegleich, c2-Regeln R80-R91 nur fuer ed) |
+| `cmd_s5.md` | `bin`-Diskette, Stufe 5: mt, tar (ganzdatei bytegleich), adb (A, nicht rekonstruiert); c2-Regel R92 nur fuer tar |
+| `wk_w0.md` | Werkzeugkette (Plan 52) W0: Triage cc ld as cpp c0 c1 c2, libc.a, crt0 |
+| `wk_w13.md` | Werkzeugkette W1/W3: cc, ld (ganzdatei bytegleich), c2-Regeln R93-R100 nur fuer cc/ld; Stufenbau in drei Gastbefehlen |
+| `wk_w2.md` | Werkzeugkette W2: cpp (A, 13 Restbloecke Codeanordnung); Gast-yacc erzeugt die cpp-Tabellen wortgleich; c2-Regeln R101-R112 nur fuer cpp |
+| `wk_w4.md` | Werkzeugkette W4: c0 (ganzdatei bytegleich), c2-Regeln R130-R133 nur fuer c0; Gleitkommaglieder fltpr/ecvt in libc_alt |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
 | `erg_e3a.md`, `erg_e3b.md`, `erg_e3c.md` | Ergaenzungen aus V7: yacc (verkleinert, SMALL), vmake (V7 make); tsort ranlib dc expr egrep bc; sed m4 lex |
+| `erg_e6.md` | Ergaenzungsdisketten v7erg1/v7erg2 (Mount `/v7`), Pfadumstellung, Abnahme |
 | `erg_e2a.md`, `erg_e2b.md` | Ergaenzungen aus V7 (Plan 45): grep fgrep tr join du file; sort find diff diffh |
 | `libc_alt.md` | Rueckbau-libc der Originalprogramme (ohne Gleitkomma), Glied x Programm, c2-Regeln R20-R26/R31 |
 | `../werkzeugkette/` | `cc`/`as`/`ld`-Befunde, a.out-Format, `libc_signaturen.txt` |
@@ -169,6 +175,30 @@ Die `main()`-Schleife ist kein Quellunterschied (alle Schleifenformen ergeben da
 **Regelnummern:** Die Agenten vergaben parallel dieselben Nummern; bei der Zusammenfuehrung wurden sie neu vergeben (Zaehler in `uspace.c2_emu_s`, Tests und Dokumente angepasst).  `ps` und `pstat` schalten R1-R76 ab (`C2_AUS`).
 Die Regeln R65-R77 sind je an 1 bis 2 Stellen belegt, also schwach (siehe Punkt 2).  Behelfe von Hand: `ar/k.txt` (Eintrag `code 18F4` streichen), `ed.members` (Glied `fakcu` bei 283C), `*.members.zusatz`.
 
+## Herkunft der Quellen: Diskette `bin`, Stufe 5 (gemessen 2026-11-16/17)
+
+| Programm | Datei (B) | Quelle | c2 | Ergebnis |
+|----------|-----------|--------|----|----------|
+| mt | 4342 | **kein V7** (V7 hat kein `mt.c`), aus dem Binary rekonstruiert | ohne Regeln (`alles mt --libc alt --ist neu`; das c2-Modell wuerde es zerstoeren) | G |
+| tar | 17000 | Text nach `original/sys3/cmd/tar.c` als **Vergleichsquelle** (die V7-Quelle von `tar` liegt hier nicht vor), 8 markierte Abweichungen | R92 (1 Stelle, nur `tar`) | G |
+| adb | 27770 | etwa die Haelfte V7 (`message.c`-Texte), dazu ein Z8000-Disassembler (Meldung `kein code %x`) ohne Quelle | -- | **A** (nicht rekonstruiert, `--check` Ueberlappung 28) |
+
+Dass MUTOS-`tar` dem System-III-Text entspricht, ist durch die Bytegleichheit gemessen; ob die gemeinsame Vorlage ein V7-`tar` war, ist *Annahme*.  Das ist keine Ergaenzung aus System III (Grundsatz Plan 45), sondern der Rueckbau eines vorhandenen MUTOS-Programms.
+Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan` gebunden ist; `--check` liest `karte_extra.txt`.
+**Regression nach dem Merge (gemessen 2026-11-17, Gast, sequentiell, `main` 82033fb..1826100):** alle 47 G-Programme (`alles NAME --c2emu --libc alt --ist neu_c2_s`; `getty`, `sync` mit Disketten-libc; `mt` wie oben) plus `sh` (`bau sh --c2emu --variante v7fix`, `cmp`): **alle gleich**.
+
+## Herkunft der Quellen: Werkzeugkette (Plan 52, gemessen 2026-11-17)
+
+| Programm | Datei (B) | Quelle | c2 | Ergebnis |
+|----------|-----------|--------|----|----------|
+| cc | 6536 | V7 `cc.c`; `main` mit MUTOS-Pfaden (`/usr/lib`, `/usr/bin`), Optionen auf `S o O p E P c D I U C` gekuerzt, weitere markierte Abweichungen (`wk_w13.md`) | R93-R96 (2-7 Stellen, nur `cc`) | G |
+| ld | 10726 | V7 `ld.c` ohne Overlay-Verwaltung und `-n`, Z8000-Magics, CALLR-Relokation in `load2td` aus dem Listing (Namen *Annahme*) | R32/R43 aus, R97-R100 (je 1-2 Stellen, nur `ld`) | G |
+| c0 | 26826 | V7 `c00.c`-`c05.c`, `c0.h`: mehr `register`-Variablen (R8-R13), `HSHSIZ` 420, `STAUTO` -12, neue Globale `regmin` (Name *Annahme*), `getcc` nur ein Zeichen, Namenskonflikt-Pruefung in `blkend` u. a. (`wk_w4.md`) | R130-R133 (1-3 Stellen, nur `c0`) | G |
+| cpp | 16382 | V7 `cpp.c`, `cpy.y`, `yylex.c` mit 3 Abweichungen (`unix`/`U8000` fest definiert, `symsiz` 500, `enterf==1`); `cpy.c` vom Gast-yacc, Tabellen wortgleich | R101-R112, R42 aus | **A**: 3268/3323 Befehle gleich, 13 Bloecke Codeanordnung (vermutlich `comjump`/`codemove` des alten c2), Text 90 B kuerzer |
+
+Triage aller Passe: `wk_w0.md` (V7-`yacc` erzeugt die Tabellen von `cpp` wortgleich; `as` ist kein V7).
+**Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  Nach W2: ed tar cc ld sh gleich, `cpy.c`/`bc.c` mit dem Gast-yacc neu erzeugt = eingecheckt, `bc` B.  **Nach W4 (c0, mit `libc_alt.py`-Aenderung fuer Gleitkommaglieder), gemessen 2026-11-17:** alle 47 Originalprogramme, `cc`, `ld`, `c0` (`--ist neu_c2`) und `sh` gleich (51 von 51).  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
+
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
 Programme, die auf den MUTOS-Disketten **fehlen**, aus den V7-Quellen (nur V7, nichts aus System III).  Es gibt keine Originalreferenz, deshalb keine Bytegleichheit:
@@ -187,7 +217,7 @@ Rahmen und Vertrag: `doc/plan/45_v7_ergaenzungen.md` Abschnitt 7, `erg_e0.md`.
 | E3c | tsort, ranlib, dc, expr, egrep, bc | ranlib: `A_MAGIC2` ergaenzt; dc: `dc.c` in drei Dateien geteilt (Ganzes: Zyklusgrenze bzw. `symbol table overflow` in `as`), `#define interdata` und `register int cc` in `cond()` (`char` ohne Vorzeichen), ohne `-O`; bc: `execvp("dc")`-Rueckfall (Gast hat `dc` nicht in `/bin`, `/usr/bin`), ohne `-O` (`c2` bricht ab); expr, egrep, bc: `.c` aus unveraendertem `.y` mit dem Gast-yacc (`tools/userspace/erg_yacc.py`) | `erg_e3c.md` |
 | E3d | sed, m4, lex | sed: keine; m4: `getchr()` liest zurueckgestellte Zeichen vorzeichenerweitert (`ipget()`, `char` ohne Vorzeichen), `m4y.c` mit dem Gast-yacc; lex: `-DSMALL`, `once.c` als `once.h`, `ncform` aus dem Arbeitsverzeichnis (usr-Platte voll), `parser.c` mit dem Gast-yacc, ohne `-O` (Bau mit `-O` nach 18e9 Zyklen abgebrochen) | `erg_e3d.md` |
 
-Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 B im Gast (E0 bis E3b).  E3c (2026-11-16): 6 weitere B, nach dem Merge auf `main` wiederholt (`erg.py alles` yacc tsort ranlib dc expr egrep bc tty grep: alle B), zusammen 35.  E3d (2026-11-16): sed, m4, lex B, nach dem Merge auf `main` wiederholt (sed m4 lex bc expr: alle B), zusammen **38**.  `lex` im Gast als ganze Kette getestet (lex, cc mit libl-Quellen, Scanner); sed-Eigenheiten von V7 (Marken bis Zeilenende, `sflag` nur durch `t` zurueckgesetzt, `l` zeigt Tab als `>` BS `-`) in `erg_e3d.md`.  Rahmen: `erg.json`-Schluessel `werkzeuge` (Hilfsprogramme auf `/mnt`, z. B. `dc` fuer `bc`, `ar` fuer `ranlib`).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
+Gemessen (Agentenberichte, danach einzeln vom Hauptagenten wiederholt): alle 29 B im Gast (E0 bis E3b).  E3c (2026-11-16): 6 weitere B, nach dem Merge auf `main` wiederholt (`erg.py alles` yacc tsort ranlib dc expr egrep bc tty grep: alle B), zusammen 35.  E3d (2026-11-16): sed, m4, lex B, nach dem Merge auf `main` wiederholt (sed m4 lex bc expr: alle B), zusammen **38**.  **E6 (2026-11-17):** zwei Disketten `v7erg1`/`v7erg2` (Bau `tools/disks/bau_alle.py --v7erg`, Abnahme `tools/userspace/erg_abnahme.py`), im Gast unter `/v7` eingehaengt; feste Pfade von `yacc`, `lex`, `bc`, `diff` auf `/v7/lib` bzw. `/v7/bin` umgestellt (der `execvp`-Behelf in `bc` entfaellt), Testrahmen haengt die Testplatte unter `/v7` ein.  Nach dem Merge auf `main` gemessen: tty yacc lex bc diff diffh dc ranlib B, `cc` bytegleich, Abnahme beider Disketten gleich.  `lib.b` (fuer `bc -l`) fehlt in `original/unix-v7` und stammt unveraendert aus `original/hippe-v7/usr/lib/lib.b`.  `lex` im Gast als ganze Kette getestet (lex, cc mit libl-Quellen, Scanner); sed-Eigenheiten von V7 (Marken bis Zeilenende, `sflag` nur durch `t` zurueckgesetzt, `l` zeigt Tab als `>` BS `-`) in `erg_e3d.md`.  Rahmen: `erg.json`-Schluessel `werkzeuge` (Hilfsprogramme auf `/mnt`, z. B. `dc` fuer `bc`, `ar` fuer `ranlib`).  Grenzen: Erwartungen stammen von GNU-/util-linux-Werkzeugen, nur fuer Faelle, in denen V7 und
 GNU gleich arbeiten.  `tty` ist nur ohne Terminal getestet, `time` und `nice` nur Aufruf und Exitstatus (nicht Werte/Wirkung), `look` ohne `/usr/dict/words`.
 E2: `file` erkennt keine Z8000-Programme (MUTOS-Magic E807, V7 kennt nur 0407/0410/0411); `diff -h` ist im Gast nicht testbar (`/usr/lib/diffh` fest, `usr`-Platte voll);
 `find` hat keine Host-Referenz (Erwartung = Gastausgabe, von Hand gegen das Handbuch geprueft); `du` nur Dateizweig getestet.

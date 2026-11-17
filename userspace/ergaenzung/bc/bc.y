@@ -576,7 +576,8 @@ char **argv;
 			fflush(stdout);
 			exit();
 		}
-		argv[1] = "/usr/lib/lib.b";
+		/* Differs from V7: library path was "/usr/lib/lib.b" (supplement disk at /v7). */
+		argv[1] = "/v7/lib/lib.b";
 	}
 	pipe(p);
 	if (fork()==0) {
@@ -592,15 +593,8 @@ char **argv;
 	dup(p[0]);
 	close(p[0]);
 	close(p[1]);
+	/* Differs from V7: dc is looked up on the V7 supplement disk (/v7/bin/dc) first; V7's /bin/dc and /usr/bin/dc follow. */
+	execl("/v7/bin/dc", "dc", "-", 0);
 	execl("/bin/dc", "dc", "-", 0);
 	execl("/usr/bin/dc", "dc", "-", 0);
-	/* Differs from V7: fall back to a PATH search for dc (execvp) -- the guest of the test has no /bin/dc or /usr/bin/dc
-	   (root and usr disks are full, no chmod to install one); dc sits on /mnt, which is in PATH.  Only reached when both V7 paths fail. */
-	{
-		char *dcargv[3];
-		dcargv[0] = "dc";
-		dcargv[1] = "-";
-		dcargv[2] = 0;
-		execvp("dc", dcargv);
-	}
 }

@@ -1,0 +1,96 @@
+--- names in /v7/bin and /v7/lib
+
+/v7/bin:
+basename
+cal
+comm
+diff
+du
+expr
+fgrep
+file
+find
+grep
+join
+look
+mesg
+nice
+rev
+sleep
+sort
+split
+sum
+tail
+tee
+test
+time
+touch
+tr
+tty
+uniq
+yes
+
+/v7/lib:
+diffh
+--- basename
+x
+--- tee
+apple
+cherry
+apple
+cherry
+--- sleep, touch, yes, mesg, time, nice
+tt.txt
+apple
+cherry
+--- tty
+not a tty
+--- sum
+15245     1
+--- rev
+elppa
+yrrehc
+--- sort | uniq -c
+   2 apple
+   1 banana
+   1 pear
+--- comm -12
+apple
+--- split -1
+apple
+cherry
+--- tail -1, look
+apple
+banana
+--- cal
+   February 1987
+ S  M Tu  W Th  F  S
+ 1  2  3  4  5  6  7
+ 8  9 10 11 12 13 14
+15 16 17 18 19 20 21
+22 23 24 25 26 27 28
+
+
+--- test, expr
+rc=0
+14
+--- grep, fgrep
+apple
+apple
+cherry
+--- find
+/v7/lib
+/v7/lib/diffh
+--- tr, join
+APPLE
+CHERRY
+apple
+apple
+--- diff, diff -h
+4d3
+< a4
+4d3
+< a4
+--- du, file
+1	t2.txt
+t2.txt:	ascii text

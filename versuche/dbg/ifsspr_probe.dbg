@@ -1,0 +1,11 @@
+# Plan 48 C1.3, erste Sonde: ist der Speicher bei EB00 nach "ACTIVATE $IFSSPR" gleich der Datei IFSSPR?
+# Vorbereitung: k1520disktool get <boot_udos_k5601.hfe> IFSSPR --to /tmp/ifsspr_d   (ebenso PIOPR)
+# Aufruf: tools/emu.py dbg --em em256 --laufwerke K5601,K5601,K5601 @DISK:a5120_mutos8000_boot_udos_k5601.hfe@ -x versuche/dbg/ifsspr_probe.dbg
+# Ergebnis (gemessen): bei Beginn von LOAD16 (PC=5000) stimmen 765 von 768 Byte, die 3 Abweichungen (ED09, ED12, ED13) sind Arbeitszellen
+# (Datei FFH, Speicher 00H nach dem Install-Aufruf).  Bytewerte im Debugger: "verify".
+g 80000000
+b 0x5000
+keys BOOT\sMUTOS\r
+g 100000000
+verify /tmp/ifsspr_d/IFSSPR @0xEB00
+q

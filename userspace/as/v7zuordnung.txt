@@ -1,0 +1,72 @@
+# as: own functions (csv entries and call targets in 0030..4988), no V7 counterpart (tools/userspace/wk_w0.py zuordnung)
+# addr size own-calls libc-calls  strings
+0030  2468  67  fprintf                        yacc stack overflow | syntax error | wrong end of module
+09D4   212   1  filbuf                         
+0AA8  2184  30  fprintf                        illegal floating register | register type | expecting '%(n)'-construct
+1330   114   2                                 fatal error: overflow of exp
+13A2    38   0                                 
+13C8   222   2                                 
+14A6    10   0                                 
+14B0    82   0                                 
+1502    62   0                                 
+1540   230   5                                 
+1626    84   1                                 hex_digit expected
+167A    38   4                                 
+16A0   170   2  sprintf                        #%6d
+174A   208   3                                 illegal number or type of op
+181A   256   0                                 
+191A    30   0                                 
+1938   162   1                                 
+19DA    68   3                                 wrong END of procedure
+1A1E    54   1                                 
+1A54    50   1                                 too many local areas
+1A86    48   1                                 too many local areas
+1AB6   116   3                                 fatal error: opxba: wrong =Q
+1B2A    88   1                                 
+1B82    88   1                                 illegal value
+1BDA    50   0  fprintf                        
+1C0C  4512  72  fprintf                        illegal value | ILLEGAL VALUE | illegal value
+2DAC    32   0                                 
+2DCC   108   1                                 
+2E38   444   1  lseek                          
+2FF4    68   0                                 
+3038   200   3  write                          fatal output error
+3100   136   2  write                          fatal output error
+3188    50   2                                 
+31BA   114   1  creat,exit,fprintf             
+322C   186   7  exit                           
+32E6   706   1  close,creat,exit,fopen,fprintf,freopen,open asm.out
+35A8    86   0  fprintf                          line: %d.  | defla not implemented
+35FE    34   2                                 
+3620   548   4                                 illegal expression | unimplemented operation in e | illegal expression
+3844   114   6  lseek                          
+38B6   210   0  fprintf                        
+3988   144   2                                 
+3A18   132   0                                 
+3A9C    26   0  fprintf                        
+3AB6    18   1                                 
+3AC8   176  12                                 01234567 | abcdefABCDEF | abcdefghijklmnopqrstuvwxyz
+3B78   370  11                                 illegal section name |  unimplmented ASSDIR
+3CEA    78   2                                 
+3D38    26   1                                 
+3D52    26   1                                 
+3D6C   100   1                                 nesting too deep
+3DD0    78   0                                 
+3E1E   128   4                                  too many generic labels | getlab: label not found in P
+3E9E    34   0                                 
+3EC0   178   4                                  overflow of __constk__ 
+3F72    62   0                                 
+3FB0    38   1                                 
+3FD6   116   0                                 
+404A    90   0                                 
+40A4   500  18  fprintf                        longer then long not support | initialization only in TEXT  | *ATDB
+4298   218   3  fprintf                        longer then 'long' not suppo | *ATDB | type longer LVAL
+4372    60   1                                 
+43AE    24   1                                 
+43C6   298   2  fprintf                         %s :  |   line: %d. 
+44F0   172   1                                 
+459C   140   4                                 
+4628   178   2                                 
+46DA   314   3                                 
+4814   144   4                                 illegal --totab-- in PASS1  |  fatal error: symbol table o
+48A4   228   5                                 undefined symbol

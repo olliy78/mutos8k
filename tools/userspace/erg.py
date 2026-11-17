@@ -10,7 +10,8 @@ Program directory: userspace/ergaenzung/NAME/ with NAME.c (or several *.c / *.h)
 "builds" plus "output equals the expectation".  Exit: 0 ok, 1 difference / no build, 77 emulator or disk missing.
 
 The guest has only the root and usr disks (no cmd disk): the test script may use sh, cat, ls, date, stty, sync
-and the program under test (it is on /mnt, PATH=/mnt:/bin:/usr/bin).  Input files (test/eingabe/*) are copied to
+and the program under test (plan 45 E6: the test disk is mounted at /v7, program and helpers in /v7/bin, lib files
+("lib": [...] in erg.json, see LIBDATEIEN) in /v7/lib, PATH=/v7/bin:/bin:/usr/bin).  Input files (test/eingabe/*) are copied to
 /tmp (the cwd of the script) before the run.  Only the standard output of the script is compared; its standard
 error is kept in work/test/NAME.stderr.
 """
@@ -28,6 +29,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(HIER), "kernel"))
 V7INC = "original/unix-v7/usr/include/"
 ERGDIR = os.path.join(U.REPO, "userspace", "ergaenzung")
 FRIST = 3_000_000_000     # emulator cycles per guest command
+MNT = "/v7"               # plan 45 E6: the test disk (drive D) is mounted at /v7 with bin/ and lib/ (as the disks v7erg1/v7erg2)
+
+# Files that live in /v7/lib on the disks (erg.json "lib": [names] says which ones a test needs).
+# name -> path relative to userspace/ergaenzung/ | ("bin", program) = the built binary | "libl.a" is built by libl_bauen()
+LIBDATEIEN = {
+    "yaccpar": "yacc/yaccpar",          # V7 usr/lib/yaccpar, unchanged
+    "ncform": "lex/ncform",             # V7 usr/lib/lex/ncform, unchanged
+    "lib.b": "bc/lib.b",                # V7 usr/lib/lib.b (copy from original/hippe-v7/usr/lib/lib.b, not in original/unix-v7)
+    "diffh": ("bin", "diffh"),
+    "libl.a": None,
+}
+LIBL_QUELLEN = ("main.c", "yywrap.c", "yyless.c", "reject.c")      # V7 lex/lib (allprint.c only with LEXDEBUG)
+LIBL_ORDNER = "original/unix-v7/usr/src/cmd/lex/lib/"
 
 
 def pfad(name, *teile):
@@ -76,6 +90,49 @@ def werkzeuge(name):
     return r
 
 
+def libl_bauen(neu=False):
+    """Build /v7/lib/libl.a in the guest: cc -c of the V7 lex/lib sources, ar r, ranlib (both from the cmd disk /
+    ergaenzung build).  Result userspace/ergaenzung/lex/work/libl/libl.a (cached)."""
+    import gast_as
+    ziel = pfad("lex", "work", "libl", "libl.a")
+    if os.path.isfile(ziel) and not neu:
+        return ziel
+    rl = pfad("ranlib", "work", "bau", "ranlib.bin")
+    if not os.path.isfile(rl) and not bau("ranlib")[0]:
+        raise SystemExit("libl.a: ranlib does not build")
+    q = {f: open(os.path.join(U.REPO, LIBL_ORDNER + f), "rb").read() for f in LIBL_QUELLEN}
+    q["bin/ar"] = U.platte_holen("cmd", "bin/ar", pfad("lex", "work", "_werkzeug"))
+    q["bin/ranlib"] = open(rl, "rb").read()
+    befehle = ["cd /tmp;cc -c -O /v7/%s >/tmp/cc_%d.err 2>&1;cd /v7" % (f, i) for i, f in enumerate(LIBL_QUELLEN)]
+    objs = " ".join(f[:-2] + ".o" for f in LIBL_QUELLEN)
+    befehle.append("cd /tmp;PATH=/v7/bin:/bin:/usr/bin;export PATH;ar r libl.a %s >/tmp/ar.err 2>&1;ranlib libl.a >/tmp/rl.err 2>&1;cd /v7" % objs)
+    rueck = ["libl.a", "ar.err", "rl.err"] + ["cc_%d.err" % i for i in range(len(LIBL_QUELLEN))]
+    r = gast_as.gast_befehle(pfad("lex", "work", "libl"), q, befehle, rueck, frist=FRIST, ausgabe={},
+                             ausfuehrbar=("bin/ar", "bin/ranlib"), mnt=MNT)
+    for k in rueck[1:]:
+        if (r.get(k) or b"").strip():
+            print("libl.a %s: %s" % (k, r[k].decode("latin-1").strip()))
+    if not r.get("libl.a"):
+        raise SystemExit("libl.a not built")
+    os.makedirs(os.path.dirname(ziel), exist_ok=True)
+    with open(ziel, "wb") as f:
+        f.write(r["libl.a"])
+    return ziel
+
+
+def libdatei(l):
+    """Content of /v7/lib/<l>."""
+    q = LIBDATEIEN[l]
+    if l == "libl.a":
+        return open(libl_bauen(), "rb").read()
+    if isinstance(q, tuple):
+        pb = pfad(q[1], "work", "bau", q[1] + ".bin")
+        if not os.path.isfile(pb) and not bau(q[1])[0]:
+            raise SystemExit("lib %s: %s does not build" % (l, q[1]))
+        return open(pb, "rb").read()
+    return open(pfad(*q.split("/")), "rb").read()
+
+
 def bau(name, parallel=4):
     """Guest build; writes work/bau/NAME.bin and NAME.err.  Returns (ok, messages)."""
     if len(name) > 9:
@@ -111,17 +168,22 @@ def test(name):
         if not ok:
             return 2
     wz = werkzeuge(name)
-    q = {name: open(pb, "rb").read(), "befehle.sh": open(os.path.join(td, "befehle.sh"), "rb").read()}
-    q.update(wz)
+    # guest layout (plan 45 E6): /v7/bin = program + helper tools, /v7/lib = lib files, /v7 = script and inputs
+    q = {"bin/" + name: open(pb, "rb").read(), "befehle.sh": open(os.path.join(td, "befehle.sh"), "rb").read()}
+    for w, b in wz.items():
+        q["bin/" + w] = b
+    libs = konfig(name).get("lib", [])
+    for l in libs:
+        q["lib/" + l] = libdatei(l)
     ein = os.path.join(td, "eingabe")
     eingaben = sorted(os.listdir(ein)) if os.path.isdir(ein) else []
     for f in eingaben:
         q["e_" + f[:12]] = open(os.path.join(ein, f), "rb").read()   # guest names are cut at 14 characters
-    befehle = ["cat /mnt/e_%s >/tmp/%s;cd /mnt" % (f[:12], f) for f in eingaben]
-    befehle.append("cd /tmp;PATH=/mnt:/bin:/usr/bin sh /mnt/befehle.sh >/tmp/aus.txt 2>/tmp/aus.err;cd /mnt")
+    befehle = ["cat %s/e_%s >/tmp/%s;cd %s" % (MNT, f[:12], f, MNT) for f in eingaben]
+    befehle.append("cd /tmp;PATH=%s/bin:/bin:/usr/bin sh %s/befehle.sh >/tmp/aus.txt 2>/tmp/aus.err;cd %s" % (MNT, MNT, MNT))
     ar = pfad(name, "work", "test")
     aus = {}
-    r = gast_as.gast_befehle(ar, q, befehle, ["aus.txt", "aus.err"], frist=FRIST, ausgabe=aus, ausfuehrbar=(name,) + tuple(wz))
+    r = gast_as.gast_befehle(ar, q, befehle, ["aus.txt", "aus.err"], frist=FRIST, ausgabe=aus, ausfuehrbar=tuple("bin/" + n for n in (name,) + tuple(wz)) + tuple("lib/" + l for l in libs if l == "diffh"), mnt=MNT)
     ist = (r.get("aus.txt") or b"").decode("latin-1")
     with open(os.path.join(ar, name + ".ist"), "w") as f:
         f.write(ist)

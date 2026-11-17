@@ -1,0 +1,49 @@
+25D8 Premature EOF
+25E6 __.SYMDEF
+25F6 /tmp/ldaXXXXX
+2634 l.out
+263A l.out
+2645 Bad output file
+2655 Bad 'use' or 'entry'
+266A -D: arg missing
+267A -D: too small
+2688 bad flag
+2696 fast load buffer too small
+26B1 out of date (warning)
+26C7 No relocation bits
+26DA text overflow
+26E8 data overflow
+26F6 bss overflow
+2703 symbol table overflow
+2719 _etext
+2720 _edata
+2727 _end
+272C bss overflow
+274B bss overflow
+2758 %.8s: 
+275F Multiply defined
+2770 Entry point not in text
+2788 cannot create temp
+279B cannot create output
+27B0 internal error: symbol not found
+27D1 Local symbol overflow
+27E7 %.8s: 
+27EE Multiply defined
+27FF Relocation error
+2810 CALLR : illegal destination
+282C CALLR : out of range
+2841 a.out
+2847 l.out
+284D a.out
+2853 a.out
+2859 No pages
+2862 -la
+2866 /usr/lib/libxxxxxxxxxxxxxxx
+2882 cannot open
+288E Symbol table overflow
+28A4 ld:
+28AB (%.14s)
+28BA Local symbol botch
+28CD Bad format
+28D8 output error
+292A null

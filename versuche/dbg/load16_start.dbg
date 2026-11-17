@@ -1,0 +1,17 @@
+# Nach LOAD16: was tut mutos_io mit EM und U8001?  emlog ab 9000, erste Befehle des U8001.  Plan 48 C1.2.
+#   tools/emu.py dbg --em em256 --laufwerke K5601,K5601,K5601 @DISK:a5120_mutos8000_boot_udos_k5601.hfe@ -x versuche/dbg/load16_start.dbg
+g 80000000
+b 0x9000
+keys BOOT\sMUTOS\r
+g 400000000
+bd 0x9000
+emlog @REPO@/out/load16_start_emlog.txt
+cpu zve1
+keys r
+g 20000000
+cpu u8000
+r
+d <<0>>%0000 16
+u <<0>>%027E 6
+dev em
+q

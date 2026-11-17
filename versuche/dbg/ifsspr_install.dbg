@@ -1,0 +1,16 @@
+# Plan 48 C1.3: was tut ACTIVATE $IFSSPR?  Logpunkte auf den Treibereinsprung und Watchpoints auf die Nukleus-Zellen.
+# Aufruf wie ifsspr_probe.dbg.  Ergebnis (gemessen): ein Aufruf EB14 mit IY=4348H, IY+1=0 (Befehl "install");
+# der Treiber schreibt 0FF0=EC9E, 0FE4=EC86, 0FDB |= 8FH, 0FF4=ED60, 0FF6=ED79.  (Die "wp"-Treffer bei PC=50F8 danach
+# sind LDIR in den EM-Speicher von LOAD16, keine Schreibzugriffe auf 0FExx.)
+g 80000000
+wp 0x0FDB
+wp 0x0FE4..0x0FE5
+wp 0x0FF0..0x0FF7
+lp 0xEB14 IY [IY+0] [IY+1] [IY+2]w [IY+4]w [IY+6]w [IY+8]w
+lp 0xEB3F SP
+lp 0xED2A SP
+keys BOOT\sMUTOS\r
+g 100000000
+d 0x0FD0 48
+wl
+q

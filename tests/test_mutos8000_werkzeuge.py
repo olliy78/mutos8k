@@ -306,7 +306,7 @@ def test_bau_alle_kennt_genau_die_fertigen_disketten():
     import bau_alle
     im_skript = {n for _, n in bau_alle.LADEDISKETTEN + bau_alle.WURZELN} | set(bau_alle.datendisketten()) \
         | set(bau_alle.DISK_SATZ)
-    im_ordner = {p.name for p in FERTIG.glob("*.hfe")}
+    im_ordner = {p.name for p in FERTIG.glob("*.hfe") if "_v7erg" not in p.name}     # v7erg: bau_alle.py --v7erg, not in the default list
     assert im_skript == im_ordner
 
 
