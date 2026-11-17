@@ -1,6 +1,7 @@
 """Generate NAME.c from NAME.y with the MUTOS V7-yacc in the guest (plan 45, E3c: expr, egrep, bc).
 
-  K1520EMU=... python3 -I tools/userspace/erg_yacc.py NAME [NAME...]     (NAME = DIR/NAME for a grammar whose name differs from the folder, e.g. m4/m4y)
+  K1520EMU=... python3 -I tools/userspace/erg_yacc.py NAME [NAME...]     (NAME = DIR/NAME for a grammar whose name differs from the folder, e.g. m4/m4y;
+  DIR = userspace/PROG for a program outside ergaenzung/, e.g. userspace/cpp/cpy)
 
 Needs userspace/ergaenzung/yacc/work/bau/yacc.bin (python3 -I tools/userspace/erg.py bau yacc).
 For every NAME the file userspace/ergaenzung/NAME/NAME.y (V7 text, unchanged) is run through yacc in one guest session
@@ -21,6 +22,11 @@ KOPF = ("/* %s.c: GENERATED from %s.y (V7 text, unchanged) by the MUTOS V7-yacc 
         "   Not V7 source text, not edited by hand. */\n")
 
 
+def verz(d):
+    """DIR below userspace/ergaenzung, or a repository path given as userspace/PROG (e.g. userspace/cpp/cpy for plan 52 W2)."""
+    return os.path.join(U.REPO, d) if d.startswith("userspace/") else os.path.join(ERG, d)
+
+
 def main(namen):
     # "DIR/NAME" names a grammar NAME.y inside the program folder DIR (m4: m4/m4y); plain NAME means DIR = NAME
     ziele = {}
@@ -38,11 +44,11 @@ def main(namen):
         befehle = ["cat /mnt/yaccpar >/tmp/yaccpar;cd /mnt"]
         rueck = []
         for n in namen:
-            q[n + ".y"] = open(os.path.join(ERG, ziele[n], n + ".y"), "rb").read()
+            q[n + ".y"] = open(os.path.join(verz(ziele[n]), n + ".y"), "rb").read()
             befehle.append("cat /mnt/%s.y >/tmp/%s.y;cd /tmp;PATH=/mnt:/bin:/usr/bin yacc %s.y >/tmp/%s.yerr 2>&1;cat y.tab.c >/tmp/%s.c;cd /mnt"
                            % (n, n, n, n, n))
             rueck += [n + ".c", n + ".yerr"]
-        r = gast_as.gast_befehle(os.path.join(ERG, ziele[namen[0]], "work", "yacc"), q, befehle, rueck,
+        r = gast_as.gast_befehle(os.path.join(verz(ziele[namen[0]]), "work", "yacc"), q, befehle, rueck,
                                  frist=3_000_000_000, ausgabe={}, ausfuehrbar=("yacc",))
         rc = 0
         for n in namen:
@@ -53,7 +59,7 @@ def main(namen):
                 rc = 1
                 continue
             txt = r[n + ".c"].decode("latin-1").replace("\r", "")
-            with open(os.path.join(ERG, ziele[n], n + ".c"), "w", encoding="latin-1") as f:
+            with open(os.path.join(verz(ziele[n]), n + ".c"), "w", encoding="latin-1") as f:
                 f.write(KOPF % (n, n, n, n, ziele[n] + "/" + n if ziele[n] != n else n) + txt)
             print("%s.c: %d bytes" % (n, len(txt)))
         return rc

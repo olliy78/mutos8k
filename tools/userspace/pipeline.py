@@ -13,6 +13,7 @@ NAME.strings) next to the sources.  Exit 77 when the emulator project or a disk 
 """
 import argparse
 import os
+import re
 import shutil
 import sys
 
@@ -199,6 +200,10 @@ def quelle_lesen(p):
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
         elif f.endswith(".h"):
             koepfe[f] = open(os.path.join(p, f), "rb").read()
+    # a .c file that another .c of the directory #includes (cpp: cpy.c includes yylex.c, as in V7) is not a module of its own
+    for f in list(dat):
+        if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):
+            koepfe[f] = dat.pop(f).encode("latin-1")
     return dat, koepfe
 
 
