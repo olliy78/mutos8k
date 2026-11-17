@@ -80,7 +80,7 @@ PROGRAMME = {
     "ld": ("usr", "bin/ld", "userspace/ld/ld.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
-    "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain: doc/userspace/wk_w4.md
     "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c2": ("usr", "lib/c2", "userspace/c2", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
@@ -249,7 +249,7 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc")
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
                     if name == "ld":
                         zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
                         cnt.update(c3)
@@ -260,7 +260,7 @@ def cmd_bau(name, a):
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc")
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
                 if name == "ld":        # R97-R99 on top of the standard model (R45 off), doc/userspace/wk_w13.md
                     zwei[n + "_c2_s"], c3 = U.c2_ld_s(zwei[n + "_c2_s"])
                     cnt.update(c3)

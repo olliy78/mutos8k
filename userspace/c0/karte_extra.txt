@@ -1,0 +1,19 @@
+# Switch jump tables in the data part (LD R1,Lxxxx(Rn) ; JP @R1): the word entries are code entry points.
+# Hash switches (DIV RR2,#n) have n entries, range switches (CP R2,#k ; JR UGT) k+1 entries.
+dwc 5CC6 5CCF
+dwc 5CD0 5CD5
+dwc 5CD6 5CE3
+dwc 5CE4 5CE7
+dwc 5EFE 5F05
+dwc 5F06 5F15
+dwc 5F16 5F4F
+dwc 6066 6077
+dwc 6078 608F
+dwc 60B2 60B9
+dwc 6362 63A3
+dwc 63A4 63A9
+dwc 651A 6529
+# Vorschlaege inside doprnt (hand-written assembler with shared tails) and gcvt: label lands mid-instruction
+ohne 4DE8
+ohne 4E4E
+ohne 4F04
