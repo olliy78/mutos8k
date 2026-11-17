@@ -433,3 +433,6 @@ Wellen (innerhalb einer Welle parallel):
   (`~/projects/a5120emu/doc/merkposten/<thema>.md`, nur Doku, kein Code, kein Commit dort -- die Datei bleibt fuer den Projektinhaber uncommittet liegen);
   Verweis im Befund.  Einen Behelf hier nur, wenn er billig ist.
 * **O6:** wie empfohlen (C4: `bewerten` Pflicht; Fixpunkt ueber CP/A optional in C5.2).
+* **Anforderung an die CP/A-Variante (Projektinhaber, 2026-11-17):** vier Floppy-Laufwerke A:-D: **und** GIDE-Unterstuetzung (erstes GIDE-Laufwerk E:) **und** RTC.
+  Stand C1.8 (*gemessen*, `doc/plus/cpa/c1_8_vier_floppy.md`): die gebaute Variante `anzdisk = 4` zeigt Disketten A:-D:, GIDE E: bis L: (`DIR E:` liest die Platte)
+  und die RTC an D5H -- die Anforderung ist damit erfuellt; `tools/plus/cpa_system.py` (C5) und sein Waechter pruefen alle drei Punkte (Kopfzeile, `DIR E:`, Uhr).
