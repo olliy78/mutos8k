@@ -403,7 +403,7 @@ Wellen (innerhalb einer Welle parallel):
 | C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | offen | | |
 | C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.4" |
 | C1.5 | `doc/plus/cpa/c1_5_bios.md` | Sekunden | 3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.5" |
-| C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | offen | | |
+| C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | fertig (alle Saetze gleich bei root_fm/mfm/8x512 und GIDE; Regel SETSEC: Tabelle ab OFF, Schreiben C=0,0,0,1) | 2026-11-17 | Betreff "Plan 48 C1.6" |
 | C1.7 | `versuche/plus_cpa/itest.mac`, `itest.py`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | erledigt (keine Tickverluste, groesste Verspaetung 0,68 ms; BIOS liest/schreibt mit Fremd-ISR richtig; E2 (a), E6 Tastatur ueber BIOS `CONST`) | 2026-11-17 | s. git log |
 | C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | erledigt | 2026-11-17 | 7f41132 |
 | C1.9 | `doc/plus/cpa_analyse.md`, §8-§10 | -- | 1-2 h | offen | | |

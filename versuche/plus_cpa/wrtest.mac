@@ -1,0 +1,383 @@
+; wrtest.mac -- write patterns through the CP/A BIOS WRITE entry, then keep going without a warm boot (plan 48 C1.6)
+;
+; WRTEST d script      d = drive letter, script = one token of commands, executed left to right:
+;   0 1 2   WRITE the 8 target records with write type C = 0 / 1 / 2 (SETTRK, SETSEC, SETDMA, WRITE)
+;   R       READ the 8 records back and compare with the pattern (counts the matches)
+;   X       READ one far-away record (track 76, record 1) -- a different host sector / track
+;   H       HOME      S  SELDSK (E bit 0 = 1)      P  wait two seconds (BIOS 1-s counter at 0043H)
+;   B b     write the 4 records 9..12 of track 5 (one 512-byte sector on 8 x 512): types 0,0,0,1 / 0,0,0,0
+; The pattern of record (t, r) is byte i = (i + t + 3*r + 5AH) mod 256.  The 8 targets (BIOS track, record) are in
+; the table TARG (B / b: see WR4), all on data tracks >= 3 (SETSEC = record, translated by the BIOS like in rdtest.mac).
+; At the end the program prints WRTEST DONE and then idles (JR $) WITHOUT a warm boot, so that the host can
+; look at what has reached the diskette image after the debugger ran on.
+	.Z80
+	CSEG
+BDOS	EQU	5
+TBUF	EQU	4000H		; read buffer
+PBUF	EQU	4100H		; pattern buffer
+OFS_SELDSK	EQU	18H	; BIOS entry minus WBOOT (CB1B - CB03)
+OFS_SETTRK	EQU	1BH
+OFS_SETSEC	EQU	1EH
+OFS_SETDMA	EQU	21H
+OFS_READ	EQU	24H
+OFS_WRITE	EQU	27H
+OFS_HOME	EQU	15H
+
+	JP	START		; 0100
+MKA:	RET			; 0103
+MKB:	RET			; 0104
+
+; ---- call a BIOS entry: A = offset from the WBOOT address, BC/DE arguments pass through
+BCALL:	PUSH	DE
+	LD	HL,(0001H)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	POP	DE
+	JP	(HL)
+
+; ---- the BDOS caches the selected drive and does not call SELDSK again: put the BIOS back on C: (GIDE)
+SELC:	LD	A,(ODRV)
+	LD	C,A
+	LD	E,1
+	LD	A,OFS_SELDSK
+	JP	BCALL
+
+PUTC:	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+
+PSTR:	LD	C,9		; DE = text up to '$'
+	JP	BDOS
+
+PHEX:	PUSH	AF		; A as two hex digits
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	CALL	PNIB
+	POP	AF
+PNIB:	AND	0FH
+	ADD	A,90H
+	DAA
+	ADC	A,40H
+	DAA
+	JP	PUTC
+
+PHEXW:	LD	A,H		; HL as four hex digits
+	CALL	PHEX
+	LD	A,L
+	JP	PHEX
+
+CRLF:	LD	DE,TCRLF
+	JP	PSTR
+
+; ---- carry set when the tail has no further token
+MORE:	CALL	SKIPSP
+	LD	DE,(ENDP)
+	LD	A,L
+	SUB	E
+	LD	A,H
+	SBC	A,D
+	CCF
+	RET			; carry now set = PTR >= ENDP = no further token
+; ---- command tail parser: (PTR) -> next token
+SKIPSP:	LD	HL,(PTR)
+SK1:	LD	A,(HL)
+	CP	' '
+	JR	NZ,SK2
+	INC	HL
+	JR	SK1
+SK2:	LD	(PTR),HL
+	RET
+
+NUM:	CALL	SKIPSP		; decimal number -> HL
+NU1:	LD	HL,(PTR)
+	LD	A,(HL)
+	SUB	'0'
+	CP	10
+	JR	NC,NUEND
+	INC	HL
+	LD	(PTR),HL
+	LD	C,A
+	LD	HL,(NUMV)
+	LD	D,H
+	LD	E,L
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,DE
+	ADD	HL,HL
+	LD	B,0
+	ADD	HL,BC
+	LD	(NUMV),HL
+	JR	NU1
+NUEND:	LD	HL,(NUMV)
+	LD	DE,0
+	LD	(NUMV),DE
+	RET
+
+START:	LD	SP,3F00H
+	LD	HL,0081H
+	LD	(PTR),HL
+	CALL	SKIPSP
+	LD	A,(HL)
+	AND	5FH
+	SUB	'A'
+	LD	(DRV),A
+	INC	HL
+	LD	(PTR),HL
+	CALL	SKIPSP
+	LD	(SCR),HL
+	LD	A,(DRV)
+	LD	C,A
+	LD	E,0		; login (format detection)
+	LD	A,OFS_SELDSK
+	CALL	BCALL
+	LD	A,H
+	OR	L
+	JR	NZ,RUN
+	LD	DE,TSELF
+	CALL	PSTR
+	JP	0
+
+RUN:	LD	HL,(SCR)
+CLOOP:	LD	A,(HL)
+	CP	' '+1
+	JP	C,FIN		; end of token
+	INC	HL
+	LD	(SCR),HL
+	CP	'0'
+	JR	C,NOCMD
+	CP	'3'
+	JR	NC,NOCMD
+	SUB	'0'		; write type
+	LD	(WTYP),A
+	CALL	WRALL
+	JR	NEXT
+NOCMD:	CP	'R'
+	JR	NZ,N1
+	CALL	RDALL
+	JR	NEXT
+N1:	CP	'X'
+	JR	NZ,N2
+	LD	BC,76
+	LD	A,OFS_SETTRK
+	CALL	BCALL
+	LD	BC,1
+	LD	A,OFS_SETSEC
+	CALL	BCALL
+	LD	BC,TBUF
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	A,OFS_READ
+	CALL	BCALL
+	JR	NEXT
+N2:	CP	'H'
+	JR	NZ,N3
+	LD	A,OFS_HOME
+	CALL	BCALL
+	JR	NEXT
+N3:	CP	'S'
+	JR	NZ,N4
+	CALL	SELB
+	JR	NEXT
+N4:	CP	'P'
+	JR	NZ,N5
+	LD	A,(0043H)	; BIOS 1-s counter (word at 0043H/0044H)
+	LD	B,A
+	LD	C,2
+PW1:	LD	A,(0043H)
+	CP	B
+	JR	Z,PW1
+	LD	B,A
+	DEC	C
+	JR	NZ,PW1
+N5:	CP	'B'
+	JR	NZ,N6
+	LD	A,1		; B: 4 records of one 512-byte sector, types 0,0,0,1
+	LD	(L1),A
+	CALL	WR4
+	JR	NEXT
+N6:	CP	'b'
+	JR	NZ,NEXT
+	XOR	A		; b: the same with types 0,0,0,0
+	LD	(L1),A
+	CALL	WR4
+NEXT:	LD	HL,(SCR)
+	JP	CLOOP
+
+FIN:	LD	DE,TDONE
+	CALL	PSTR
+	LD	HL,(WERR)
+	CALL	PHEXW
+	LD	DE,TRB
+	CALL	PSTR
+	LD	HL,(RBOK)
+	CALL	PHEXW
+	CALL	CRLF
+IDLE:	JR	IDLE
+
+SELB:	LD	A,(DRV)
+	LD	C,A
+	LD	E,1
+	LD	A,OFS_SELDSK
+	JP	BCALL
+
+; ---- fill PBUF with the pattern of record (t = (TT), r = (RR)): byte i = i + t + 3r + 5AH
+PATT:	LD	HL,PBUF
+	LD	A,(RR)
+	LD	B,A
+	ADD	A,A
+	ADD	A,B
+	LD	B,A
+	LD	A,(TT)
+	ADD	A,B
+	ADD	A,5AH
+	LD	B,128
+PT1:	LD	(HL),A
+	INC	HL
+	INC	A
+	DJNZ	PT1
+	RET
+
+; ---- the four records 9..12 of track 5 (= one 512-byte sector of an 8 x 512 disk), pattern as for the targets
+WR4:	CALL	SELB
+	LD	A,5
+	LD	(TT),A
+	LD	A,9
+	LD	(RR),A
+W41:	CALL	PATT
+	CALL	SETTS
+	LD	BC,PBUF
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	C,0
+	LD	A,(RR)
+	CP	12
+	JR	NZ,W42
+	LD	A,(L1)
+	LD	C,A		; last record: type 1 when L1 = 1
+W42:	LD	A,OFS_WRITE
+	CALL	BCALL
+	LD	A,(RR)
+	INC	A
+	LD	(RR),A
+	CP	13
+	JR	C,W41
+	RET
+
+WRALL:	CALL	SELB
+	XOR	A
+	LD	(TI),A
+WA1:	CALL	GETT
+	CALL	PATT
+	CALL	SETTS
+	LD	BC,PBUF
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	A,(WTYP)
+	LD	C,A
+	LD	A,OFS_WRITE
+	CALL	BCALL
+	OR	A
+	JR	Z,WA2
+	LD	HL,(WERR)
+	INC	HL
+	LD	(WERR),HL
+WA2:	LD	A,(TI)
+	INC	A
+	LD	(TI),A
+	CP	8
+	JR	C,WA1
+	RET
+
+RDALL:	CALL	SELB
+	XOR	A
+	LD	(TI),A
+RA1:	CALL	GETT
+	CALL	PATT
+	CALL	SETTS
+	LD	BC,TBUF
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	A,OFS_READ
+	CALL	BCALL
+	OR	A
+	JR	NZ,RA3
+	LD	HL,TBUF
+	LD	DE,PBUF
+	LD	B,128
+RA2:	LD	A,(DE)
+	CP	(HL)
+	JR	NZ,RA3
+	INC	HL
+	INC	DE
+	DJNZ	RA2
+	LD	HL,(RBOK)
+	INC	HL
+	LD	(RBOK),HL
+RA3:	LD	A,(TI)
+	INC	A
+	LD	(TI),A
+	CP	8
+	JR	C,RA1
+	RET
+
+; ---- GETT: (TT), (RR) of target (TI)
+GETT:	LD	A,(TI)
+	ADD	A,A
+	LD	E,A
+	LD	D,0
+	LD	HL,TARG
+	ADD	HL,DE
+	LD	A,(HL)
+	LD	(TT),A
+	INC	HL
+	LD	A,(HL)
+	LD	(RR),A
+	RET
+
+SETTS:	LD	A,(TT)
+	LD	C,A
+	LD	B,0
+	LD	A,OFS_SETTRK
+	CALL	BCALL
+	LD	A,(RR)
+	LD	C,A
+	LD	B,0
+	LD	A,OFS_SETSEC
+	CALL	BCALL
+	RET
+
+; 8 targets: BIOS track, record (SETSEC)
+TARG:	DEFB	3,5, 10,14, 20,2, 30,26, 40,13, 50,7, 60,20, 70,9
+
+TCRLF:	DEFB	13,10,'$'
+TSELF:	DEFM	'SELDSK FAILED (HL=0)'
+	DEFB	13,10,'$'
+TDONE:	DEFM	'WRTEST DONE W='
+	DEFB	'$'
+TRB:	DEFM	' RB='
+	DEFB	'$'
+
+PTR:	DEFW	0
+NUMV:	DEFW	0
+ENDP:	DEFW	0
+SCR:	DEFW	0
+DRV:	DEFB	0
+WTYP:	DEFB	0
+ODRV:	DEFB	2
+TI:	DEFB	0
+L1:	DEFB	0
+TT:	DEFB	0
+RR:	DEFB	0
+WERR:	DEFW	0
+RBOK:	DEFW	0
+	END	START

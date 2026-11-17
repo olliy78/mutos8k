@@ -1,0 +1,473 @@
+; blktest.mac -- read MUTOS 512-byte kernel blocks through the CP/A BIOS with the mutos_io block formula (plan 48 C1.6)
+;
+; BLKTEST d first last f [o]   d = drive letter, first/last = decimal BLOCK numbers (kernel blocks of 512 bytes),
+;                              f = '2' (26 x 128, interleave 2, track skew 6) or '5' (8 x 512),
+;                              o = drive letter of the output file RAW.BIN (default C)
+;
+; The block -> (cylinder, sector ID) formula is the one of mutos_io (doc/plus/cpa/c1_4_inventar.md section 7);
+; the BIOS record number for SETSEC follows doc/plus/cpa/c1_6_formate.md: 26 x 128: record = ID on the tracks below
+; OFF (DPB word at +13), else INV[ID] (the CP/A skew table inverted); 8 x 512: record = (ID-1)*4 + k + 1.
+; Blocks are read in chunks of 64 (32 KB), MKA before / MKB after each chunk (cycle probe as in rdtest.mac), then
+; appended to C:RAW.BIN (512 bytes per block).  A block with a failed record is stored EEH-filled and counted.
+	.Z80
+	CSEG
+BDOS	EQU	5
+TBUF	EQU	2000H		; 64 blocks = 32 KB chunk buffer (2000H..9FFFH)
+OFS_SELDSK	EQU	18H	; BIOS entry minus WBOOT (CB1B - CB03)
+OFS_SETTRK	EQU	1BH
+OFS_SETSEC	EQU	1EH
+OFS_SETDMA	EQU	21H
+OFS_READ	EQU	24H
+
+	JP	START		; 0100
+MKA:	RET			; 0103
+MKB:	RET			; 0104
+
+; ---- call a BIOS entry: A = offset from the WBOOT address, BC/DE arguments pass through
+BCALL:	PUSH	DE
+	LD	HL,(0001H)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	POP	DE
+	JP	(HL)
+
+; ---- the BDOS caches the selected drive and does not call SELDSK again: put the BIOS back on C: (GIDE)
+SELC:	LD	A,(ODRV)
+	LD	C,A
+	LD	E,1
+	LD	A,OFS_SELDSK
+	JP	BCALL
+
+PUTC:	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+
+PSTR:	LD	C,9		; DE = text up to '$'
+	JP	BDOS
+
+PHEX:	PUSH	AF		; A as two hex digits
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	CALL	PNIB
+	POP	AF
+PNIB:	AND	0FH
+	ADD	A,90H
+	DAA
+	ADC	A,40H
+	DAA
+	JP	PUTC
+
+PHEXW:	LD	A,H		; HL as four hex digits
+	CALL	PHEX
+	LD	A,L
+	JP	PHEX
+
+CRLF:	LD	DE,TCRLF
+	JP	PSTR
+
+; ---- carry set when the tail has no further token
+MORE:	CALL	SKIPSP
+	LD	DE,(ENDP)
+	LD	A,L
+	SUB	E
+	LD	A,H
+	SBC	A,D
+	CCF
+	RET			; carry now set = PTR >= ENDP = no further token
+; ---- command tail parser: (PTR) -> next token
+SKIPSP:	LD	HL,(PTR)
+SK1:	LD	A,(HL)
+	CP	' '
+	JR	NZ,SK2
+	INC	HL
+	JR	SK1
+SK2:	LD	(PTR),HL
+	RET
+
+NUM:	CALL	SKIPSP		; decimal number -> HL
+NU1:	LD	HL,(PTR)
+	LD	A,(HL)
+	SUB	'0'
+	CP	10
+	JR	NC,NUEND
+	INC	HL
+	LD	(PTR),HL
+	LD	C,A
+	LD	HL,(NUMV)
+	LD	D,H
+	LD	E,L
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,DE
+	ADD	HL,HL
+	LD	B,0
+	ADD	HL,BC
+	LD	(NUMV),HL
+	JR	NU1
+NUEND:	LD	HL,(NUMV)
+	LD	DE,0
+	LD	(NUMV),DE
+	RET
+
+START:	LD	SP,1F00H
+	LD	HL,0081H
+	LD	(PTR),HL
+	LD	HL,0
+	LD	(NUMV),HL
+	CALL	SKIPSP
+	LD	A,(HL)
+	AND	5FH
+	SUB	'A'
+	LD	(DRV),A
+	INC	HL
+	LD	(PTR),HL
+	CALL	NUM
+	LD	(BN1),HL
+	CALL	NUM
+	LD	(BN2),HL
+	CALL	SKIPSP
+	LD	A,(HL)
+	LD	(FMT),A		; '2' or '5'
+	INC	HL
+	LD	(PTR),HL
+	LD	HL,0081H	; optional output drive
+	LD	A,(0080H)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	LD	(ENDP),HL
+	CALL	MORE
+	JR	C,NOOPT
+	LD	HL,(PTR)
+	LD	A,(HL)
+	AND	5FH
+	SUB	'A'
+	LD	(ODRV),A
+	INC	A
+	LD	(FCB),A
+NOOPT:
+	; ---- log in the drive, OFF from the DPB (word at +13)
+	LD	A,(DRV)
+	LD	C,A
+	LD	E,0
+	LD	A,OFS_SELDSK
+	CALL	BCALL
+	LD	A,H
+	OR	L
+	JR	NZ,SELOK
+	LD	DE,TSELF
+	CALL	PSTR
+	JP	0
+SELOK:	LD	DE,10
+	ADD	HL,DE
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)		; DE = DPB
+	LD	HL,13
+	ADD	HL,DE
+	LD	A,(HL)
+	LD	(OFF),A
+	CALL	SELC
+	LD	DE,FCB
+	LD	C,19
+	CALL	BDOS
+	LD	DE,FCB
+	LD	C,22
+	CALL	BDOS
+	INC	A
+	JR	NZ,FOK
+	LD	DE,TFILE
+	CALL	PSTR
+	JP	0
+FOK:	LD	HL,(BN1)
+	LD	(BN),HL
+
+; ---- chunk loop
+CLOOP:	LD	HL,(BN)		; BN > BN2 -> done
+	LD	DE,(BN2)
+	LD	A,E
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	JP	C,FIN
+	; chunk size = min(64, BN2 - BN + 1)
+	LD	HL,(BN2)
+	LD	DE,(BN)
+	OR	A
+	SBC	HL,DE
+	INC	HL		; HL = blocks left
+	LD	A,H
+	OR	A
+	LD	A,64
+	JR	NZ,CSZ
+	LD	A,L
+	CP	64
+	JR	C,CSZ
+	LD	A,64
+CSZ:	LD	(NBLK),A
+	LD	HL,TBUF
+	LD	(DMA),HL
+	LD	A,(DRV)		; the BIOS may have been moved to C: by the file writes
+	LD	C,A
+	LD	E,1
+	LD	A,OFS_SELDSK
+	CALL	BCALL
+	CALL	MKA
+	LD	A,(NBLK)
+	LD	(CNT),A
+	CALL	BSTART		; (Q,POS,V) of the first block of the chunk (26 x 128: NEXTR then walks on, as mutos_io does)
+BLOOP:	LD	A,(FMT)
+	CP	'5'
+	CALL	Z,BSTART	; 8 x 512: position follows from BN alone
+	XOR	A
+	LD	(K),A
+KLOOP:	CALL	DOREC		; one 128-byte record into (DMA); carry = failed
+	JR	NC,KOK
+	LD	HL,(NERR)
+	INC	HL
+	LD	(NERR),HL
+KOK:	LD	HL,(DMA)
+	LD	DE,128
+	ADD	HL,DE
+	LD	(DMA),HL
+	CALL	NEXTR		; next record position (POS, Q, V)
+	LD	A,(K)
+	INC	A
+	LD	(K),A
+	CP	4
+	JR	C,KLOOP
+	LD	HL,(BN)
+	INC	HL
+	LD	(BN),HL
+	LD	A,(CNT)
+	DEC	A
+	LD	(CNT),A
+	JR	NZ,BLOOP
+	CALL	MKB
+
+	; ---- append NBLK*4 records to the file
+	CALL	SELC
+	LD	HL,TBUF
+	LD	(DMA),HL
+	LD	A,(NBLK)
+	ADD	A,A
+	ADD	A,A
+	LD	B,A
+WLOOP:	PUSH	BC
+	LD	DE,(DMA)
+	LD	C,26
+	CALL	BDOS
+	LD	DE,FCB
+	LD	C,21
+	CALL	BDOS
+	OR	A
+	JR	Z,WOK
+	LD	DE,TWR
+	CALL	PSTR
+WOK:	LD	HL,(DMA)
+	LD	DE,128
+	ADD	HL,DE
+	LD	(DMA),HL
+	POP	BC
+	DJNZ	WLOOP
+	JP	CLOOP
+
+FIN:	LD	DE,FCB
+	LD	C,16
+	CALL	BDOS
+	LD	DE,TDONE
+	CALL	PSTR
+	LD	HL,(NERR)
+	CALL	PHEXW
+	CALL	CRLF
+	JP	0
+
+; ---- (Q, POS, V) of the first record of block BN
+;      26 x 128: l = 4*BN, Q = l div 26, POS = l mod 26, V = 6*Q mod 26
+;      8 x 512 : Q = BN div 8, POS = BN mod 8 (V unused)
+BSTART:	LD	HL,(BN)
+	XOR	A
+	LD	(Q),A
+	LD	(V),A
+	LD	A,(FMT)
+	CP	'5'
+	JR	Z,BS5
+	ADD	HL,HL
+	ADD	HL,HL
+BS1:	LD	A,H
+	OR	A
+	JR	NZ,BS2
+	LD	A,L
+	CP	26
+	JR	C,BS3
+BS2:	LD	DE,26
+	OR	A
+	SBC	HL,DE
+	LD	A,(Q)
+	INC	A
+	LD	(Q),A
+	LD	A,(V)
+	ADD	A,6
+	CP	26
+	JR	C,BS4
+	SUB	26
+BS4:	LD	(V),A
+	JR	BS1
+BS3:	LD	A,L
+	LD	(POS),A
+	RET
+BS5:	LD	A,L
+	AND	7
+	LD	(POS),A
+	LD	A,L
+	RRCA
+	RRCA
+	RRCA
+	AND	1FH
+	LD	B,A
+	LD	A,H		; BN < 2048: the high byte contributes H*32
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,B
+	LD	(Q),A
+	RET
+
+; ---- advance one record: 26 x 128: POS+1, at 26 POS = 0, Q+1, V+6 mod 26; 8 x 512: only within the block (K counts)
+NEXTR:	LD	A,(FMT)
+	CP	'5'
+	RET	Z		; 8 x 512: the four records are SETSEC r..r+3 in DOREC (K), position unchanged
+	LD	A,(POS)
+	INC	A
+	CP	26
+	JR	C,NX1
+	XOR	A
+	LD	HL,Q
+	INC	(HL)
+	LD	B,A
+	LD	A,(V)
+	ADD	A,6
+	CP	26
+	JR	C,NX2
+	SUB	26
+NX2:	LD	(V),A
+	LD	A,B
+NX1:	LD	(POS),A
+	RET
+
+; ---- DOREC: one record: SETTRK, SETSEC, SETDMA, READ.  Carry set = READ failed (record filled with EEH)
+DOREC:	LD	A,(Q)
+	INC	A		; cylinder = Q + 1
+	LD	C,A
+	LD	B,0
+	LD	A,OFS_SETTRK
+	CALL	BCALL
+	LD	A,(FMT)
+	CP	'5'
+	JR	Z,DR5
+	; 26 x 128: ID = ((x + V) mod 26) + 1, x = 2*POS (+1 when >= 26)
+	LD	A,(POS)
+	ADD	A,A
+	CP	26
+	JR	C,DR1
+	INC	A
+DR1:	LD	B,A
+	LD	A,(V)
+	ADD	A,B
+DR2:	CP	26
+	JR	C,DR3
+	SUB	26
+	JR	DR2
+DR3:	INC	A		; A = ID 1..26
+	LD	C,A		; default record = ID (tracks below OFF)
+	LD	A,(Q)
+	INC	A
+	LD	B,A		; cylinder
+	LD	A,(OFF)
+	LD	D,A
+	LD	A,B
+	CP	D
+	JR	C,DRSET		; cylinder < OFF: record = ID
+	LD	B,0
+	LD	HL,INVT-1
+	ADD	HL,BC
+	LD	C,(HL)		; record = INV[ID]
+	JR	DRSET
+DR5:	LD	A,(POS)		; 8 x 512: record = POS*4 + K + 1
+	ADD	A,A
+	ADD	A,A
+	LD	B,A
+	LD	A,(K)
+	ADD	A,B
+	INC	A
+	LD	C,A
+DRSET:	LD	B,0
+	LD	A,OFS_SETSEC
+	CALL	BCALL
+	LD	BC,(DMA)
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	A,OFS_READ
+	CALL	BCALL
+	OR	A
+	RET	Z		; carry clear
+	LD	HL,(DMA)
+	LD	(HL),0EEH
+	LD	D,H
+	LD	E,L
+	INC	DE
+	LD	BC,127
+	LDIR
+	SCF
+	RET
+
+; INV[ID] = record r with SKEW[r-1] = ID (biosdpb.mac:374 inverted), ID = 1..26
+INVT:	DEFB	1,14,10,23,6,19,2,15,11,24,7,20,3,16,12,25,8,21,4,17,13,26,9,22,5,18
+
+TCRLF:	DEFB	13,10,'$'
+TSELF:	DEFM	'SELDSK FAILED (HL=0)'
+	DEFB	13,10,'$'
+TFILE:	DEFM	'CANNOT MAKE RAW.BIN'
+	DEFB	13,10,'$'
+TWR:	DEFM	'WRFAIL'
+	DEFB	13,10,'$'
+TDONE:	DEFM	'BLKTEST DONE ERR='
+	DEFB	'$'
+
+FCB:	DEFB	3		; drive C:
+	DEFM	'RAW     BIN'
+	DEFB	0,0,0,0
+	DEFS	16
+	DEFB	0
+
+PTR:	DEFW	0
+NUMV:	DEFW	0
+ENDP:	DEFW	0
+DRV:	DEFB	0
+ODRV:	DEFB	2
+BN1:	DEFW	0
+BN2:	DEFW	0
+BN:	DEFW	0
+FMT:	DEFB	'2'
+OFF:	DEFB	0
+NBLK:	DEFB	0
+CNT:	DEFB	0
+K:	DEFB	0
+Q:	DEFB	0
+POS:	DEFB	0
+V:	DEFB	0
+DMA:	DEFW	0
+NERR:	DEFW	0
+	END	START

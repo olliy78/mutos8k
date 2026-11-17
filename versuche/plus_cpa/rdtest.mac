@@ -1,0 +1,382 @@
+; rdtest.mac -- read MUTOS floppies through the CP/A BIOS jump table (plan 48 C1.6)
+;
+; RDTEST d first last [base [o]]   d = drive letter (A..), first/last = decimal track numbers (BIOS tracks),
+;                          base = number of the first sector for SETSEC (1 floppy = default, 0 GIDE),
+;                          o = drive letter of the output file RAW.BIN (default C)
+;
+; For every track: SELDSK, SETTRK, then SETSEC 1..SPT / SETDMA / READ (no SECTRAN, no BDOS), the
+; BIOS entries are taken from the warm-boot vector at 0001H (never from fixed addresses).
+; SPT comes from the DPB that SELDSK returns.  The records of every track are appended to C:RAW.BIN
+; (BDOS file functions, 128 B per record, in the order SETSEC 1..SPT) so that the host can compare them.
+; A record that READ reports as failed is stored as 0EEH-filled.
+;
+; Cycle probe for the debugger: MKA (0103H) is called before the first SETSEC of a track and MKB (0104H)
+; after its last READ; `logpoint 0x103` / `logpoint 0x104` print the machine cycle.  Fixed addresses,
+; because the program starts with JP START (3 bytes) and MKA/MKB are one byte each.
+	.Z80
+	CSEG
+BDOS	EQU	5
+TBUF	EQU	4000H		; 128 records = 16 KB track buffer
+OFS_SELDSK	EQU	18H	; BIOS entry minus WBOOT (CB1B - CB03)
+OFS_SETTRK	EQU	1BH
+OFS_SETSEC	EQU	1EH
+OFS_SETDMA	EQU	21H
+OFS_READ	EQU	24H
+
+	JP	START		; 0100
+MKA:	RET			; 0103
+MKB:	RET			; 0104
+
+; ---- call a BIOS entry: A = offset from the WBOOT address, BC/DE arguments pass through
+BCALL:	PUSH	DE
+	LD	HL,(0001H)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	POP	DE
+	JP	(HL)
+
+; ---- the BDOS caches the selected drive and does not call SELDSK again: put the BIOS back on C: (GIDE)
+SELC:	LD	A,(ODRV)
+	LD	C,A
+	LD	E,1
+	LD	A,OFS_SELDSK
+	JP	BCALL
+
+PUTC:	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+
+PSTR:	LD	C,9		; DE = text up to '$'
+	JP	BDOS
+
+PHEX:	PUSH	AF		; A as two hex digits
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	CALL	PNIB
+	POP	AF
+PNIB:	AND	0FH
+	ADD	A,90H
+	DAA
+	ADC	A,40H
+	DAA
+	JP	PUTC
+
+PHEXW:	LD	A,H		; HL as four hex digits
+	CALL	PHEX
+	LD	A,L
+	JP	PHEX
+
+CRLF:	LD	DE,TCRLF
+	JP	PSTR
+
+; ---- carry set when the tail has no further token
+MORE:	CALL	SKIPSP
+	LD	DE,(ENDP)
+	LD	A,L
+	SUB	E
+	LD	A,H
+	SBC	A,D
+	CCF
+	RET			; carry now set = PTR >= ENDP = no further token
+; ---- command tail parser: (PTR) -> next token
+SKIPSP:	LD	HL,(PTR)
+SK1:	LD	A,(HL)
+	CP	' '
+	JR	NZ,SK2
+	INC	HL
+	JR	SK1
+SK2:	LD	(PTR),HL
+	RET
+
+NUM:	CALL	SKIPSP		; decimal number -> HL
+NU1:	LD	HL,(PTR)
+	LD	A,(HL)
+	SUB	'0'
+	CP	10
+	JR	NC,NUEND
+	INC	HL
+	LD	(PTR),HL
+	LD	C,A
+	LD	HL,(NUMV)
+	LD	D,H
+	LD	E,L
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,DE
+	ADD	HL,HL
+	LD	B,0
+	ADD	HL,BC
+	LD	(NUMV),HL
+	JR	NU1
+NUEND:	LD	HL,(NUMV)
+	LD	DE,0
+	LD	(NUMV),DE
+	RET
+
+START:	LD	SP,3F00H
+	LD	HL,0081H
+	LD	(PTR),HL
+	LD	HL,0
+	LD	(NUMV),HL
+	CALL	SKIPSP
+	LD	A,(HL)
+	AND	5FH
+	SUB	'A'
+	LD	(DRV),A
+	INC	HL
+	LD	(PTR),HL
+	CALL	NUM
+	LD	(TRK1),HL
+	CALL	NUM
+	LD	(TRK2),HL
+	LD	HL,0081H	; optional arguments: end of the tail = 0081H + length
+	LD	A,(0080H)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	LD	(ENDP),HL
+	CALL	MORE
+	JR	C,NOOPT
+	CALL	NUM
+	LD	A,L
+	LD	(BASE),A
+	CALL	MORE
+	JR	C,NOOPT
+	LD	HL,(PTR)
+	LD	A,(HL)
+	AND	5FH
+	SUB	'A'
+	LD	(ODRV),A
+	INC	A
+	LD	(FCB),A
+NOOPT:
+
+	; ---- log in the drive (E bit 0 = 0), DPB
+	LD	A,(DRV)
+	LD	C,A
+	LD	E,0
+	LD	A,OFS_SELDSK
+	CALL	BCALL
+	LD	A,H
+	OR	L
+	JR	NZ,SELOK
+	LD	DE,TSELF
+	CALL	PSTR
+	JP	0
+SELOK:	LD	DE,10
+	ADD	HL,DE
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)		; DE = DPB
+	LD	(DPBP),DE
+	LD	DE,TDPB
+	CALL	PSTR
+	LD	HL,(DPBP)
+	LD	B,18H		; 24 bytes of the DPB (the CP/A DPB has extra fields)
+DP1:	LD	A,(HL)
+	INC	HL
+	PUSH	HL
+	PUSH	BC
+	CALL	PHEX
+	LD	A,' '
+	CALL	PUTC
+	POP	BC
+	POP	HL
+	DJNZ	DP1
+	CALL	CRLF
+	LD	HL,(DPBP)
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	LD	(SPT),DE	; SPT in 128-byte records
+	LD	A,D
+	OR	A
+	JR	NZ,SPTBAD
+	LD	A,E
+	CP	129
+	JR	C,SPTOK
+SPTBAD:	LD	DE,TSPT
+	CALL	PSTR
+	JP	0
+SPTOK:	LD	A,(BASE)	; last sector number = base + SPT - 1
+	ADD	A,E
+	DEC	A
+	LD	(LAST),A
+
+	; ---- output file C:RAW.BIN
+	CALL	SELC
+	LD	DE,FCB
+	LD	C,19		; delete
+	CALL	BDOS
+	LD	DE,FCB
+	LD	C,22		; make
+	CALL	BDOS
+	INC	A
+	JR	NZ,FOK
+	LD	DE,TFILE
+	CALL	PSTR
+	JP	0
+FOK:
+
+	; ---- track loop
+	LD	HL,(TRK1)
+	LD	(TRK),HL
+TLOOP:	LD	HL,(TRK)
+	LD	DE,(TRK2)
+	LD	A,E
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	JP	C,FIN		; TRK > TRK2
+
+	LD	A,(DRV)
+	LD	C,A
+	LD	E,1		; already logged in
+	LD	A,OFS_SELDSK
+	CALL	BCALL
+	LD	BC,(TRK)
+	LD	A,OFS_SETTRK
+	CALL	BCALL
+	CALL	MKA
+	LD	A,(BASE)
+	LD	(SEC),A
+	LD	HL,TBUF
+	LD	(DMA),HL
+SLOOP:	LD	A,(SEC)
+	LD	C,A
+	LD	B,0
+	LD	A,OFS_SETSEC
+	CALL	BCALL
+	LD	BC,(DMA)
+	LD	A,OFS_SETDMA
+	CALL	BCALL
+	LD	A,OFS_READ
+	CALL	BCALL
+	OR	A
+	JR	Z,RDOK
+	; failed record: count, print the first few, fill with EEH
+	LD	HL,(NERR)
+	INC	HL
+	LD	(NERR),HL
+	LD	A,H
+	OR	A
+	JR	NZ,NOPR
+	LD	A,L
+	CP	9
+	JR	NC,NOPR
+	LD	DE,TERR
+	CALL	PSTR
+	LD	HL,(TRK)
+	CALL	PHEXW
+	LD	A,'/'
+	CALL	PUTC
+	LD	A,(SEC)
+	CALL	PHEX
+	CALL	CRLF
+NOPR:	LD	HL,(DMA)
+	LD	(HL),0EEH
+	LD	D,H
+	LD	E,L
+	INC	DE
+	LD	BC,127
+	LDIR
+RDOK:	LD	HL,(DMA)
+	LD	DE,128
+	ADD	HL,DE
+	LD	(DMA),HL
+	LD	A,(SEC)
+	INC	A
+	LD	(SEC),A
+	DEC	A
+	LD	HL,LAST
+	CP	(HL)		; done when the record just read was the last one
+	JR	NZ,SLOOP
+	CALL	MKB
+
+	; ---- append the SPT records to the file
+	CALL	SELC
+	LD	HL,TBUF
+	LD	(DMA),HL
+	LD	A,(SPT)
+	LD	B,A
+WLOOP:	PUSH	BC
+	LD	DE,(DMA)
+	LD	C,26
+	CALL	BDOS
+	LD	DE,FCB
+	LD	C,21
+	CALL	BDOS
+	OR	A
+	JR	Z,WOK
+	LD	DE,TWR
+	CALL	PSTR
+WOK:	LD	HL,(DMA)
+	LD	DE,128
+	ADD	HL,DE
+	LD	(DMA),HL
+	POP	BC
+	DJNZ	WLOOP
+
+	LD	HL,(TRK)
+	INC	HL
+	LD	(TRK),HL
+	JP	TLOOP
+
+FIN:	LD	DE,FCB
+	LD	C,16		; close
+	CALL	BDOS
+	LD	DE,TDONE
+	CALL	PSTR
+	LD	HL,(NERR)
+	CALL	PHEXW
+	CALL	CRLF
+	JP	0
+
+TCRLF:	DEFB	13,10,'$'
+TSELF:	DEFM	'SELDSK FAILED (HL=0)'
+	DEFB	13,10,'$'
+TSPT:	DEFM	'SPT OUT OF RANGE'
+	DEFB	13,10,'$'
+TFILE:	DEFM	'CANNOT MAKE C:RAW.BIN'
+	DEFB	13,10,'$'
+TDPB:	DEFM	'DPB '
+	DEFB	'$'
+TERR:	DEFM	'RDERR T/S '
+	DEFB	'$'
+TWR:	DEFM	'WRFAIL'
+	DEFB	13,10,'$'
+TDONE:	DEFM	'RDTEST DONE ERR='
+	DEFB	'$'
+
+FCB:	DEFB	3		; drive C:
+	DEFM	'RAW     BIN'
+	DEFB	0,0,0,0
+	DEFS	16
+	DEFB	0
+
+PTR:	DEFW	0
+NUMV:	DEFW	0
+DRV:	DEFB	0
+TRK1:	DEFW	0
+TRK2:	DEFW	0
+TRK:	DEFW	0
+SPT:	DEFW	0
+DPBP:	DEFW	0
+DMA:	DEFW	0
+SEC:	DEFB	0
+BASE:	DEFB	1
+LAST:	DEFB	0
+ODRV:	DEFB	2
+ENDP:	DEFW	0
+NERR:	DEFW	0
+	END	START
