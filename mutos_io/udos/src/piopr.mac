@@ -1,0 +1,348 @@
+; ==========================================================================
+; piopr - UDOS printer driver "PIO" for the A5120 (PIO A31, parallel)
+; ==========================================================================
+; Original UDOS file PIOPR (type P1, 640 bytes at EB00H) of the MUTOS 8000 boot disk;
+; boot script MUTOS.PIO = "ACTIVATE $PIOPR", LOAD16 mutos_1216, mutos_io (menu entry
+; "BOOT MUTOS.PIO").  Same program as IFSSPR (ifsspr.mac) from the interface down to
+; the job logic; only the hardware layer differs.  Read ifsspr.mac for the interface,
+; the coroutine trick and the time-out; this file comments only the differences.
+; Must assemble byte-identical (python3 mutos_io/udos/build_drucker.py --check).
+;
+; Differences to IFSSPR:
+;   * hardware: PIO A31 ports 54H (A data), 55H (A control), 56H (B data), 57H (B control)
+;     instead of SIO A32 channel B; no baud/CTC programming, no receive handshake
+;   * only slot 0FF0H (vector F0H = PIO A) and 0FE4H (time-out) are hooked, the slots
+;     0FF4H/0FF6H are not touched; PIO A raises the interrupt when the printer has taken
+;     the byte (strobe/ready handshake in hardware), so TXISR = "next character"
+;   * what the PIO control words mean is derived from the Z80-PIO data sheet, not measured:
+;     the emulator has no printer on PIO A31 (see doc/mutos_io/udos_drucker.md)
+; ==========================================================================
+	.Z80
+
+; ---- ports and system cells ----
+PIOAD	EQU	54H		; PIO A31 port A data
+PIOAC	EQU	55H		; PIO A31 port A control
+PIOBD	EQU	56H		; PIO A31 port B data
+PIOBC	EQU	57H		; PIO A31 port B control
+CTCTMO	EQU	0EH		; system CTC channel 2 (time-out)
+VCTC2	EQU	0FE4H		; IM 2 slot: CTC channel 2
+VTXB	EQU	0FF0H		; IM 2 slot: PIO A (vector F0H) = byte taken
+UDFLAG	EQU	0FDBH		; UDOS flag byte
+TABSTP	EQU	24C4H		; UDOS tab stop table (one byte per column, non-zero = stop)
+
+; N filler bytes FFH
+FILLFF	MACRO	N
+	REPT	N
+	DB	0FFH
+	ENDM
+	ENDM
+
+	CSEG
+	.PHASE	0EB00H
+SEGEB00:
+ENTRY:	JR	DISPAT
+	DB	'PRINTER V4 1184 MP'
+
+; ---- command dispatcher; IY = parameter block ----
+DISPAT:	LD	A,(IY+1)
+	RES	0,A			; drop the asynchronous bit
+	CP	00H
+	JR	Z,CMDINI
+	CP	02H
+	JR	Z,SETOK
+	CP	04H
+	JR	Z,CMDOPN
+	CP	06H
+	JR	Z,CMDCLS
+	CP	44H
+	JR	Z,CMDREM
+	CP	0EH
+	JR	Z,DSP1			; (JR Z skips the next CP; Z stays set)
+	CP	10H
+DSP1:	JR	Z,DSP2
+	CP	48H
+DSP2:	JR	Z,CMDWRT
+	LD	A,0C1H			; bad command
+SETSTA:	LD	(IY+10),A
+	RET
+
+; ---- 00: install ----
+CMDINI:	LD	HL,0000H
+	LD	(JOBPTR),HL		; no job active
+	LD	HL,(VTXB)
+	LD	(OLDVEC),HL		; remember the old transmit slot
+	LD	HL,TXISR
+	LD	(VTXB),HL
+	LD	HL,TMOISR
+	LD	(VCTC2),HL
+	LD	A,(UDFLAG)
+	OR	8FH
+	LD	(UDFLAG),A
+	CALL	HWINIT			; program the PIO
+	JR	CMDCLS
+
+; ---- 04: open ----
+CMDOPN:	LD	A,(OWNFLG)
+	OR	A
+	LD	A,0D6H			; busy
+	JR	NZ,SETSTA
+	LD	(OWNFLG),A		; A is non-zero here (D6H)
+	LD	A,(IY+0)
+	LD	(OWNUNT),A
+	LD	HL,COLUMN
+	LD	(HL),00H
+	JR	SETOK
+
+; ---- 06: close ----
+CMDCLS:	XOR	A
+	LD	(OWNFLG),A
+	JR	SETOK
+
+; ---- 44: remove ----
+CMDREM:	LD	HL,UDFLAG
+	RES	7,(HL)
+	LD	HL,(OLDVEC)
+	LD	(VTXB),HL
+SETOK:	LD	(IY+10),80H
+	RET
+
+; ---- 0E / 10 / 48: write ----
+CMDWRT:	LD	A,(OWNFLG)
+	OR	A
+	JR	Z,BUSYWT		; not open: accept any unit
+	LD	A,(OWNUNT)
+	CP	(IY+0)
+	LD	A,0CBH			; foreign unit
+	JP	NZ,SETSTA
+BUSYWT:	LD	HL,(JOBPTR)		; wait until the previous job is over
+	LD	A,H
+	OR	L
+	JR	NZ,BUSYWT
+	BIT	0,(IY+1)
+	JR	NZ,STRTJB		; asynchronous: start and return
+	CALL	STRTJB
+DONEWT:	BIT	7,(IY+10)		; synchronous: wait for status bit 7
+	JR	Z,DONEWT
+	RET
+
+; start a job: HL = buffer, BC = count, DE = bytes done
+STRTJB:	LD	L,(IY+2)
+	LD	H,(IY+3)
+	LD	(SAVEHL),HL
+	LD	L,(IY+4)
+	LD	H,(IY+5)
+	LD	A,H
+	OR	L
+	JR	Z,SETOK			; count 0: ready at once
+	LD	(SAVEBC),HL
+	LD	HL,0000H
+	LD	(SAVEDE),HL
+	LD	(JOBPTR),IY
+	LD	(IY+10),00H		; running
+	CALL	TXON			; enable the transmitter interrupt
+	LD	A,0B7H			; CTC 2: timer, interrupt on, prescaler 256, TC follows, reset
+	OUT	(CTCTMO),A
+	LD	A,0C0H			; time constant 192
+	OUT	(CTCTMO),A
+	LD	HL,03E8H
+	LD	(TMOCNT),HL		; time-out counter
+	XOR	A
+	CALL	PUTCH			; send a NUL to start the chain; the job code continues
+					; here after the first transmit (or time-out) interrupt
+	LD	A,37H			; CTC 2 again, interrupt off
+	OUT	(CTCTMO),A
+	LD	A,0C0H
+	OUT	(CTCTMO),A
+	PUSH	HL
+	LD	HL,(TMOCNT)
+	LD	A,H
+	OR	L
+	POP	HL
+	LD	A,0C2H			; time-out
+	JR	Z,ENDSTA
+CHARLP:	LD	A,(IY+1)
+	RES	0,A
+	CP	48H
+	LD	A,(HL)			; next byte
+	JR	Z,DOCHAR		; binary: send as it is
+	CP	0FFH
+	JR	NZ,CHKTAB
+ENDINC:	INC	DE			; the terminator counts
+ENDOK:	LD	A,80H
+ENDSTA:	LD	(IY+10),A		; end of the job: status, bytes done, no job active
+	LD	(IY+5),D
+	LD	(IY+4),E
+	LD	HL,0000H
+	LD	(JOBPTR),HL
+	CALL	TXOFF
+	RET				; leaves the coroutine: returns to the ISR frame
+
+CHKTAB:	CP	09H
+	JR	Z,TABEXP
+DOCHAR:	CALL	PUTCH
+	PUSH	HL
+	LD	HL,COLUMN
+	INC	(HL)
+	POP	HL
+	CP	0DH
+	JR	NZ,NXTCHR
+	XOR	A			; after a CR send NULs until UDFLAG bit 0 is set
+CRPAD:	CALL	PUTCH
+	LD	A,(UDFLAG)
+	BIT	0,A
+	LD	A,00H
+	JR	Z,CRPAD
+	LD	A,(UDFLAG)
+	BIT	1,A
+	SET	1,A
+	LD	(UDFLAG),A
+	LD	A,49H			; bit 1 was clear: report 49H once, ending the job
+	JR	Z,ENDSTA
+	XOR	A
+	LD	(COLUMN),A
+	LD	A,(IY+1)
+	RES	0,A
+	CP	10H
+	JR	Z,ENDINC		; "write line" ends after the CR
+NXTCHR:	INC	HL
+	DEC	BC
+	INC	DE
+	LD	A,C
+	OR	B
+	JR	NZ,CHARLP
+	JR	ENDOK
+
+; TAB: blanks up to the next stop of the UDOS tab table
+TABEXP:	LD	A,20H
+	CALL	PUTCH
+	PUSH	HL
+	PUSH	BC
+	LD	HL,COLUMN
+	INC	(HL)
+	LD	C,(HL)
+	LD	B,00H
+	LD	HL,TABSTP
+	ADD	HL,BC
+	LD	A,(HL)
+	AND	A
+	POP	BC
+	POP	HL
+	JR	Z,TABEXP
+	JR	NXTCHR
+
+; ---- interrupt: system CTC 2 = time-out tick ----
+TMOISR:	PUSH	AF
+	LD	A,(TMOCNT)
+	DEC	A
+	LD	(TMOCNT),A
+	JR	NZ,TMOEX
+	LD	A,(TMOCNT+1)
+	DEC	A
+	LD	(TMOCNT+1),A
+	JR	Z,TMOGO
+TMOEX:	POP	AF
+	EI
+	RETI
+TMOGO:	POP	AF			; time-out: continue the job like TXISR
+
+; ---- interrupt: SIO B transmit empty = next character ----
+TXISR:	EI
+	PUSH	HL
+	PUSH	AF
+	PUSH	IY
+	PUSH	IX
+	PUSH	DE
+	PUSH	BC
+	LD	HL,ISRRET
+	PUSH	HL
+	LD	HL,(CONTIN)
+	PUSH	HL
+	LD	IY,(JOBPTR)
+	LD	(IY+10),00H
+	LD	HL,(SAVEHL)
+	LD	BC,(SAVEBC)
+	LD	DE,(SAVEDE)
+	LD	A,(SAVEA)
+	RET				; resume the job code behind its last CALL PUTCH
+ISRRET:	LD	(SAVEA),A		; the job code reaches here at its next PUTCH or at its end
+	LD	(SAVEDE),DE
+	LD	(SAVEBC),BC
+	LD	(SAVEHL),HL
+	POP	BC
+	POP	DE
+	POP	IX
+	LD	A,(IY+10)
+	OR	A
+	JR	NZ,ISRERR		; status set: the job is over
+ISREXI:	POP	IY
+	POP	AF
+	POP	HL
+	RETI
+ISRERR:	BIT	6,(IY+10)
+	JR	Z,ISRCB
+	LD	H,(IY+9)		; error: callback IY+8/9 if given
+	LD	L,(IY+8)
+	LD	A,H
+	OR	L
+	JR	NZ,ISRJMP
+ISRCB:	BIT	0,(IY+1)
+	JR	Z,ISREXI		; synchronous job: nobody to call
+	LD	L,(IY+6)
+	LD	H,(IY+7)
+ISRJMP:	POP	IY
+	POP	AF
+	EX	(SP),HL			; HL = old HL again, callback address on the stack
+	RETI				; RETI "returns" into the callback
+
+; ---- variables (FFH in the file; INSTALL clears JOBPTR) ----
+TMOCNT:	DB	0FFH,0FFH		; time-out counter
+OWNUNT:	DB	0FFH			; unit that opened the printer
+OWNFLG:	DB	0FFH			; non-zero = open
+COLUMN:	DB	0FFH			; print column (for TAB), cleared by open
+SAVEA:	DB	0FFH
+SAVEHL:	DW	0FFFFH
+SAVEBC:	DW	0FFFFH
+SAVEDE:	DW	0FFFFH
+JOBPTR:	DW	0FFFFH			; parameter block of the running job, 0 = none
+CONTIN:	DW	0FFFFH			; continuation address saved by PUTCH
+OLDVEC:	DW	0FFFFH			; old content of slot 0FF0H
+
+	DB	'CD PIO V4 1184 MP'
+
+; ---- hardware layer (PIOPR: PIO A31) ----
+; install: port A mode 2 (bidirectional, 8FH), vector F0H; port B: 7FH to control and data,
+; then 0FFH (mode 3), I/O mask 0FEH, data 0FEH.  (Meaning derived from the Z80-PIO data sheet.)
+HWINIT:	LD	A,8FH
+	OUT	(PIOAC),A
+	LD	A,0F0H
+	OUT	(PIOAC),A
+	LD	A,7FH
+	OUT	(PIOBC),A
+	OUT	(PIOBD),A
+	LD	A,0FFH
+	OUT	(PIOBC),A
+	DEC	A
+	OUT	(PIOBC),A
+	OUT	(PIOBD),A
+	RET
+; job start: dummy read of port A data, then 87H (interrupt control word: enable) to port B
+; control.  There is no "off" routine: TXOFF is the RET at the end of TXON.
+TXON:	IN	A,(PIOAD)
+	LD	A,87H
+	OUT	(PIOBC),A
+TXOFF:	RET
+; send A to the printer (does not return to the caller, see ifsspr.mac "Coroutine trick");
+; the dummy read of port A data before the write is kept as in the original
+PUTCH:	POP	IX
+	LD	(CONTIN),IX
+	PUSH	AF
+	IN	A,(PIOAD)
+	POP	AF
+	OUT	(PIOAD),A
+	RET
+SEGEB00E:
+	REPT	(80H-(($-SEGEB00) AND 7FH)) AND 7FH
+	DB	0FFH
+	ENDM
+	.DEPHASE
+	END

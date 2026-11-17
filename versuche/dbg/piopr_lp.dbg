@@ -1,0 +1,28 @@
+# Plan 48 C1.3: dasselbe mit PIOPR ("BOOT MUTOS.PIO").  Aufruf wie ifsspr_probe.dbg.
+# Ergebnis (gemessen): der Emulator hat an PIO A31 (54H-57H) keinen Drucker: IN (54H) liefert immer AEH, OUT (54H) geht ins Leere,
+# kein Interrupt; der Treiber endet nach 36,6 Mio. Maschinentakten mit Status C2H (Zeitablauf); der Kernel wiederholt den Auftrag.
+g 80000000
+keys BOOT\sMUTOS.PIO\r
+g 100000000
+eject A
+mount C @DISK:a5120_mutos8000_root_mfm.hfe@ udos_ss77
+keys r
+g 100000000
+keys root\r
+g 100000000
+lp 0xEB14 IY [IY+0] [IY+1] [IY+2]w [IY+4]w [IY+6]w [IY+8]w [IY+10] count 20
+lp 0xED48 A count 80
+lp 0xEC9E SP count 5
+lp 0xEC17 A count 5
+lp 0x91E1 SP count 5
+iow 0x54
+iow 0x55
+iow 0x56
+iow 0x57
+keys cat\s/etc/motd\s>\s/dev/lp\r
+g 150000000
+screen
+dev pio all
+d 0xFE0 32
+lpl
+q

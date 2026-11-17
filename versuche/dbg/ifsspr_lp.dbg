@@ -1,0 +1,27 @@
+# Plan 48 C1.3: cat /etc/motd > /dev/lp mit Portprotokoll (IFSSPR).  Aufruf wie ifsspr_probe.dbg.
+# Ergebnis (gemessen): zwei Auftraege (53 B, 2 B) mit IY+1 = 0FH (0EH "write text", asynchron); je Auftrag ein NUL vorweg,
+# 63 x OUT (5EH),A in Summe, nach jedem Zeichen ein Tx-leer-Interrupt (EC9E), Ende mit Status 80H und Rueckruf 91E1.
+# Nach CR sendet der Treiber ein NUL.  Der Zeichenstrom ist nur am Port sichtbar (k1520dbg hat keinen Seriell-Hub).
+g 80000000
+keys BOOT\sMUTOS\r
+g 100000000
+eject A
+mount C @DISK:a5120_mutos8000_root_mfm.hfe@ udos_ss77
+keys r
+g 100000000
+keys root\r
+g 100000000
+lp 0x91A8 IX [IX+7] [IX+8] [IX+14]w
+lp 0xEB14 IY [IY+0] [IY+1] [IY+2]w [IY+4]w [IY+6]w [IY+8]w [IY+10] count 40
+lp 0xED5D A count 80
+lp 0xEC9E SP count 5
+lp 0xEC17 A count 5
+lp 0x91E1 SP count 5
+iow 0x5F
+keys cat\s/etc/motd\s>\s/dev/lp\r
+g 100000000
+screen
+dev sio
+dev ctc
+lpl
+q

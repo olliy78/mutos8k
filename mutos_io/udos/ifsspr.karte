@@ -1,0 +1,25 @@
+# Karte von IFSSPR (Plan 48 C1.3): Ausgangsstand fuer z80_disasm2.py; nach dem Handschliff in src/ifsspr.mac nur noch Nachweis.
+# python3 -I <k1520emu>/tools/z80_disasm2.py --format mac --karte mutos_io/udos/ifsspr.karte <Datei IFSSPR der Ladediskette>
+seg EB00 0 300
+code EB00 EB01
+txt EB02 EB13
+code EB14 EB14
+code EC86 EC86
+code EC9E EC9E
+code ED2A ED2A
+code ED45 ED45
+code ED4E ED4E
+code ED57 ED57
+code ED60 ED60
+db ED06 ED07
+db ED08 ED08
+db ED09 ED09
+db ED0A ED0A
+dw ED0C ED0D
+dw ED0E ED0F
+dw ED10 ED11
+dw ED12 ED13
+dw ED14 ED15
+dw ED16 ED17
+txt ED18 ED29
+db ED7C ED89
