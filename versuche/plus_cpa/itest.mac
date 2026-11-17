@@ -1,0 +1,640 @@
+; itest.mac -- interrupt coexistence probe for plan 48 C1.7 (GIDE-CP/A, M80 syntax, .COM at 0100H)
+;
+; Installs a CTC-channel-1 ISR like mutos_io's ISR_TAKT (control A7H, time constant C0H on port 0DH = 50 Hz,
+; the ISR only counts) in the CP/A interrupt table (I register : FAH = F7FAH, channel 1 with the BIOS vector base F8H),
+; then runs phases and counts ticks per phase.  Every phase runs twice: with the ISR off (reference) and on.
+;   P  idle at the prompt until 500 ticks (HALT loop)
+;   A  400 records READ from B: (BIOS jump table, address from 0001H; SELDSK, SETTRK, SETSEC (1-based), SETDMA, READ)
+;   B  2000 characters through BIOS CONOUT
+;   C  200 records WRITE (C=1) to B: from track WTRK, then read back and compared
+; Phase borders are CALLs of one-byte RET routines at fixed addresses 0110H+n; the host (itest.py) sets log points there.
+; The ISR also reads the keyboard through BIOS CONST/CONIN (queue KQ), as plan 48 3.8 option (b) would.
+; Tick counter at each border -> table RSLT (14 words); results are printed in hex at the end ("FERTIG").
+	.Z80
+	CSEG
+BDOS	EQU	5
+NREAD	EQU	400
+NWRIT	EQU	200
+NCHAR	EQU	2000
+WTRK	EQU	40		; first track of the write test (data area of the copy)
+START:	JP	MAIN
+	DEFS	13		; border routines start at 0110H
+MK0:	DEFB	0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H
+	DEFB	0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H
+	DEFB	0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H
+	DEFB	0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H,0C9H
+
+SNAP	MACRO	N
+	LD	HL,(TICKS)
+	LD	(RSLT+2*N),HL
+	LD	HL,(0041H)	; BIOS 5 ms counter (cell 0041H/0042H, increments in the BIOS CTC channel 2 ISR)
+	LD	(BIOS5+2*N),HL
+	CALL	0110H+N
+	ENDM
+
+PATCHJ	MACRO	T,O
+	LD	HL,(BASE)
+	LD	DE,O
+	ADD	HL,DE
+	LD	(T+1),HL
+	ENDM
+
+; --- the interrupt service routine (must stay at 0130H: the host sets a log point on its first instruction)
+; (original comment: (what mutos_io's ISR_TAKT does besides the keyboard/EM work) ---
+ISR:	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	PUSH	IX
+	PUSH	IY
+	LD	HL,(TICKS)
+	INC	HL
+	LD	(TICKS),HL
+	; keyboard through the BIOS from inside the ISR (plan 3.8 option (b)): CONST, and CONIN only when a key is there
+	CALL	JCONS
+	OR	A
+	JR	Z,ISRX
+	CALL	JCONI
+	LD	B,A
+	LD	A,(KQN)
+	CP	15
+	JR	NC,ISRX
+	LD	E,A
+	LD	D,0
+	INC	A
+	LD	(KQN),A
+	LD	HL,KQ
+	ADD	HL,DE
+	LD	(HL),B
+ISRX:	POP	IY
+	POP	IX
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	EI
+	RETI
+
+ISRON:	LD	HL,0
+	LD	(TICKS),HL
+	LD	A,0A7H
+	OUT	(0DH),A
+	LD	A,0C0H
+	OUT	(0DH),A
+	RET
+ISROFF:	LD	A,03H		; software reset of channel 1: no more interrupts
+	OUT	(0DH),A
+	LD	HL,0
+	LD	(TICKS),HL
+	RET
+
+JSELD:	JP	0
+JSTRK:	JP	0
+JSSEC:	JP	0
+JSDMA:	JP	0
+JREAD:	JP	0
+JWRIT:	JP	0
+JCONO:	JP	0
+JCONS:	JP	0
+JCONI:	JP	0
+
+MAIN:	LD	SP,STKT
+	LD	HL,(1)		; WBOOT = BIOS base + 3
+	LD	DE,-3
+	ADD	HL,DE
+	LD	(BASE),HL
+	PATCHJ	JSELD,1BH
+	PATCHJ	JSTRK,1EH
+	PATCHJ	JSSEC,21H
+	PATCHJ	JSDMA,24H
+	PATCHJ	JREAD,27H
+	PATCHJ	JWRIT,2AH
+	PATCHJ	JCONO,0CH
+	PATCHJ	JCONS,06H
+	PATCHJ	JCONI,09H
+	LD	A,I
+	LD	H,A
+	LD	(IREG),A
+	LD	L,0FAH
+	LD	DE,ISR
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+	; B: = drive 1, log in (E bit 0 = 0)
+	LD	C,1
+	LD	E,0
+	CALL	JSELD
+	LD	A,H
+	OR	L
+	JP	Z,NODSK
+	LD	DE,10
+	ADD	HL,DE
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	LD	(SPT),DE
+	; ---- P: idle until 500 ticks
+	CALL	BIOSC0
+	CALL	ISRON
+	SNAP	0
+IDLE:	HALT
+	LD	HL,(TICKS)
+	LD	DE,500
+	OR	A
+	SBC	HL,DE
+	JR	C,IDLE
+	SNAP	1
+	CALL	ISROFF
+	CALL	BIOSC1
+	; ---- A: reads.  x0 = ISR off (cold), x1 = ISR off (warm, same start conditions as x2), x2 = ISR on
+	SNAP	2
+	CALL	RDPASS
+	SNAP	3
+	SNAP	14
+	CALL	RDPASS
+	SNAP	15
+	LD	HL,(CKS)
+	LD	(CKA0),HL
+	LD	HL,(ERRS)
+	LD	(ERA0),HL
+	CALL	ISRON
+	SNAP	4
+	CALL	RDPASS
+	SNAP	5
+	CALL	ISROFF
+	LD	HL,(CKS)
+	LD	(CKA1),HL
+	LD	HL,(ERRS)
+	LD	(ERA1),HL
+	; ---- B: console, same order
+	SNAP	6
+	CALL	CONPASS
+	SNAP	7
+	SNAP	16
+	CALL	CONPASS
+	SNAP	17
+	CALL	ISRON
+	SNAP	8
+	CALL	CONPASS
+	SNAP	9
+	CALL	ISROFF
+	; ---- C: writes, same order, seeds 11H, 33H, 77H (the ISR-on pass is the last one: the host looks for its pattern)
+	LD	A,011H
+	LD	(SEED),A
+	SNAP	10
+	CALL	WRPASS
+	SNAP	11
+	LD	HL,(ERRS)
+	LD	(WER0),HL
+	CALL	VRPASS
+	LD	HL,(VERR)
+	LD	(VER0),HL
+	LD	A,033H
+	LD	(SEED),A
+	SNAP	18
+	CALL	WRPASS
+	SNAP	19
+	LD	HL,(ERRS)
+	LD	(WER2),HL
+	CALL	VRPASS
+	LD	HL,(VERR)
+	LD	(VER2),HL
+	LD	A,077H
+	LD	(SEED),A
+	CALL	ISRON
+	SNAP	12
+	CALL	WRPASS
+	SNAP	13
+	LD	HL,(ERRS)
+	LD	(WER1),HL
+	CALL	VRPASS
+	CALL	ISROFF
+	LD	HL,(VERR)
+	LD	(VER1),HL
+	JP	REPORT
+
+NODSK:	LD	DE,MNODSK
+	LD	C,9
+	CALL	BDOS
+	JP	0
+
+BIOSC0:	LD	HL,41H
+	LD	DE,BC0
+	LD	BC,4
+	LDIR
+	LD	HL,50H
+	LD	BC,3
+	LDIR
+	RET
+BIOSC1:	LD	HL,41H
+	LD	DE,BC1
+	LD	BC,4
+	LDIR
+	LD	HL,50H
+	LD	BC,3
+	LDIR
+	RET
+
+; --- common loop state: TRK, SEC (1-based), CNT; NEXTR advances, Z = CNT reached LIMIT ---
+NEXTR:	LD	A,(SEC)
+	INC	A
+	LD	(SEC),A
+	LD	HL,(SPT)
+	CP	L
+	JR	C,NX1		; SEC < SPT
+	JR	Z,NX1		; SEC = SPT
+	LD	A,1
+	LD	(SEC),A
+	LD	HL,(TRK)
+	INC	HL
+	LD	(TRK),HL
+NX1:	LD	HL,(CNT)
+	INC	HL
+	LD	(CNT),HL
+	LD	DE,(LIMIT)
+	OR	A
+	SBC	HL,DE
+	RET
+
+INITR:	LD	(TRK),HL	; HL = first track
+	LD	HL,0
+	LD	(CNT),HL
+	LD	(CKS),HL
+	LD	(ERRS),HL
+	LD	(VERR),HL
+	LD	A,1
+	LD	(SEC),A
+	RET
+
+POSIT:	LD	BC,(TRK)
+	CALL	JSTRK
+	LD	A,(SEC)
+	LD	C,A
+	LD	B,0
+	CALL	JSSEC
+	LD	BC,BUF
+	CALL	JSDMA
+	RET
+
+RDPASS:	LD	HL,NREAD
+	LD	(LIMIT),HL
+	LD	HL,0
+	CALL	INITR
+RD1:	CALL	POSIT
+	CALL	JREAD
+	OR	A
+	JR	Z,RD2
+	LD	HL,(ERRS)
+	INC	HL
+	LD	(ERRS),HL
+RD2:	CALL	SUM
+	CALL	NEXTR
+	JR	NZ,RD1
+	RET
+
+SUM:	LD	HL,(CKS)
+	LD	DE,BUF
+	LD	B,128
+SUM1:	ADD	HL,HL
+	JR	NC,SUM2
+	INC	L
+SUM2:	LD	A,(DE)
+	XOR	L
+	LD	L,A
+	INC	DE
+	DJNZ	SUM1
+	LD	(CKS),HL
+	RET
+
+; pattern of record CNT: byte i = SEED + CNT(low) + i
+FILLP:	LD	A,(CNT)
+	LD	B,A
+	LD	A,(SEED)
+	ADD	A,B
+	LD	B,128
+FP1:	LD	(HL),A
+	INC	HL
+	INC	A
+	DJNZ	FP1
+	RET
+
+WRPASS:	LD	HL,NWRIT
+	LD	(LIMIT),HL
+	LD	HL,WTRK
+	CALL	INITR
+WR1:	LD	HL,BUF
+	CALL	FILLP
+	CALL	POSIT
+	LD	C,1		; write type 1: directory = written at once
+	CALL	JWRIT
+	OR	A
+	JR	Z,WR2
+	LD	HL,(ERRS)
+	INC	HL
+	LD	(ERRS),HL
+WR2:	CALL	NEXTR
+	JR	NZ,WR1
+	RET
+
+VRPASS:	LD	HL,NWRIT
+	LD	(LIMIT),HL
+	LD	HL,WTRK
+	CALL	INITR
+VR1:	CALL	POSIT
+	CALL	JREAD
+	OR	A
+	JR	Z,VR2
+	LD	HL,(ERRS)
+	INC	HL
+	LD	(ERRS),HL
+VR2:	LD	HL,PBUF
+	CALL	FILLP
+	LD	HL,BUF
+	LD	DE,PBUF
+	LD	B,128
+VR3:	LD	A,(DE)
+	CP	(HL)
+	JR	NZ,VRBAD
+	INC	HL
+	INC	DE
+	DJNZ	VR3
+	JR	VR4
+VRBAD:	LD	HL,(VERR)
+	INC	HL
+	LD	(VERR),HL
+VR4:	CALL	NEXTR
+	JR	NZ,VR1
+	RET
+
+CONPASS:	LD	HL,0
+	LD	(CNT),HL
+	XOR	A
+	LD	(IDX),A
+	LD	(LINE),A
+CO1:	LD	A,(IDX)
+	LD	C,A
+	ADD	A,'A'
+	LD	C,A
+	CALL	JCONO
+	LD	A,(IDX)
+	INC	A
+	CP	26
+	JR	C,CO2
+	XOR	A
+CO2:	LD	(IDX),A
+	LD	A,(LINE)
+	INC	A
+	LD	(LINE),A
+	CP	70
+	JR	C,CO3
+	XOR	A
+	LD	(LINE),A
+	LD	C,13
+	CALL	JCONO
+	LD	C,10
+	CALL	JCONO
+CO3:	LD	HL,(CNT)
+	INC	HL
+	LD	(CNT),HL
+	LD	DE,NCHAR
+	OR	A
+	SBC	HL,DE
+	JR	NZ,CO1
+	RET
+
+; --- output ---
+PRTW:	PUSH	HL
+	LD	A,H
+	CALL	PRTB
+	POP	HL
+	LD	A,L
+PRTB:	PUSH	AF
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	CALL	PRTN
+	POP	AF
+PRTN:	AND	0FH
+	ADD	A,'0'
+	CP	'9'+1
+	JR	C,PN1
+	ADD	A,7
+PN1:	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	RET
+PRTS:	LD	C,9
+	CALL	BDOS
+	RET
+PRTWM:	LD	E,(HL)		; word at (HL), then a blank; HL = next word
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	PUSH	HL
+	EX	DE,HL
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	POP	HL
+	RET
+
+REPORT:	LD	DE,MHEAD
+	CALL	PRTS
+	LD	HL,IREG
+	LD	A,(HL)
+	CALL	PRTB
+	LD	DE,MSPT
+	CALL	PRTS
+	LD	HL,(SPT)
+	CALL	PRTW
+	LD	DE,MTICK
+	CALL	PRTS
+	LD	HL,RSLT
+	LD	B,10
+	CALL	RP1
+	PUSH	HL
+	LD	DE,MT2
+	CALL	PRTS
+	POP	HL
+	LD	B,10
+	CALL	RP1
+	LD	DE,MB5
+	CALL	PRTS
+	LD	HL,BIOS5
+	LD	B,10
+	CALL	RP1
+	PUSH	HL
+	LD	DE,MB52
+	CALL	PRTS
+	POP	HL
+	LD	B,10
+	CALL	RP1
+	LD	DE,MKBD
+	CALL	PRTS
+	LD	A,(KQN)
+	CALL	PRTB
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,KQ
+	LD	A,(KQN)
+	LD	B,A
+	OR	A
+	JR	Z,KQ9
+KQ1:	PUSH	BC
+	PUSH	HL
+	LD	E,(HL)
+	LD	C,2
+	CALL	BDOS
+	POP	HL
+	POP	BC
+	INC	HL
+	DJNZ	KQ1
+KQ9:	LD	DE,MKBD2
+	CALL	PRTS
+DRAIN:	CALL	JCONS
+	OR	A
+	JR	Z,DRAIN9
+	CALL	JCONI
+	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	JR	DRAIN
+DRAIN9:	LD	DE,MCRLF
+	CALL	PRTS
+	LD	DE,MCHK
+	CALL	PRTS
+	LD	HL,(CKA0)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(CKA1)
+	CALL	PRTW
+	LD	DE,MERR
+	CALL	PRTS
+	LD	HL,(ERA0)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(ERA1)
+	CALL	PRTW
+	LD	DE,MWR
+	CALL	PRTS
+	LD	HL,(WER0)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(VER0)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(WER1)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(VER1)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(WER2)
+	CALL	PRTW
+	LD	E,' '
+	LD	C,2
+	CALL	BDOS
+	LD	HL,(VER2)
+	CALL	PRTW
+	LD	DE,MBC
+	CALL	PRTS
+	LD	HL,BC0
+	LD	B,7
+	CALL	PRTBY
+	LD	E,'/'
+	LD	C,2
+	CALL	BDOS
+	LD	HL,BC1
+	LD	B,7
+	CALL	PRTBY
+	LD	DE,MEND
+	CALL	PRTS
+	JP	0
+
+RP1:	PUSH	BC
+	CALL	PRTWM
+	POP	BC
+	DJNZ	RP1
+	RET
+
+PRTBY:	PUSH	BC
+	PUSH	HL
+	LD	A,(HL)
+	CALL	PRTB
+	POP	HL
+	INC	HL
+	POP	BC
+	DJNZ	PRTBY
+	RET
+
+MHEAD:	DEFB	13,10,'ITEST I=$'
+MSPT:	DEFB	' SPT=$'
+MTICK:	DEFB	13,10,'T: $'
+MCRLF:	DEFB	13,10,'$'
+MT2:	DEFB	13,10,'T2: $'
+MB52:	DEFB	13,10,'B52: $'
+MB5:	DEFB	13,10,'B5: $'
+MKBD:	DEFB	13,10,'KQ: $'
+MKBD2:	DEFB	13,10,'KBD: $'
+MCHK:	DEFB	'CK A0/A1: $'
+MERR:	DEFB	' RDERR: $'
+MWR:	DEFB	13,10,'WERR/VERR off-cold, on, off-warm: $'
+MBC:	DEFB	13,10,'BIOS 41-44,50-52 start/end: $'
+MEND:	DEFB	13,10,'FERTIG',13,10,'$'
+MNODSK:	DEFB	'SELDSK B: FAILED',13,10,'$'
+
+BASE:	DEFW	0
+TICKS:	DEFW	0
+IREG:	DEFB	0
+SPT:	DEFW	0
+TRK:	DEFW	0
+SEC:	DEFB	0
+CNT:	DEFW	0
+LIMIT:	DEFW	0
+CKS:	DEFW	0
+ERRS:	DEFW	0
+VERR:	DEFW	0
+CKA0:	DEFW	0
+CKA1:	DEFW	0
+ERA0:	DEFW	0
+ERA1:	DEFW	0
+WER0:	DEFW	0
+VER0:	DEFW	0
+WER1:	DEFW	0
+VER1:	DEFW	0
+WER2:	DEFW	0
+VER2:	DEFW	0
+SEED:	DEFB	0
+IDX:	DEFB	0
+LINE:	DEFB	0
+BC0:	DEFS	7
+BC1:	DEFS	7
+RSLT:	DEFS	40
+BIOS5:	DEFS	40
+KQN:	DEFB	0
+KQ:	DEFS	16,'.'
+BUF:	DEFS	128
+PBUF:	DEFS	128
+	DEFS	128
+	DEFS	128
+STKT:	DEFS	2
+	END	START
