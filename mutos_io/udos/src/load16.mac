@@ -1,0 +1,263 @@
+	.Z80
+; ==========================================================================
+; load16 - UDOS loader for the 16-bit part ("LOAD16 (C)ZFT/KEAW-841001")
+; ==========================================================================
+; Original UDOS file LOAD16 (type P, 512 bytes at 5000H, 22.08.84) of the MUTOS 8000 boot
+; disk.  The boot script MUTOS runs "LOAD16 mutos_1216" between ACTIVATE (printer driver)
+; and mutos_io.  Reconstructed from the disk image (z80_disasm2 + load16.karte) and
+; commented by hand; must assemble byte-identical
+; (python3 mutos_io/udos/build.py --check).  Findings and measurements:
+; doc/mutos_io/udos_lader.md section 1.
+;
+; What it does (all measured, versuche/dbg/load16_*.dbg):
+;   1. EM256 card: all 16 attribute (A22) pages := 0FH (disabled), PIO A32 programmed
+;      (port A vector EAH mode 3 input, int on INT-16; port B vector ECH, int on /PE).
+;      The PIO B mode word leaves the output register at 0: U8001 not in reset, /STOP active.
+;   2. Opens the file named by the first command line argument (pointer in 0FBBH), reads
+;      the 128-byte attribute block, accepts only file types 80H/81H (P/P1), takes the
+;      target address in the EM from the block (LOW ADDRESS, header offset 122).
+;   3. Reads the file in 4 KB pieces until end of file (status C9H) into the buffer 524BH
+;      and copies every piece into the EM through the window 0000H-3FFFH (A22 pages
+;      0..3, EM address bits 15/14 come from the page attribute, bits 13..0 from the Z80
+;      address; EM segment 0).  PIO B 38H = EM RAM enabled, U8001 in reset; 3CH afterwards.
+;   4. Closes the file and returns to UDOS (RET).  It does NOT start the U8001: that is
+;      done by mutos_io (OUT (0A9H),2CH releases RESET16).
+; Errors: wrong file type -> UDOS error byte (0FB4H) := 48H (ILLEGAL FILE TYPE), close;
+;         other file status -> text "I/O ERROR xx" (xx = status in hex), close.
+; The load size is not checked: the EM address is a 16-bit word, so more than 64 KB wraps
+; around in segment 0.
+;
+; ---- UDOS file service (CALL 1003H, IY = request block PBLK) -------------------------
+; Meaning of the fields derived from how this program uses them (functions measured at
+; the call, the rest read from the code):
+;   IY+0   class      04 file service, 02 console
+;   IY+1   function   02 open (name pointer in IY+2/3), 04 read attribute block,
+;                     0AH read bytes, 06 close, 10H write text line (console)
+;   IY+2/3 buffer (or name pointer for open)
+;   IY+4/5 byte count in, bytes transferred out
+;   IY+8/9 record number (0 at open)
+;   IY+10  status     bit 7 = request done, bit 6 = condition (C9H = end of file)
+;   IY+11/12 pointer to option bytes (here POPT, 0 = read access)
+; ---- UDOS cells used -------------------------------------------------------------------
+UDFILE	EQU	1003H		; file/console service entry
+UDARG	EQU	0FBBH		; pointer to the first command line argument
+UDERR	EQU	0FB4H		; UDOS error byte (message index = value - 40H)
+; ---- EM256 ports (A5120.16) ---------------------------------------------------------
+PIOADA	EQU	0A8H		; PIO A32 port A data (bit 6 = 8/16 flag, 1 = 8-bit mode)
+PIOBDA	EQU	0A9H		; PIO A32 port B data (bit 2 /RAMEN, bit 3 /STOP, bit 4 RESET16, bit 5 /TRQ8)
+PIOACT	EQU	0AAH		; PIO A32 port A control
+PIOBCT	EQU	0ABH		; PIO A32 port B control
+A22PRT	EQU	0AFH		; A22 attribute memory (page = Z80 address bits 15..12, so B = page * 16)
+; ---- buffer layout beyond the file image ------------------------------------------------
+HDRBUF	EQU	51CBH		; 128-byte attribute block (file starts at 5000H, image ends at 51FFH)
+HDRLOW	EQU	HDRBUF+6EH	; block offset 110 = header sector offset 122 = LOW ADDRESS
+DATBUF	EQU	524BH		; 4 KB data buffer 524BH..624AH (UDOS HIGH ADDRESS = 624AH)
+
+; N filler bytes FFH (the UDOS file image is padded with FFH)
+FILLFF	MACRO	N
+	REPT	N
+	DB	0FFH
+	ENDM
+	ENDM
+
+	CSEG
+	.PHASE	5000H
+LOAD16:	JR	START
+	DB	'LOAD16 (C)ZFT/KEAW-841001'
+START:
+; --- 1. EM card: A22 pages disabled (value 0FH), PIO A32 mode words ---------------------
+	LD	E,10H
+	LD	BC,00AFH	; B = page << 4, C = A22 port
+INITPG:	LD	A,0FH
+	OUT	(C),A
+	LD	A,10H
+	ADD	A,B
+	LD	B,A
+	DEC	E
+	JR	NZ,INITPG
+	LD	C,PIOACT
+	LD	B,05H
+	LD	HL,PIOATB
+	OTIR
+	INC	C		; PIOBCT
+	LD	B,05H
+	LD	HL,PIOBTB
+	OTIR
+; --- 2. open the file named on the command line ---------------------------------------
+	LD	A,02H
+	LD	(PBFUNC),A	; function open
+	LD	A,04H
+	LD	(PBCLAS),A	; class file service
+	XOR	A
+	LD	(POPT),A	; option byte 0 = read
+	LD	HL,(UDARG)
+	LD	(PBBUF),HL	; name pointer
+	LD	HL,POPT
+	LD	(PBOPTP),HL
+	LD	HL,0000H
+	LD	(PBREC),HL
+	LD	IY,PBLK
+	CALL	UDFILE
+	LD	A,(PBSTAT)
+	BIT	6,A
+	JP	NZ,IOERR
+; --- read the attribute block (128 bytes) -------------------------------------------------
+	LD	A,04H
+	LD	(PBFUNC),A	; function read attribute block
+	LD	A,00H
+	LD	(POPT),A
+	LD	A,0FFH
+	LD	(POPT2),A
+	LD	HL,HDRBUF
+	LD	(PBBUF),HL
+	LD	HL,0080H
+	LD	(PBLEN),HL
+	CALL	UDFILE
+	LD	A,(PBSTAT)
+	BIT	6,A
+	JP	NZ,IOERR
+	LD	A,(HDRBUF)	; file type: only 8xH (P, P1) can be loaded
+	AND	0F0H
+	CP	80H
+	JR	Z,TYPEOK
+	LD	A,48H		; ILLEGAL FILE TYPE
+	LD	(UDERR),A
+	JP	CLOSE
+TYPEOK:	LD	HL,(HDRLOW)	; LOW ADDRESS of the file = target address in the EM
+	LD	(EMADR),HL
+; --- 3. read 4 KB pieces and copy each one into the EM ----------------------------------
+NEXTPC:	LD	A,0AH
+	LD	(PBFUNC),A	; function read bytes
+	LD	A,04H
+	LD	(PBCLAS),A
+	LD	HL,1000H
+	LD	(PBLEN),HL
+	LD	HL,DATBUF
+	LD	(PBBUF),HL
+	CALL	UDFILE
+	LD	A,(PBSTAT)
+	BIT	6,A
+	JR	Z,COPYPC	; no condition: full piece
+	CP	0C9H
+	JR	NZ,IOERR	; condition other than end of file
+	LD	HL,(PBLEN)
+	LD	A,H
+	OR	L
+	JR	Z,CLOSE		; end of file, nothing left
+COPYPC:	LD	A,(PBSTAT)
+	PUSH	AF		; keep the status (C9H = last piece)
+	LD	HL,(EMADR)
+	CALL	SETPAG
+	LD	HL,DATBUF
+	LD	DE,(EMADR)
+	LD	A,D
+	AND	3FH
+	LD	D,A		; DE = EM address within the window 0000H-3FFFH
+	LD	BC,(PBLEN)	; bytes actually read
+	LD	A,38H		; PIO B: EM RAM enabled (/RAMEN = 0), U8001 in reset
+	OUT	(PIOBDA),A
+WAIT8:	IN	A,(PIOADA)
+	BIT	6,A		; wait until the 8/16 flag shows 8-bit mode
+	JR	Z,WAIT8
+	LDIR
+	LD	A,3CH		; PIO B: EM RAM disabled again
+	OUT	(PIOBDA),A
+	LD	HL,(EMADR)
+	LD	DE,1000H
+	ADD	HL,DE
+	LD	(EMADR),HL
+	POP	AF
+	CP	0C9H
+	JR	Z,CLOSE		; last piece done
+	JR	NEXTPC
+; --- error: write "I/O ERROR xx" -------------------------------------------------------
+IOERR:	LD	A,10H
+	LD	(PBFUNC),A	; function write text line
+	LD	A,02H
+	LD	(PBCLAS),A	; class console
+	LD	HL,TXTHEX
+	LD	A,(PBSTAT)
+	CALL	HEX2		; status as two hex digits
+	LD	HL,TXTERR
+	LD	(PBBUF),HL
+	LD	HL,000DH
+	LD	(PBLEN),HL
+	CALL	UDFILE
+; --- 4. close the file, back to UDOS --------------------------------------------------
+CLOSE:	LD	A,06H
+	LD	(PBFUNC),A	; function close
+	LD	A,04H
+	LD	(PBCLAS),A
+	LD	HL,0000H
+	LD	(PBBUF),HL
+	LD	(PBLEN),HL
+	LD	(PBOPTP),HL
+	CALL	UDFILE
+	RET
+; --- SETPAG: A22 pages for the 4 KB piece at EM address HL ------------------------------
+; Window page (HL bits 13..12) and the next page get the attribute with EM address bits
+; 15/14 (inverted, bits 3/2), PEN and WE enabled (bits 1/0 = 0).
+SETPAG:	LD	A,H
+	AND	30H
+	LD	B,A
+	LD	C,A22PRT
+	LD	A,H
+	CALL	SETPG1
+	LD	A,10H
+	ADD	A,B
+	LD	B,A
+	LD	A,10H
+	ADD	A,H
+	CALL	SETPG1
+	RET
+SETPG1:	CPL
+	AND	0C0H
+	RRA
+	RRA
+	RRA
+	RRA
+	OUT	(C),A
+	RET
+; --- HEX2: A as two hex digits at (HL), (HL+1) ----------------------------------------
+HEX2:	PUSH	AF
+	RRA
+	RRA
+	RRA
+	RRA
+	CALL	HEX1
+	POP	AF
+	INC	HL
+	CALL	HEX1
+	RET
+HEX1:	AND	0FH
+	CP	0AH
+	JR	C,HEXDIG
+	ADD	A,07H
+HEXDIG:	ADD	A,30H
+	LD	(HL),A
+	RET
+; --- tables and texts -----------------------------------------------------------------
+PIOATB:	DB	0EAH,0CFH,0FFH,0B7H,0EFH	; vector EA, mode 3, all inputs, int control, mask (INT-16)
+PIOBTB:	DB	0ECH,0CFH,80H,97H,7FH		; vector EC, mode 3, bit 7 input, int control, mask (/PE)
+TXTERR:	DB	'I/O ERROR '
+TXTHEX:	DB	0FFH,0FFH			; filled with the two hex digits
+	DB	0DH
+; --- request block (IY = PBLK) and variables; FFH in the file image ------------------------
+PBLK:
+PBCLAS:	DB	0FFH		; IY+0
+PBFUNC:	DB	0FFH		; IY+1
+PBBUF:	DB	0FFH,0FFH	; IY+2/3
+PBLEN:	DB	0FFH,0FFH	; IY+4/5
+	DB	0FFH,0FFH	; IY+6/7 (not used)
+PBREC:	DB	0FFH,0FFH	; IY+8/9
+PBSTAT:	DB	0FFH		; IY+10
+PBOPTP:	DB	0FFH,0FFH	; IY+11/12
+POPT:	DB	0FFH		; option byte 0 (0 = read)
+	DB	0FFH
+POPT2:	DB	0FFH		; option byte 2 (set to FFH before the attribute block is read)
+	FILLFF	32
+EMADR:	DB	0FFH,0FFH	; 51C9H: EM target address of the next piece
+	; 51CBH = HDRBUF: attribute block, from here on only buffer
+	FILLFF	53
+	.DEPHASE
+	END

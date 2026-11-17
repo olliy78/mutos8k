@@ -1,0 +1,8 @@
+# Karte von LOAD16 (Plan 48 C1.2): Ausgangsstand fuer z80_disasm2.py; nach dem Handschliff in src/load16.mac nur noch Nachweis.
+# python3 -I <k1520emu>/tools/z80_disasm2.py --format mac --karte mutos_io/udos/load16.karte <Datei LOAD16 der Ladediskette>
+seg 5000 0 200
+code 5000 501B
+txt 5002 501A
+db 5182 518B
+txt 518C 5195
+db 5196 51FF

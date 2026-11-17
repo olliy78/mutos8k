@@ -1,0 +1,24 @@
+# LOAD16: Ablauf (UDOS-Dienste, EM-Zugriffe) mit Logpoints.  Plan 48 C1.2.
+#   tools/emu.py dbg --em em256 --laufwerke K5601,K5601,K5601 @DISK:a5120_mutos8000_boot_udos_k5601.hfe@ -x versuche/dbg/load16_ablauf.dbg
+# emlog nach out/ (Ordner muss existieren).  5000 = Start von LOAD16; 1003H = UDOS-Dienst mit IY = Auftragsblock (5199H); 5149 = Seitenwahl; 9000 = Start von mutos_io
+# IY-Block (LOAD16 intern, mutos_io-Quelle load16.mac): +0 Klasse, +1 Funktion (2 open, 4 Attribute, 0AH lesen, 6 close), +2 Zeiger, +4 Laenge, +10 Status (51A3)
+g 80000000
+emlog @REPO@/out/load16_emlog.txt
+lp 0x5000 PC SP IY
+lp 0x5060 A
+lp 0x1003 IY [IY+0] [IY+1] [IY+2]w [IY+4]w [IY+8]w [IY+11]w SP
+lp 0x5063 A [0x51A3]
+lp 0x50C1 A [0x51A3] [0x519D]w
+lp 0x5149 HL [0xFFFF]
+lp 0x512F PC
+lp 0x510D PC
+lp 0x9000 PC
+b 0x9000
+keys BOOT\sMUTOS\r
+g 400000000
+r
+dev em
+cpu u8000
+r
+screen
+q
