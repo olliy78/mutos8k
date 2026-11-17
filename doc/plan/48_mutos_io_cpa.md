@@ -398,7 +398,7 @@ Wellen (innerhalb einer Welle parallel):
 
 | Schritt | Schreibt | Gastlauf | Dauer (Schaetzung) | Stand | Datum | Commit |
 |---------|----------|----------|--------------------|-------|-------|--------|
-| C1.1 | `tools/plus/cpa.py`, `versuche/plus_cpa/`, `tests/test_plus_cpa.py`, `doc/plus/cpa/c1_1_werkzeug.md` | Sekunden | 2 h | offen | | |
+| C1.1 | `tools/plus/cpa.py`, `versuche/plus_cpa/`, `tests/test_plus_cpa.py`, `doc/plus/cpa/c1_1_werkzeug.md` | Sekunden | 2 h | erledigt (probe: HALLO, EM256ADR/EM16ABL gleich unter GIDE-CP/A und normalem CP/A, 9 s; M80/LINKMT unterscheiden >= 7 Zeichen) | 2026-11-17 | s. git log |
 | C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | offen | | |
 | C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | offen | | |
 | C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.4" |

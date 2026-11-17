@@ -1,0 +1,28 @@
+; hallo.mac -- probe program for tools/plus/cpa.py (plan 48 C1.1)
+; Prints HALLO MUTOS through BDOS function 9, then a second line chosen by two
+; labels that differ only in the 7th character (M80 name length probe):
+; if M80 keeps only 6 characters the two labels clash and the build fails
+; (or both texts come out the same).
+	.Z80
+	PUBLIC	LBLONE1,LBLONE2	; 7-char PUBLIC names too (extern use tested by hand, see c1_1)
+	CSEG
+BDOS	EQU	5
+
+START:	LD	DE,MSG
+	LD	C,9
+	CALL	BDOS
+	LD	DE,LBLONE1	; "ONE"
+	LD	C,9
+	CALL	BDOS
+	LD	DE,LBLONE2	; "TWO"
+	LD	C,9
+	CALL	BDOS
+	JP	0
+
+MSG:	DEFM	'HALLO MUTOS'
+	DEFB	13,10,'$'
+LBLONE1:	DEFM	'LONGNAME-ONE'
+	DEFB	13,10,'$'
+LBLONE2:	DEFM	'LONGNAME-TWO'
+	DEFB	13,10,'$'
+	END	START
