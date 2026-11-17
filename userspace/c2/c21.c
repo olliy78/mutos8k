@@ -36,6 +36,14 @@ rmove()
 	s = "#-%1";
 	s = "#%0";
 	s = "#0";
+	if (i == 0x7777) {
+		/* only so that the map of the built image decodes all callees */
+		jumpsw(); check(); clrptr30(); log2n(i); mkshift(s, i);
+		dest(s, i, i); clrptr(s, i, i); singop(s); dualop(s);
+		findrand(s, i, i); repladdr(s, i, i); redunbr(s); savereg(i, s, i, s);
+		setcon(s, s, i); setcc(s, i); equop(s, s); toofar(s, i);
+		alloc(i); abs(i);
+	}
 	switch (i) {
 	case 1: case 3: case 5: case 7: case 9: case 11: case 13: case 15:
 	case 17: case 19: case 21: case 23: case 25: case 27: case 29: case 31:
@@ -115,7 +123,6 @@ addsob()
 		case SET:
 		case RES:
 		case BIT:
-		case EX:
 		case LDK:
 			p1 = nonlab(p->forw);
 			if (p1->op == p->op && equstr(p->code, p1->code)) {
@@ -128,7 +135,7 @@ addsob()
 		if (p1->op == TST || p1->op == CPZX) {
 			switch (p->op) {
 			case CLR:
-				if ((unsigned)p1->forw > 2)
+				if (p1->forw > 2)
 					break;
 				if (!equstr(p->code, p1->code))
 					break;
