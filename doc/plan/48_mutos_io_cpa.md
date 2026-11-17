@@ -401,7 +401,7 @@ Wellen (innerhalb einer Welle parallel):
 | C1.1 | `tools/plus/cpa.py`, `versuche/plus_cpa/`, `tests/test_plus_cpa.py`, `doc/plus/cpa/c1_1_werkzeug.md` | Sekunden | 2 h | offen | | |
 | C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | offen | | |
 | C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | offen | | |
-| C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | offen | | |
+| C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.4" |
 | C1.5 | `doc/plus/cpa/c1_5_bios.md` | Sekunden | 3 h | offen | | |
 | C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | offen | | |
 | C1.7 | `versuche/plus_cpa/itest.mac`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | offen | | |
