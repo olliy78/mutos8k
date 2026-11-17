@@ -90,6 +90,10 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 * **Gleitkomma** in `c0`/`c1` (Konstantenfaltung `double`): ob die ausgelieferte `libc.a` den Gleitkommateil enthaelt, ist bei `init` als fehlend gemessen (Stub `ffltpr`).
 * Die Hippe-Sammlung (`original/hippe-v7/lib/c2`) ist ein PDP-11-Binary: nur Vergleich, nie Urheber.
 
-## 7. Naechster Schritt
+## 7. Stand
+
+*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  In Arbeit: W2 `cpp`, W4 `c0` (Regelbereiche R101-R129 bzw. R130-R169).
+
+## 8. Naechster Schritt (urspruenglich)
 
 W0 (Triage) als erster Agentenauftrag; danach Aufteilung W1-W5, W8 je nach W0-Befund.

@@ -20,6 +20,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `cmd_s3b1.md` .. `cmd_s3b6.md` | `cmd`-Diskette, Stufe 3b: nm strip chown; dd pr passwd; ar; ps pstat; hex convert (kein V7, Quelle aus dem Binary rekonstruiert); ed (s3b3 Befund, s3b6 bytegleich, c2-Regeln R80-R91 nur fuer ed) |
 | `cmd_s5.md` | `bin`-Diskette, Stufe 5: mt, tar (ganzdatei bytegleich), adb (A, nicht rekonstruiert); c2-Regel R92 nur fuer tar |
 | `wk_w0.md` | Werkzeugkette (Plan 52) W0: Triage cc ld as cpp c0 c1 c2, libc.a, crt0 |
+| `wk_w13.md` | Werkzeugkette W1/W3: cc, ld (ganzdatei bytegleich), c2-Regeln R93-R100 nur fuer cc/ld; Stufenbau in drei Gastbefehlen |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -182,6 +183,16 @@ Die Regeln R65-R77 sind je an 1 bis 2 Stellen belegt, also schwach (siehe Punkt 
 Dass MUTOS-`tar` dem System-III-Text entspricht, ist durch die Bytegleichheit gemessen; ob die gemeinsame Vorlage ein V7-`tar` war, ist *Annahme*.  Das ist keine Ergaenzung aus System III (Grundsatz Plan 45), sondern der Rueckbau eines vorhandenen MUTOS-Programms.
 Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan` gebunden ist; `--check` liest `karte_extra.txt`.
 **Regression nach dem Merge (gemessen 2026-11-17, Gast, sequentiell, `main` 82033fb..1826100):** alle 47 G-Programme (`alles NAME --c2emu --libc alt --ist neu_c2_s`; `getty`, `sync` mit Disketten-libc; `mt` wie oben) plus `sh` (`bau sh --c2emu --variante v7fix`, `cmp`): **alle gleich**.
+
+## Herkunft der Quellen: Werkzeugkette (Plan 52, gemessen 2026-11-17)
+
+| Programm | Datei (B) | Quelle | c2 | Ergebnis |
+|----------|-----------|--------|----|----------|
+| cc | 6536 | V7 `cc.c`; `main` mit MUTOS-Pfaden (`/usr/lib`, `/usr/bin`), Optionen auf `S o O p E P c D I U C` gekuerzt, weitere markierte Abweichungen (`wk_w13.md`) | R93-R96 (2-7 Stellen, nur `cc`) | G |
+| ld | 10726 | V7 `ld.c` ohne Overlay-Verwaltung und `-n`, Z8000-Magics, CALLR-Relokation in `load2td` aus dem Listing (Namen *Annahme*) | R32/R43 aus, R97-R100 (je 1-2 Stellen, nur `ld`) | G |
+
+Triage aller Passe: `wk_w0.md` (V7-`yacc` erzeugt die Tabellen von `cpp` wortgleich; `as` ist kein V7).
+**Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
