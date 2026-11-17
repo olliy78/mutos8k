@@ -5,6 +5,11 @@
 /* July/August 1978
 */
 
+/* Differs from V7: V7 passes -Dunix=1 -Dpdp11=1 on the cc command line (makefile); here the MUTOS build has no -D, and the original
+   binary predefines "unix" and "U8000" (not "pdp11"), so the macros are set in the source. */
+#define unix 1
+#define U8000 1
+
 #define STATIC
 
 #define STDIN 0
@@ -165,7 +170,7 @@ static jmp_buf env;
 extern FILE *_f[];
 # define symsiz 500
 # else
-# define symsiz 400
+# define symsiz 500	/* Differs from V7: 400 (bss of the MUTOS cpp is 400 B larger = 100 more struct symtab entries) */
 # endif
 STATIC	struct symtab stab[symsiz];
 
@@ -1091,6 +1096,9 @@ main(argc,argv)
 # endif
 # if ibm
 	ysysloc=stsym ("ibm");
+# endif
+# if U8000
+	varloc=stsym("U8000");	/* Differs from V7: V7 has stsym("pdp11") under # if pdp11 */
 # endif
 # if pdp11
 	varloc=stsym("pdp11");

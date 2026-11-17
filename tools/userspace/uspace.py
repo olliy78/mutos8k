@@ -474,6 +474,53 @@ def c2_cc_s(s):
     return "\n".join(out), n
 
 
+def c2_cpp_s(s):
+    """Rules R101-R129 for `usr/lib/cpp` ONLY (doc/userspace/wk_w2.md), applied after c2_emu_s (standard model R1-R91).  MODEL of the old c2.
+      R101  two consecutive stores of one register variable to globals, `ld M1,rV ; ld M2,rV` (V7 `outp = inp = p;`), and the form the
+            standard model makes of it, `ld r2,rV ; ld M1,r2 ; ld M2,rV`  ->  `ld r2,rV ; ld M1,r2 ; ld M2,r2` (both stores through r2)
+      R102  byte store of an immediate, `ldb DST,#k`  ->  the constant is loaded first: `ldk rT,#k ; ldb DST,rlT` (`ld` instead of `ldk`
+            for k > 15); rT = r3 when DST uses r2 (`@r2`), else r2.
+      R103  switch jump on a char value, `ld r2,r3 ; cp r2,#k ; jp ugt L ; add r2,r3 ; ld r1,Ltab(r2)`  ->  `add r2,r2` (as for an int switch)"""
+    z = s.split("\n")
+    n = {"R101": 0, "R102": 0, "R103": 0}
+    out = []
+    i = 0
+    g = r"_\w+$"
+    while i < len(z):
+        a = z[i]
+        if (a == "add\tr2,r3" and i >= 3 and z[i - 3] == "ld\tr2,r3" and z[i - 1].startswith("jp\tugt\t") and z[i - 2].startswith("cp\tr2,#")
+                and i + 1 < len(z) and z[i + 1].startswith("ld\tr1,L")):
+            out.append("add\tr2,r2")
+            n["R103"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr2,(r(?:8|9|1[0-3]))$", a)
+        if (m and i + 2 < len(z) and re.match(r"ld\t%s,r2$" % g[:-1] + "$", z[i + 1]) and z[i + 2].startswith("ld\t_")
+                and z[i + 2].endswith("," + m.group(1)) and re.match(r"ld\t_\w+,r(?:8|9|1[0-3])$", z[i + 2])):
+            out += [a, z[i + 1], z[i + 2][:-len(m.group(1))] + "r2"]
+            n["R101"] += 1
+            i += 3
+            continue
+        m = re.match(r"ld\t(_\w+),(r(?:8|9|1[0-3]))$", a)
+        m2 = re.match(r"ld\t(_\w+),(r(?:8|9|1[0-3]))$", z[i + 1]) if i + 1 < len(z) else None
+        if m and m2 and m.group(2) == m2.group(2) and m.group(1) != m2.group(1):
+            out += ["ld\tr2," + m.group(2), "ld\t%s,r2" % m.group(1), "ld\t%s,r2" % m2.group(1)]
+            n["R101"] += 1
+            i += 2
+            continue
+        m = re.match(r"ldb\t([^,]+),#%([0-9A-F]+)$", a)
+        if m:
+            t = "3" if "r2" in m.group(1) else "2"
+            k = int(m.group(2), 16)
+            out += [("ldk\tr%s,#%%%s" if k <= 15 else "ld\tr%s,#%%%s") % (t, m.group(2)), "ldb\t%s,rl%s" % (m.group(1), t)]
+            n["R102"] += 1
+            i += 1
+            continue
+        out.append(a)
+        i += 1
+    return "\n".join(out), n
+
+
 def c2_ld_s(s):
     """Rules R97-R100: measured on `usr/bin/ld` ONLY (doc/userspace/wk_w13.md); applied AFTER c2_emu_s (R45 switched off for ld).  MODEL of the old
     c2, not a run of it.

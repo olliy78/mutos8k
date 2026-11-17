@@ -252,6 +252,9 @@ def cmd_bau(name, a):
                     if name == "ld":
                         zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
                         cnt.update(c3)
+                    if name == "cpp":       # R101-R129, doc/userspace/wk_w2.md
+                        zwei[n + "_c2"][fn], c3 = U.c2_cpp_s(zwei[n + "_c2"][fn])
+                        cnt.update(c3)
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
