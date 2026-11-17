@@ -1,4 +1,4 @@
-# Makefile of the MUTOS kernel (plan 47).  Call in the guest:  cd /tmp; /mnt/make -f /mnt/Makefile
+# Makefile of the MUTOS kernel (plan 47).  Call in the guest:  cd /tmp; /mnt/vmake -f /mnt/Makefile  (V7 make; the own make works too)
 # Sources and headers are on /mnt (drive D), objects and result on /tmp (drive A).
 # Default target mutos_1216: the kernel file = lk without the 16-byte header, padded to a multiple of 512 bytes.
 # Two dd calls in a pipe (an intermediate file does not fit on drive A, measured 2026-11-16: no space left).

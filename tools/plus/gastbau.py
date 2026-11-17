@@ -9,6 +9,7 @@ The host only CHECKS (lk header, end of BSS, kernel file length) and never chang
   python3 -I tools/plus/gastbau.py boot  --arbeit DIR --kernel F boot F, run the work tests b1..b11
   python3 -I tools/plus/gastbau.py alles --arbeit DIR            build, compare with the host cut, boot
   python3 -I tools/plus/gastbau.py fixpunkt --arbeit DIR         build with the original kernel (K1), then boot K1, build again (K2), K1 == K2?
+All commands take --make vmake (default, the V7 make, userspace/ergaenzung/vmake) or --make make (own make, userspace/make).
 Exit 77 without the emulator.
 """
 import argparse
@@ -30,6 +31,9 @@ gastlauf = basis.gastlauf
 PLUS = os.path.join(G.WURZEL, "kernel", "plus")
 NICHT_AUF_DISK = ("README.md",)
 CMD_HFE = "a5120_mutos8000_cmd_mfm.hfe"
+MAKE = "vmake"     # guest make program on /mnt: "vmake" (V7 make, default, plan 47 P3.4) or "make" (own make)
+VMAKE_BIN = os.path.join(G.WURZEL, "userspace", "ergaenzung", "vmake", "work", "bau", "vmake.bin")
+ERG_PY = os.path.join(G.WURZEL, "tools", "userspace", "erg.py")
 
 
 class Fehler(Exception):
@@ -51,12 +55,25 @@ def _cmd_programme(arbeit, namen):
     return aus
 
 
+def make_programm():
+    """-> {guest name: bytes} for the selected make.  vmake.bin is NOT checked in (it belongs to main's userspace/ergaenzung and is
+    a build product, work/ is ignored): use the existing build of tools/userspace/erg.py, else build it in the guest (~200 s)."""
+    if MAKE == "make":
+        mk = os.path.join(G.WURZEL, "userspace", "make")
+        return {"make": open(os.path.join(mk, "make.bin"), "rb").read(),
+                "make.fileinfo": open(os.path.join(mk, "make.bin.fileinfo"), "r").read()}
+    if not os.path.isfile(VMAKE_BIN):
+        print("vmake.bin missing: building it with erg.py (guest, ~200 s)")
+        if subprocess.run([sys.executable, "-I", ERG_PY, "bau", "vmake"]).returncode or not os.path.isfile(VMAKE_BIN):
+            raise Fehler("erg.py bau vmake failed")
+    return {"vmake": open(VMAKE_BIN, "rb").read()}
+
+
 def quellen(arbeit):
     """-> (disk1, disk2, d1c, d2c): the two source disks.  Which C file goes where is read from mk1 (objs1: line) and Makefile (OBJS)."""
     def lies(pfad, binaer=True):
         return open(pfad, "rb" if binaer else "r").read()
-    mk = os.path.join(G.WURZEL, "userspace", "make")
-    base = {"make": lies(os.path.join(mk, "make.bin")), "make.fileinfo": lies(os.path.join(mk, "make.bin.fileinfo"), False)}
+    base = dict(make_programm())
     for h in sorted(os.listdir(G.HQUELLEN)):
         if h.endswith(".h"):
             base[h] = lies(os.path.join(G.HQUELLEN, h))
@@ -97,9 +114,10 @@ def lk_pruefen(lk, bss_s):
     return text, data, bss, cf, bende
 
 
-BAU_BEFEHLE = ["(cd /tmp; /mnt/make -f /mnt/mk1) >/tmp/make1.log 2>&1", ("wechsel", 1),
-               "(cd /tmp; /mnt/make -f /mnt/Makefile) >/tmp/make2.log 2>&1",
-               "ls -l /tmp >/tmp/ls.log 2>&1"]
+def bau_befehle():
+    return ["(cd /tmp; /mnt/%s -f /mnt/mk1) >/tmp/make1.log 2>&1" % MAKE, ("wechsel", 1),
+            "(cd /tmp; /mnt/%s -f /mnt/Makefile) >/tmp/make2.log 2>&1" % MAKE,
+            "ls -l /tmp >/tmp/ls.log 2>&1"]
 
 
 def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000, d3=None, rueck_extra=()):
@@ -109,14 +127,14 @@ def bauen(arbeit, boot_hfe=None, extra=None, frist=6_000_000_000, d3=None, rueck
     d1, d2, c1, c2 = quellen(arbeit)
     for i, d in enumerate((d1, d2), 1):
         print("disk %d: %d files, %d bytes" % (i, len(d), basis.laenge(d)))
-    befehle = BAU_BEFEHLE + list(extra or [])
+    befehle = bau_befehle() + list(extra or [])
     aus = {}
     disks = [d1, d2] + ([d3] if d3 else [])
     if d3:
         print("disk 3: %d files, %d bytes" % (len(d3), basis.laenge(d3)))
     erg = gastlauf.lauf(os.path.join(arbeit, "gast"), disks, befehle,
                         ["make1.log", "make2.log", "ls.log", "lk", "mutos_1216"] + list(rueck_extra),
-                        boot_hfe=boot_hfe, ausfuehrbar=["make", "dd", "cmp", "ps", "pstat"], frist=frist, ausgabe=aus)
+                        boot_hfe=boot_hfe, ausfuehrbar=["make", "vmake", "dd", "cmp", "ps", "pstat"], frist=frist, ausgabe=aus)
     print("guest run time (wall clock): %.0f s, log %s" % (aus["dauer"], aus["log"]))
     for n in ("make1.log", "make2.log", "ls.log"):
         print("---", n)
@@ -308,8 +326,11 @@ def main(argv=None):
     ap.add_argument("cmd", choices=("bauen", "boot", "alles", "fixpunkt"))
     ap.add_argument("--arbeit", required=True)
     ap.add_argument("--kernel")
+    ap.add_argument("--make", choices=("vmake", "make"), default="vmake", help="guest make program (default vmake, the V7 make)")
     ap.add_argument("--k1", help="fixpunkt: use this file as K1 instead of building it (repeat run 2 only)")
     a = ap.parse_args(argv)
+    global MAKE
+    MAKE = a.make
     try:
         gast_as.pruefe_hilfsmittel()
         if a.cmd == "boot":

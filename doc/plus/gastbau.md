@@ -165,6 +165,21 @@ Messung (zwei Teilmessungen, **ein Gesamtlauf wurde nicht in einem Aufruf gemess
 
 * Schnell, immer: `python3 -m pytest -q tests/test_plus_selbstbau.py` (7 Tests: Makefile-Quellen vorhanden, jede C-Datei gebaut und gelinkt, keine `dn*.s`/`abs.o`, `WV _cf_x88a`, `&max_proc` im Code von `conf.c`,
   ASCII in `kernel/plus` ohne README, V-Funde als erledigt, `bewerten` trennt gut/schlecht).  Der Test importiert `tools/plus/gastbau.py` (und damit das als historisch gekennzeichnete `basis.py`) nur fuer `bewerten`; `basis.py` selbst ist von veralteten Bezuegen nur durch Kennzeichnung bereinigt.
-* Lang: `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` (Marke `gast`, ~30 Min.; im Hintergrund starten).  **Nicht als Test gelaufen**; Referenz ist die Messung in §6
+* Lang: `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` (Marke `gast`, ~30 Min.; im Hintergrund starten).  Als Test gelaufen mit P3.4 (§8: gruen, 1690 s); davor war die Referenz die Messung in §6
   (Lauf 1 815 s + Lauf 2 831 s Gast; Boot + Tests je ~90 s).
 * Aufrufe: `gastbau.py bauen|boot|alles|fixpunkt --arbeit DIR`.  Laufzeiten: Gastbau ~14 Min., Boot + Arbeitstests ~1,5 Min., Fixpunkt ~30 Min.
+
+## 8. P3.4: Kernelbau mit dem V7-`make` (`vmake`) (gemessen 2026-11-17)
+
+`tools/plus/gastbau.py` baut jetzt Standard mit `vmake` (V7-`make`, `userspace/ergaenzung/vmake`, `doc/userspace/erg_e3b.md`); `--make make` waehlt den Eigenbau `userspace/make` weiter.
+`kernel/plus/Makefile` und `mk1` blieben **unveraendert** (nur der Kopfkommentar "Call in the guest"): sie nutzen nur Regeln, Makros `$(SRC)` und Befehle, keine `$(X:.c=.o)`-Ersetzung; die Pipe in der Befehlszeile von `mutos_1216`
+laeuft ueber `/bin/sh -ce` (V7-`make` bei Metazeichen) ohne Befund.
+* **Bereitstellung: gebaut, nicht eingecheckt.**  `vmake.bin` (22 406 B, `work/bau/`) ist Bauergebnis von `tools/userspace/erg.py bau vmake` (~200 s Gast) und liegt unter `userspace/`, das zu `main` gehoert und in `work/` nicht eingecheckt wird.
+  `gastbau.make_programm()` nimmt ein vorhandenes `work/bau/vmake.bin` und ruft sonst `erg.py bau vmake` auf.  Eingecheckt wuerde 22 KB Binaerdatei doppeln, die `main` ohnehin reproduzierbar baut; Zeitbedarf nur beim ersten Mal.
+  Das vorhandene `work/bau/vmake.bin` (19:30, Quellen 15.11. unveraendert, `vmake.err` leer) war aktuell und wurde benutzt (sha256 `c4dfa4f2408ab3254c979e4cf13dc9f08ddfd424a105cdc8187f237eb9b70fe7`).
+* **Platz:** `vmake` ist nur 2540 B groesser als der Eigenbau (22 406 gegen 19 866 B, nicht ~9 KB); es entfaellt `make.fileinfo`.  Diskette 1: 40 Dateien, 186 723 B (vorher 184 852); Diskette 2: 44 Dateien, 211 826 B (vorher 209 919);
+  beide passen (Grenze etwa 230 KB), Aufteilung unveraendert, Diskette 3 des Fixpunkts enthaelt kein `make`.
+* **(a) `gastbau.py alles --arbeit /tmp/mplus/p3_4/a`:** Gastbau **753 s** (Eigenbau 823-852 s), Boot + Tests 83 s.  `lk` text 34 652 / data 1 638 / bss 17 560, sha256 `edf4bc86...918bdf` (wie P2.3);
+  `mutos_1216` 36 352 B, sha256 `a0e2a9c519470477e681803bce34dc7bd4e835ec5ef231e31c81405c9ed97e25` = Kernel aus P2.3/P3.2, bytegleich zum Host-Schnitt; `bewerten: no failure`.
+  Die Befehlsreihenfolge in `make1.log`/`make2.log` ist die der Abhaengigkeitsliste, die Linkreihenfolge (`$(OBJS)`) ist dadurch unveraendert.
+* **(b) Langtest** `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_selbstbau.py -k lang` mit `vmake`: **1 passed in 1690 s (28 Min.)**, das ist zugleich die in P3.3 offene Messung (K1 == K2, `cmp.log` leer, `gleich` vorhanden, `bewerten` fehlerfrei).
