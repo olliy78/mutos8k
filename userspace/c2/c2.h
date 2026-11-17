@@ -148,6 +148,7 @@ char	conlsz;
 char	conval[20];
 char	convsz;
 char	ccloc[20];
+char	ccpad;		/* Annahme: unreferenced; fills the BSS gap 5096..5098 */
 char	ccsz;
 int	fflag;
 struct optab *ophash[OPHS];

@@ -9,8 +9,8 @@
 
 #include "c2.h"
 
-/* Not V7: condition names of the Z8000 'jp cc,L' form (table at 0x4252 in the binary) */
-struct optab conds[] {
+/* Not V7: condition names of the Z8000 'jp cc,L' form, (name, code) pairs (table at 0x4252) */
+int conds[] {
 	"eq",	JEQ,
 	"ne",	JNE,
 	"le",	JLE,
@@ -200,7 +200,7 @@ input()
 	register struct node *p, *lastp;
 	register int oper;
 	register char *cp, *s, *np;
-	struct optab *cc;
+	int *cc;
 	static char cbuf[10];
 
 	lastp = &first;
@@ -208,46 +208,14 @@ input()
 		oper = getline();
 		switch (oper&0377) {
 
-		/* Differs from V7: the condition is split off the 'jp cc,L' operand (conds[]) */
-		case JBR:
-		case JMP:
-		case JSW:
+		default:
 			p = (struct node *)alloc(sizeof first);
 			p->op = oper&0377;
-			p->subop = 0;
-			if (*curlp != 'L') {
-				np = cbuf;
-				for (cp = curlp; *cp; ) {
-					switch (*cp) {
-					case '\t':
-					case ' ':
-					case ',':
-					case '\n':
-						goto fin;
-					}
-					*np++ = *cp++;
-				}
-			fin:
-				*np++ = 0;
-				for (cc = conds; cc->opstring; cc++) {
-					s = cc->opstring;
-					np = cbuf;
-					while (*s++ == *np)
-						if (*np++ == 0) {
-							p->subop = cc->opcode;
-							p->op -= 2;
-							curlp = ++cp;
-							goto done;
-						}
-				}
-			}
-		done:
-			if (*curlp=='L' && (p->labno = getnum(curlp+1)))
-				p->code = 0;
-			else {
-				p->labno = 0;
-				p->code = copy(1, curlp);
-			}
+			p->subop = oper>>8;
+			if (fflag && (p->subop & FLTF) == 0)
+				p->subop = FLTF;
+			p->labno = 0;
+			p->code = copy(1, curlp);
 			break;
 
 		case LABEL:
@@ -274,14 +242,40 @@ input()
 			p->code = copy(1, line);
 			break;
 
-		default:
+		/* Differs from V7: the condition is split off the 'jp cc,L' operand (conds[]) */
+		case JBR:
+		case JMP:
+		case JSW:
 			p = (struct node *)alloc(sizeof first);
 			p->op = oper&0377;
-			p->subop = oper>>8;
-			if (fflag && !(p->subop & FLTF))
-				p->subop = FLTF;
-			p->labno = 0;
-			p->code = copy(1, curlp);
+			p->subop = 0;
+			if (*curlp != 'L') {
+				np = cbuf;
+				for (cp = curlp; *cp; ) {
+					if (*cp=='\t' || *cp==' ' || *cp==',' || *cp=='\n')
+						break;
+					*np++ = *cp++;
+				}
+				*np++ = 0;
+				for (cc = conds; *cc; cc += 2) {
+					s = *cc;
+					np = cbuf;
+					while (*s++ == *np)
+						if (*np++ == 0) {
+							p->subop = cc[1];
+							p->op -= 2;
+							curlp = ++cp;
+							goto done;
+						}
+				}
+			}
+		done:
+			if (*curlp=='L' && (p->labno = getnum(curlp+1)))
+				p->code = 0;
+			else {
+				p->labno = 0;
+				p->code = copy(1, curlp);
+			}
 			break;
 
 		}
@@ -516,7 +510,8 @@ oplook()
 		while (*np++ == *lp)
 			if (*lp++ == 0)
 				return(optp->opcode);
-		if (((c = *lp++)=='b' || c=='l' || c=='s' || c=='d') && *lp++==0 && *--np==0) {
+		c = *lp++;
+		if ((c=='b' || c=='l' || c=='s' || c=='d') && *lp++==0 && *--np==0) {
 			if (c=='b')
 				return(optp->opcode + (BYTE<<8));
 			else if (c=='l')
@@ -725,8 +720,7 @@ struct node *
 codemove(p)
 struct node *p;
 {
-	register struct node *p1, *p2, *p3;
-	struct node *t, *tl;
+	register struct node *p1, *p2, *p3, *t, *tl;
 	register n;
 
 	p1 = p;

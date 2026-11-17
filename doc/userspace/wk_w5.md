@@ -23,3 +23,33 @@ Gegenueber V7 `c20.c/c21.c` (Funktionszuordnung von W0 war an mehreren Stellen f
 ## 3. Offene Punkte
 * `c20.c`/`c21.c` schreiben (die oben gelesenen Funktionen sind bis auf `rmove`-Zweige 1A00-1F6E/21BE im Detail ausgewertet; Registerzuordnung der Locals, `register`-Parameter in umgekehrter Deklarationsreihenfolge) und im Gast iterieren; BSS-Luecke 5096-5098 (`ccloc` 22 statt 20?) klaeren.
 * Danach Gegenprobe R1-R112 / K1-K6 und Regression (`sh ed tar cc ld`): nicht ausgefuehrt.
+
+# Teil b (Branch `us-wk-w5b`): `c2.h` + `c20.c`
+
+Stand 2026-11-17.  Quellen: `userspace/c2/c2.h`, `userspace/c2/c20.c` (Funktionen 0030..151E, 17 Stueck), `userspace/c2/c21.c` (**vorlaeufiger Stub**, nur damit das Programm bindet; Teil zwei ersetzt ihn).
+Aufruf (Gast, ca. 6 min je Lauf): `python3 -I tools/userspace/pipeline.py alles c2 --c2emu --libc alt --ist neu_c2`; Bericht `userspace/c2/work/bau/neu_c2.bericht`.
+
+## Funktionen (Adresse im Original, V7-Gegenstueck, Befund)
+| Adresse | Funktion | V7 | Befund (gemessen) |
+|---------|----------|----|-------------------|
+| 0030 | `main` | c20.c main | V7-Rahmen, aber: erste Eingabezeile bis `;` unveraendert durchgereicht, kein `movedat`/`jumpsw`, `retopt()`-Abbruch, `do shortjmp() while (nchange)`; Register `niter maxiter isend c nflag` = R13..R9 |
+| 039A | `input` | c20.c input | `case`-Reihenfolge im Quelltext `default, LABEL, CMT, JBR/JMP/JSW` (die Rumpfreihenfolge im Binary; der Compiler sortiert die Vergleichskette selbst); `JBR/JMP/JSW` zerlegen die Bedingung (`jp eq,L5`) ueber die Tabelle `conds` (Schritt 2 Zeichen: `cc += 2`); `CMT` (`!`) -> Knoten mit `op` 0; Registervariablen R13..R8 (`p lastp oper cp s np`), `cc` Stapel |
+| 0568 | `getline` | c20.c getline | `f`-Praefix (`fflag`), Kommentarzeilen `!`/`~`, `:` liest noch ein Zeichen (Zeilenende) |
+| 0704 | `getnum` | c20.c getnum | V7 |
+| 0748 | `output` | c20.c output | Hash-Schalter (`op/3`); `LABEL`/`DLABEL` mit `\n`; Suffixe `b l s d`; `WV L%d`, `djnz`; kein `reducelit` (das V7-`reducelit` gibt es nicht; die Zuordnung von W0 war falsch) |
+| 09C6 | `copy` | c20.c copy | V7, aber `onp` Registervariable (R11) |
+| 0A4A | `opsetup` | c20.c opsetup | V7 (`OPHS` 79) |
+| 0AAE | `oplook` | c20.c oplook | Suffix-Behandlung `ld cp or ex` + `b l s d`; `WV Ln` statt `Ln`-Sprungschalter |
+| 0CDA | `refcount` | c20.c refcount | V7 + Entfernen von `I`/`G`-Deklarationszeilen (`delnode`); Schleifenkopf `p->op<=JSW` |
+| 0E54 | `iterate` | c20.c iterate | stark erweitert (JBR/JMP, CBRS/CBR, `delnode`, Sprung auf Folgebefehl) |
+| 10C8 | `xjump` | c20.c xjump | V7 + Pseudobefehlsbereich `CODE..CMT` bricht ab; `JMP` statt `JBR` |
+| 1152 | `insertl` | c20.c insertl | V7 |
+| 11CC | `codemove` | c20.c codemove | V7 mit `JMP`/`JBR`, Schleifenbedingung `p3->op && p3->op>CBR`; `t tl n` Registervariablen |
+| 1382 | `comjump` | c20.c comjump | V7 mit `JBR`/`JMP` |
+| 13EA | `shortjmp` | nicht V7 | `jp` -> `jr`, wenn `!toofar(p,0)` (`p->op--`); Name *Annahme* |
+| 1430 | `backjmp` | c20.c backjmp | V7, `delnode(p2)` statt Auskettung |
+| 149C | `retopt` | nicht V7 | `call csv ; ... ; jp cret` -> `ret`; Name *Annahme* |
+
+Konstanten/Tabellen: `optab` (76 Eintraege, `0x4286`), `conds` (12 Paare + Ende, `0x4252`), `revbr`, `isn = 9000`, `lastseg = 32` (alle gemessen).
+`lastseg` wird nur in `output` gesetzt (`CODE` 31 / `DATA` 36 / `BSS` 34) und nirgends gelesen (`movedat` fehlt).  `DATA` (36) hat keinen `optab`-Eintrag; die tote V7-Pruefung
+`p->forw->op!=DATA` in `iterate` ist erhalten (Wert 0x24 im Binary gemessen).  Namen `DSEC` (32), `CODE`, `SDEF` usw. sind *Annahme*.
