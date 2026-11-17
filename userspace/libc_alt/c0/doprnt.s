@@ -165,10 +165,10 @@ L4CE6:
 	inc	r10,#1
 	ret
 L4CEC:
-	call	%2A+pscien
+	call	pfloat
 	jr	L4D40
 L4CF2:
-	call	pscien
+	call	pgen
 	jr	L4D40
 L4CF8:
 	inc	r11,#1
@@ -177,7 +177,7 @@ L4CF8:
 	ldk	r11,#7
 	ld	r9,r11
 L4D02:
-	call	%9E+pscien
+	call	pscien
 	jr	L4D40
 L4D08:
 	ld	r13,@r13

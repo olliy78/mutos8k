@@ -30,7 +30,8 @@ build(op)
 	dope = opdope[op];
 	if ((dope&BINARY)!=0) {
 		p2 = chkfun(disarray(*--cp));
-		t2 = p2->type;
+		if (p2)		/* Differs from V7: chkfun/disarray may return NULL */
+			t2 = p2->type;
 	}
 	p1 = *--cp;
 	/*
@@ -139,7 +140,10 @@ build(op)
 		*cp++ = block(PLUS,t,p2->subsp,p2->strp,p1,cblock(p2->tr1->hoffset));
 		build(STAR);
 		if (p2->tr1->hflag&FFIELD)
-			*cp++ = block(FSEL,UNSIGN,NULL,NULL,*--cp,p2->tr1->hstrp);
+			{	/* Differs from V7: evaluation order made explicit */
+				p3 = block(FSEL,UNSIGN,NULL,NULL,*--cp,p2->tr1->hstrp);
+				*cp++ = p3;
+			}
 		return;
 	}
 	if ((dope&LVALUE)!=0)
@@ -304,6 +308,8 @@ struct tnode *ap;
 	register int t;
 
 	p = ap;
+	if (p==0)	/* Not V7 */
+		return(p);
 	if (((t = p->type)&XTYPE)==FUNC && p->op!=ETYPE)
 		return(block(AMPER,incref(t),p->subsp,p->strp,p));
 	return(p);
@@ -321,6 +327,8 @@ struct tnode *ap;
 	register struct tnode *p;
 
 	p = ap;
+	if (p==0)	/* Not V7 */
+		return(p);
 	/* check array & not MOS and not typer */
 	if (((t = p->type)&XTYPE)!=ARRAY || p->op==NAME&&p->tr1->hclass==MOS
 	 || p->op==ETYPE)

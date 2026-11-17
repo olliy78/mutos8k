@@ -5,7 +5,7 @@ fprintf 4A4E 4A82 exp=_fprintf@4A4E src=S
 filbuf 4A82 4B76 bss=9772:14 exp=__filbuf@4A82 src=S
 setbuf 4B76 4BC2 exp=_setbuf@4B76 src=S
 doprnt 4BC2 4D9C data=67B0:67FA exp=__doprnt@4BC2 code=4CEC,4CF2,4D08 src=S
-fltpr 4D9C 4EC6 data=67FA:67FE exp=pgen@4D9C,pfloat@4D9C,pscien@4D9C,sign@67FA,decpt@67FC src=G
+fltpr 4D9C 4EC6 data=67FA:67FE exp=pgen@4D9C,pfloat@4DC6,pscien@4E3A,sign@67FA,decpt@67FC src=G
 gcvt 4EC6 5068 exp=_gcvt@4EC6 src=S
 ecvt 5068 52CA data=67FE:6816 bss=9786:50 exp=_ecvt@5068,_fcvt@5092 src=G
 strout 52CA 53F0 exp=__strout@52CA src=S
@@ -29,7 +29,7 @@ sbrk 5BC2 5BFE data=68B8:68BA exp=_sbrk@5BC2,_brk@5BE6 src=A
 write 5BFE 5C14 exp=_write@5BFE src=A
 cerror 5C14 5C22 bss=97E2:2 exp=cerror@5C14,_errno@97E2 src=A
 csv 5C22 5C3E exp=csv@5C22,cret@5C30 src=A
-common __sibuf 9370 200 data
-common __sobuf 9570 200 data
-extern _environ 9770 2
+common __sibuf 9356 200 data
+common __sobuf 9556 200 data
+extern _environ 9756 2
 extern _end 97E4 0

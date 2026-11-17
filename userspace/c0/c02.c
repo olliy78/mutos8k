@@ -108,7 +108,8 @@ cfunc()
 	if (proflg)
 		outcode("BN", PROFIL, isn++);
 	cb = curbase;
-	regvar = 5;
+	regmin = 8;	/* Not V7 */
+	regvar = 14;	/* Differs from V7: 5 (r13..r8 are register variables) */
 	autolen = STAUTO;
 	maxauto = STAUTO;
 	blklev = 1;
@@ -303,7 +304,8 @@ statement()
 {
 	register o, o1, o2, o3;	/* Differs from V7: o3, np registers */
 	register struct tnode *np;
-	int sauto, sreg;
+	register int sauto;	/* Differs from V7: register (sauto, not sreg) */
+	int sreg;
 
 stmt:
 	switch(o=symbol()) {
@@ -320,8 +322,7 @@ stmt:
 		while (!eof) {
 			if ((o=symbol())==RBRACE) {
 				autolen = sauto;
-				if (sreg!=regvar)
-					outcode("BN", SETREG, sreg);
+				/* Differs from V7: no SETREG output */
 				regvar = sreg;
 				blkend();
 				return;
@@ -692,7 +693,7 @@ blockhead()
 {
 	register r;
 
-	r = regvar;
+	r = regmin;	/* Differs from V7: regvar */
 	blklev++;
 	declist(0);
 	/* Differs from V7: no SETREG output */

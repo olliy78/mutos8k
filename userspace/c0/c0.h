@@ -22,7 +22,7 @@
 #define	NBPC	8	/* bits per character, object machine */
 #define	NCPW	2	/* chars per word, object machine */
 #define	LNCPW	2	/* chars per word, compiler's machine */
-#define	STAUTO	(-6)	/* offset of first auto variable */
+#define	STAUTO	(-12)	/* offset of first auto variable */ /* Differs from V7: -6 (csv saves r8-r13) */
 #define	STARG	4	/* offset of first argument */
 
 
@@ -188,6 +188,7 @@ int	initflg;
 int	inhdr;
 char	sbuf[BUFSIZ];
 FILE	*sbufp;
+int	regmin;		/* Not V7: set to 8 in cfunc, read in blockhead */
 int	regvar;
 int	bitoffs;
 struct	tnode	funcblk;

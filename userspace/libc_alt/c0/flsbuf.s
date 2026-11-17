@@ -62,7 +62,7 @@ L5458:
 	jr	ne,L54B6
 	cp	r13,#__iob
 	jr	ne,L5490
-	ld	r2,#%9356
+	ld	r2,#__sibuf
 L546A:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L5484:
 	setb	%0006(r13),#2
 	jr	L542A
 L548A:
-	ld	r2,#%1E6+__sibuf
+	ld	r2,#__sobuf
 	jr	L546A
 L5490:
 	cp	r13,#%8+__iob

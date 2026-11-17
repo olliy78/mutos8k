@@ -515,7 +515,38 @@ def c2_ld_s(s):
     return "\n".join(out), n
 
 
-def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False, cc=False):
+def c2_c0_s(s):
+    """Rules R130-R133: measured on `usr/lib/c0` ONLY (doc/userspace/wk_w4.md); c2_emu_s(..., c0=True) applies these and nothing else
+    (c0 was compiled by a c2 that matches the shipped one except the forms below).  MODEL of the old c2, not a run of it.
+      R130 `inc SP,#%A ; push @SP,r2`  ->  `inc SP,#%8 ; ld @SP,r2`   (the merge of the cleanup with the next push of the call result; the
+           shipped c2 does it for the other counts but not for 10; 3 sites: `build` (twice, `cinit`..), `statement`, `dogoto`)
+      R131 `cp r9,#%8 ; jp ne,La ; cp @r13,#%5A ; jp eq,Lb`  ->  `jr eq,Lb`  (tree: `o==8 ... *op==...` test; 1 site)
+      R132 `cp r2,#%3 ; jp eq,La ; cp r2,#%7 ; jp eq,Lb ; jp Lc`  ->  `jr eq,Lb ; jr Lc`  (tree, switch on the operator; 1 site)
+      R133 `cp r2,#%16 ; jp eq,La ; cp r2,#%17 ; jp eq,Lb ; cp r2,#%19`  ->  `jr eq,Lb`  (treeout; 1 site)
+    The jump forms are the old c2's span estimate (the jump is within the range of `jr`); named by their shape, one site each."""
+    z = s.split("\n")
+    n = {"R130": 0, "R131": 0, "R132": 0, "R133": 0}
+    for i in range(len(z)):
+        if z[i] == "inc\tSP,#%A" and i + 1 < len(z) and z[i + 1] == "push\t@SP,r2":
+            z[i], z[i + 1] = "inc\tSP,#%8", "ld\t@SP,r2"
+            n["R130"] += 1
+        if (z[i] == "cp\t@r13,#%5A" and i >= 2 and z[i - 2] == "cp\tr9,#%8" and i + 1 < len(z)
+                and z[i + 1].startswith("jp\teq\tL")):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            n["R131"] += 1
+        if (z[i] == "cp\tr2,#%7" and i >= 2 and z[i - 2] == "cp\tr2,#%3" and z[i - 1].startswith("jp\teq\tL") and i + 2 < len(z)
+                and z[i + 1].startswith("jp\teq\tL") and re.match(r"jp\tL", z[i + 2])):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            z[i + 2] = "jr" + z[i + 2][2:]
+            n["R132"] += 1
+        if (z[i] == "cp\tr2,#%17" and i >= 2 and z[i - 2] == "cp\tr2,#%16" and z[i - 1].startswith("jp\teq\tL") and i + 2 < len(z)
+                and z[i + 1].startswith("jp\teq\tL") and z[i + 2] == "cp\tr2,#%19"):
+            z[i + 1] = "jr" + z[i + 1][2:]
+            n["R133"] += 1
+    return "\n".join(z), n
+
+
+def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False, cc=False, c0=False):
     """Rewrite a `cc -O -S` assembler source so that it reads as the ORIGINAL (older) c2 would have emitted it -- inverse
     of c2_kanon on the .s text (as dialect, hex numbers with %):
       R1  `inc SP,#%k ; ld @SP,x`  ->  `inc SP,#%k+2 ; push @SP,x`
@@ -540,6 +571,8 @@ def c2_emu_s(s, aus=(), mkfs=False, ed=False, tar=False, cc=False):
         return c2_tar_s(s)
     if cc:
         return c2_cc_s(s)
+    if c0:
+        return c2_c0_s(s)
     z = s.split("\n")
     out, n = [], {"R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0, "R9": 0, "R10": 0, "R30": 0, "R11": 0, "R12": 0, "R13": 0, "R14": 0, "R16": 0,
          "R32": 0, "R33": 0, "R34": 0, "R35": 0, "R36": 0, "R37": 0, "R38": 0, "R39": 0, "R42": 0, "R43": 0, "R45": 0, "R46": 0, "R47": 0, "R48": 0, "R60": 0, "R61": 0, "R62": 0, "R63": 0, "R64": 0, "R65": 0, "R66": 0, "R67": 0, "R68": 0, "R69": 0, "R70": 0, "R71": 0, "R77": 0}

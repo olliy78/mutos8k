@@ -426,6 +426,8 @@ struct hshtab *atptr, *absname;
 	/*	if (STAUTO < 0) {	*/
 			autolen =- rlength(dsym);
 			dsym->hoffset = autolen;
+			if (dsym->htype==CHAR)	/* Not V7: char lives in the low byte of its word */
+				dsym->hoffset++;
 			if (autolen < maxauto)
 				maxauto = autolen;
 	/*	} else { 			*/

@@ -15,17 +15,9 @@ constant
 	WV	:= wval
 	LV	:= lval
 	L	:= label
-G	pfloat	PR
-E
-pfloat:
-end pfloat
 G	pgen	PR
 E
 pgen:
-end pgen
-G	pscien	PR
-E
-pscien:
 	push	@r15,r10
 	push	@r15,r11
 	test	r11
@@ -46,7 +38,10 @@ L4DBE:
 	jr	ne,L4DBC
 	dec	r12,#1
 	ret
-L4DC6:
+end pgen
+G	pfloat	PR
+E
+pfloat:
 	push	@r15,#sign
 	push	@r15,#decpt
 	test	r9
@@ -106,7 +101,10 @@ L4E2E:
 	djnz	r11,L4E2E
 L4E38:
 	ret
-L4E3A:
+end pfloat
+G	pscien	PR
+E
+pscien:
 	push	@r15,#sign
 	push	@r15,#decpt
 L4E42:

@@ -857,7 +857,7 @@ struct hshtab *atyb;
 	struct hshtab typer;
 	int sc;
 	register char *md, *fb;
-	struct tnode *scp;
+	register struct tnode *scp;	/* Differs from V7: register */
 
 	tyb = atyb;
 	fb = funcbase;
