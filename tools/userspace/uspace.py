@@ -298,13 +298,15 @@ def stufen_befehl(name, lib, nur_s):
     truncates the files it consumed (`>file`; there is no `rm` on the guest PATH, the commands disk is not mounted), which frees the blocks.
     Errors go to NAME.err (NAME.err2 for the -S run).  Result: /tmp/NAME (linked by `cc -s -o` like the one-step cc) or /tmp/NAME.s."""
     e = name + (".err2" if nur_s else ".err")
-    r = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci",
-         "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5"]
+    # Three guest commands, each ending in /mnt: one line longer than ca. 250 characters is damaged by the guest tty (a character is
+    # lost, the chain silently does not run: measured with ld, 22 KB source + libc_alt archive, 2026-11-17).
+    a = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci", "cd /mnt"]
+    b = ["cd /tmp", "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5", "cd /mnt"]
+    c = []
     if not nur_s:
-        r += ["/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
-              "cc -s -o %s %s.o%s >>%s 2>&1" % (name, name, lib, e), ">%s.o" % name]
-    r.append("cd /mnt")
-    return ";".join(r)
+        c = ["cd /tmp", "/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
+             "cc -s -o %s %s.o%s >>%s 2>&1" % (name, name, lib, e), ">%s.o" % name, "cd /mnt"]
+    return [";".join(x) for x in (a, b, c) if x]
 
 
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
@@ -335,13 +337,13 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             # passes are run by hand and each pass deletes its inputs (same commands as cc.c, cc -O only; USERSPACE_STUFEN=1 forces it).
             stufen = (not ist_s) and "-O" in flags.split() and (len(text) > STUFEN_AB or os.environ.get("USERSPACE_STUFEN") == "1")
             if stufen:
-                befehle = [stufen_befehl(name, lib, False)]
+                befehle = stufen_befehl(name, lib, False)
             else:
                 befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 if stufen:
-                    befehle.append(stufen_befehl(name, lib, True))
+                    befehle += stufen_befehl(name, lib, True)
                 else:
                     befehle.append("cd /tmp;cc %s -I/mnt -S /mnt/%s.c >%s.err2 2>&1;cd /mnt" % (flags.replace("-s", "").strip(), name, name))
                 rueck += [name + ".s", name + ".err2"]
@@ -469,6 +471,47 @@ def c2_cc_s(s):
             mir, stale = a.split(",")[1], None
         else:
             mir = stale = None
+    return "\n".join(out), n
+
+
+def c2_ld_s(s):
+    """Rules R97-R100: measured on `usr/bin/ld` ONLY (doc/userspace/wk_w13.md); applied AFTER c2_emu_s (R45 switched off for ld).  MODEL of the old
+    c2, not a run of it.
+      R97  `sub r2,rN ; ld MEM,r2 ; jr mi,L`  ->  `test r2` inserted before the `jr` (mget(), 2 sites; the shipped c2 drops the redundant test)
+      R98  `xorb rhN,rhN ; xor r2,r2 ; div rr2,#k` (hash switch on a char, main(), 1 site)  ->  `ld r2,rN ; ld rN,r2` inserted before the `xor`
+      R100 `ld LOCAL,r3 ; ld r2,r3` -> `ld r2,LOCAL` (ldrand(), `sp = *pp; sp->stype` with sp a stack local, first site only: the old c2 reloads the local)
+      R99  `mult rr4,#%C ; ld r13,r5 ; add r13,#X ; ld MEM,r13 ; ld @r2,r13`  ->  copies through r3 (enter(), 1 site):
+           `ld r3,r5 ; ld r13,r3 ; add r13,#X ; ld r3,r13 ; ld MEM,r3 ; ld @r2,r3`"""
+    z = s.split("\n")
+    out = []
+    n = {"R97": 0, "R98": 0, "R99": 0, "R100": 0}
+    i = 0
+    while i < len(z):
+        a = z[i]
+        if (a == "sub\tr2,r12" and i + 2 < len(z) and re.match(r"ld\t[^,]+,r2$", z[i + 1]) and z[i + 2].startswith("jr\tmi\t")):
+            out += [a, z[i + 1], "test\tr2"]
+            n["R97"] += 1
+            i += 2
+            continue
+        m = re.match(r"xorb\trh(\d),rh\1$", a)
+        if m and m.group(1) == "3" and i + 2 < len(z) and z[i + 1] == "exts\trr2" and re.match(r"div\trr2,#%3$", z[i + 2]):
+            out += [a, "ld\tr2,r3", "ld\tr3,r2", "xor\tr2,r2"]       # R45 has turned `xor r2,r2` into `exts rr2`: main() keeps the xor
+            n["R98"] += 1
+            i += 2
+            continue
+        if (a.startswith("ld\t-%") and a.endswith(",r3") and i + 1 < len(z) and z[i + 1] == "ld\tr2,r3" and n["R100"] == 0):
+            out += [a, "ld\tr2," + a.split(",")[0][3:]]            # ldrand(): `sp = *pp` then sp is reloaded from the local
+            n["R100"] = 1
+            i += 2
+            continue
+        if (a == "mult\trr4,#%C" and i + 4 < len(z) and z[i + 1] == "ld\tr13,r5" and z[i + 2].startswith("add\tr13,#")
+                and re.match(r"ld\t[^,@]+,r13$", z[i + 3]) and z[i + 4] == "ld\t@r2,r13"):
+            out += [a, "ld\tr3,r5", "ld\tr13,r3", z[i + 2], "ld\tr3,r13", z[i + 3].replace(",r13", ",r3"), "ld\t@r2,r3"]
+            n["R99"] += 1
+            i += 5
+            continue
+        out.append(a)
+        i += 1
     return "\n".join(out), n
 
 
