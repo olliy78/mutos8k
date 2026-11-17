@@ -4,11 +4,11 @@
 ; Original UDOS file IFSSPR (type P1, 768 bytes at EB00H, 05.03.1985) of the MUTOS 8000
 ; boot disk.  The boot script MUTOS runs "ACTIVATE $IFSSPR" before LOAD16 and mutos_io.
 ; ACTIVATE puts the file at EB00H and calls it ONCE with command 0 (install, measured,
-; doc/mutos_io/udos_drucker.md); afterwards mutos_io calls EB00H for every /dev/lp job
+; doc/mutos_io/udos_lader.md section 2); afterwards mutos_io calls EB00H for every /dev/lp job
 ; (mutos_io 91D9, CALL 0EB00H; parameter block AUF1 = A567H in IY).
 ;
 ; Reconstructed from the disk image (z80_disasm2 + karte) and commented by hand;
-; must assemble byte-identical (python3 mutos_io/udos/build_drucker.py --check).
+; must assemble byte-identical (python3 mutos_io/udos/build.py --check).
 ; The twin PIOPR (parallel printer on PIO A31) is the same program with another
 ; hardware layer (piopr.mac); keep both comments in step.
 ;

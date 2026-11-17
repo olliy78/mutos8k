@@ -1,6 +1,6 @@
 """Guard for the UDOS printer drivers IFSSPR and PIOPR (Plan 48 C1.3).
 
-1. source -> M80/LINKMT -> bytes == the checked-in ifsspr.bin / piopr.bin  (build_drucker.py --check)
+1. source -> M80/LINKMT -> bytes == the checked-in ifsspr.bin / piopr.bin  (build.py --check)
 2. the checked-in .bin == the file of the same name on the original boot disk (k1520disktool get)
 
 Skipped without the emulator project or the CP/M tool chain (exit 77 of the build script)."""
@@ -19,7 +19,7 @@ pytestmark = pytest.mark.gast
 
 
 def test_round_trip_source_to_bytes():
-    r = subprocess.run([sys.executable, "-I", str(UDOS / "build_drucker.py"), "--check"],
+    r = subprocess.run([sys.executable, "-I", str(UDOS / "build.py"), "--check"],
                        capture_output=True, text=True)
     if r.returncode == 77:
         pytest.skip("emulator project or CP/M tool chain missing")

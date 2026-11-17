@@ -6,7 +6,7 @@
 ; "BOOT MUTOS.PIO").  Same program as IFSSPR (ifsspr.mac) from the interface down to
 ; the job logic; only the hardware layer differs.  Read ifsspr.mac for the interface,
 ; the coroutine trick and the time-out; this file comments only the differences.
-; Must assemble byte-identical (python3 mutos_io/udos/build_drucker.py --check).
+; Must assemble byte-identical (python3 mutos_io/udos/build.py --check).
 ;
 ; Differences to IFSSPR:
 ;   * hardware: PIO A31 ports 54H (A data), 55H (A control), 56H (B data), 57H (B control)
@@ -15,7 +15,7 @@
 ;     0FF4H/0FF6H are not touched; PIO A raises the interrupt when the printer has taken
 ;     the byte (strobe/ready handshake in hardware), so TXISR = "next character"
 ;   * what the PIO control words mean is derived from the Z80-PIO data sheet, not measured:
-;     the emulator has no printer on PIO A31 (see doc/mutos_io/udos_drucker.md)
+;     the emulator has no printer on PIO A31 (see doc/mutos_io/udos_lader.md section 2)
 ; ==========================================================================
 	.Z80
 
