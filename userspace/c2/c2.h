@@ -40,10 +40,11 @@
 #define	XOR	29
 #define	TEXT	30
 #define	CODE	31
-#define	DATA	32
+#define	DSEC	32	/* $SECTION c_d */
 #define	SDEF	33
 #define	BSS	34
 #define	EVEN	35
+#define	DATA	36	/* no optab entry: pseudo segment id (lastseg, dead test in iterate) */
 #define	CMT	37		/* ! */
 #define	MULS	38		/* mul */
 #define	CPZX	39
