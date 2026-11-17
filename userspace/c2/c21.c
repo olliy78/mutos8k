@@ -427,9 +427,9 @@ register struct node *np;
 
 /* V7 dest with size (sz) bookkeeping; '@' instead of '*', '#' instead of '$' */
 dest(as, sz, flt)
-register char *as;
 char sz;
 register flt;
+register char *as;
 {
 	register i, r;
 
@@ -466,9 +466,9 @@ register flt;
  * walk as dest.  Name Annahme.
  */
 clrptr(as, sz, flt)
-register char *as;
 char sz;
 register flt;
+register char *as;
 {
 	register i;
 
@@ -789,11 +789,9 @@ char *ap1, *ap2;
 	p1 = ap1;
 	p2 = ap2;
 	if (*p1 == '#' && *p2 == '#') {
-		p1++;
-		if (*p1 == '%')
+		if (*++p1 == '%')
 			p1++;
-		p2++;
-		if (*p2 == '%')
+		if (*++p2 == '%')
 			p2++;
 	}
 	do {
@@ -845,7 +843,7 @@ char *ap;
 atoh(s)
 char *s;
 {
-	register n;
+	register unsigned n;
 
 	n = 0;
 	while (*s >= '0' && *s <= '9' || *s >= 'a' && *s <= 'f') {
@@ -918,20 +916,24 @@ char sz;
 	if (rsz[i] == 'q' || sz == 'q') {
 		regs[i][0] = 0;
 		rsz[i] = 0;
-		rnode[i++] = 0;
+		rnode[i] = 0;
+		i++;
 		regs[i][0] = 0;
 		rsz[i] = 0;
-		rnode[i++] = 0;
+		rnode[i] = 0;
+		i++;
 		regs[i][0] = 0;
 		rsz[i] = 0;
-		rnode[i++] = 0;
+		rnode[i] = 0;
+		i++;
 		regs[i][0] = 0;
 		rsz[i] = 0;
 		rnode[i] = 0;
 	} else if (rsz[j] == 'r' || sz == 'r') {
 		regs[j][0] = 0;
 		rsz[j] = 0;
-		rnode[j++] = 0;
+		rnode[j] = 0;
+		j++;
 		regs[j][0] = 0;
 		rsz[j] = 0;
 		rnode[j] = 0;
@@ -957,9 +959,7 @@ register unsigned n;
 {
 	register i;
 
-	if (n == 0 || n > 0x8000)
-		return(-1);
-	if (n & (n-1))
+	if (n == 0 || n > 0x8000 || (n & (n-1)))
 		return(-1);
 	for (i = 0; n >>= 1; i++);
 	return(i);
