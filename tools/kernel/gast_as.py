@@ -163,14 +163,16 @@ def gast_assemblieren(arbeit, teile, ausgabe=None, kommando=">asm.out;as %s.s >/
     return erg
 
 
-def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=(), mnt="/mnt"):
+def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=(), mnt="/mnt", quelle_hfe=None):
     """Allgemeiner Gastlauf (AP K5): `quellen` {name: bytes|str} kommen auf die Quelldiskette D (im Gast /mnt = Arbeitsordner),
     `befehle` laufen nacheinander in der Shell (Rueckmeldung je Befehl ueber eine Marke), danach werden die Dateien
     `rueck` aus /tmp (eigene leere Diskette A) geholt.  Rueckgabe {name: bytes oder None}.
     Befehle schreiben ihre Meldungen selbst nach /tmp/<name> (`>/tmp/x.err 2>&1`).
     `mnt`: mount point of drive D (default /mnt; plan 45 E6 uses /v7).  Every command must end in `mnt` (the runner
     appends `cat fertigN`).  Keys of `quellen` may contain "/" (bin/NAME, lib/NAME): subdirectories of the disk.
-    A mount point other than /mnt is created on the (copied) root disk first."""
+    A mount point other than /mnt is created on the (copied) root disk first.
+    `quelle_hfe`: an existing disk image for drive D (copied; `quellen` and the end markers are put onto the copy)
+    instead of a freshly created one (plan 45 E6 acceptance of v7erg1/v7erg2)."""
     pruefe_hilfsmittel()
     arbeit = os.path.abspath(arbeit)
     os.makedirs(arbeit, exist_ok=True)
@@ -199,10 +201,13 @@ def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dat
     rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "tmp.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes", "200"])
     if rc:
         raise RuntimeError("create tmp: " + o)
-    rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "quelle.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes",
-                   str(len(quellen) + len(befehle) + 40)])
-    if rc:
-        raise RuntimeError("create quelle: " + o)
+    if quelle_hfe:
+        shutil.copyfile(quelle_hfe, os.path.join(arbeit, "quelle.hfe"))
+    else:
+        rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "quelle.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes",
+                       str(len(quellen) + len(befehle) + 40)])
+        if rc:
+            raise RuntimeError("create quelle: " + o)
     dateien = [os.path.join(q, f) for f in sorted(os.listdir(q)) if not f.endswith(".fileinfo")]    # Angabendateien holt `put` selbst
     if any(os.path.isdir(f) for f in dateien):      # subdirectories (bin/, lib/): `put` takes the whole folder alone, its content lands in /
         dateien = [q]
