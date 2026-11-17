@@ -75,8 +75,8 @@ PROGRAMME = {
     "mt": ("bin", "mt", "userspace/mt/mt.c", []),   # not V7: doc/userspace/cmd_s5.md
     "tar": ("bin", "tar", "userspace/tar/tar.c", [V7INC + "sys/dir.h"]),   # not V7: doc/userspace/cmd_s5.md
     "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
-    "cc": ("usr", "bin/cc", "userspace/cc", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
-    "ld": ("usr", "bin/ld", "userspace/ld", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "cc": ("usr", "bin/cc", "userspace/cc/cc.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "ld": ("usr", "bin/ld", "userspace/ld/ld.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
@@ -90,7 +90,9 @@ PROGRAMME = {
 # c2 rules that do NOT apply to a program.  sh: the plain `cc -O` build has the SAME text length as the original (16746 B) and
 # 5249 of 5266 instructions equal without any rewriting, i.e. its c2 emits the usr c2's forms for R1, R2, R3, R4, R5, R7, R30
 # (measured, doc/userspace/sh.md); only the small rules R11-R14 remain.
-C2_AUS = {"sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
+# ld: R32 (1 site, symreloc) and R43 (1 site, getfile) would add an XORB the original does not have (measured, doc/userspace/wk_w13.md)
+C2_AUS = {"ld": {"R32", "R43"},
+         "sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
          # dd: R3 would put an XORB before the `jr` after `cp r2,#%30 ; jr nc` in number() (`switch(c)` dispatch at the end of the digit loop); the original has none (1 site, measured)
@@ -241,12 +243,18 @@ def cmd_bau(name, a):
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
                 for fn, t in sorted(r["s"].items()):
-                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar")
+                    zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc")
+                    if name == "ld":
+                        zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
+                        cnt.update(c3)
                     for k2, v2 in cnt.items():
                         tot[k2] = tot.get(k2, 0) + v2
                 print("%s: c2 model rewrote %s" % (n, tot))
             elif r["s"]:
-                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar")
+                zwei[n + "_c2_s"], cnt = U.c2_emu_s(r["s"], c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc")
+                if name == "ld":        # R97-R99 on top of the standard model (R45 off), doc/userspace/wk_w13.md
+                    zwei[n + "_c2_s"], c3 = U.c2_ld_s(zwei[n + "_c2_s"])
+                    cnt.update(c3)
                 print("%s: c2 model rewrote %s" % (n, cnt))
         erg2 = U.gast_bauen(os.path.join(ar, "bau"), zwei, koepfe, parallel=a.parallel, libs=libs)
         erg.update(erg2)
