@@ -53,3 +53,23 @@ Aufruf (Gast, ca. 6 min je Lauf): `python3 -I tools/userspace/pipeline.py alles 
 Konstanten/Tabellen: `optab` (76 Eintraege, `0x4286`), `conds` (12 Paare + Ende, `0x4252`), `revbr`, `isn = 9000`, `lastseg = 32` (alle gemessen).
 `lastseg` wird nur in `output` gesetzt (`CODE` 31 / `DATA` 36 / `BSS` 34) und nirgends gelesen (`movedat` fehlt).  `DATA` (36) hat keinen `optab`-Eintrag; die tote V7-Pruefung
 `p->forw->op!=DATA` in `iterate` ist erhalten (Wert 0x24 im Binary gemessen).  Namen `DSEC` (32), `CODE`, `SDEF` usw. sind *Annahme*.
+
+## Ergebnis Teil b (gemessen, Gast, `alles c2 --c2emu --libc alt --ist neu_c2`)
+**Alle 17 Funktionen von `c20.c` befehlsgleich (E auf Funktionsebene)**: im Bericht bleiben in 0030..149C keine Befehlsbloecke ausser vier Artefakten, die mit Teil zwei verschwinden:
+* `PUSH @R15,#D+..`/`ADD ..,#B+..` mit konstantem Versatz 0x1AA (Daten) bzw. Adressen in `libc`: das gebaute Abbild hat 426 B weniger Daten (Tabellen von c21) und 106 B weniger BSS, weil `c21.c` noch Stub ist.
+* `0748` `CP R2,#4 ; JR UGT` und `0AAE` `ADD R2,#%2000`: Darstellungsartefakte des Berichts (der Disassembler des Gebauten kennt die `ohne`-Marke 0902 des Originals nicht bzw. deutet 0x2000 als Funktionsadresse); die Bytes sind gleich.
+* `149C`/ab `151E`: Stub-Code statt `rmove` usw.
+Daten von `c20` (Zeichenketten, `conds`, `optab`, `revbr`, `isn`, `lastseg`) gleich dem Original (Bytevergleich mit Zeigerversatz, `diff` leer).  BSS-Adressen aller Globalen aus `c2.h` stimmen (`fflag` 509A usw.).
+
+Quellvarianten, die probiert wurden (je ein Gastlauf), und was sie entschied:
+* `input`: `case`-Rumpfreihenfolge muss `default, LABEL, CMT, JBR..` sein (Rumpf folgt der Quelle, Vergleichskette sortiert der Compiler); die Zerlegung der Bedingung ist eine `if`-Kette (`'\t' ' ' ',' '\n'`), kein `switch` (der sortiert die Vergleiche); `conds` ist ein `int`-Feld mit Schritt 2 (`int *cc; *cc != 0; cc += 2`; mit `*cc` allein oder `char **` ergibt der Compiler `ld r3,@r2 ; test r3`, das Original `test @r2`); `(p->subop & FLTF) == 0` statt `!(..)` (sonst `bitb`).
+* `oplook`: erste Stelle `(c = tmpop[2]) == 'b' || ...` als Ausdruck, zweite Stelle `c = *lp++;` als Anweisung davor (sonst fehlt `xorb`).
+* `codemove`: `t tl n` sind Registervariablen R10 R9 R8.
+* `main`: `putchar(c = getchar())` ist `c = getchar(); putchar(c);` (zwei Anweisungen).
+
+c2-Modell: **keine neue Regel.**  `C2_AUS["c2"] = {R5, R7, R32, R45}` in `tools/userspace/pipeline.py` (nur fuer das Programm `c2`, wie bei `sh`/`ed`): der gelieferte c2 selbst zeigt die Formen des aelteren Standes (`ld rA,rB ; test rB`, `ld DST,rB` nach `getchar`, kein `xorb` zwischen `ldb` und `cp` bei `tmpop[1]`, `xor r2,r2` vor dem Hash-Schalter in `output`).  R1 (3), R2 (6), R4 (7), R30 (2) feuern und stimmen.  Andere Programme sind nicht beruehrt (Schluessel ist der Name).
+
+## Offene Punkte fuer Teil zwei (`c21.c`, 0x151E..0x3590)
+* Funktionen laut Karte: `rmove` (3232 B, Sprungtabelle 4778), `jumpsw` (20EC, ungenutzt, V7-Rest), `addsob`, `toofar`, `ilen`, `adrlen`, `abs`, `equop`, `decref`, `nonlab`, `alloc`, `clearreg`, `savereg`, `dest`, `clrptr`, `singop`, `dualop`, `findrand`, `isreg`, `check` (ungenutzt), `repladdr`, `redunbr`, `findcon`, `compare`, `setcon`, `equstr`, `setcc`, `clrcc`, `natural`, `atoh`, `delnode`, `regno`, `setrsz`, `kill`, `clrptr30`, `log2n`, `mkshift` (Namen *Annahme*, Zuordnung der W0-Tabelle ist an mehreren Stellen falsch).
+* BSS-/Daten-Adressen der Globalen und der Statics (`labhash` 5566, `tmpop` 5546, `cbuf` 553C in `c20`) stimmen schon; die Daten von c21 (Tabellen 4808, 484C, 4778 ..) und c21-Statics fehlen noch (426 B Daten, 106 B BSS).
+* Aufrufschnittstellen aus `c20` (aus den Aufrufen gemessen): `toofar(p, 0)`, `equop(p1,p2)`, `decref(p)`, `nonlab(p)`, `alloc(n)`, `equstr(s1,s2)`, `delnode(p)` (ruft `nchange++`), `clearreg()`, `rmove()`, `addsob()`; Rueckgabe `retopt()` 1/0.

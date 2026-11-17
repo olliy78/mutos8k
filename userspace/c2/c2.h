@@ -4,7 +4,8 @@
  * Differs from V7: the opcode numbers are the ones of the MUTOS optab (measured at
  * 0x4286 in the binary), registers are tracked in 38 slots, the jump
  * ops come in a short (jr) and a long (jp) form.  All names are Annahme except
- * those taken over from V7 c2.h.
+ * those taken over from V7 c2.h.  Built with c20.c: every global below has the address of
+ * the original (BSS from 0x4A10, checked), `ccpad` fills a 2-byte gap (Annahme).
  */
 
 #include <stdio.h>

@@ -257,7 +257,7 @@ input()
 					*np++ = *cp++;
 				}
 				*np++ = 0;
-				for (cc = conds; *cc; cc += 2) {
+				for (cc = conds; *cc != 0; cc += 2) {
 					s = *cc;
 					np = cbuf;
 					while (*s++ == *np)
