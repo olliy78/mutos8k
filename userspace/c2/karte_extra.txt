@@ -1,0 +1,45 @@
+# c2: entries that --vorschlaege proposes but that lie inside instructions (data words read as pointers)
+ohne 0902
+ohne 206C
+ohne 2074
+ohne 20AA
+ohne 2102
+ohne 2120
+ohne 2578
+ohne 2920
+ohne 2A2A
+ohne 2A36
+ohne 2E2C
+ohne 2F2C
+# switch-table targets (data tables at 4770-48D2) and dead jr/functions that --vorschlaege misses
+code 2086
+code 20D8
+code 20EC
+code 2324
+code 245A
+code 2476
+code 247C
+code 2482
+code 24C4
+code 24F0
+code 250A
+code 2BD4
+code 301C
+code 3022
+code 3028
+code 302E
+code 3034
+code 303A
+code 3040
+code 3046
+code 304C
+code 3052
+code 3058
+code 305E
+# doprnt (libc, handwritten assembler) switch targets, see libc_alt/c2.members.zusatz; 3010/22FC/2572 further table targets
+code 3010
+code 22FC
+code 2572
+code 389C
+code 38A2
+code 38B8
