@@ -337,6 +337,11 @@ class Quelle:
                     if k == "B" and ad == a:
                         return s
                 return "B%04X" % a
+        if not cand and not eigen and self.m.bss and a == self.m.bss[0] + self.m.bss[1] and art == "B":
+            # `&buf[N]`: the one-past-the-end address of the member's OWN bss lies at the start of the next member's bss
+            # (ecvt's `buf[NDIG]` end test); the other member has no exported symbol there, so it can only be our own end
+            self.labels_bss.add(a)
+            return "B%04X" % a
         if not cand:
             raise Fehler("%s: %04X in %s of %s without an exported symbol before it (context: %s)" %
                          (self.m.name, a, art, w.name, kontext))
@@ -412,6 +417,16 @@ def code_umschreiben(self):
             if t in konst:
                 z = z[:mt.start()] + self.ausdruck(konst[t], "%04X %s" % (a, z.strip())) + z[mt.end():]
                 break
+        mx = re.match(r"\text[048][ef]\t(.*)$", z, re.I)
+        if mx:
+            # EPA extension instructions (floating point): the old `as` has no mnemonic for them (as_dialekt.md), so the
+            # words are written as data words in the code; only an address operand stays symbolic (relocated like any word)
+            ops = mx.group(1).split(",")
+            w = [struct.unpack(">H", c.raw[a + 2 * j:a + 2 * j + 2])[0] for j in range(3 if len(ops) == 3 else 2)]
+            wz = ["%%%04X" % x for x in w]
+            if len(ops) == 3 and not re.match(r"%[0-9A-F]+\(r14\)$", ops[2], re.I):
+                wz[2] = ops[2]
+            z = "\t" + ";".join("WV " + x for x in wz)
         neu[i] = z
     self.body = neu
 

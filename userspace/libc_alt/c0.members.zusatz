@@ -1,0 +1,2 @@
+# Hand-made correction for c0.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see cc.members.zusatz).
+doprnt code=4CEC,4CF2,4D08
