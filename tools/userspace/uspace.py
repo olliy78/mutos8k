@@ -480,14 +480,83 @@ def c2_cpp_s(s):
             standard model makes of it, `ld r2,rV ; ld M1,r2 ; ld M2,rV`  ->  `ld r2,rV ; ld M1,r2 ; ld M2,r2` (both stores through r2)
       R102  byte store of an immediate, `ldb DST,#k`  ->  the constant is loaded first: `ldk rT,#k ; ldb DST,rlT` (`ld` instead of `ldk`
             for k > 15); rT = r3 when DST uses r2 (`@r2`), else r2.
+      R104  `inc rV,#1 ; ldk/ld rT,#k ; ldb @r2,rlT` (post-increment store `*p++ = k`) where r2 was not loaded from rV right before (after the
+            R101 chain, after a `jr cc`): the original reloads the pointer, `ld r2,rV` is inserted before the `inc`
+      R105  `ld r2,rV ; ld _M,r2 ; cp rV,X`  ->  `cp r2,X`   (`eob(inp = --p)`)
+      R106  `ld r2,@rK ; ld rV,r2 ; test rV`  ->  `test r2`   (exception to R5: the pointed-to int is assigned and tested, `while (sp->name)`)
+      R102b a second `ldb @r2,#k` with the same k directly after the first one (only `ld r2,rV`/`inc rV` between) does not load the constant again
+      R107  after R4's `ld r0,M ; cp r0,#k ; jcc L` the fall-through path takes the tested value from r0: `ld r2,M` -> `ld r2,r0`
+            (refill, `fretop<MAXFRE`); with the value just stored from r2 (`ld M,r2 ; ld r0,M ; cp r0,#k ; jcc L ; sla r2,#1`, yyparse
+            `yyn = yypact[..]+1`) the test is `ld r0,r2 ; cp r0,#k ; jcc L ; ld r2,r0 ; sla r2,#1`
+      R108  `sla r4,#1 ; sub r2,r4`  ->  `sla r4,#1 ; ld r3,r4 ; sub r2,r3`   (yyparse `yypv -= yyr2[yyn]`, 2 sites)
+      R109  `ld r13,r9 ; ld r2,r13`  ->  `ld r13,r9 ; ld r2,r9`   (yyparse `yyps = yyp`-like copy; the standard model's R1 form is wrong here, 1 site)
+      R111  `ld r2,r10 ; ld r3,r2` -> `ld r3,r10` (lookup `c %= symsiz` hash; the standard model's R5 form is wrong here, 1 site)
+      R112  `call _strdex ; inc SP,#4 ; ld rV,r2 ; test rV` -> `test r2` (main, `if (p = strdex(*cp2, '='))`; the read() result in refill keeps `test r10`, 1 site)
+      R110  in cotoken: the FIRST `Lx: inc r13,#1 ; jr Ly` -> `jp Ly` (1 site: the original's layout puts the target further away, its c2 chose JP; the same shape
+            in main/slookup stays `jr`; without this the assembler rejects the jr after R104 grew the code)
       R103  switch jump on a char value, `ld r2,r3 ; cp r2,#k ; jp ugt L ; add r2,r3 ; ld r1,Ltab(r2)`  ->  `add r2,r2` (as for an int switch)"""
     z = s.split("\n")
-    n = {"R101": 0, "R102": 0, "R103": 0}
+    n = {"R101": 0, "R102": 0, "R103": 0, "R104": 0, "R105": 0, "R106": 0, "R107": 0, "R108": 0, "R109": 0, "R110": 0, "R111": 0, "R112": 0}
     out = []
     i = 0
     g = r"_\w+$"
+    fn = ""
+    cst = None      # (register, k) of the constant the last R102 store loaded, still valid
     while i < len(z):
         a = z[i]
+        if a.startswith("~~"):
+            fn = a[2:].rstrip(":")
+        if a == "ld\tr3,r2" and out and out[-1] == "ld\tr2,r10":
+            out.append("ld\tr3,r10")
+            n["R111"] += 1
+            i += 1
+            continue
+        m = re.match(r"test\t(r(?:8|9|1[0-3]))$", a)
+        if (m and len(out) >= 3 and out[-1] == "ld\t%s,r2" % m.group(1) and out[-2] == "inc\tSP,#%4" and out[-3] == "call\t_strdex"):
+            out.append("test\tr2")
+            n["R112"] += 1
+            i += 1
+            continue
+        if (fn == "cotoken" and n["R110"] == 0 and re.match(r"jr\tL\d+$", a) and i >= 2 and z[i - 1] == "inc\tr13,#%1" and re.match(r"L\d+:$", z[i - 2])):
+            out.append("jp" + a[2:])
+            n["R110"] += 1
+            i += 1
+            continue
+        if (a == "test\t" + (z[i - 1].split(",")[0].split("\t")[1] if i and z[i - 1].startswith("ld\tr") else "?") and i >= 2
+                and re.match(r"ld\tr(?:8|9|1[0-3]),r2$", z[i - 1]) and re.match(r"ld\tr2,@r\d+$", z[i - 2])):
+            out.append("test\tr2")
+            n["R106"] += 1
+            i += 1
+            continue
+        if (a.startswith("cp\tr") and i >= 2 and re.match(r"ld\t_\w+,r2$", z[i - 1]) and re.match(r"ld\tr2,r(?:8|9|1[0-3])$", z[i - 2])
+                and a.split(",")[0] == "cp\t" + z[i - 2].split(",")[1]):
+            out.append("cp\tr2," + a.split(",", 1)[1])
+            n["R105"] += 1
+            i += 1
+            continue
+        if a == "sub\tr2,r4" and out and out[-1] == "sla\tr4,#%1":
+            out += ["ld\tr3,r4", "sub\tr2,r3"]
+            n["R108"] += 1
+            i += 1
+            continue
+        if a == "ld\tr2,r13" and out and out[-1] == "ld\tr13,r9":
+            out.append("ld\tr2,r9")
+            n["R109"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr2,(_\w+)$", a)
+        if m and len(out) >= 3 and out[-3] == "ld\tr0," + m.group(1) and out[-2].startswith("cp\tr0,#") and re.match(r"j[rp]\t\w+\tL\w+$", out[-1]):
+            out.append("ld\tr2,r0")
+            n["R107"] += 1
+            i += 1
+            continue
+        m = re.match(r"ld\tr0,(-%[0-9A-F]+\(FP\))$", a)
+        if (m and out and out[-1] == "ld\t%s,r2" % m.group(1) and i + 3 < len(z) and z[i + 1].startswith("cp\tr0,#")
+                and re.match(r"j[rp]\t\w+\tL\w+$", z[i + 2]) and z[i + 3] == "sla\tr2,#%1"):
+            out += ["ld\tr0,r2", z[i + 1], z[i + 2], "ld\tr2,r0"]
+            n["R107"] += 1
+            i += 3
+            continue
         if (a == "add\tr2,r3" and i >= 3 and z[i - 3] == "ld\tr2,r3" and z[i - 1].startswith("jp\tugt\t") and z[i - 2].startswith("cp\tr2,#")
                 and i + 1 < len(z) and z[i + 1].startswith("ld\tr1,L")):
             out.append("add\tr2,r2")
@@ -508,14 +577,26 @@ def c2_cpp_s(s):
             n["R101"] += 1
             i += 2
             continue
+        m = re.match(r"inc\t(r(?:8|9|1[0-3])),#%1$", a)
+        if m and i + 1 < len(z) and re.match(r"ldb\t@r2,#%[0-9A-F]+$", z[i + 1]) and not (out and out[-1] == "ld\tr2," + m.group(1)):
+            out.append("ld\tr2," + m.group(1))
+            n["R104"] += 1
+            out.append(a)
+            i += 1
+            continue
         m = re.match(r"ldb\t([^,]+),#%([0-9A-F]+)$", a)
         if m:
             t = "3" if "r2" in m.group(1) else "2"
             k = int(m.group(2), 16)
-            out += [("ldk\tr%s,#%%%s" if k <= 15 else "ld\tr%s,#%%%s") % (t, m.group(2)), "ldb\t%s,rl%s" % (m.group(1), t)]
+            if cst != (t, k):
+                out.append(("ldk\tr%s,#%%%s" if k <= 15 else "ld\tr%s,#%%%s") % (t, m.group(2)))
+            out.append("ldb\t%s,rl%s" % (m.group(1), t))
+            cst = (t, k)
             n["R102"] += 1
             i += 1
             continue
+        if not (re.match(r"ld\tr2,r\d+$", a) or re.match(r"inc\tr\d+,#%1$", a)):
+            cst = None
         out.append(a)
         i += 1
     return "\n".join(out), n

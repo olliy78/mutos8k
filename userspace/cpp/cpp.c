@@ -823,7 +823,7 @@ char *namep;
 			if (around) {pperror("too many defines", 0); exit(exfail);}
 			else {++around; sp = &stab[symsiz-1];}
 	}
-	if (enterf>0) sp->name=namep;
+	if (enterf==1) sp->name=namep;	/* Differs from V7: V7 has enterf>0 (the MUTOS binary compares with 1) */
 	return(lastsym=sp);
 }
 
