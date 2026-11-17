@@ -121,7 +121,7 @@ addsob()
 			if (p1->op == p->op && equstr(p->code, p1->code)) {
 				delnode(p);
 				p = p->back;
-				if ((p1 = p->forw) == 0)
+				if (!(p1 = p->forw))
 					return;
 			}
 		}
@@ -138,7 +138,7 @@ addsob()
 				case JHI:
 					delnode(p1->forw);
 					delnode(p1);
-					if ((p1 = p->forw) == 0)
+					if (!(p1 = p->forw))
 						return;
 				case JEQ:
 				case JLE:
@@ -213,8 +213,12 @@ struct node *ap;
 		p1 = p->ref;
 	}
 	len = 0;
-	while ((p = p->forw) && p != p1)
+	for (;;) {
+		p = p->forw;
+		if (p == 0 || p == p1)
+			break;
 		len += ilen(p);
+	}
 	if (len >= 254)
 		return(1);
 	return(0);
@@ -251,13 +255,13 @@ register struct node *p;
 	case CBRS:
 	case JBR:
 	case SOB:
-	case RESM:
+	case LDK:
 		return(2);
 
 	default:
 		dualop(p);
 		if (p->subop & FLTF)
-			return(adrlen(regs[RT2]) + adrlen(regs[RT1]) + 4);
+			return(adrlen(regs[RT1]) + adrlen(regs[RT2]) + 4);
 		switch (p->op) {
 		case INC:
 		case DEC:
@@ -276,7 +280,7 @@ register struct node *p;
 				return(6);
 
 		default:
-			return(adrlen(regs[RT2]) + adrlen(regs[RT1]) + 2);
+			return(adrlen(regs[RT1]) + adrlen(regs[RT2]) + 2);
 		}
 	}
 }
