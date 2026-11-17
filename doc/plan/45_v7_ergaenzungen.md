@@ -49,7 +49,7 @@ Es gibt **kein Original**, gegen das man vergleichen koennte.  Die Beweisstandar
 | E3 | Entwicklungswerkzeuge: `yacc` (zuerst), dann `make` (V7, `gram.y`), `egrep`, `bc`, `dc`, `lex`, `m4`, `sed`, `ranlib`, `tsort` | `make` = Selbsthosting; `yacc` schaltet `.y` frei; *Stand: `yacc` B (Groessenklasse `SMALL`, `erg_e3a.md`), V7-`make` als `vmake` B (`erg_e3b.md`); tsort ranlib dc expr egrep bc B (`erg_e3c.md`), sed m4 lex B (`erg_e3d.md`), 2026-11-16; E3 damit vollstaendig* |
 | E4 | Systemverwaltung: `su newgrp chgrp mail write wall update cron at ac restor dump quot` | haengt von Kernel und Konfiguration ab (utmp, acct), je Programm klaeren; *Stand: offen* |
 | E5 | Rest nach Bedarf: `awk`, `ratfor`, `units`, `ptx`, `crypt`, ... | gross oder Gleitkomma; *Stand: offen* |
-| E6 | **Disketten `v7erg1`/`v7erg2`** (eingeplant 2026-11-16, nach Plan 52 W0) | siehe Abschnitt 8 |
+| E6 | **Disketten `v7erg1`/`v7erg2`** (eingeplant 2026-11-16, nach Plan 52 W0) | siehe Abschnitt 8; *Stand 2026-11-17: erledigt* (`erg_e6.md`): v7erg1 27 Programme + `diffh` (52 KB frei), v7erg2 10 Programme + `yaccpar ncform libl.a lib.b` (31 KB frei), Pfade auf `/v7`, alle 39 Tests B unter `/v7`, Abnahme beider Disketten gleich |
 
 `make`: V7-`make` (Verzeichnis `make/`, 8 `.c` + `gram.y`, Mehrdatei) neben unserem `userspace/make`; Vergleich beider ist ein eigener Auftrag.  *Nachtrag 2026-11-15:* gebaut als `userspace/ergaenzung/vmake`, `gram.c` im Gast mit dem MUTOS-`yacc` erzeugt; Unterschiede zu `userspace/make` in `erg_e3b.md`.
 
