@@ -442,7 +442,7 @@ register flt;
 	}
 	for (i = 0; i < NREG; i++)
 		if ((r >= 0 && isreg(regs[i]) == r)
-		 || (regs[i][0] == '@' && equstr(regs[i]+1, s)))
+		 || (regs[i][0] == '@' && equstr(s, regs[i]+1)))
 			kill(i, sz);
 	while ((i = findrand(s, sz, flt)) >= 0) {
 		if (rsz[i] == sz)

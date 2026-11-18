@@ -73,3 +73,37 @@ c2-Modell: **keine neue Regel.**  `C2_AUS["c2"] = {R5, R7, R32, R45}` in `tools/
 * Funktionen laut Karte: `rmove` (3232 B, Sprungtabelle 4778), `jumpsw` (20EC, ungenutzt, V7-Rest), `addsob`, `toofar`, `ilen`, `adrlen`, `abs`, `equop`, `decref`, `nonlab`, `alloc`, `clearreg`, `savereg`, `dest`, `clrptr`, `singop`, `dualop`, `findrand`, `isreg`, `check` (ungenutzt), `repladdr`, `redunbr`, `findcon`, `compare`, `setcon`, `equstr`, `setcc`, `clrcc`, `natural`, `atoh`, `delnode`, `regno`, `setrsz`, `kill`, `clrptr30`, `log2n`, `mkshift` (Namen *Annahme*, Zuordnung der W0-Tabelle ist an mehreren Stellen falsch).
 * BSS-/Daten-Adressen der Globalen und der Statics (`labhash` 5566, `tmpop` 5546, `cbuf` 553C in `c20`) stimmen schon; die Daten von c21 (Tabellen 4808, 484C, 4778 ..) und c21-Statics fehlen noch (426 B Daten, 106 B BSS).
 * Aufrufschnittstellen aus `c20` (aus den Aufrufen gemessen): `toofar(p, 0)`, `equop(p1,p2)`, `decref(p)`, `nonlab(p)`, `alloc(n)`, `equstr(s1,s2)`, `delnode(p)` (ruft `nchange++`), `clearreg()`, `rmove()`, `addsob()`; Rueckgabe `retopt()` 1/0.
+
+# Teil c (Branch `us-wk-w5c`): `c21.c` ohne `rmove`
+
+Stand 2026-11-18.  `userspace/c2/c21.c` ersetzt den Stub: alle c21-Funktionen ausser `rmove` sind gelesen und gebaut; `rmove` bleibt ein **markierter Stub** (Teil d), der
+nur die Zeichenketten (13 Literale in Originalreihenfolge) und eine 55-Eintraege-Sprungtabelle erzeugt, damit die Daten stimmen, und der alle anderen Funktionen aufruft
+(`if (i == 0x7777)`, nur damit die Karte des gebauten Abbilds sie dekodiert).  Aufruf wie in Teil b.
+
+## Ergebnis (gemessen)
+* **Daten: 1984 B = Original** (die +0x1AA-Verschiebung der c20-Datenverweise ist weg; `c20` im Bericht ohne Differenzbloecke).  c21-Daten: Tabellen 4778 (rmove, Stub), 47E6/47EC/47FE (addsob), 4808/484C (ilen), 48BA (compare), Zeichenketten ab 48D2 (rmove-Literale, alloc, `"#0"` in redunbr).
+* **BSS: 3296 B = Original**; Statics `rt1[50] rt2[50]` (5664, repladdr) und `buf[5]` (56C8, mkshift) = 106 B.  Die BSS-Adressen im gebauten Abbild liegen noch tiefer als im Original, weil der Text ohne `rmove` kuerzer ist (Teil d).
+* "own code": 3622 von 4717 Befehlen gleich (rmove, 3232 B, fehlt); 44 Differenzbloecke, keiner in `c20`.
+
+## Funktionen (Adresse, Stand; V7-Gegenstueck wo vorhanden)
+* 151E rmove: Stub (Teil d).  20EC jumpsw (V7, tot): gleich.  21BE addsob (nicht V7, nur der `djnz`-Teil): gleich bis auf tote `JR L22FC` bei 2324.
+* 23E4 toofar(p,flag): **Differenz** (Original hat den Ausgangsblock vor der Schleife).  244E ilen (nicht V7): Differenz in der Lage der Rueckgabebloecke 0/2/4.  2510 adrlen: Differenz (Lage des `s[1]=='P'`-Blocks).  2572 abs: gleich.
+* 258C equop (V7): Differenz (Original wiederholt den op/subop-Vergleich bei 25C2; Quelle unklar).  25FE decref, 2622 nonlab, 2644 alloc (`fprintf(stderr,"C Optimizer: out of space\n")`), 26A2 clearreg, 2702 savereg(ai,as,sz,np): gleich.
+* 278C dest(as,sz,flt) (V7 + Groesse): gleich bis auf eine `equstr`-Argumentreihenfolge (zuletzt korrigiert, ungeprueft).  2932 clrptr (nicht V7): gleich.  2A36 singop, 2A72 dualop: gleich (+ `setrsz`).
+* 2AF2 findrand(as,sz,flt): Differenz (das `JP cret` sitzt bei `return(i)` statt beim ersten `return(-1)`).  2BC0 isreg (`return regno(as)`), 2BD4 check (V7, tot), 2BFC repladdr(p,f,flt), 2E5A redunbr, 2F26 findcon: gleich.
+* 2F94 compare: Differenz (Tabelle 48BA stimmt, Vergleichsketten anders zusammengefuehrt; `JPL/JMI` neu).  3060 setcon(ar1,ar2,sz), 30C0 equstr (`#%x` = `#x`), 311E setcc, 315C clrcc, 316C natural, 31BA atoh (nicht V7, `register unsigned n`), 322E delnode, 3256 regno, 3322 setrsz: gleich.
+* 33AE kill: fast gleich (eine `JR NZ`-Differenz bei 34D0).  34E4 clrptr30, 3536 mkshift: gleich.  3504 log2n: Differenz (Lage von `return(-1)`).
+
+Die Zuordnung der W0-Tabelle war an mehreren Stellen falsch: 21BE ist `addsob` (550 B), `jumpsw` liegt bei 20EC; 278C `dest`, 2932 `clrptr`, 2A36 `singop`, 2A72 `dualop`, 2BC0 `isreg`, 2E5A `redunbr`, 2F26 `findcon`, 2F94 `compare`, 3060 `setcon`, 30C0 `equstr`, 311E `setcc`, 316C `natural`.  Namen ausser V7 sind *Annahme*.
+
+## Quellvarianten, die entschieden haben
+* `if (!(p1 = p->forw)) return;` ergibt `LD R2,..;LD R12,R2;TEST R2` wie das Original; `(p1 = ..) == 0` nicht.
+* `dest`/`clrptr`: `register char *s; s = as;` (R12) mit `register flt` (R13); ein Registerparameter `as` vertauscht die Register.
+* `kill`: `rnode[i] = 0; i++;` getrennt (`rnode[i++]` setzt das `INC` zu frueh).
+* `addsob`-Hash-Schalter: Faelle MOV CLR TST CMP BIS BIC CPZX CPFX SET RES BIT LDK (aus den Eimerketten zurueckgerechnet: Eimer = op%3, Kettenwert = op/3); `EX` gehoert nicht dazu.
+* `addsob` vergleicht `p1->forw` (Wort bei +2) mit der Konstanten 2 (`CP 2(R12),#2`); als `p1->forw > 2` uebernommen (*Annahme*: Fehler der Original-Quelle).
+* `ilen`: letzter Fall `LDK` (55), nicht `RESM` (sonst Tabelle 57 statt 55 Eintraege); `adrlen(regs[RT1]) + adrlen(regs[RT2])`.
+
+## Offen fuer Teil d (`rmove`)
+* Stub ersetzen; Tabelle 4778 (55 Eintraege, `op-1`), Literale `#0 SP ,#%%%x #0 x6 #%ffff #-%1 #%0 #0`, danach die alloc-Zeichenkette.  Der Aufrufblock im Stub entfaellt.
+* Ungeklaerte Lagen (toofar/ilen/adrlen/equop/findrand/compare/log2n/addsob-Totsprung): vermutlich Quelltextform; keine neue c2-Regel eingefuehrt.
