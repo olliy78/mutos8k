@@ -5,6 +5,9 @@
 
 #include "c1.h"
 
+extern int nreg;
+extern int isn;
+
 /* Not V7: original data at 7B3E (3 bytes + pad) */
 char	modname[]	"c_";
 int	nfloat;

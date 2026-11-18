@@ -6,6 +6,9 @@
 
 #include "c1.h"
 
+extern int nreg;
+extern int isn;
+
 optim(atree)
 struct tnode *atree;
 {

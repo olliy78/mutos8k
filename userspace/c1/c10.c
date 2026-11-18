@@ -234,7 +234,7 @@ again:
 			atree = tree = optim(tree);
 		}
 	}
-	switch ((unsigned)tree->op)  {
+	switch (tree->op)  {
 
 	/*
 	 * Structure assignments
@@ -1413,8 +1413,7 @@ struct tnode *tree;
 		lregf = 0;
 		return;
 	}
-	c = isfloat(t);
-	if (c=='l')
+	if ((c = isfloat(t))=='l')
 		printf("rr%d", n);
 	else if (c=='f') {
 		printf("f%d", reg);
