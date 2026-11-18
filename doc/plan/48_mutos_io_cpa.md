@@ -612,7 +612,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | erledigt (E7 b) | 2026-11-18 | e514d0a |
 | C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | erledigt | 2026-11-18 | d23a7db |
 | C4.2 | `doc/plus/cpa/c4_2_arbeitstests.md` | 5-15 Min. je Lauf | 2-3 h | erledigt | 2026-11-18 | 1eee4aa |
-| C5.2 | `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md`, `doc/plus/cpa/c5_2_abschluss.md` | Langtest | 2-3 h | offen | | |
+| C5.2 | `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md`, `doc/plus/cpa/c5_2_abschluss.md` | Langtest | 2-3 h | erledigt (Fixpunkt nicht, s. c5_2) | 2026-11-18 | bb6c7fd |
 
 ## 11. Offene Entscheidungen fuer den Projektinhaber (jetzt, vor C1)
 
