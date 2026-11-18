@@ -610,7 +610,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C3.3 | wie C3.2, `doc/plus/cpa/c3_3_platte.md` | Minuten | 4-6 h | erledigt | 2026-11-18 | b864f84 |
 | C3.4 | wie C3.2, `doc/plus/cpa/c3_4_tastatur.md`, `doc/plus/abweichungen.md` | Minuten | 3-5 h | erledigt | 2026-11-18 | 0a58e67 |
 | C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | offen | | |
-| C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | offen | | |
+| C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | erledigt | 2026-11-18 | d23a7db |
 | C4.2 | `doc/plus/cpa/c4_2_arbeitstests.md` | 5-15 Min. je Lauf | 2-3 h | offen | | |
 | C5.2 | `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md`, `doc/plus/cpa/c5_2_abschluss.md` | Langtest | 2-3 h | offen | | |
 
@@ -647,3 +647,7 @@ Keiner muss jetzt entschieden werden.  Bedingt vorzulegen ist nur:
 Alle anderen Messpunkte aus `cpa_analyse` §8 sind als Erste Sonden eingeplant (voller ISR neben `READ` C3.3, Stapeltiefe C3.2/C4.2, lange Tastenfolgen C3.4, `LIST` C4.1,
 Diskettenwechsel C3.4 mit vorab festgelegtem Rueckfall).  `CONOUT` im ISR entfaellt mit E6 (d) (Ausgabe nur aus der Hauptschleife); C4.2 misst stattdessen die Verzoegerung der Ausgabe.
 Nicht untersucht bleibt `diskio` (nicht noetig, E1 (a)).
+
+**Entscheidung E7 nach C4.1-Sonde (Projektinhaber, 2026-11-18):** Rueckfall **E7 (b)**: Treiberkern aus `mutos_io/udos/src/ifsspr.mac` (ab `HWINIT`) in `mutoscpa` uebernehmen.
+Grund (*gemessen*, `doc/plus/cpa/c4_1_drucker.md`): BIOS `LIST` sendet mit 1 statt 2 Stoppbits, DEL statt NUL am Auftragsanfang, ohne NUL nach CR und blockiert
+beim ersten Druck ~76 Mio. Takte (kein Drucker im Emulator); `IFSSPR` ist interruptgetrieben und am Port gemessen.
