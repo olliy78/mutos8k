@@ -20,3 +20,7 @@ python3 -I mutos_io/cpa/build.py abbild [--out MUTOSIO.IMG]
 (*gemessen*).  Die Funktion `build.abbild()` ist fuer C2.4 (Bootdiskette) importierbar.  Der Bau nutzt `ladediskette.baue(quelle=...)`.
 
 **Basis-Commit** = der Commit von Plan 48 C2.1: `git diff <basis> -- mutos_io/cpa/src/mutoscpa.mac` zeigt alle CP/A-Aenderungen.
+
+Gesamtbild (Startkette, Aufrufe, Speicherkarte, Laufzeiten, Grenzen): `doc/plus/cpa.md`.  Hostwerkzeuge: `tools/plus/cpa_system.py` (4-Floppy-`@OS.COM`), `cpa_disk.py` (Bootdiskette, `kstart`),
+`cpa_lauf.py` (Gastlauf, `probe`/`boot`).  Waechter: `tests/test_plus_cpa_*.py`; Langtest `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_cpa_lang.py` (Arbeitstests ueber CP/A, `bewerten` ohne Fehlschlag).
+`mutoscpa.bin` ist ab C3.2 **nicht mehr** bytegleich zu `mutos_io/mutosio.bin`; Basis-Commit siehe oben.

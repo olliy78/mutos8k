@@ -4,7 +4,7 @@ Stand 2026-11-15, Branch `mutos-plus` (Plan 47).  **Grobplan.**  Hervorgegangen 
 
 ## 1. Ausgangslage
 
-* **GIDE im CP/A** (`k1520emu: doc/merkposten/gide_cpa.md`): Treiber fest im BIOS, Plattenformat nach Heiko Poppe, **8 Laufwerke zu je 8 MB** (C: bis J:, 256 MB Abbild,
+* **GIDE im CP/A** (`k1520emu: doc/merkposten/gide_cpa.md`): Treiber fest im BIOS, Plattenformat nach Heiko Poppe, **8 Laufwerke zu je 8 MB** (bei der fertigen Emulator-Diskette mit 2 Floppys C: bis J:; bei der **4-Floppy-Variante von Plan 48 E: bis L:**, *gemessen* `doc/plus/cpa/c1_8_vier_floppy.md` §4; 256 MB Abbild,
   500 Spuren x 16 x 63 Sektoren); bootet mit Lade-ROM UL4 auch ohne Diskette von der Platte.  Unvertraeglich mit dem Kingstener-Format (`gidn`).
 * **Emulator:** GIDE-Karte, ATA-Platte und RTC umgesetzt (`k1520emu: doc/design/50_gun_gide.md`, G2-G6); fertige formatierte Platte `k1520emu: disks/a5120_cpa_gide/`.
 * Der fruehere Ansatz aus Plan 46 (Raw-Modus in `mutos_io` am Controller vorbei, weil UDOS keine Platte kennt) **entfaellt**: ueber das CP/A-BIOS ist jedes
@@ -22,7 +22,7 @@ ohne Diskette (CP/A bootet von der Platte, der Lader aus Plan 48 startet MUTOS v
 1. **Ein CP/A-Laufwerk = eine MUTOS-Einheit** (8 MB).  Groessere Dateisysteme ueber mehrere CP/A-Laufwerke sind nicht vorgesehen.
 2. **Eigener Major** fuer die Platte (Diskettenweg bleibt unberuehrt) oder derselbe `rk` mit mehr Einheiten?  *Empfohlen:* derselbe `rk` mit Einheitentabelle aus
    Plan 49 B3 (Groesse je Einheit), weil der Weg in `mutos_io` gleich ist (BIOS-Laufwerk); Minor-Nummern fuer die Platteneinheiten festlegen.
-3. **Belegung:** welche der 8 Laufwerke bekommt MUTOS, welche bleiben CP/A (C: traegt `@OS.COM` und die Werkzeuge -- fuer den Plattenstart unverzichtbar).
+3. **Belegung:** welche der 8 Laufwerke bekommt MUTOS, welche bleiben CP/A (das erste GIDE-Laufwerk -- **E:** bei der 4-Floppy-Variante, C: bei 2 Floppys -- traegt `@OS.COM` und die Werkzeuge, fuer den Plattenstart unverzichtbar).
    Ein von MUTOS belegtes Laufwerk ist fuer CP/A unbrauchbar (und umgekehrt).
 4. **Swap:** eigene Einheit auf der Platte (`swapdev`, `swplo`, `nswap`), entlastet die Wurzel.
 5. **Werkzeuge:** `icheck`, `ncheck`, `dcheck` sind fuer 16 384 Bloecke zu klein (gemessen fuer Disketten, Plan 49 §1); `fsck` wird nicht ergaenzt (MUTOS bleibt V7).
