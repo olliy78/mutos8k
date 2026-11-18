@@ -83,6 +83,13 @@ Zeitgrenze 600000 ms oder im Hintergrund mit Benachrichtigung, nie `sleep`, Rund
 Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Programme plus `sh` im Gast (sequentiell), Herkunftstabelle in `doc/userspace/README.md`
 (Abschnitt "Werkzeugkette"), Stand in Plan 44 Stufe 4 und Plan 42 H7 nachtragen.
 
+## 5a. Reihenfolge ab 2026-11-18 (Entscheidung Projektinhaber)
+
+1. W10b (laeuft): unsere `c2`-Quelle funktional gegen den ausgelieferten `c2` pruefen.
+2. **W7 `as`** in kleinen Schritten (Triage, yacc-Grammatik, Scanner `plzlex`, Codeerzeugung) -- groesste echte Luecke, Voraussetzung fuer W9 und die E-Glieder von `libc.a`.
+3. W10 weiter (Schalter im `c2`), dann gemeinsam fuer die Restbloecke von `c1`, `c2`, `cpp` und `as`.
+4. W9 Selbsthosting mit beiden Ketten; zuletzt W11 (Herkunft ZEUS/WEGA).
+
 ## 6a. W10: Original- und angepasste Werkzeugkette (Auftrag des Projektinhabers 2026-11-18)
 
 **Ziel:** Alle Teile des Systems bytegleich **im MUTOS-Gast** bauen, ohne Zwischenergebnisse (`.s`) auf dem Linux-Host zu patchen.
