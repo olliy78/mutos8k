@@ -143,6 +143,83 @@ Variablen: `p` R13, `cp` R12, `r r1 flt i` R11..R8, `fl2` (Stack FFF2, Bank des 
 * `rnode[..] != 0` statt `rnode[..]` ergibt `TEST @R2` statt `LD R3,@R2; TEST R3` (`pop`, `ld`/`clr`-Zweig, `EROU`-Schleife; beim `xor` ist die kurze Form richtig).
 * XOR-Zweig `else { savereg(..); goto setc; }` (der `savereg`-Block wandert hinter `setcc`); `if (p->op != BIC) clrcc(); else setcc(..)`; CBR: `if (p->forw->op <= CBR) delnode(p); else { unlink }`.
 * `log2n`: `if (n != 0 && n <= 0x8000 && (n & (n-1)) == 0) { for (..); return(i); } return(-1);`.
+* `toofar`: `return(len >= 254);` in der Schleife (`if (p == 0 || p == p1) return(len >= 254);`) bringt die Rueckgabebloecke vor die Schleife; Rest: `LDK`/`XOR` der Relation (2 Bloecke).
+  Die Form `if (len >= 254) return(1); return(0);` in der Schleife war schlechter (Lauf 6).  `adrlen` mit verschachteltem `if (*s == 'S') { if (s[1]=='P') ..}` aenderte nichts (zurueckgenommen).
+
+## Offene Punkte fuer Teil zwei (`c21.c`, 0x151E..0x3590)
+* Funktionen laut Karte: `rmove` (3232 B, Sprungtabelle 4778), `jumpsw` (20EC, ungenutzt, V7-Rest), `addsob`, `toofar`, `ilen`, `adrlen`, `abs`, `equop`, `decref`, `nonlab`, `alloc`, `clearreg`, `savereg`, `dest`, `clrptr`, `singop`, `dualop`, `findrand`, `isreg`, `check` (ungenutzt), `repladdr`, `redunbr`, `findcon`, `compare`, `setcon`, `equstr`, `setcc`, `clrcc`, `natural`, `atoh`, `delnode`, `regno`, `setrsz`, `kill`, `clrptr30`, `log2n`, `mkshift` (Namen *Annahme*, Zuordnung der W0-Tabelle ist an mehreren Stellen falsch).
+* BSS-/Daten-Adressen der Globalen und der Statics (`labhash` 5566, `tmpop` 5546, `cbuf` 553C in `c20`) stimmen schon; die Daten von c21 (Tabellen 4808, 484C, 4778 ..) und c21-Statics fehlen noch (426 B Daten, 106 B BSS).
+* Aufrufschnittstellen aus `c20` (aus den Aufrufen gemessen): `toofar(p, 0)`, `equop(p1,p2)`, `decref(p)`, `nonlab(p)`, `alloc(n)`, `equstr(s1,s2)`, `delnode(p)` (ruft `nchange++`), `clearreg()`, `rmove()`, `addsob()`; Rueckgabe `retopt()` 1/0.
+
+# Teil c (Branch `us-wk-w5c`): `c21.c` ohne `rmove`
+
+Stand 2026-11-18.  `userspace/c2/c21.c` ersetzt den Stub: alle c21-Funktionen ausser `rmove` sind gelesen und gebaut; `rmove` bleibt ein **markierter Stub** (Teil d), der
+nur die Zeichenketten (13 Literale in Originalreihenfolge) und eine 55-Eintraege-Sprungtabelle erzeugt, damit die Daten stimmen, und der alle anderen Funktionen aufruft
+(`if (i == 0x7777)`, nur damit die Karte des gebauten Abbilds sie dekodiert).  Aufruf wie in Teil b.
+
+## Ergebnis (gemessen)
+* **Daten: 1984 B = Original** (die +0x1AA-Verschiebung der c20-Datenverweise ist weg; `c20` im Bericht ohne Differenzbloecke).  c21-Daten: Tabellen 4778 (rmove, Stub), 47E6/47EC/47FE (addsob), 4808/484C (ilen), 48BA (compare), Zeichenketten ab 48D2 (rmove-Literale, alloc, `"#0"` in redunbr).
+* **BSS: 3296 B = Original**; Statics `rt1[50] rt2[50]` (5664, repladdr) und `buf[5]` (56C8, mkshift) = 106 B.  Die BSS-Adressen im gebauten Abbild liegen noch tiefer als im Original, weil der Text ohne `rmove` kuerzer ist (Teil d).
+* "own code": 3623 von 4717 Befehlen gleich (rmove, 3232 B, fehlt); 42 Differenzbloecke, keiner in `c20`.
+
+## Funktionen (Adresse, Stand; V7-Gegenstueck wo vorhanden)
+* 151E rmove: Stub (Teil d).  20EC jumpsw (V7, tot): gleich.  21BE addsob (nicht V7, nur der `djnz`-Teil): gleich bis auf tote `JR L22FC` bei 2324.
+* 23E4 toofar(p,flag): **Differenz** (Original hat den Ausgangsblock vor der Schleife).  244E ilen (nicht V7): Differenz in der Lage der Rueckgabebloecke 0/2/4.  2510 adrlen: Differenz (Lage des `s[1]=='P'`-Blocks).  2572 abs: gleich.
+* 258C equop (V7): Differenz (Original wiederholt den op/subop-Vergleich bei 25C2; Quelle unklar).  25FE decref, 2622 nonlab, 2644 alloc (`fprintf(stderr,"C Optimizer: out of space\n")`), 26A2 clearreg, 2702 savereg(ai,as,sz,np): gleich.
+* 278C dest(as,sz,flt) (V7 + Groesse): gleich (im letzten Lauf).  2932 clrptr (nicht V7): gleich.  2A36 singop, 2A72 dualop: gleich (+ `setrsz`).
+* 2AF2 findrand(as,sz,flt): Differenz (das `JP cret` sitzt bei `return(i)` statt beim ersten `return(-1)`).  2BC0 isreg (`return regno(as)`), 2BD4 check (V7, tot), 2BFC repladdr(p,f,flt), 2E5A redunbr, 2F26 findcon: gleich.
+* 2F94 compare: Differenz (Tabelle 48BA stimmt, Vergleichsketten anders zusammengefuehrt; `JPL/JMI` neu).  3060 setcon(ar1,ar2,sz), 30C0 equstr (`#%x` = `#x`), 311E setcc, 315C clrcc, 316C natural, 31BA atoh (nicht V7, `register unsigned n`), 322E delnode, 3256 regno, 3322 setrsz: gleich.
+* 33AE kill: fast gleich (eine `JR NZ`-Differenz bei 34D0).  34E4 clrptr30, 3536 mkshift: gleich.  3504 log2n: Differenz (Lage von `return(-1)`).
+
+Die Zuordnung der W0-Tabelle war an mehreren Stellen falsch: 21BE ist `addsob` (550 B), `jumpsw` liegt bei 20EC; 278C `dest`, 2932 `clrptr`, 2A36 `singop`, 2A72 `dualop`, 2BC0 `isreg`, 2E5A `redunbr`, 2F26 `findcon`, 2F94 `compare`, 3060 `setcon`, 30C0 `equstr`, 311E `setcc`, 316C `natural`.  Namen ausser V7 sind *Annahme*.
+
+## Quellvarianten, die entschieden haben
+* `if (!(p1 = p->forw)) return;` ergibt `LD R2,..;LD R12,R2;TEST R2` wie das Original; `(p1 = ..) == 0` nicht.
+* `dest`/`clrptr`: `register char *s; s = as;` (R12) mit `register flt` (R13); ein Registerparameter `as` vertauscht die Register.
+* `kill`: `rnode[i] = 0; i++;` getrennt (`rnode[i++]` setzt das `INC` zu frueh).
+* `addsob`-Hash-Schalter: Faelle MOV CLR TST CMP BIS BIC CPZX CPFX SET RES BIT LDK (aus den Eimerketten zurueckgerechnet: Eimer = op%3, Kettenwert = op/3); `EX` gehoert nicht dazu.
+* `addsob` vergleicht `p1->forw` (Wort bei +2) mit der Konstanten 2 (`CP 2(R12),#2`); als `p1->forw > 2` uebernommen (*Annahme*: Fehler der Original-Quelle).
+* `ilen`: letzter Fall `LDK` (55), nicht `RESM` (sonst Tabelle 57 statt 55 Eintraege); `adrlen(regs[RT1]) + adrlen(regs[RT2])`.
+
+## Offen fuer Teil d (`rmove`)
+* Stub ersetzen; Tabelle 4778 (55 Eintraege, `op-1`), Literale `#0 SP ,#%%%x #0 x6 #%ffff #-%1 #%0 #0`, danach die alloc-Zeichenkette.  Der Aufrufblock im Stub entfaellt.
+* Ungeklaerte Lagen (toofar/ilen/adrlen/equop/findrand/compare/log2n/addsob-Totsprung): vermutlich Quelltextform; keine neue c2-Regel eingefuehrt.
+
+# Teil d (Branch `us-wk-w5d`): `rmove`
+
+Stand 2026-11-18.  `rmove` (151E, 3232 B) in `userspace/c2/c21.c` ist geschrieben; der Stub samt Hilfsaufrufblock (`if (i == 0x7777)`) ist weg.
+Lauf: `python3 -I tools/userspace/pipeline.py alles c2 --c2emu --libc alt --ist neu_c2`.
+
+## Ergebnis (gemessen)
+* **`rmove` ist befehlsgleich**: im Bericht bleiben in 151E..20EC nur Darstellungsartefakte (`CALL L`/`CALL F` auf `clrptr` 2932, das im Gebauten noch verschoben liegt; ein vom Disassembler
+  falsch dekodiertes Wort bei 2090 und der Anfang von `jumpsw` bei 20EC, beides Folge der `ohne`-Marken des Originals).  Das Gebaute ist an 20EC gleich lang (der Text ist nur nach den
+  Lagefunktionen kuerzer).
+* c20: unveraendert gleich.  c21: die Funktionen ausser `addsob` (Totsprung), `ilen`, `adrlen`, `equop`, `findrand`, `compare` sind befehlsgleich (Stand Lauf 5: 4609 von 4717 Befehlen, 28 Bloecke).
+* `log2n`, `kill`, `clrptr30` sind jetzt gleich (Quellform von `log2n`: positive Bedingung, `return(-1)` am Ende).
+* Daten 1984 B, BSS 3296 B gleich Original; BSS-Adressen stimmen.  Der Text ist um 20 B kuerzer als das Original (nur noch in den Lagefunktionen).
+
+## Fall fuer Fall (Tabelle 4778, Index `op-1`; Namen der Variablen *Annahme*)
+Variablen: `p` R13, `cp` R12, `r r1 flt i` R11..R8, `fl2` (Stack FFF2, Bank des Quelloperanden; `flt` ist die Bank des Ziels).
+* LDIL (9), MOV (10) und LDK (55): gleich.  Gemeinsames `mv:` mit zwei `findrand`-Pruefungen (`rsz`-Vergleich, `isreg`), `goto del` auf `delnode(p); redunm++`;
+  `flt == fl2`: Entfernen eines toten Vorgaengers (`rnode[r+flt]`, `kill`), `ld r,#0`/`clr r` -> `xor r,r` (nicht bei LONG/FLTF), `repladdr`; dann `clrcc` je nach `ccloc` und
+  `dest`/`clrptr`/`savereg`/`setcon`.
+* INC DEC ASR ASL SET RES SRL SLL (13 14 17 18 41 42 50 51): gleich.  `inc SP,#n ; push` wird zu `inc SP,#n-2 ; ld @SP` (`sprintf(",#%%%x")`), sonst `dest`+`clrptr`+`setcc`/`clrcc`.
+* ADD SUB BIS SDL MUL DIV ASH XOR MULS POP PUSH (21..23 25..29 38 45 46): gleich.  `pop` entfernt den ladenden Knoten; `or r,#2^n` -> `set` (`log2n`, `mkshift`); `xor r,r` mit
+  Registerkenntnis (`cregs`: Halbregister).
+* NEG (15), CLR COM SXT (11 12 19), TST CPZX (16 39), CMP CPFX BIT (20 40 43), BIC (24): gleich.  `and r,#~2^n` -> `res`; `and r,#%ffff`/`#-%1` -> `test`, `and r,#%0` -> `clr`.
+* CBRS CBR (1 2), JBR JMP (3 4): gleich.  Bedingter Sprung nach `test`/`cmp` mit bekannten Konstanten (`findcon`, `compare`): entfernen oder zum unbedingten Sprung machen (`op += 2`);
+  fallt dann in `redunbr(p); clrptr30();` durch (kein `clearreg`).
+* EROU CALL END (8 47 48): Register 0..7, die nur ein `ld`-Knoten laedt (`regs[r][0] == 'r'`), werden entfernt; weiter in `default: clearreg()`.
+
+## Quellvarianten, die entschieden haben
+* Kopf: `if (p->subop & FLTF) flt = FREG; else flt = 0; fl2 = flt;` (die `?:`-Form ergibt `XOR R2,R2; LD R9,R2`).
+* LDIL: `if (rsz[RT2] == 'r') fl2 = 0; else flt = 0; goto mv;`; MOV: `if (!equstr(..)) goto mv; goto del;` **vor** dem Block `mv:`.  Der Block `mv:` rueckt durch `codemove`
+  hinter den `goto mv` von LDIL (V7-`codemove` verlangt, dass der Befehl vor dem Ziel ein unbedingter Sprung ist; mit `if (equstr) goto del;` und Durchfall passiert das nicht).
+* `del:` steht im Rumpf der ersten Pruefung (`if (c1) { del: delnode; redunm++; continue; }`), die zweite Pruefung macht `goto del`.
+* `equstr(regs[RT2], "#0")`: die Argumente stehen in der Reihenfolge von links nach rechts im Quelltext (Stapel rechts nach links).
+* `rnode[..] != 0` statt `rnode[..]` ergibt `TEST @R2` statt `LD R3,@R2; TEST R3` (`pop`, `ld`/`clr`-Zweig, `EROU`-Schleife; beim `xor` ist die kurze Form richtig).
+* XOR-Zweig `else { savereg(..); goto setc; }` (der `savereg`-Block wandert hinter `setcc`); `if (p->op != BIC) clrcc(); else setcc(..)`; CBR: `if (p->forw->op <= CBR) delnode(p); else { unlink }`.
+* `log2n`: `if (n != 0 && n <= 0x8000 && (n & (n-1)) == 0) { for (..); return(i); } return(-1);`.
 * `toofar`: Schleifenende mit `if (p == 0 || p == p1) { if (len >= 254) return(1); return(0); }` (Schleife ohne Rotation: `codemove`/`ivloop` des Originals greifen nur, wenn hinter dem
   Rueckwaertssprung ein Label folgt).
 

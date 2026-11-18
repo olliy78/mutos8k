@@ -532,11 +532,8 @@ struct node *ap;
 	len = 0;
 	for (;;) {
 		p = p->forw;
-		if (p == 0 || p == p1) {
-			if (len >= 254)
-				return(1);
-			return(0);
-		}
+		if (p == 0 || p == p1)
+			return(len >= 254);
 		len += ilen(p);
 	}
 }
@@ -610,10 +607,8 @@ register char *s;
 		return(0);
 	if (*s == 'r' || *s == 'f')
 		return(0);
-	if (*s == 'S') {
-		if (s[1] == 'P')
-			return(0);
-	}
+	if (*s == 'S' && s[1] == 'P')
+		return(0);
 	if (*s == '(' && (s[1] == 'r' || s[1] == 'F'))
 		return(0);
 	if (*s == '@')
