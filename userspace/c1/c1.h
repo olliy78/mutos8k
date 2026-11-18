@@ -102,8 +102,8 @@ struct	swtab {
 char	maprel[];
 char	modname[];	/* not V7: module name for the as header, "c_" (defined in c11.c) */
 char	notrel[];
-int	nreg;
-int	isn;
+/* nreg and isn are initialised data defined in c10.c; c11.c/c12.c declare them extern
+   (a plain declaration here would reserve 4 bytes of BSS in front of the other commons) */
 int	namsiz;
 int	line;
 int	nerror;
@@ -111,13 +111,13 @@ struct	table	cctab[];
 struct	table	efftab[];
 struct	table	regtab[];
 struct	table	sptab[];
-struct	table	lsptab[1];
+/* lsptab: not declared here; see c10.c (BSS order) */
 struct	instab	instab[];
 struct	instab	branchtab[];
 int	opdope[];
 char	*opntab[];
 int	nstack;
-int	nfloat;
+/* nfloat is defined in c10.c (after fptab); declared in c11.c */
 struct	tname	sfuncr;
 char	*funcbase;
 char	*curbase;

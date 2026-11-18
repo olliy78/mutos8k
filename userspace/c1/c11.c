@@ -5,8 +5,19 @@
 
 #include "c1.h"
 
+extern int nreg;
+extern int isn;
+
 /* Not V7: original data at 7B3E (3 bytes + pad) */
 char	modname[]	"c_";
+int	nfloat;
+
+/* Not V7: zero-initialised flags at 7B42..7B4A (names *Annahme*) */
+int	yf0	0;	/* 7B42 */
+int	yf1	0;	/* 7B44 */
+int	yf2	0;	/* 7B46 */
+int	yf3	0;	/* 7B48 */
+int	yf4	0;	/* 7B4A */
 
 max(a, b)
 {
@@ -1167,4 +1178,53 @@ decref(at)
 incref(t)
 {
 	return(((t&~TYPE)<<TYLEN) | (t&TYPE) | PTR);
+}
+
+/*
+ * Not V7 (original at 2DAE, name *Annahme*): bit number of a single-bit
+ * constant, else -1.  Belongs between ispow2 and pow2 in c11 (to be
+ * placed when c11 is reconstructed).
+ */
+bitnum(v)
+unsigned v;
+{
+	register n;
+
+	if (v==0 || v>0100000 || (v&(v-1))!=0)
+		return(-1);
+	for (n=0; (v >>= 1)!=0; n++)
+		;
+	return(n);
+}
+
+/*
+ * Not V7 (original at 2EE4, name *Annahme*): turn the AND/OR/ASAND/ASOR
+ * with a single-bit constant into the bit reset/set operators 82/81/84/83
+ * (op numbers measured; no names in c1.h yet) with the bit number as the
+ * constant.  Belongs after pow2 in c11.
+ */
+bitop(tree, n)
+struct tnode *tree;
+{
+	struct tnode *p;
+
+	p = tree;
+	if (p->tr1->type==CHAR && n>7)
+		return(p);
+	p->tr2->value = n;
+	switch (p->op) {
+	case AND:
+		p->op = 82;
+		break;
+	case OR:
+		p->op = 81;
+		break;
+	case ASAND:
+		p->op = 84;
+		break;
+	case ASOR:
+		p->op = 83;
+		break;
+	}
+	return(p);
 }
