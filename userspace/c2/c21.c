@@ -533,12 +533,9 @@ struct node *ap;
 	for (;;) {
 		p = p->forw;
 		if (p == 0 || p == p1)
-			break;
+			return(len >= 254);
 		len += ilen(p);
 	}
-	if (len >= 254)
-		return(1);
-	return(0);
 }
 
 /* Not V7: length in bytes of one instruction (Z8000 encoding) */
@@ -1273,10 +1270,11 @@ register unsigned n;
 {
 	register i;
 
-	if (n == 0 || n > 0x8000 || (n & (n-1)))
-		return(-1);
-	for (i = 0; n >>= 1; i++);
-	return(i);
+	if (n != 0 && n <= 0x8000 && (n & (n-1)) == 0) {
+		for (i = 0; n >>= 1; i++);
+		return(i);
+	}
+	return(-1);
 }
 
 /* Not V7: make the operand ",#%k" (shift count) for the shift made from mult/and/or */
