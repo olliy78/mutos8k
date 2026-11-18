@@ -227,17 +227,28 @@ struct tnode *atree;
 	return(tree);
 }
 
+/*
+ * Reconstructed from the binary at 4584 (W6h).  Differs strongly from V7:
+ * - a CHAR register operand is widened to INT before anything else;
+ * - ITOF/LTOF build an FCON for CON and LCON operands (via long->double),
+ *   a zero constant just returns optim(subtre); no FTOI case, no SFCON,
+ *   no PDP-11 character sign extension (ITOC on CON masks with 0377,
+ *   on NAME the char is the byte at offset+1);
+ * - LTOI has no ANDN case, no INCAFT/DECBEF (AUTOI/AUTOD) in STAR;
+ * - STAR returns tree unchanged when the operand is a leaf;
+ * - NEG has no SFCON case.
+ */
 unoptim(atree)
 struct tnode *atree;
 {
 	struct { int intx[4]; };
 	register struct tnode *subtre, *tree;
 	register int *p;
-	double static fv;
-	struct ftconst *fp;
 
 	if ((tree=atree)==0)
 		return(0);
+	if (tree->tr1->type==CHAR && tree->tr1->class==REG)
+		tree->tr1->type = INT;
     again:
 	if (tree->op==AMPER && tree->tr1->op==STAR) {
 		subtre = tree->tr1->tr1;
@@ -257,56 +268,32 @@ struct tnode *atree;
 		}
 		break;
 
-	case FTOI:
-		if (tree->type==UNSIGN) {
-			tree->op = FTOL;
-			tree->type = LONG;
-			tree = tnode(LTOI, UNSIGN, tree);
-		}
-		break;
-
-	case LTOF:
-		if (subtre->op==LCON) {
-			tree = getblk(sizeof(*fp));
-			tree->op = FCON;
-			tree->type = DOUBLE;
-			tree->value = isn++;
-			tree->fvalue = subtre->lvalue;
-			return(optim(tree));
-		}
-		break;
-
 	case ITOF:
-		if (tree->tr1->type==UNSIGN) {
-			tree->tr1 = tnode(ITOL, LONG, tree->tr1);
-			tree->op = LTOF;
-			tree = optim(tree);
-		}
-		if (subtre->op!=CON)
+	case LTOF:
+		if (subtre->op==LCON && subtre->lvalue==0)
+			return(optim(subtre));
+		if (subtre->op==CON && subtre->value==0)
+			return(optim(subtre));
+		if (subtre->op!=LCON && subtre->op!=CON)
 			break;
-		fv = subtre->value;
-		p = &fv;
-		p++;
-		if (*p++==0 && *p++==0 && *p++==0) {
-			tree = getblk(sizeof(*fp));
-			tree->op = SFCON;
-			tree->type = DOUBLE;
-			tree->value = * (int *) &fv;
-			tree->fvalue = fv;
-			return(tree);
-		}
-		break;
+		tree = getblk(sizeof(struct ftconst));
+		tree->op = FCON;
+		tree->type = DOUBLE;
+		tree->value = isn++;
+		if (subtre->op==LCON)
+			ltod(subtre->lvalue, &tree->fvalue);
+		else
+			ltod((long)subtre->value, &tree->fvalue);
+		return(optim(tree));
 
 	case ITOC:
 		p = tree->tr1;
-		/*
-		 * Sign-extend PDP-11 characters
-		 */
 		if (p->op==CON) {
-			p->value = p->value << 8 >> 8;
+			p->value =& 0377;
 			return(p);
 		} else if (p->op==NAME) {
 			p->type = CHAR;
+			p->offset =+ 1;
 			return(p);
 		}
 		break;
@@ -323,7 +310,10 @@ struct tnode *atree;
 
 		case NAME:
 			p->offset =+ 2;
-			p->type = tree->type;
+			if (tree->type==CHAR)
+				p->type = INT;
+			else
+				p->type = tree->type;
 			return(p);
 
 		case STAR:
@@ -338,7 +328,6 @@ struct tnode *atree;
 		case PLUS:
 		case MINUS:
 		case AND:
-		case ANDN:
 		case OR:
 		case EXOR:
 			p->tr2 = tnode(LTOI, tree->type, p->tr2);
@@ -398,13 +387,9 @@ struct tnode *atree;
 			subtre->regno = subtre->nloc;
 			return(subtre);
 		}
+		if (opdope[subtre->op]&LEAF)
+			return(tree);
 		p = subtre->tr1;
-		if ((subtre->op==INCAFT||subtre->op==DECBEF)&&tree->type!=LONG
-		 && p->op==NAME && p->class==REG && p->type==subtre->type) {
-			p->type = tree->type;
-			p->op = subtre->op==INCAFT? AUTOI: AUTOD;
-			return(p);
-		}
 		if (subtre->op==PLUS && p->op==NAME && p->class==REG) {
 			if (subtre->tr2->op==CON) {
 				p->offset =+ subtre->tr2->value;
@@ -485,14 +470,6 @@ struct tnode *atree;
 				tree->lvalue = -subtre->tr1->value;
 			return(tree);
 		}
-		/*
-		 * PDP-11 FP negation
-		 */
-		if (subtre->op==SFCON) {
-			subtre->value =^ 0100000;
-			subtre->fvalue.intx[0] =^ 0100000;
-			return(subtre);
-		}
 		if (subtre->op==FCON) {
 			subtre->fvalue.intx[0] =^ 0100000;
 			return(subtre);
@@ -520,6 +497,9 @@ struct tnode *at;
 	register struct fasgn *t2;
 
 	t = at;
+	/* Differs from V7: ASAND is complemented here (no ASANDN case) and again below */
+	if (t->op==ASAND)
+		t->tr2 = tnode(COMPL, t->tr2->type, t->tr2, NULL);
 	switch (t->op) {
 
 	case ASSIGN:
@@ -532,7 +512,7 @@ struct tnode *at;
 		t2->tr2 = t->tr2;
 		t = t2;
 
-	case ASANDN:
+	case ASAND:
 	case ASPLUS:
 	case ASMINUS:
 	case ASOR:
@@ -549,6 +529,8 @@ struct tnode *at;
 		t1 = t1->tr2;
 		t1 = tnode(COMMA, INT, tconst(t1->tr1->value, INT),
 			tconst(t1->tr2->value, INT));
+		if (t->op==ASAND)
+			t->tr2 = tnode(COMPL, t->tr2->type, t->tr2, NULL);
 		return(optim(tnode(FSELT, UNSIGN, t, t1)));
 
 	}
@@ -564,12 +546,17 @@ struct acl {
 	struct tnode *llist[LSTSIZ+1];
 };
 
+/*
+ * Differs from V7 (reconstructed from the binary at 4D76, W6h): flt is
+ * compared with 'f' (isfloat returns a letter), t/flt/op are register
+ * variables, "+0" removal only when nextl>0, no hardlongs for LONG TIMES.
+ */
 acommute(atree)
 {
 	struct acl acl;
-	int d, i, op, flt, d1;
-	register struct tnode *t1, **t2, *tree;
-	struct tnode *t;
+	int d, i, d1;
+	register struct tnode *t1, **t2, *tree, *t;
+	register int flt, op;
 
 	acl.nextl = 0;
 	acl.nextn = 0;
@@ -579,7 +566,7 @@ acommute(atree)
 	insert(op, tree, &acl);
 	acl.nextl--;
 	t2 = &acl.llist[acl.nextl];
-	if (!flt) {
+	if (flt!='f') {
 		/* put constants together */
 		for (i=acl.nextl; i>0; i--) {
 			if (t2[0]->op==CON && t2[-1]->op==CON) {
@@ -595,8 +582,8 @@ acommute(atree)
 	}
 	if (op==PLUS || op==OR) {
 		/* toss out "+0" */
-		if (acl.nextl>0 && (t1 = isconstant(*t2)) && t1->value==0
-		 || (*t2)->op==LCON && (*t2)->lvalue==0) {
+		if (acl.nextl>0 && ((t1 = isconstant(*t2)) && t1->value==0
+		 || (*t2)->op==LCON && (*t2)->lvalue==0)) {
 			acl.nextl--;
 			t2--;
 		}
@@ -626,11 +613,11 @@ acommute(atree)
 				}
 		}
 	}
-	if (op==PLUS && !flt)
+	if (op==PLUS && flt!='f')
 		distrib(&acl);
 	tree = *(t2 = &acl.llist[0]);
 	d = max(degree(tree), islong(tree->type));
-	if (op==TIMES && !flt)
+	if (op==TIMES && flt!='f')
 		d++;
 	for (i=0; i<acl.nextl; i++) {
 		t1 = acl.nlist[i];
@@ -648,9 +635,7 @@ acommute(atree)
 		t1->tr1 = tree;
 		tree = t1;
 		if (tree->type==LONG) {
-			if (tree->op==TIMES)
-				tree = hardlongs(tree);
-			else if (tree->op==PLUS && (t = isconstant(tree->tr1))
+			if (tree->op==PLUS && (t = isconstant(tree->tr1))
 			       && t->value < 0 && t->type!=UNSIGN) {
 				tree->op = MINUS;
 				t->value = - t->value;
@@ -675,10 +660,10 @@ struct acl *list;
  * fewest divisors. Reduce this pair to c1*(y+c2*x)
  * and iterate until no reductions occur.
  */
-	register struct tnode **p1, **p2;
-	struct tnode *t;
-	int ndmaj, ndmin;
-	struct tnode **dividend, **divisor;
+	register struct tnode **p1, **p2, *t;
+	register int ndmaj, ndmin;
+	register struct tnode **dividend;
+	struct tnode **divisor;
 	struct tnode **maxnod, **mindiv;
 
     loop:
@@ -1030,31 +1015,4 @@ regnode(class, type, reg)
 	p->offset = 0;
 	p->regno = 0;
 	return(p);
-}
-
-hardlongs(at)
-struct tnode *at;
-{
-	register struct tnode *t;
-
-	t = at;
-	switch(t->op) {
-
-	case TIMES:
-	case DIVIDE:
-	case MOD:
-		t->op =+ LTIMES-TIMES;
-		break;
-
-	case ASTIMES:
-	case ASDIV:
-	case ASMOD:
-		t->op =+ LASTIMES-ASTIMES;
-		t->tr1 = tnode(AMPER, LONG+PTR, t->tr1);
-		break;
-
-	default:
-		return(t);
-	}
-	return(optim(t));
 }
