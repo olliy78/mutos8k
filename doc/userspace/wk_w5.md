@@ -83,13 +83,13 @@ nur die Zeichenketten (13 Literale in Originalreihenfolge) und eine 55-Eintraege
 ## Ergebnis (gemessen)
 * **Daten: 1984 B = Original** (die +0x1AA-Verschiebung der c20-Datenverweise ist weg; `c20` im Bericht ohne Differenzbloecke).  c21-Daten: Tabellen 4778 (rmove, Stub), 47E6/47EC/47FE (addsob), 4808/484C (ilen), 48BA (compare), Zeichenketten ab 48D2 (rmove-Literale, alloc, `"#0"` in redunbr).
 * **BSS: 3296 B = Original**; Statics `rt1[50] rt2[50]` (5664, repladdr) und `buf[5]` (56C8, mkshift) = 106 B.  Die BSS-Adressen im gebauten Abbild liegen noch tiefer als im Original, weil der Text ohne `rmove` kuerzer ist (Teil d).
-* "own code": 3622 von 4717 Befehlen gleich (rmove, 3232 B, fehlt); 44 Differenzbloecke, keiner in `c20`.
+* "own code": 3623 von 4717 Befehlen gleich (rmove, 3232 B, fehlt); 42 Differenzbloecke, keiner in `c20`.
 
 ## Funktionen (Adresse, Stand; V7-Gegenstueck wo vorhanden)
 * 151E rmove: Stub (Teil d).  20EC jumpsw (V7, tot): gleich.  21BE addsob (nicht V7, nur der `djnz`-Teil): gleich bis auf tote `JR L22FC` bei 2324.
 * 23E4 toofar(p,flag): **Differenz** (Original hat den Ausgangsblock vor der Schleife).  244E ilen (nicht V7): Differenz in der Lage der Rueckgabebloecke 0/2/4.  2510 adrlen: Differenz (Lage des `s[1]=='P'`-Blocks).  2572 abs: gleich.
 * 258C equop (V7): Differenz (Original wiederholt den op/subop-Vergleich bei 25C2; Quelle unklar).  25FE decref, 2622 nonlab, 2644 alloc (`fprintf(stderr,"C Optimizer: out of space\n")`), 26A2 clearreg, 2702 savereg(ai,as,sz,np): gleich.
-* 278C dest(as,sz,flt) (V7 + Groesse): gleich bis auf eine `equstr`-Argumentreihenfolge (zuletzt korrigiert, ungeprueft).  2932 clrptr (nicht V7): gleich.  2A36 singop, 2A72 dualop: gleich (+ `setrsz`).
+* 278C dest(as,sz,flt) (V7 + Groesse): gleich (im letzten Lauf).  2932 clrptr (nicht V7): gleich.  2A36 singop, 2A72 dualop: gleich (+ `setrsz`).
 * 2AF2 findrand(as,sz,flt): Differenz (das `JP cret` sitzt bei `return(i)` statt beim ersten `return(-1)`).  2BC0 isreg (`return regno(as)`), 2BD4 check (V7, tot), 2BFC repladdr(p,f,flt), 2E5A redunbr, 2F26 findcon: gleich.
 * 2F94 compare: Differenz (Tabelle 48BA stimmt, Vergleichsketten anders zusammengefuehrt; `JPL/JMI` neu).  3060 setcon(ar1,ar2,sz), 30C0 equstr (`#%x` = `#x`), 311E setcc, 315C clrcc, 316C natural, 31BA atoh (nicht V7, `register unsigned n`), 322E delnode, 3256 regno, 3322 setrsz: gleich.
 * 33AE kill: fast gleich (eine `JR NZ`-Differenz bei 34D0).  34E4 clrptr30, 3536 mkshift: gleich.  3504 log2n: Differenz (Lage von `return(-1)`).
