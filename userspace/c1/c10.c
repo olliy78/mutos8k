@@ -512,6 +512,10 @@ again:
 	return(reg);
 }
 
+/* Differs from V7: lsptab is not in c1.h (it would take BSS in front of nstack); only the
+   unreconstructed V7 text of cexpr below uses it */
+struct	table	lsptab[1];
+
 /*
  * Try to compile the tree with the code table using
  * registers areg and up.  If successful,
