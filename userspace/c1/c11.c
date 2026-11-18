@@ -226,6 +226,13 @@ struct tnode *ap;
 	return(d);
 }
 
+/*
+ * Differs from V7 (original at 26D8): dense switch over NAME..STAR; FCON,
+ * AMPER and a non-register NAME give 12, LCON 11 (no AUTOI/AUTOD/SFCON);
+ * CON is graded 4/5/6/7/8 by value (12 if not positive); STAR of a register
+ * name gives 9, of an OFFS name 12 (V7: NAME/CON/AUTOI/AUTOD operand, not
+ * LONG).
+ */
 dcalc(ap, nrleft)
 struct tnode *ap;
 {
@@ -239,34 +246,40 @@ struct tnode *ap;
 		if (p->class==REG)
 			return(9);
 
-	case AMPER:
 	case FCON:
-	case LCON:
-	case AUTOI:
-	case AUTOD:
+	case AMPER:
 		return(12);
 
+	case LCON:
+		return(11);
+
 	case CON:
-	case SFCON:
 		if (p->value==0)
 			return(4);
-		if (p->value==1)
-			return(5);
-		if (p->value > 0)
+		if (p->value>0) {
+			if (p->value<16)
+				return(5);
+			if (p->value==16)
+				return(6);
+			if (p->value<33)
+				return(7);
 			return(8);
+		}
 		return(12);
 
 	case STAR:
 		p1 = p->tr1;
-		if (p1->op==NAME||p1->op==CON||p1->op==AUTOI||p1->op==AUTOD)
-			if (p->type!=LONG)
-				return(12);
+		if (p1->op==NAME && p1->class==REG)
+			return(9);
+		if (p1->op==NAME && p1->class==OFFS)
+			return(12);
 	}
 	if (p->type==LONG)
 		nrleft--;
 	return(p->degree <= nrleft? 20: 24);
 }
 
+/* Differs from V7: no register-char/ASSIGN exemption (op is unused) */
 notcompat(ap, ast, op)
 struct tnode *ap;
 {
@@ -289,23 +302,36 @@ struct tnode *ap;
 		at = at&TYPE | 020;
 	if (st==FLOAT && at==DOUBLE)
 		at = FLOAT;
-	if (p->op==NAME && p->class==REG && op==ASSIGN && st==CHAR)
-		return(0);
 	return(st != at);
 }
 
-prins(op, c, itable)
+/*
+ * Differs from V7 (original at 2826): extra argument fl (unused here; the
+ * callers pass the float flag), entries are {iop, str1, str2}; a string
+ * starting with '!' only counts up yf4; an operator string starting with
+ * 'm' gets a 't' appended unless fl; t/x/o/an operators set zf4 (branch
+ * code selection).  Reconstructed from the listing.
+ */
+prins(op, fl, c, itable)
 struct instab *itable;
 {
 	register struct instab *insp;
 	register char *ip;
 
-	for (insp=itable; insp->op != 0; insp++) {
-		if (insp->op == op) {
+	for (insp=itable; insp->iop != 0; insp++) {
+		if (insp->iop == op) {
 			ip = c? insp->str2: insp->str1;
 			if (ip==0)
 				break;
+			if (*ip=='!') {
+				yf4++;
+				return;
+			}
 			printf("%s", ip);
+			if (*ip=='m' && !fl)
+				putchar('t');
+			if (*ip=='t' || *ip=='x' || *ip=='o' || (*ip=='a' && ip[1]=='n'))
+				zf4 = 1;
 			return;
 		}
 	}
@@ -351,14 +377,16 @@ struct tnode *t;
 		case ASTIMES:
 		case ASDIV:
 		case ASMOD:
-			if (t->type!=LONG)
+			if (t->type==LONG) {
+				if (reg>2)
+					error("Register overflow for longs: simplify expression");
+				else {
+					if (reg || t->op==MOD || t->op==ASMOD)
+						return(4);
+					return(0);
+				}
+			} else
 				return((reg+1)|1);
-			if (reg<=2) {
-				if (reg || t->op==MOD || t->op==ASMOD)
-					return(4);
-				return(0);
-			}
-			error("Register overflow for longs: simplify expression");
 		}
 	}
 	if (c=='l' || t->op==ITOF || t->op==FTOI)
@@ -762,7 +790,10 @@ branch(lbl, aop, c)
 	if (op=aop) {
 		if (zf4) {
 			zf4 = 0;
-			k = op>200? op-200: op;
+			if (op>200)
+				k = op-200;
+			else
+				k = op;
 			if (k==GREAT && !c || k==LESSEQ && c) {
 				printf("jp	eq	L%d\n", isn);
 				printf("jp	pl	L%d\n", lbl);
