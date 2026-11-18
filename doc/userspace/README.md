@@ -25,6 +25,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `wk_w4.md` | Werkzeugkette W4: c0 (ganzdatei bytegleich), c2-Regeln R130-R133 nur fuer c0; Gleitkommaglieder fltpr/ecvt in libc_alt |
 | `wk_w8.md` | Werkzeugkette W8: `libc.a` je Glied (140: 111 G, 24 E, 5 A), `crt0.o`/`mcrt0.o` E; Quellen `userspace/libc/` |
 | `wk_w5.md` | Werkzeugkette W5: c2 (c20.c und rmove befehlsgleich; 6 c21-Funktionen weichen in der Blockanordnung ab) |
+| `wk_w5e.md` | c2-Gegenprobe: echter ausgelieferter c2 im Gast gegen das Regelmodell, 52 Programme; Werkzeuge `c2gegen.py`, `c2layout.py` |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -203,6 +204,17 @@ Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan`
 
 Triage aller Passe: `wk_w0.md` (V7-`yacc` erzeugt die Tabellen von `cpp` wortgleich; `as` ist kein V7).
 **Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  Nach W2: ed tar cc ld sh gleich, `cpy.c`/`bc.c` mit dem Gast-yacc neu erzeugt = eingecheckt, `bc` B.  **Nach W4 (c0, mit `libc_alt.py`-Aenderung fuer Gleitkommaglieder), gemessen 2026-11-17:** alle 47 Originalprogramme, `cc`, `ld`, `c0` (`--ist neu_c2`) und `sh` gleich (51 von 51).  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
+
+## c2-Gegenprobe (gemessen 2026-11-18, `wk_w5e.md`)
+
+`cc -O -S` laeuft schon durch den **ausgelieferten** `/usr/lib/c2`; das Regelmodell bildet also *dessen* Ausgabe auf die Ausgabe des c2 ab, mit dem die Originale gebaut wurden.
+Gemessen mit `tools/userspace/c2gegen.py` (c1-Ausgabe im Gast, echter c2 darauf, Vergleich mit dem Modell) an 52 Programmen / 78 Modulen:
+
+* **Die Originalprogramme wurden nicht mit dem ausgelieferten c2 gebaut.**  82 von 94 Regeln greifen nur dort, wo der ausgelieferte c2 die Originalform *nicht* erzeugt (zusammen 774 Stellen); 280 Stellen macht er wie das Original.
+* Ohne jedes Modell, nur mit dem echten c2, bytegleich: `sync`, `rm`, `pstat`, `mt` (fuer `mt` waere das Modell sogar falsch); `ps` braucht nur R77.  Alle anderen gebauten Programme brauchen das Modell.
+* Der echte c2 tut nichts, was das Modell nicht abbildet (keine unerklaerte Form gefunden).
+* Auch `c2` selbst wurde mit einem anderen c2-Stand gebaut: die Blockanordnung in `adrlen`/`toofar` (erster von mehreren gleichen Rueckkehrbloecken bleibt oben) erzeugt der ausgelieferte c2 aus keiner der drei probierten Quellformen (*Annahme*: anderes `codemove`/`backjmp`).
+* Die Regeln bleiben damit Modell eines **unbekannten aelteren c2-Standes**, jetzt aber mit gemessener Abgrenzung je Regel (`userspace/c2/gegenprobe_regeln.tsv`).
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 
