@@ -1,0 +1,79 @@
+program	module	lines_s0	lines_s	lines_model	diff_s_model	rule:state:sites
+ar	ar.s	2100	1821	1823	96	R1:active:20,R2:active:1,R4:active:3,R30:active:1,R42:active:2,R71:active:1
+c0	c00.s	2663	2338	2338	6	R131:active:1,R132:active:1
+c0	c01.s	1760	1536	1536	0	
+c0	c02.s	2162	1988	1988	8	R130:active:2
+c0	c03.s	1853	1701	1701	0	
+c0	c04.s	1293	1099	1099	6	R130:active:1,R133:active:1
+c0	c05.s	350	350	350	0	
+c2	c20.s	3155	2814	2815	39	R1:active:3,R2:active:6,R4:active:7,R5:aus:13,R7:aus:5,R30:active:2,R32:aus:14,R45:aus:1
+c2	c21.s	4418	3813	3807	72	R1:active:14,R2:active:10,R3:active:2,R4:active:1,R5:aus:3,R7:aus:18,R10:active:1,R11:aus:1,R30:active:8,R32:aus:12,R45:aus:1
+cat	cat.s	254	227	230	15	R4:active:4,R5:active:2,R11:aus:1,R13:aus:1
+cc	cc.s	1281	1164	1171	37	R93:active:2,R94:active:7,R95:active:4,R96:active:2
+chmod	chmod.s	460	381	382	11	R1:active:2,R4:active:1,R11:aus:4,R33:active:1
+chown	chown.s	160	145	146	7	R1:active:1,R4:active:1,R39:active:1
+clri	clri.s	270	248	250	22	R1:active:4,R4:active:2,R39:active:1
+cmp	cmp.s	449	426	429	37	R1:active:1,R4:active:5,R5:active:3,R61:active:3,R62:active:1
+convert	convert.s	731	656	663	85	R1:active:9,R2:aus:2,R4:active:7,R72:active:2,R73:active:1,R74:active:1,R75:active:1,R76:active:1
+cp	cp.s	299	265	267	10	R1:active:1,R4:active:2,R30:active:2,R34:active:1
+cpp	cpp.s	4166	3564	3600	232	R1:active:4,R2:active:17,R3:active:4,R4:active:10,R5:active:15,R7:active:2,R11:aus:4,R30:active:5,R32:active:3,R39:active:7,R42:aus:1,R101:active:13,R102:active:24,R103:active:1,R104:active:3,R105:active:1,R106:active:1,R107:active:1,R110:active:1,R111:active:1,R112:active:1
+cpp	cpy.s	1852	1671	1679	22	R4:active:5,R5:active:1,R13:aus:1,R32:active:1,R107:active:1,R108:active:2,R109:active:1
+date	date.s	550	512	516	34	R1:active:1,R2:active:3,R4:active:8,R5:active:1,R6:active:1
+dcheck	dcheck.s	606	556	560	24	R4:active:4,R11:aus:1,R35:active:1,R36:active:1,R37:active:1,R38:active:1
+dd	dd.s	1925	1823	1825	36	R1:active:6,R2:active:1,R3:aus:1,R4:active:2,R66:active:1,R67:active:1
+df	df.s	301	270	270	10	R1:aus:1,R4:aus:3,R42:active:1,R64:active:1
+echo	echo.s	122	112	113	3	R4:active:1
+ed	ed.s	4707	4153	4167	204	R1:active:15,R2:active:7,R4:active:11,R5:active:4,R7:active:1,R11:aus:1,R13:aus:1,R30:active:12,R32:active:1,R42:aus:2,R45:aus:2,R80:active:12,R81:active:2,R82:active:2,R84:active:4,R85:active:1,R86:active:1,R87:active:2,R88:active:2,R89:active:1,R90:active:1,R91:active:1
+getty	getty.s	538	497	497	22	R1:active:3,R2:active:2,R4:active:1,R8:active:1,R9:active:1
+hex	hex.s	341	307	307	2	R2:aus:2,R5:active:1
+icheck	icheck.s	1321	1211	1222	59	R1:active:1,R4:active:9,R5:active:1,R11:aus:1,R38:active:2,R42:active:3,R46:active:3,R47:active:1,R48:active:1
+init	init.s	861	736	729	89	R1:active:20,R2:active:8,R3:active:1
+kill	kill.s	122	109	112	7	R4:active:2,R32:active:1
+ld	ld.s	3214	2849	2857	106	R1:active:13,R2:active:5,R4:active:8,R5:active:5,R7:active:1,R11:aus:1,R13:aus:2,R30:active:1,R32:aus:1,R43:aus:1,R45:active:2,R97:active:2,R98:active:1,R99:active:1,R100:active:1
+ln	ln.s	193	186	189	19	R1:active:2,R4:active:4
+login	login.s	559	524	527	61	R1:active:12,R4:active:3,R5:active:2,R11:aus:1
+ls	ls.s	1223	1114	1117	19	R1:active:1,R2:active:3,R4:active:3,R7:active:3
+mkdir	mkdir.s	282	263	264	31	R1:active:7,R4:active:1
+mkfs	mkfs.s	1827	1664	1704	180	R1:active:11,R4:active:32,R11:aus:1,R13:aus:5,R30:active:1,R38:active:2,R46:active:1,R49:active:5,R50:active:3,R51:active:1,R52:active:1,R53:active:2,R54:active:1,R55:active:2,R56:active:1,R57:active:1,R58:active:1
+mknod	mknod.s	159	144	146	8	R4:active:3
+mount	mount.s	255	240	243	17	R1:active:2,R4:active:3,R30:active:2
+mt	mt.s	217	210	213	21	R1:aus:3,R4:aus:3
+mv	mv.s	1189	1040	1044	40	R1:active:5,R4:active:4,R5:active:2,R63:active:1
+ncheck	ncheck.s	867	784	792	44	R1:active:3,R4:active:7,R5:active:1,R7:active:1,R11:aus:1,R38:active:1,R42:active:2,R43:active:1,R45:active:1
+nm	nm.s	731	678	680	26	R1:active:4,R4:active:2,R5:active:1,R45:active:1
+od	od.s	942	833	840	27	R1:active:1,R3:aus:1,R4:active:5,R5:active:1,R7:active:1,R13:aus:1,R32:active:1,R38:active:1,R60:active:1
+passwd	passwd.s	541	500	516	96	R1:active:5,R4:active:21,R5:active:1,R68:active:1,R69:active:1
+pr	pr.s	1184	1065	1070	25	R1:active:1,R4:active:5,R5:active:1,R11:aus:2,R38:active:1,R70:active:1
+ps	ps.s	1866	1702	1702	2	R1:aus:13,R2:aus:2,R3:aus:1,R4:aus:4,R5:aus:6,R7:aus:2,R11:aus:3,R77:active:1
+pstat	pstat.s	1519	1424	1424	0	R1:aus:36,R3:aus:1,R11:aus:1
+pwd	pwd.s	271	240	238	22	R1:active:5,R2:active:2
+rm	rm.s	588	526	526	0	R1:aus:5,R4:aus:3,R5:aus:2
+rmdir	rmdir.s	408	373	374	19	R1:active:4,R4:active:1
+sh	args.s	465	417	417	0	R2:aus:1,R4:aus:2,R5:aus:1
+sh	blok.s	296	270	270	0	R5:aus:3
+sh	builtin.s	35	29	29	0	
+sh	cmd.s	1028	892	892	0	R1:aus:2,R4:aus:16,R5:aus:4
+sh	ctype.s	385	385	385	0	
+sh	error.s	290	249	249	0	R5:aus:1
+sh	expand.s	644	561	561	6	R2:aus:1,R3:aus:1,R5:aus:1,R7:aus:1,R11:active:1
+sh	fault.s	385	333	333	0	R5:aus:2
+sh	io.s	509	439	439	0	R1:aus:2,R2:aus:1,R5:aus:2
+sh	macro.s	913	806	806	2	R1:aus:1,R2:aus:4,R11:active:1
+sh	main.s	560	521	521	2	R1:aus:3,R4:aus:1,R13:active:1
+sh	msg.s	584	584	584	0	
+sh	name.s	1071	913	913	0	R2:aus:1,R5:aus:4
+sh	print.s	449	385	386	1	R2:aus:1,R5:aus:5,R14:active:1,R45:aus:1
+sh	service.s	1157	1010	1010	2	R1:aus:1,R2:aus:1,R4:aus:1,R5:aus:5,R11:active:1
+sh	setbrk.s	146	140	140	0	
+sh	stak.s	302	254	254	0	R1:aus:1,R4:aus:1
+sh	string.s	259	226	226	4	R5:aus:1,R12:active:1
+sh	word.s	640	578	578	2	R2:aus:3,R16:active:1,R32:aus:1
+sh	xec.s	1209	1103	1103	4	R1:aus:4,R4:aus:4,R5:aus:1,R11:active:1,R13:active:1,R42:aus:1
+size	size.s	167	159	161	6	R4:active:2
+strip	strip.s	357	327	328	25	R1:active:5,R4:active:1,R65:active:1
+stty	stty.s	1210	1156	1157	39	R1:active:8,R2:active:2,R4:active:1,R10:active:2
+sync	sync.s	34	29	29	0	
+tar	tar.s	3055	2732	2732	2	R92:active:1
+umount	umount.s	202	188	189	3	R4:active:1
+wc	wc.s	294	268	272	16	R4:active:4,R5:active:2
+who	who.s	181	166	170	24	R1:active:3,R4:active:4
