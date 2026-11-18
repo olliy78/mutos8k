@@ -982,6 +982,9 @@ struct table *table;
  * replaces the assignment.
  * Moreover, expressions like "reg = x+y" are best done as
  * "reg = x; reg =+ y" (so long as "reg" and "y" are not the same!).
+ *
+ * Differs from V7 (reconstructed from the binary at 16D0): no ANDN/ASANDN, shifts
+ * and long operands are left alone, 107/108 are shift operators unknown to c1.h.
  */
 sreorder(treep, table, reg, recurf)
 struct tnode **treep;
@@ -1004,26 +1007,33 @@ struct table *table;
 	if (p1->op==NAME) switch(p->op) {
 		case ASLSH:
 		case ASRSH:
+			if (p->type==LONG)
+				return(0);
 		case ASSIGN:
-			if (p1->class != REG||p1->type==CHAR||isfloat(p->tr2))
+			if (p1->class != REG||p1->type==CHAR||isfloat(p->tr2)=='f')
 				return(0);
 			if (p->op==ASSIGN) switch (p->tr2->op) {
 			case TIMES:
 				if (!ispow2(p->tr2))
 					break;
 				p->tr2 = pow2(p->tr2);
+				goto cm;
+			case LSHIFT:
+			case RSHIFT:
+			case 107:	/* not in c1.h (Annahme: Z8000 shifts) */
+			case 108:
+				if (p->tr2->type==LONG)
+					break;
 			case PLUS:
 			case MINUS:
 			case AND:
-			case ANDN:
 			case OR:
 			case EXOR:
-			case LSHIFT:
-			case RSHIFT:
+			cm:
 				p1 = p->tr2->tr2;
 				if (xdcalc(p1, 16) > 12
 				 || p1->op==NAME
-				 &&(p1->nloc==p->tr1->nloc
+				 &&(p->tr1->nloc==p1->nloc
 				  || p1->regno==p->tr1->nloc))
 					return(0);
 				p1 = p->tr2;
@@ -1045,7 +1055,6 @@ struct table *table;
 		case ASPLUS:
 		case ASMINUS:
 		case ASAND:
-		case ASANDN:
 		case ASOR:
 		case ASXOR:
 		case INCBEF:
