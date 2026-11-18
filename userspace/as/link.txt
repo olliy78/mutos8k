@@ -1,0 +1,9 @@
+# link order of /usr/bin/as = address order of the original (doc/userspace/wk_w7c.md); as_y.c is the yacc output of as.y (checked in)
+as_y.c
+as_lex.c
+as_misc.c
+as_code.c
+as_main.c
+as_expr.c
+as_dir.c
+as_tab.c
