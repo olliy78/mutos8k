@@ -1,0 +1,95 @@
+rule	active_sites	active_programs	aus_sites	aus_programs	active_list	aus_list
+R1	197	33	72	6	ar:20 c2:17 chmod:2 chown:1 clri:4 cmp:1 convert:9 cp:1 cpp:4 date:1 dd:6 ed:15 getty:3 icheck:1 init:20 ld:13 ln:2 login:12 ls:1 mkdir:7 mkfs:11 mount:2 mv:5 ncheck:3 nm:4 od:1 passwd:5 pr:1 pwd:5 rmdir:4 strip:5 stty:8 who:3	df:1 mt:3 ps:13 pstat:36 rm:5 sh:14
+R2	67	12	19	4	ar:1 c2:16 cpp:17 date:3 dd:1 ed:7 getty:2 init:8 ld:5 ls:3 pwd:2 stty:2	convert:2 hex:2 ps:2 sh:13
+R3	7	3	5	5	c2:2 cpp:4 init:1	dd:1 od:1 ps:1 pstat:1 sh:1
+R4	201	39	38	5	ar:3 c2:8 cat:4 chmod:1 chown:1 clri:2 cmp:5 convert:7 cp:2 cpp:15 date:8 dcheck:4 dd:2 echo:1 ed:11 getty:1 icheck:9 kill:2 ld:8 ln:4 login:3 ls:3 mkdir:1 mkfs:32 mknod:3 mount:3 mv:4 ncheck:7 nm:2 od:5 passwd:21 pr:5 rmdir:1 size:2 strip:1 stty:1 umount:1 wc:4 who:4	df:3 mt:3 ps:4 rm:3 sh:25
+R5	44	16	54	4	cat:2 cmp:3 cpp:16 date:1 ed:4 hex:1 icheck:1 ld:5 login:2 mv:2 ncheck:1 nm:1 od:1 passwd:1 pr:1 wc:2	c2:16 ps:6 rm:2 sh:30
+R6	1	1	0	0	date:1	
+R7	9	6	26	3	cpp:2 ed:1 ld:1 ls:3 ncheck:1 od:1	c2:23 ps:2 sh:1
+R8	1	1	0	0	getty:1	
+R9	1	1	0	0	getty:1	
+R10	3	2	0	0	c2:1 stty:2	
+R11	4	1	23	14	sh:4	c2:1 cat:1 chmod:4 cpp:4 dcheck:1 ed:1 icheck:1 ld:1 login:1 mkfs:1 ncheck:1 pr:2 ps:3 pstat:1
+R12	1	1	0	0	sh:1	
+R13	2	1	11	6	sh:2	cat:1 cpp:1 ed:1 ld:2 mkfs:5 od:1
+R14	1	1	0	0	sh:1	
+R16	1	1	0	0	sh:1	
+R30	34	8	0	0	ar:1 c2:10 cp:2 cpp:5 ed:12 ld:1 mkfs:1 mount:2	
+R32	7	4	28	3	cpp:4 ed:1 kill:1 od:1	c2:26 ld:1 sh:1
+R33	1	1	0	0	chmod:1	
+R34	1	1	0	0	cp:1	
+R35	1	1	0	0	dcheck:1	
+R36	1	1	0	0	dcheck:1	
+R37	1	1	0	0	dcheck:1	
+R38	8	6	0	0	dcheck:1 icheck:2 mkfs:2 ncheck:1 od:1 pr:1	
+R39	9	3	0	0	chown:1 clri:1 cpp:7	
+R42	8	4	4	3	ar:2 df:1 icheck:3 ncheck:2	cpp:1 ed:2 sh:1
+R43	1	1	1	1	ncheck:1	ld:1
+R45	4	3	5	3	ld:2 ncheck:1 nm:1	c2:2 ed:2 sh:1
+R46	4	2	0	0	icheck:3 mkfs:1	
+R47	1	1	0	0	icheck:1	
+R48	1	1	0	0	icheck:1	
+R49	5	1	0	0	mkfs:5	
+R50	3	1	0	0	mkfs:3	
+R51	1	1	0	0	mkfs:1	
+R52	1	1	0	0	mkfs:1	
+R53	2	1	0	0	mkfs:2	
+R54	1	1	0	0	mkfs:1	
+R55	2	1	0	0	mkfs:2	
+R56	1	1	0	0	mkfs:1	
+R57	1	1	0	0	mkfs:1	
+R58	1	1	0	0	mkfs:1	
+R60	1	1	0	0	od:1	
+R61	3	1	0	0	cmp:3	
+R62	1	1	0	0	cmp:1	
+R63	1	1	0	0	mv:1	
+R64	1	1	0	0	df:1	
+R65	1	1	0	0	strip:1	
+R66	1	1	0	0	dd:1	
+R67	1	1	0	0	dd:1	
+R68	1	1	0	0	passwd:1	
+R69	1	1	0	0	passwd:1	
+R70	1	1	0	0	pr:1	
+R71	1	1	0	0	ar:1	
+R72	2	1	0	0	convert:2	
+R73	1	1	0	0	convert:1	
+R74	1	1	0	0	convert:1	
+R75	1	1	0	0	convert:1	
+R76	1	1	0	0	convert:1	
+R77	1	1	0	0	ps:1	
+R80	12	1	0	0	ed:12	
+R81	2	1	0	0	ed:2	
+R82	2	1	0	0	ed:2	
+R84	4	1	0	0	ed:4	
+R85	1	1	0	0	ed:1	
+R86	1	1	0	0	ed:1	
+R87	2	1	0	0	ed:2	
+R88	2	1	0	0	ed:2	
+R89	1	1	0	0	ed:1	
+R90	1	1	0	0	ed:1	
+R91	1	1	0	0	ed:1	
+R92	1	1	0	0	tar:1	
+R93	2	1	0	0	cc:2	
+R94	7	1	0	0	cc:7	
+R95	4	1	0	0	cc:4	
+R96	2	1	0	0	cc:2	
+R97	2	1	0	0	ld:2	
+R98	1	1	0	0	ld:1	
+R99	1	1	0	0	ld:1	
+R100	1	1	0	0	ld:1	
+R101	13	1	0	0	cpp:13	
+R102	24	1	0	0	cpp:24	
+R103	1	1	0	0	cpp:1	
+R104	3	1	0	0	cpp:3	
+R105	1	1	0	0	cpp:1	
+R106	1	1	0	0	cpp:1	
+R107	2	1	0	0	cpp:2	
+R108	2	1	0	0	cpp:2	
+R109	1	1	0	0	cpp:1	
+R110	1	1	0	0	cpp:1	
+R111	1	1	0	0	cpp:1	
+R112	1	1	0	0	cpp:1	
+R130	3	1	0	0	c0:3	
+R131	1	1	0	0	c0:1	
+R132	1	1	0	0	c0:1	
+R133	1	1	0	0	c0:1	
