@@ -42,6 +42,13 @@ rmove()
 			fl2 = 0;
 		else
 			flt = 0;
+		goto mv;
+
+	case MOV:
+	case LDK:
+		dualop(p);
+		if (equstr(regs[RT1], regs[RT2]))
+			goto del;
 	mv:
 		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
 		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
@@ -51,15 +58,6 @@ rmove()
 			redunm++;
 			continue;
 		}
-		goto mv2;
-
-	case MOV:
-	case LDK:
-		dualop(p);
-		if (equstr(regs[RT1], regs[RT2]))
-			goto del;
-		goto mv;
-	mv2:
 		if ((r = findrand(regs[RT1], rsz[RT1], flt)) >= 0
 		 && rsz[r+flt] == rsz[RT1] && isreg(regs[RT2]) == r
 		 && rsz[r+fl2] == rsz[RT2])
@@ -73,7 +71,7 @@ rmove()
 				if (isreg(ccloc) == r+flt)
 					clrcc();
 			}
-			if (p->op == CLR || equstr("#0", regs[RT2])) {
+			if (p->op == CLR || equstr(regs[RT2], "#0")) {
 				if (p->subop != LONG && (p->subop & FLTF) == 0
 				 && isreg(regs[RT1]) >= 0) {
 					p->op = XOR;
