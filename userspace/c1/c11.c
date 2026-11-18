@@ -575,18 +575,31 @@ struct swtab *afp, *alp;
 	return(0);
 }
 
+/*
+ * Differs from V7: returns long and accepts a CON, LCON or ITOL(CON) right
+ * operand (original at 2D12).  Returns the constant if it is a power of
+ * two > 0, else 0L.
+ */
+long
 ispow2(atree)
+struct tnode *atree;
 {
-	register int d;
-	register struct tnode *tree;
+	register struct tnode *p;
+	long d;
 
-	tree = atree;
-	if (!isfloat(tree) && tree->tr2->op==CON) {
-		d = tree->tr2->value;
-		if (d>1 && (d&(d-1))==0)
-			return(d);
-	}
-	return(0);
+	if (atree->tr2->op==CON || atree->tr2->op==LCON)
+		p = atree->tr2;
+	else if (atree->tr2->op==ITOL && atree->tr2->tr1->op==CON)
+		p = atree->tr2->tr1;
+	else
+		return(0L);
+	if (p->op==LCON)
+		d = p->lvalue;
+	else
+		d = p->value;
+	if (d>1 && (d&(d-1))==0)
+		return(d);
+	return(0L);
 }
 
 /*
@@ -608,13 +621,13 @@ unsigned v;
 pow2(atree)
 struct tnode *atree;
 {
-	register int d, i;
+	register int i;
 	register struct tnode *tree;
+	long d;
 
 	tree = atree;
 	if (d = ispow2(tree)) {
 		for (i=0; (d=>>1)!=0; i++);
-		tree->tr2->value = i;
 		switch (tree->op) {
 
 		case TIMES:
@@ -626,28 +639,40 @@ struct tnode *atree;
 			break;
 
 		case DIVIDE:
-			tree->op = ULSH;
-			tree->tr2->value = -i;
+			if (tree->type==UNSIGN)
+				tree->op = ZLSH;
+			else
+				tree->op = LSHIFT;
+			i = -i;
 			break;
 
 		case ASDIV:
-			tree->op = ASULSH;
-			tree->tr2->value = -i;
+			if (tree->type==UNSIGN)
+				tree->op = ASZLSH;
+			else
+				tree->op = ASLSH;
+			i = -i;
 			break;
 
 		case MOD:
 			tree->op = AND;
-			tree->tr2->value = (1<<i)-1;
+			i = (1<<i)-1;
 			break;
 
 		case ASMOD:
 			tree->op = ASAND;
-			tree->tr2->value = (1<<i)-1;
+			i = (1<<i)-1;
 			break;
 
 		default:
 			error("pow2 botch");
 		}
+		if (tree->tr2->op==ITOL)
+			tree->tr2->tr1->value = i;
+		else if (tree->tr2->op==LCON)
+			tree->tr2->lvalue = i;
+		else
+			tree->tr2->value = i;
 		tree = optim(tree);
 	}
 	return(tree);
