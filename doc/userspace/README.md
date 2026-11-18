@@ -26,6 +26,7 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `wk_w8.md` | Werkzeugkette W8: `libc.a` je Glied (140: 111 G, 24 E, 5 A), `crt0.o`/`mcrt0.o` E; Quellen `userspace/libc/` |
 | `wk_w5.md` | Werkzeugkette W5: c2 (c20.c und rmove befehlsgleich; 6 c21-Funktionen weichen in der Blockanordnung ab) |
 | `wk_w5e.md` | c2-Gegenprobe: echter ausgelieferter c2 im Gast gegen das Regelmodell, 52 Programme; Werkzeuge `c2gegen.py`, `c2layout.py` |
+| `wk_w6.md` | Werkzeugkette W6: c1 (in Arbeit) -- Codetabellen bytegleich (`table.s`, `tools/userspace/cvopt_z8k.py`), Linkreihenfolge `link.txt` |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
