@@ -15,51 +15,351 @@
 extern char revbr[];
 
 /*
- * STUB (part d): the real rmove is 3232 bytes.  The strings are the ones of the
- * original in order of use, the switch has the 55-entry table at 0x4778.
+ * Differs from V7: Z8000 operand order (destination first, so RT1 is the destination),
+ * 38 register slots (two banks), the size of every operand is tracked in rsz[], flt is
+ * 0 or FREG per bank.  Reconstructed from the binary (0x151E); case groups follow the
+ * jump table at 0x4778.  Variable names are Annahme.  flt is the bank of the
+ * destination, fl2 the bank of the source operand.
  */
 rmove()
 {
-	register char *s;
-	register i;
+	register struct node *p;
+	register char *cp;
+	register r, r1, flt, i;
+	int fl2;
 
-	s = "#0";
-	s = "SP";
-	s = ",#%%%x";
-	s = "#0";
-	s = "#0";
-	s = "#0";
-	s = "#0";
-	s = "#0";
-	s = "#0";
-	s = "#%ffff";
-	s = "#-%1";
-	s = "#%0";
-	s = "#0";
-	if (i == 0x7777) {
-		/* only so that the map of the built image decodes all callees */
-		jumpsw(); check(); clrptr30(); log2n(i); mkshift(s, i);
-		dest(s, i, i); clrptr(s, i, i); singop(s); dualop(s);
-		findrand(s, i, i); repladdr(s, i, i); redunbr(s); savereg(i, s, i, s);
-		setcon(s, s, i); setcc(s, i); equop(s, s); toofar(s, i);
-		alloc(i); abs(i);
-	}
-	switch (i) {
-	case 1: case 3: case 5: case 7: case 9: case 11: case 13: case 15:
-	case 17: case 19: case 21: case 23: case 25: case 27: case 29: case 31:
-	case 33: case 35: case 37: case 39: case 41: case 43: case 45: case 47:
-	case 49: case 51: case 53: case 55:
-		i++;
-		break;
+	for (p = first.forw; p != 0; p = p->forw) {
+	fl2 = flt = (p->subop & FLTF) ? FREG : 0;
+	switch (p->op) {
+
+	case LDIL:
+		dualop(p);
+		if (rsz[RT2] != 'r')
+			flt = 0;
+		goto mv;
+
+	case MOV:
+	case LDK:
+		dualop(p);
+		if (equstr(regs[RT1], regs[RT2]))
+			goto del;
+	mv:
+		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
+		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
+		 && rsz[r+flt] == rsz[RT1])
+			goto del;
+		if ((r = findrand(regs[RT1], rsz[RT1], flt)) >= 0
+		 && rsz[r+flt] == rsz[RT1] && isreg(regs[RT2]) == r
+		 && rsz[r+fl2] == rsz[RT2]) {
+		del:
+			delnode(p);
+			redunm++;
+			continue;
+		}
+		if (flt == fl2) {
+		l163a:
+			r = isreg(regs[RT1]);
+			if (r >= 0 && rnode[r+flt] && rsz[r+flt] == rsz[RT1]) {
+				delnode(rnode[r+flt]);
+				kill(r+flt, rsz[RT1]);
+				if (isreg(ccloc) == r+flt)
+					clrcc();
+			}
+			if (p->op == CLR || equstr("#0", regs[RT2])) {
+				if (p->subop != LONG && (p->subop & FLTF) == 0
+				 && isreg(regs[RT1]) >= 0) {
+					p->op = XOR;
+					regs[RT2][0] = ',';
+					i = 0;
+					do
+						regs[RT2][i+1] = regs[RT1][i];
+					while (regs[RT1][i++]);
+					p->code = copy(2, regs[RT1], regs[RT2]);
+					nchange++;
+					continue;
+				}
+			}
+			if (p->op != LDK) {
+				repladdr(p, 0, flt);
+				dualop(p);
+			}
+		}
+		r = isreg(ccloc);
+		r1 = isreg(regs[RT1]);
+		if ((r < 0 && r1 < 0) || (r == r1 && ccsz == rsz[RT1])
+		 || (ccsz == 'r' && (r1 & ~1) == r)
+		 || (rsz[RT1] == 'r' && (r & ~1) == r1))
+			clrcc();
+		r = isreg(regs[RT2]);
+		dest(regs[RT1], rsz[RT1], flt);
+		if (r1 < 0)
+			clrptr(regs[RT1], rsz[RT1], flt);
+		clrptr(regs[RT2], rsz[RT2], fl2);
+		if (r >= 0) {
+			if (r1 >= 0) {
+				if (r1 < r)
+					savereg(r1+flt, regs[RT2], rsz[RT2], p);
+				else
+					savereg(r1+flt, regs[r], rsz[r], p);
+			} else if (regs[r+fl2][0] == 0)
+				savereg(r+fl2, regs[RT1], rsz[RT1], 0);
+			else {
+				if (fl2)
+					continue;
+				savereg(r+14, regs[RT1], rsz[RT1], 0);
+			}
+		} else if (r1 >= 0)
+			savereg(r1+flt, regs[RT2], rsz[RT2], p);
+		else
+			setcon(regs[RT2], regs[RT1], rsz[RT1]);
+		continue;
+
+	case INC:
+	case DEC:
+	case ASR:
+	case ASL:
+	case SET:
+	case RES:
+	case SRL:
+	case SLL:
+		dualop(p);
+		if (p->op == INC && equstr(regs[RT1], "SP") && p->forw
+		 && p->forw->op == PUSH && regs[RT2][0] == '#') {
+			dualop(p->forw);
+			if (regs[RT2][0] == 'r' || regs[RT2][0] == '#') {
+				dualop(p);
+				r1 = atoh(regs[RT2][1] == '%' ? &regs[RT2][2] : &regs[RT2][1]);
+				if (p->forw->subop == LONG && r1 > 3)
+					r1 -= 4;
+				else if (r1 > 1 && p->forw->subop != LONG)
+					r1 -= 2;
+				else
+					goto dflt;
+				if (r1 == 0)
+					delnode(p);
+				else
+					sprintf(regs[RT2], ",#%%%x", r1);
+				p->forw->op = MOV;
+				p->code = copy(2, regs[RT1], regs[RT2]);
+				redunm++;
+				continue;
+			}
+		}
+	dflt:
+		dualop(p);
+		dest(regs[RT1], rsz[RT1], flt);
+		clrptr(regs[RT2], rsz[RT2], flt);
+		clrptr(regs[RT1], rsz[RT1], flt);
+		if (p->op == SET || p->op == RES || p->op == PUSH || p->op == POP) {
+		clrc:
+			clrcc();
+			continue;
+		}
+		goto setc;
+
+	case ADD:
+	case SUB:
+	case BIS:
+	case SDL:
+	case MUL:
+	case DIV:
+	case ASH:
+	case XOR:
+	case MULS:
+	case POP:
+	case PUSH:
+	dble:
+		dualop(p);
+		if (p->op == POP && (r = isreg(regs[RT1])) >= 0 && rnode[r]
+		 && rsz[r] == rsz[RT1]) {
+			delnode(rnode[r]);
+			kill(r, rsz[RT1]);
+			if (isreg(ccloc) == r)
+				clrcc();
+		}
+		if (p->op == BIS && regs[RT2][0] == '#' && p->subop == 0) {
+			cp = &regs[RT2][1];
+			if (*cp == '%')
+				cp++;
+			if ((i = log2n(atoh(cp))) >= 0) {
+				p->op = SET;
+			shft:
+				mkshift(p, i);
+				clrcc();
+				nchange++;
+				continue;
+			}
+		}
+		if (p->op == XOR && (r = isreg(regs[RT1])) >= 0
+		 && equstr(regs[RT1], regs[RT2])) {
+			if (rnode[r] && rsz[r] == rsz[RT1]) {
+				delnode(rnode[r]);
+				kill(r, rsz[RT1]);
+				if (isreg(ccloc) == r)
+					clrcc();
+			}
+			if (rsz[r] == rsz[RT1]) {
+				if (rsz[r] != 'h' && equstr(regs[r], "#0"))
+					goto del;
+				if (rsz[r] == 'h' && equstr(cregs[r], "#0"))
+					goto del;
+			}
+			if (rsz[r] == 'l' && rsz[RT1] == 'h' && equstr(cregs[r], "#0"))
+				goto del;
+			if (rsz[r] == 'h' && rsz[RT1] == 'l' && equstr(regs[r], "#0"))
+				goto del;
+			if (rsz[RT1] == 'h') {
+				if (rsz[r] != 'l')
+					kill(r, 'h');
+				cregs[r][0] = '#';
+				cregs[r][1] = '0';
+				cregs[r][2] = 0;
+				rnode[r] = p;
+			} else
+				savereg(r+flt, "#0", rsz[RT1], p);
+		setc:
+			setcc(regs[RT1], rsz[RT1]);
+			continue;
+		}
+		repladdr(p, 0, flt);
+		dualop(p);
+		dest(regs[RT1], rsz[RT1], flt);
+		clrptr(regs[RT2], rsz[RT2], flt);
+		clrptr(regs[RT1], rsz[RT1], flt);
+		goto setc;
+
+	case NEG:
+		if (p->subop & FLTF)
+			goto dble;
+	case CLR:
+	case COM:
+	case SXT:
+		singop(p);
+		if (p->op == CLR) {
+			if ((r = isreg(regs[RT1])) >= 0)
+				goto l163a;
+			setcon("#0", regs[RT1], rsz[RT1]);
+		}
+		dest(regs[RT1], rsz[RT1], flt);
+		clrptr(regs[RT1], rsz[RT1], flt);
+		if (p->op == CLR)
+			goto clrc;
+		goto setc;
+
+	case TST:
+	case CPZX:
+		singop(p);
+	tst2:
+		repladdr(p, 1, flt);
+		singop(p);
+		if ((ccsz == rsz[RT1] && equstr(regs[RT1], ccloc))
+		 || (p->forw && p->forw->op > CBR)) {
+			delnode(p);
+			nrtst++;
+		} else
+			setcc(regs[RT1], rsz[RT1]);
+		clrptr(regs[RT1], rsz[RT1], flt);
+		continue;
+
+	case CMP:
+	case CPFX:
+	case BIT:
+		if (p->forw->op > CBR) {
+			delnode(p);
+			continue;
+		}
+	case BIC:
+		dualop(p);
+		if (p->op == BIC && regs[RT2][0] == '#' && p->subop == 0) {
+			cp = &regs[RT2][1];
+			if (*cp == '%')
+				cp++;
+			if ((i = log2n(~atoh(cp))) >= 0) {
+				p->op = RES;
+				goto shft;
+			}
+		}
+		if (p->op == BIC) {
+			if (equstr(regs[RT2], "#%ffff") || equstr(regs[RT2], "#-%1")) {
+				p->op = TST;
+				regs[RT2][0] = 0;
+				rsz[RT2] = 0;
+				p->code = copy(1, regs[RT1]);
+				nchange++;
+				nsaddr++;
+				goto tst2;
+			}
+			if (equstr(regs[RT2], "#%0")) {
+				p->op = CLR;
+				regs[RT2][0] = 0;
+				rsz[RT2] = 0;
+				p->code = copy(1, regs[RT1]);
+				nchange++;
+				nsaddr++;
+				goto l163a;
+			}
+			dest(regs[RT1], rsz[RT1], flt);
+		}
+		if (p->op != BIT && (p->op != CMP || regs[RT2][0] != '#')) {
+			repladdr(p, 1, flt);
+			dualop(p);
+		}
+		if (p->op == BIC)
+			setcc(regs[RT1], rsz[RT1]);
+		else
+			clrcc();
+		clrptr(regs[RT1], rsz[RT1], flt);
+		clrptr(regs[RT2], rsz[RT2], flt);
+		continue;
+
+	case CBRS:
+	case CBR:
+		if (p->back->op == TST || p->back->op == CMP) {
+			if (p->back->op == TST) {
+				singop(p->back);
+				savereg(RT2, "#0", rsz[RT1], p->back);
+			} else
+				dualop(p->back);
+			r = compare(p->subop, findcon(RT1), findcon(RT2));
+			if (r == 0) {
+				if (p->forw->op > CBR) {
+					p->back->back->forw = p->forw;
+					p->forw->back = p->back->back;
+				} else
+					delnode(p);
+				clrcc();
+				decref(p->ref);
+				p = p->back->back;
+				nchange++;
+			} else if (r > 0) {
+				p->op += 2;
+				p->subop = 0;
+				p->back->back->forw = p;
+				p->back = p->back->back;
+				p = p->back;
+				nchange++;
+			}
+		}
+
+	case JBR:
+	case JMP:
+		redunbr(p);
+		clrptr30();
+		continue;
+
+	case EROU:
+	case CALL:
+	case END:
+		for (r = 0; r < 8; r++)
+			if (rnode[r] && regs[r][0] == 'r') {
+				delnode(rnode[r]);
+				if (isreg(ccloc) == r)
+					clrcc();
+			}
+
 	default:
-		i--;
-		break;
-	case 2: case 4: case 6: case 8: case 10: case 12: case 14: case 16:
-	case 18: case 20: case 22: case 24: case 26: case 28: case 30: case 32:
-	case 34: case 36: case 38: case 40: case 42: case 44: case 46: case 48:
-	case 50: case 52: case 54:
-		i += 2;
-		break;
+		clearreg();
+	}
 	}
 }
 
