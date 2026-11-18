@@ -78,7 +78,7 @@ PROGRAMME = {
     "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
     "cc": ("usr", "bin/cc", "userspace/cc/cc.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ld": ("usr", "bin/ld", "userspace/ld/ld.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
-    "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, linking skeleton: doc/userspace/wk_w7c.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain: doc/userspace/wk_w4.md
     "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain: doc/userspace/wk_w6.md

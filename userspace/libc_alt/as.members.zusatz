@@ -1,0 +1,2 @@
+# Hand-made correction for as.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see cpp.members.zusatz).
+doprnt code=4C82,4C88,4C9E
