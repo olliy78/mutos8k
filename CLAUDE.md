@@ -63,6 +63,14 @@ tests/          pytest; guest tests are marked `gast` and skip (exit 77 / pytest
 
 * Guest runs take minutes to hours of wall clock: **run them in the background**, never poll with `sleep`, and
   leave no waiting loops behind.
+* **Waiting costs tokens only when you wake up** -- every wake-up re-reads the whole context.  So:
+  * start a long build in the background **with a built-in limit** of about twice its expected duration
+    (`timeout 1800 python3 -I tools/userspace/pipeline.py alles ...`) and wait for the completion notification;
+  * if you must wait in the foreground, wait in **one long piece** (`timeout 590 tail --pid=<PID of your own process> -f /dev/null`),
+    never in short slices (2-minute polling of a 2-hour hang happened once);
+  * never wait with `pgrep -f '<pattern>'` loops: the waiting shell's own command line matches the pattern, so the loop never ends;
+  * when the limit expires the run is **hung, not slow**: kill your own processes and find the cause (single-module `cc -c`, guest logs).
+  Typical durations: small program 2-3 min, `ed`/`c0` 6-8 min, `c1` about 13 min.
 * `k1520dbg` mounts copy-on-write by default; with `--rw` **only ever on copies**, never on files in `disks/`.
 * The root disk is too small for `cc`'s temporary files: mount an empty disk as `/tmp` (drive A, `rk0`).
 * Host files carry 2026 time stamps; set sources to 1987 (`k1520disktool attr --mtime`) and the guest date to 1987,
