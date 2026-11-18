@@ -553,7 +553,7 @@ struct table *table;
 	p = tree;
 	c = p->op;
 	reg = areg;
-	if ((c&0400)==0)
+	if (!(c&0400))
 		p1 = tree->tr2;
 	opd = opdope[c];
 	/*
@@ -593,7 +593,7 @@ struct table *table;
 			p1->type = INT;
 	}
 	tree = p;
-	if ((p->op&0400)==0)
+	if (!(p->op&0400))
 		tree->tr2 = p1;
 	areg = reg;
 	reg = oddreg(tree, reg);
@@ -721,7 +721,7 @@ loop:
 		goto loop;
 
 	case 'T':
-		if ((opd&LEAF)==0 && dcalc(p1, 0)<6) {
+		if (!(opd&LEAF) && dcalc(p1, 0)<6) {
 			putchar('k');
 			goto loop;
 		}
@@ -1232,7 +1232,7 @@ extern int yf0;	/* defined in c11.c */
  * Differs from V7 (reconstructed from the binary at 1C74, doc wk_w6.md part 6):
  * Z8000 as syntax (BV/WV/LV), no SFCON, FLOAT and DOUBLE are output alike
  * (four words), floating constants can be pooled via yf0.  The suspicious
- * fcopy(tree->value, &fval) in the yf0 branch is as in the binary (the
+ * fcopy(tree->value, fval) in the yf0 branch is as in the binary (the
  * branch is probably never run: yf0 is never set).
  */
 doinit(atype, atree)
@@ -1241,7 +1241,7 @@ struct tnode *atree;
 	register struct tnode *tree;
 	register int type;
 	float sfval;
-	double fval;
+	int fval[4];
 	long lval;
 	int chrf;
 
@@ -1292,13 +1292,13 @@ struct tnode *atree;
 		if (tree->op==ITOF) {
 			if (tree->tr1->op!=CON)
 				goto illinit;
-			ltod((long)tree->tr1->value, &fval);
+			ltod((long)tree->tr1->value, fval);
 		} else if (tree->op==FCON)
-			fcopy(&fval, &tree->fvalue);
+			fcopy(fval, &tree->fvalue);
 		else if (tree->op==LTOF) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
-			ltod(tree->tr1->lvalue, &fval);
+			ltod(tree->tr1->lvalue, fval);
 		} else if (tree->op==CON || tree->op==LCON) {
 			printf("WV %%0;WV %%0;WV %%0;WV %%0\n");
 			return;
@@ -1307,13 +1307,13 @@ struct tnode *atree;
 		if (yf0==0) {
 			if (tree->op==FCON)
 				printf("L%d:\n", tree->value);
-			printf("WV %%%x;WV %%%x;WV %%%x;WV %%%x\n", fval);
+			printf("WV %%%x;WV %%%x;WV %%%x;WV %%%x\n", fval[0], fval[1], fval[2], fval[3]);
 			return;
 		}
 		if (tree->op!=FCON) {
 			tree = getblk(sizeof(struct ftconst));
 			tree->value = isn++;
-			fcopy(tree->value, &fval);
+			fcopy(tree->value, fval);
 		}
 		outfp(tree, 0);
 		return;
@@ -1349,7 +1349,7 @@ struct tnode *tree;
 {
 	register d, s;
 
-	if (r0==r1)
+	if (r1==r0)
 		return;
 	d = zreg(r1);
 	s = zreg(r0);
