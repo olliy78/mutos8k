@@ -361,6 +361,45 @@ def archiv(blau=None):
     return 0 if b == soll else 1
 
 
+def arbau():
+    """Guest `ar rc` over our objects (work/bau/NAME.o) in the shipped member order (12 names per command: the guest shell
+    line is short); compare with the host-built archive: header dates are the guest clock, everything else is compared."""
+    import gast_as
+    try:
+        gast_as.pruefe_hilfsmittel()
+    except gast_as.Fehlt as e:
+        raise U.Fehlt(str(e))
+    emu.build()
+    soll = open(os.path.join(WORK, "libc.a"), "rb").read()
+    namen = [m.name.decode() for m in O.Archiv.lesen(soll).mitglieder]
+    quellen = {n: open(os.path.join(WORK, "bau", n), "rb").read() for n in namen}
+    # `ar` is not on the usr/root disks: the original bin/ar of the cmd disk goes onto the source disk and is started from there
+    quellen["ar"] = open(os.path.join(WORK, "arbin", "bin", "ar"), "rb").read()
+    befehle = ["./ar rc /tmp/libc.a %s >/tmp/ar%d.err 2>&1" % (" ".join(namen[i:i + 12]), i // 12) for i in range(0, len(namen), 12)]
+    r = gast_as.gast_befehle(os.path.join(WORK, "gast_ar"), quellen, befehle, ["libc.a"] + ["ar%d.err" % i for i in range(len(befehle))],
+                             frist=20_000_000_000, ausfuehrbar=("ar",))
+    g = r.get("libc.a")
+    if not g:
+        print("no archive from the guest: %s" % [(k, (v or b"")[:100]) for k, v in r.items() if k != "libc.a"])
+        return 1
+    open(os.path.join(WORK, "libc_guest.a"), "wb").write(g)
+    a, b = O.Archiv.lesen(g), O.Archiv.lesen(soll)
+    print("guest ar: %d B (shipped %d B), %d members" % (len(g), len(soll), len(a.mitglieder)))
+    kopf = {}
+    for x, y in zip(a.mitglieder, b.mitglieder):
+        kopf.setdefault("name", 0)
+        kopf["name"] += x.name != y.name
+        for f in ("uid", "gid", "mode"):
+            kopf[f] = kopf.get(f, 0) + (getattr(x, f) != getattr(y, f))
+        kopf["daten"] = kopf.get("daten", 0) + (x.daten != y.daten)
+        kopf["datum"] = kopf.get("datum", 0) + (x.datum != y.datum)
+    print("members differing from the shipped archive by field:", kopf)
+    print("guest header sample: uid %d gid %d mode %o date %d; shipped: uid %d gid %d mode %o date %d" % (
+        a.mitglieder[0].uid, a.mitglieder[0].gid, a.mitglieder[0].mode, a.mitglieder[0].datum,
+        b.mitglieder[0].uid, b.mitglieder[0].gid, b.mitglieder[0].mode, b.mitglieder[0].datum))
+    return 0
+
+
 def stapel(namen, art, grenze=110_000):
     """split the names into guest runs whose sources fit on the source disk"""
     gr, cur, size = [], [], 0
@@ -390,7 +429,7 @@ def bauen(namen, art):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau", "hbau", "rbau", "wbau"):
+    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau", "hbau", "rbau", "wbau", "arbau"):
         print(__doc__)
         return 2
     try:
@@ -434,6 +473,8 @@ def main(argv):
             for n in argv[1:]:
                 open(os.path.join(WORK, "bau", n + ".s"), "w").write((erg[n][1] or b"").decode("latin-1")) if os.makedirs(os.path.join(WORK, "bau"), exist_ok=True) is None else None
             print({n: erg[n][0] for n in argv[1:]})
+        elif argv[0] == "arbau":
+            return arbau()
         elif argv[0] == "archiv":
             return archiv()
         elif argv[0] == "diff":
