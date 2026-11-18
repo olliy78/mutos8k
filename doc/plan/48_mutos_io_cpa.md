@@ -1,6 +1,6 @@
 # Plan 48: `mutos_io` nach CP/A portieren
 
-Stand 2026-11-17, Branch `mutos-plus` (Plan 47).  **C1 in Agentenschritte zerlegt (§7); C2-C5 vorlaeufig (§9), endgueltig nach dem Entscheidungspunkt (§8).**
+Stand 2026-11-18, Branch `mutos-plus` (Plan 47).  **C1 erledigt (§7); E1-E9 entschieden (§8, 2026-11-17); C2-C5 endgueltig in Agentenschritte zerlegt (§9), Wellen §10.**
 Hervorgegangen aus Plan 46 (auf `main` geloescht in `5738a8e`).
 Aussagen sind *gemessen* (mit Befehl/Fundstelle), *abgeleitet* (aus Quelle gelesen), *Angabe des Projektinhabers* oder *Annahme*.
 
@@ -142,8 +142,10 @@ ein Commit je Schritt, parallele Agenten nur in ihren Dateien).  Ergaenzungen fu
    Probeprogramme unter `versuche/plus_cpa/` werden je Lauf gebaut und **nicht** als `.COM` eingecheckt; eingecheckt wird nur, was der Bootweg braucht (ab C2).
 7. **Befunddateien:** je Schritt eine eigene Datei `doc/plus/cpa/c1_<n>_<thema>.md` (parallele Agenten schreiben nie in dieselbe Datei).  Jede Aussage *gemessen* (Befehl,
    Arbeitsordner, Datum, Takte/Wanduhr) / *abgeleitet* (Datei:Zeile) / *Annahme*.
-8. **Commit:** Betreff `Plan 48 <Schritt>: <Inhalt>`, Stand-Zeile in §10 im selben Commit.  Vorher `python3 -m pytest -q tests` (bekannt rot und unabhaengig:
+8. **Commit:** Betreff `Plan 48 <Schritt>: <Inhalt>`, Stand-Zeile in §10 im selben Commit (C1; ab C2 Regel 9).  Vorher `python3 -m pytest -q tests` (bekannt rot und unabhaengig:
    `test_bau_alle_kennt_genau_die_fertigen_disketten`).  Kein Push, kein Merge (ausser C1.9 Punkt 1).
+9. **Ab C2:** Auftrag nach §9 (Kopf), gemeinsame Festlegungen §9.0.  Agenten aendern **diesen Plan nicht**; der Stand steht in der Kopfzeile des Befunds, die leitende Sitzung
+   traegt §10 nach.  Nur die Dateien der Spalte *Schreibt* des eigenen Schritts aendern; fehlt eine Datei dort, anhalten und melden.
 
 ## 7. Detailplanung C1
 
@@ -341,97 +343,276 @@ Nicht entschieden; Empfehlung = Vorschlag an den Projektinhaber.  Kuerzel `c1_n`
 * **E8 Startmedium.**  Optionen (a) CP/A-Bootdiskette in A: + Wechsel, (b) GIDE.  Messwerte: Boot von A: (§2.1); Neuanmeldung nach Wechsel noetig (`c1_6` §7); GIDE heisst bei 4 Floppys E:.  **Empfehlung (a)**; (b) Plan 51 P6.
 * **E9 Ablage der Variante.**  Optionen (a) im Repo (`mutos_io/cpa/system/`), (b) in der Workbench.  Messwerte: Bau ohne Oberflaeche ~10 s, SHA-1 `97bbdca9...` (`c1_8` §2, §6).  **Empfehlung (a)**; mit O3 (§11) schon so entschieden.
 
-**Ergebnis:** *(nach C1.9 eintragen: Datum, Entscheidung je Zeile, Verweis)*
+**Ergebnis (Entscheidung des Projektinhabers 2026-11-17: alle Empfehlungen aus C1.9 uebernommen; Belege `doc/plus/cpa_analyse.md` §6):**
+* **E1 = (a)** Standard-BIOS-Einspruenge `SELDSK/SETTRK/SETSEC/SETDMA/READ/WRITE`, Satzregel `cpa_analyse` §4 (inverse CP/A-Skew-Tabelle ab Spur `OFF`, `OFF` aus dem DPB nach jedem `SELDSK`), Schreiben je Block `C = 0,0,0,1`.  Kein Wurzel-Umzug.  -> C3.3.
+* **E2 = (a)** Vektoren in die CP/A-Tabelle (`I` = F7 bleibt, BIOS-ISRs laufen weiter): CTC 0DH -> F7FA, PIO A32 -> F7EA/F7EC, SIO -> F730-F73E.  -> C3.2.
+* **E3 = (a)** `.PHASE 9000H` ff. bleiben, BDOS/CCP werden ueberschrieben, Stapel nach B936-C8B5 (`SP` = C8B6; Tiefe in C3.2/C4.2 messen).  -> C2.3, C3.2.
+* **E4 = (a)** ein Lader `M8KBOOT.COM` (Kernel in den EM, `mutos_io` nach 9000H, Sprung); Betriebsart `K` startet den U8001 selbst.  -> C2.3.
+* **E5 = (a)** 4-Floppy-Variante des GIDE-CP/A (A:-D: K5601, GIDE ab E:, RTC D5H).  -> C2.2.
+* **E6 = (d)** Ausgabe ueber BIOS `CONOUT` aus der Hauptschleife, Tastatur ueber BIOS `CONST`/`CONIN` im 50-Hz-ISR (kein eigenes Pollen von 5CH/5DH).  -> C3.2, C3.4.
+* **E7 = (a), vorlaeufig** BIOS `LIST` mit IOBYTE 80H (LPT 5EH/5FH); Pruefung in C4.1.  Faellt die Pruefung durch, haelt C4.1 an (Rueckfall (b) braucht eine neue Entscheidung, §12).
+* **E8 = (a)** CP/A-Bootdiskette in A:, Wechsel in der Bedienmaske; Start von GIDE erst Plan 51 P6.  -> C2.4, C3.3, C5.1.
+* **E9 = (a)** Konfiguration der Variante in diesem Repo (`mutos_io/cpa/system/`), Bau ueber eine frische Workbench-Kopie (`tools/plus/cpa_system.py`).  -> C2.2.
+* Weiter gelten O1-O6 und die Anforderung an die CP/A-Variante aus §11.
 
-## 9. C2-C5 (vorlaeufig, fuer die Empfehlungen E1a, E2a, E3a, E4a, E5a, E6a, E7a, E8a)
+## 9. Detailplanung C2-C5 (endgueltig fuer E1a, E2a, E3a, E4a, E5a, E6d, E7a, E8a, E9a; Stand 2026-11-18)
 
-Weicht eine Entscheidung ab, passt C1.9 Punkt 4 die betroffenen Schritte an (Spalte "Folge" in §8).  Die Form der Schritte ist dieselbe wie in §7; *Lesen* ergaenzt C1.9.
+Form wie §7.  Jeder Schritt ist fuer einen Agenten ohne Vorwissen geschnitten; die Spalte *Schreibt* ist verbindlich (parallele Schritte haben keine gemeinsame Datei).
+Auftrag je Schritt: *"Arbeite im Worktree `/home/olliy/projects/mutos8k-plus` (Branch `mutos-plus`).  Lies `CLAUDE.md`, `doc/plan/47_mutos_plus.md` §6,
+`doc/plan/48_mutos_io_cpa.md` §2, §6, §9.0 und §9 <Schritt>, fuehre genau diesen Schritt aus."*
 
-### C2.1 Lader `M8KBOOT.COM`
-*Haengt ab von:* E3, E4; Befund C1.2.  *Gastlauf:* kurz.
-*Tun:* `mutos_io/cpa/m8kboot.mac` (Englisch): Kernel `MUTOS.SYS` (Datei des Kernels, 8.3) per BDOS in Stuecken lesen und ueber das EM-Fenster 4000-7FFF in den EM schreiben
-(Lesepuffer **ausserhalb** 4000-7FFF), EM-Initialisierung und Start des U8001 wie `LOAD16` (C1.2 (b)-(d)), dann `MUTOSIO.BIN` lesen, nach 9000H ff. schieben (Segmente wie
-`mutos_io`), BIOS-Anfang pruefen (Abbruch mit Meldung, wenn `mutos_io` hineinragt), springen.  Schalter (Kommandozeile `K`): nur Kernel laden und starten, danach Halteschleife (fuer C2.3).
-`mutos_io/cpa/build.py` (Muster `mutos_io/build.py`, `--check`), `.COM` eingecheckt.
-*Abnahme:* Rundlauf `--check`; Probelauf `M8KBOOT K` ohne EM-Karte meldet Fehler statt zu haengen.
+### 9.0 Gemeinsame Festlegungen fuer C2-C5
 
-### C2.2 Bootdiskette `tools/plus/cpa_disk.py`
-*Haengt ab von:* C1.8 (Systemdiskette 4 Floppy), C2.1.  *Gastlauf:* nein.
-*Tun:* Systemdiskette (aus C1.8, Bau nach E9) + `M8KBOOT.COM`, `MUTOS.SYS` (Kernel: Vorgabe `mutos_1216` der Original-Ladediskette, wahlweise Datei), `MUTOSIO.BIN`;
-Kaltstartkommando der Variante auf `M8KBOOT` nur, wenn die Workbench das ohne Aenderung kann (sonst Eingabe per `keys`).
-*Abnahme:* `k1520disktool ls` zeigt die Dateien mit richtigen Laengen; Test `tests/test_plus_cpa.py::test_bootdiskette` (gast).
+**Dateien und Orte**
+* `mutos_io/cpa/` = CP/A-Fassung: `src/mutoscpa.mac` (aus `mutos_io/src/mutosio.mac` kopiert, dann umgebaut), `src/m8kboot.mac` (Lader), `build.py`, die Bauergebnisse
+  `mutoscpa.bin` und `m8kboot.com` (**eingecheckt**, wie `mutos_io/mutosio.bin`; Plan 48 §6.6), `README.md`, `system/` (Konfiguration der CP/A-Variante, E9).
+* `mutos_io/src/`, `mutos_io/build.py`, `mutos_io/ladediskette.py`, `mutos_io/mutosio.bin`, `mutos_io/udos/` gehoeren zu `main`: **nur lesen bzw. importieren** (§6.2).
+  `tools/kernel/*`, `tools/plus/gastbau.py`, `tools/plus/gastlauf.py`, `tools/plus/cpa.py`: in C2-C5 **nur importieren**, nicht aendern (neue Hilfen kommen in die Werkzeuge des Schritts).
+* Hostwerkzeuge neu: `tools/plus/cpa_system.py` (C2.2), `tools/plus/cpa_disk.py` (C2.4), `tools/plus/cpa_lauf.py` (C5.1).  Probeprogramme unter `versuche/plus_cpa/`, Debuggerskripte
+  unter `versuche/dbg/cpa_<schritt>_*.dbg`, Arbeitsordner `/tmp/mplus/<schritt>/` (z. B. `/tmp/mplus/c3_3/`).  Gebaute Disketten nie in `disks/`.
+* Befund je Schritt `doc/plus/cpa/<schritt>_<thema>.md` (z. B. `c2_3_lader.md`), Kopfzeile mit **Stand** (erledigt / blockiert), Datum, Arbeitsordner.
+* Tests je Schritt in einer eigenen Datei (Spalte *Schreibt*); `tests/test_plus_cpa_io.py` gehoert der Kette C3.1 -> C3.2 -> C3.3 -> C3.4 -> C4.1, die streng nacheinander laeuft.
+  Schnelltests ohne Emulator gruen oder Skip; Gasttests mit `@pytest.mark.gast` (Skip ohne Emulator, Skripte Exit 77).
 
-### C2.3 Abnahme C2: Kernel laeuft an
-*Haengt ab von:* C2.1, C2.2.  *Gastlauf:* kurz.
-*Tun/Abnahme:* `M8KBOOT K` im Debugger: EM-Inhalt Segment 0 ab 0 == Kernel-Datei (Dump ueber `cpu u8000`/`d`, Vergleich auf dem Host), U8001 laeuft im Kerneltext (PC < 8DC2),
-und die erste Postfach-Anforderung steht an (EM 4006 != 0, A33 Bit 4 = INT-16) -- der Kernel wartet auf `mutos_io`.  Befund `doc/plus/cpa/c2_lader.md`.
+**Technische Festlegungen (aus C1, gelten fuer alle Schritte)**
+* BIOS-Einspruenge nie fest: `mutoscpa` liest beim Start einmal `WBOOT = (0001H)` und legt eine eigene Sprungleiste an (`CONST = WBOOT+3`, `CONIN +6`, `CONOUT +9`, `LIST +0CH`,
+  `HOME +15H`, `SELDSK +18H`, `SETTRK +1BH`, `SETSEC +1EH`, `SETDMA +21H`, `READ +24H`, `WRITE +27H`; gemessen `c1_5` §1, `c1_6` §2); spaeter nie mehr `0001H` lesen (das BIOS ueberschreibt 0001/0002 waehrend
+  des Floppytransfers, `c1_5` §6).  `0000H`, `0001/0002`, `0003H` (IOBYTE), `0040-0055H` nicht als Speicher benutzen.
+* `INTVEC EQU 0F700H`; `INIT` prueft `LD A,I` = F7H (sonst Meldung und Halteschleife).  Vektoren: CTC 0DH -> `INTVEC+0FAH` (CTC-Basis F8H **nicht** umprogrammieren),
+  PIO A32 A/B -> `INTVEC+0EAH`/`+0ECH` (Vektorbytes EAH/ECH bleiben), SIO-Kanaele -> `INTVEC+30H..3EH` (WR2 = 30H bleibt).
+* Speicher (`cpa_analyse` §2): `mutoscpa` 9000..C967, Stapel `SP = C8B6H` (waechst nach unten in B936..C8B5), BIOS ab CA00 (4 Floppy) bzw. CB00 (2 Floppy).
+  Lader: Code/Stapel 0100H..0FFFH, Kernel-Lesepuffer 1000H..1FFFH, Bildpuffer fuer `mutos_io` ab 8000H (bis hoechstens BC05H), EM-Fenster 4000H..7FFFH.
+* Dateien auf der Bootdiskette (CP/M 8.3): `M8KBOOT.COM`, `MUTOS.SYS` (Kernel ohne UDOS-Kopf, 36 352 B; Vorgabe `mutos_1216` der Original-Ladediskette), `MUTOSIO.IMG`
+  (Speicherabbild 9000H..Ende des letzten Segments, Luecken 00H; erzeugt von `mutos_io/cpa/build.py abbild`).
+* Emulatoraufruf CP/A mit vier Floppys: `k1520dbg --em em256 --laderom ul4 --gide=0xD0 --gide-image <kopie.img.gz> --laufwerke K5601,K5601,K5601,K5601 <boot.hfe> [-b/-c/-d ...]`
+  (Muster `tools/plus/cpa.py lauf_dbg`, `c1_8` §4).  MUTOS-Disketten wie in `tools/kernel/gast_as.py` (`PLATTEN`, A = `/tmp` rk0, B = `/usr` rk1, C = Wurzel rk2, D = `/mnt` rk3).
+* Kernel: Original `mutos_1216` (`gast_as.disk("a5120_mutos8000_boot_udos_k5601.hfe")`, `k1520disktool get ... mutos_1216`) und P3.4-Kernel (sha256 `a0e2a9c5...e97e25`,
+  gebaut mit `python3 -I tools/plus/gastbau.py bauen --arbeit DIR`, `doc/plus/gastbau.md` §8).  Kernel bleibt unveraendert (O4).
+* Jede Abweichung vom Original in `doc/plus/abweichungen.md` -- geschrieben nur von den Schritten C2.4, C3.4, C4.1, C5.2 (die nie parallel laufen).
 
-### C3.1 Quelle `mutos_io/cpa/mutoscpa.mac` anlegen
-*Haengt ab von:* C2.1 (Baugeruest).  *Gastlauf:* nein.
-*Tun:* Kopie von `mutos_io/src/mutosio.mac`; Bau `mutos_io/cpa/build.py` um `mutoscpa` ergaenzen.  **Erster Commit: unveraenderte Kopie baut bytegleich zu `mutos_io/mutosio.bin`**
-(Bezugspunkt fuer alle weiteren Diffs).  Dann alle A-Zahlen aus C1.4 durch Namen ersetzen -- weiterhin bytegleich.  Deutsche Kommentare, die beruehrt werden, uebersetzen.
-*Abnahme:* zwei Rundlaeufe bytegleich (Waechter `tests/test_plus_cpa.py::test_mutoscpa_basis` prueft das am Commit der Kopie per `git show`).
+### C2.1 Geruest `mutos_io/cpa/` und bytegleiche Kopie
+*Haengt ab von:* nichts.  *Gastlauf:* nein (M80/LINKMT ueber `emu.cpm_bau()`).
+*Lesen:* `mutos_io/README.md`, `mutos_io/build.py`, `mutos_io/udos/build.py` (Muster `cpm_bau.Programm`), `mutos_io/ladediskette.py` (`baue`, `segmente`), `k1520emu: tools/cpm_bau.py`.
+*Erste Sonde:* `python3 -I mutos_io/build.py --check` -> 0 (Werkzeugkette da, Ausgangslage bytegleich).
+*Tun:*
+1. `mutos_io/cpa/src/mutoscpa.mac` = Kopie von `mutos_io/src/mutosio.mac` (nur der Kopfkommentar nennt die Herkunft und den Plan; Code unveraendert).
+2. `mutos_io/cpa/build.py` (Muster `mutos_io/udos/build.py`): Programmliste aus `src/*.mac` (sortiert), Endung `com` fuer `m8kboot`, sonst `bin`; `--check` wie `cpm_bau.hauptprogramm`.
+   Zusaetzlich Unterbefehl `abbild [--out DATEI]`: baut `mutoscpa` ueber `ladediskette.baue(quelle=...)` (importieren, nicht kopieren), legt die Segmente an ihre Adressen
+   (Dateiversatz = Summe der auf 100H gerundeten Vorgaengerlaengen, gemessen: 5376 B = 300H+F00H+200H+100H) und schreibt `MUTOSIO.IMG` ab 9000H; Funktion `abbild()` fuer C2.4.
+3. `mutoscpa.bin` bauen und einchecken; `README.md` (Deutsch): Zweck, Bau, Bezug: **Basis-Commit** = der Commit dieses Schritts (`git diff <basis> -- mutos_io/cpa/src/mutoscpa.mac` zeigt alle CP/A-Aenderungen).
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `mutos_io/cpa/build.py`, `mutos_io/cpa/mutoscpa.bin`, `mutos_io/cpa/README.md`, `tests/test_plus_cpa_quelle.py`
+(schnell: Datei ASCII; `gast`: `build.py --check` -> 0, `abbild()` liefert C968H-9000H Byte mit den Segmentinhalten an den richtigen Stellen).
+*Abnahme:* `cmp mutos_io/cpa/mutoscpa.bin mutos_io/mutosio.bin` gleich; `python3 -I mutos_io/cpa/build.py --check` -> 0; `abbild` erzeugt ein Abbild, dessen Bytes an 9000/9400/A400/C8B6 den Segmenten gleichen; ohne Emulator Exit 77.
+*Dauer:* ~1 h.
 
-### C3.2 Lage, Start, Interrupts, Konsole (minimal)
-*Haengt ab von:* C3.1, C2.3, E2/E3/E6.  *Gastlauf:* ja, Minuten (MUTOS-Boot im Hintergrund).
-*Tun:* Stapel unter den BIOS-Anfang; `I` vom BIOS uebernehmen, Vektoren (PIO A32 EAH/ECH, CTC, SIO) in freie Plaetze der CP/A-Tabelle (C1.5); UDOS-Initialisierung, die CP/A
-schon gemacht hat, weglassen (C1.4); `0BEBH`/`0BF1H` -> BIOS `CONOUT` (aus der Hauptschleife), `0BE8H` (Bedienmaske) -> eigene Abfrage wie im Zeitgeber-ISR oder BIOS `CONIN`
-vor dem Start der Interrupts.  Platte noch ueber einen Stummel, der Fehler meldet.
-*Abnahme:* Bedienmaske erscheint, `r` wird angenommen, der Kernel meldet `mem = 196608` auf dem Schirm (Konsolenweg Klasse 2), dann Plattenfehler (erwartet).
+### C2.2 CP/A-Variante mit vier Floppys bauen (`tools/plus/cpa_system.py`)
+*Haengt ab von:* nichts (parallel zu C2.1).  *Gastlauf:* ja, kurz (Sekunden).
+*Lesen:* `doc/plus/cpa/c1_8_vier_floppy.md` ganz (Bauentwurf §2, Systemdiskette §3, Start §4, Vorschlag §6, Auffaelligkeiten §7), §11 (O2/O3, Anforderung), `tools/plus/cpa.py` (Kopf, `lauf`, `schirm`).
+**Nie** `cpa_workbench.py` ohne Argumente starten; in `~/projects/CPA_Workbench` nichts schreiben.
+*Erste Sonde:* Entwurf aus `c1_8` §2 in einer frischen Kopie unter `/tmp/mplus/c2_2/wb/` mit `anzdisk = 4` laufen lassen: SHA-1 der `@os.com` = `97bbdca995953cc928e5b09cc0d3ae32d9a2ef45`?
+*Tun:*
+1. `mutos_io/cpa/system/konfig.txt`: die Abweichungen von der Vorgabe der Variante `gide_a5120` (`CONFIG_SYSTEM_CRT_K7024=y`, `CONFIG_SYSTEM_ANZDISK=4`), je Zeile `SCHLUESSEL=WERT`, Kommentar `#`;
+   `mutos_io/cpa/system/README.md`: Workbench-Stand (`0045dc6`), erwarteter SHA-1, Bauweg.
+2. `tools/plus/cpa_system.py` (Englisch, stdlib): Workbench aus `CPA_WORKBENCH` (Vorgabe `~/projects/CPA_Workbench`); jedes Mal frische Kopie (`src config prebuilt tools additions diskdefs cpaFormates.cfg`)
+   nach `<arbeit>/wb/`; Stand pruefen (`git rev-parse HEAD`, abweichend = Warnung); eigene `.config` (nie die der Workbench); `run_patch_mac extract` -> Werte aus `konfig.txt` -> `patch` -> `build_os`;
+   SHA-1 pruefen (abweichend = Fehler).  Funktionen `os_com(arbeit) -> bytes`, `systemdiskette(arbeit) -> pfad` (Kopie von `cpa.GIDE_SYS`, `@OS.COM` ersetzt, `c1_8` §3).
+   Kommandozeile `cpa_system.py bauen|pruefen --arbeit DIR`; `pruefen` bootet die Diskette (`cpa.lauf`, `laufwerke=['K5601']*4`) und prueft Kopfzeile (`A:`..`D:`, `GIDE-Laufwerke E: bis L:`,
+   `RTC 72421`), `DIR E:` (Eintrag `@OS`) und die Uhr (`d 0x0050 3` an zwei Zeitpunkten, Sekunden laufen).  Exit 77 ohne Workbench, Emulator oder Werkzeugkette.
+3. Nebenbei messen: bootet die 4-Floppy-Diskette **ohne** `--laufwerke`? (offen aus `cpa_analyse` E5; Ergebnis in den Befund, kein Umbau.)
+*Schreibt:* `tools/plus/cpa_system.py`, `mutos_io/cpa/system/konfig.txt`, `mutos_io/cpa/system/README.md`, `tests/test_plus_cpa_system.py` (schnell: `konfig.txt` lesbar, SHA-1-Konstante;
+`gast`: `pruefen`), `doc/plus/cpa/c2_2_system.md`.
+*Abnahme:* `python3 -I tools/plus/cpa_system.py pruefen --arbeit /tmp/mplus/c2_2` -> 0 (SHA-1 gleich, A:-D:, E:-L:, RTC, `DIR E:`, Uhr laeuft); Workbench danach `git status` sauber.
+*Dauer:* ~2 h.
 
-### C3.3 Plattenweg ueber das BIOS
-*Haengt ab von:* C3.2, C1.6 (Formel), E1.  *Gastlauf:* ja.
-*Tun:* `9800..9904` ersetzen: Einheit -> CP/A-Laufwerk ueber die Tabelle der Bedienmaske (A12A, Werte jetzt Laufwerksbuchstaben 0..3 = A:-D:), Block -> (Spur, Satz) nach C1.6,
-vier `READ`/`WRITE` je Block, Schreiben nach C1.6 (5) so, dass der Satz sicher auf der Diskette ist (C=1 oder Abschluss nach C1.5); Fehler -> Status wie heute (>= 40H).
-Rueckruf-/Fertigweg (9163) bleibt.  Laufwerkstabelle so anlegen, dass Plan 49/51 weitere Einheiten (GIDE) eintragen koennen.
-*Abnahme:* Boot bis `#` mit `a5120_mutos8000_root_mfm.hfe` in C: (rk2), `ls -l /`, `sync`, Neustart, Dateisystem unveraendert lesbar.  Befund `doc/plus/cpa/c3_mutos_io.md`.
+### C2.3 Lader `M8KBOOT.COM`
+*Haengt ab von:* C2.1 (`build.py` baut `src/*.mac`).  Parallel zu C2.2 und C3.1.  *Gastlauf:* ja, kurz (2-Floppy-GIDE-Systemdiskette `cpa.GIDE_SYS` genuegt; die 4-Floppy-Diskette erst in C2.4).
+*Lesen:* `doc/mutos_io/udos_lader.md` §1 (vor allem §1.3 b-e, §1.4), `mutos_io/udos/src/load16.mac`, `mutos_io/src/mutosio.mac` (`INIT` 9400 ff., `SEITE_ABBILDEN`, `TAB_PIO_A/B`, Start 9000-9009),
+`doc/plus/cpa/c1_5_bios.md` §1 und §6, `c1_6` §7 (BDOS merkt sich `SELDSK`), `tools/plus/cpa.py`, `k1520emu: tools/k1520dbg.md` §12 (`emlog`, `cpu u8000`, `dev em`), §9.0.
+*Erste Sonde:* Kleinprogramm `versuche/plus_cpa/emfenst.mac`: A22 alle Seiten 0FH, PIO A32 wie `TAB_PIO_A/B`, Seiten 4..7 auf EM-Segment 0 Adresse 0000H abbilden (Logik `SEITE_ABBILDEN`), `OUT (A9H),38H`,
+warten auf PIO A Bit 6, 4 KB Muster nach 4000H, `OUT (A9H),3CH`; im Debugger `d <<0>>%0000 32` (bzw. `cpu u8000` + `d`) zeigt das Muster.  Bestaetigt das Fenster 4000-7FFF unter CP/A (LOAD16 benutzte 0000-3FFF).
+*Tun:*
+1. `mutos_io/cpa/src/m8kboot.mac` (Englisch, M80, ohne `ORG`; Lage §9.0): `MUTOS.SYS` per BDOS (Open 15, Read Sequential 20, SETDMA 26) in 4-KB-Stuecken nach 1000H lesen und je Stueck
+   wie `LOAD16` (`udos_lader` §1.3 b) ueber das Fenster 4000-7FFF in EM-Segment 0 ab 0000H kopieren (`DI` um `OUT 38H`..`LDIR`..`OUT 3CH`); Ende = Dateiende; Laenge pruefen (> 0, <= 64 KB).
+2. Dann `MUTOSIO.IMG` nach 8000H lesen; BIOS-Anfang = `(0001H) - 3`; Abbruch mit Meldung, wenn `9000H + Laenge > BIOS-Anfang`; nach dem **letzten** BDOS-Aufruf `DI`, Abbild mit `LDDR` (ueberlappend)
+   nach 9000H schieben, `JP 9000H`.  Der U8001 bleibt im Reset (den Start macht `mutoscpa` wie heute, `udos_lader` §1.3 f).
+3. Betriebsart `M8KBOOT K` (Kommandozeile ab 0080H): nur Kernel laden, dann EM-Init wie `mutos_io` `INIT` (A22, PIO), Vektor `INTVEC+0EAH` auf eine Zaehl-ISR (`EI; RETI`, Zaehler an fester,
+   im Listing genannter Adresse), `OUT (A9H),2CH`, `EI`, Halteschleife.  Ohne EM-Karte (PIO A Bit 6 kommt nicht): Zeitgrenze, Meldung `NO EM`, Rueckkehr zum CCP.
+4. Fehlertexte (Datei fehlt, zu gross, kein EM, `mutos_io` ragt ins BIOS) ueber BDOS 9, dann Warmstart -- solange BDOS noch nicht ueberschrieben ist.
+5. `m8kboot.com` bauen und einchecken.  Debuggerskripte `versuche/dbg/cpa_c2_3_*.dbg`.
+*Schreibt:* `mutos_io/cpa/src/m8kboot.mac`, `mutos_io/cpa/m8kboot.com`, `versuche/plus_cpa/emfenst.mac`, `versuche/dbg/cpa_c2_3_*.dbg`, `tests/test_plus_cpa_lader.py`
+(`gast`: `M8KBOOT K` auf einer Kopie von `cpa.GIDE_SYS` mit `MUTOS.SYS`), `doc/plus/cpa/c2_3_lader.md`.
+*Abnahme* (Original-Kernel, 2-Floppy-GIDE-Diskette): `M8KBOOT K` -> EM-Segment 0 ab 0 bytegleich `mutos_1216` (Dump auf dem Host verglichen, alle 36 352 B); `emlog`: `RESET16 0`, U8001 laeuft
+bei `<<0>>%027E` los; Zaehl-ISR >= 1 und EM 4006H != 0 (erste Postfach-Anforderung steht an); ohne `--em` meldet der Lader `NO EM` statt zu haengen.  `build.py --check` -> 0.
+*Dauer:* ~3-4 h.
 
-### C4.1 Drucker und tty1
-*Haengt ab von:* C3.3, E7.  *Gastlauf:* ja.
-*Tun:* `0EB00H` -> BIOS `LIST` (IOBYTE auf LPT) bzw. nach E7; tty1 (SIO A) unveraendert pruefen; SIO-Vektoren aus der UDOS-Tabelle 0F30.. in die CP/A-Tabelle.
-*Abnahme:* `cat /etc/motd > /dev/lp` kommt am Drucker des Emulators an; `cat /etc/motd > /dev/tty1` sendet 44 Zeichen ueber 50H (wie `analyse.md` §7).
+### C3.1 Namen statt Zahlen in `mutoscpa.mac` (bytegleich)
+*Haengt ab von:* C2.1.  Parallel zu C2.2/C2.3 (schreibt nur `mutoscpa.*`).  *Gastlauf:* nein.
+*Lesen:* `doc/plus/cpa/c1_4_inventar.md` §1, §3 (A-Zeilen), §4, §9 Punkt 5; `mutos_io/cpa/README.md`.
+*Erste Sonde:* `rg -n '0A5A[89]H|0CB68H|0B6H,0A[5-9B]H' mutos_io/cpa/src/mutoscpa.mac` -- Umfang gegen `c1_4` §3 (23 A-Zeilen).
+*Tun:* jede A-Zeile aus `c1_4` §3 durch einen Namen ersetzen: `V_NACHR` (A5A8H, `V_NACHR+1`), Stapelanfang `INITSP EQU 0CB68H` (Wert noch unveraendert), Pufferzeiger in `AUF*`/`DCB*` als `DW PUF_xxx`
+mit `PUF_xxx EQU` je Puffer (A5B6 ... B8B6).  Beruehrte deutsche Kommentare ins Englische uebersetzen; Namen neu Englisch.  Ergebnis bleibt **bytegleich** zu `mutos_io/mutosio.bin`.
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `tests/test_plus_cpa_io.py` (schnell: ASCII; keine der A-Zahlen aus `c1_4` §3 mehr ausserhalb von `EQU`-Zeilen), `doc/plus/cpa/c3_1_namen.md` (Tabelle Zahl -> Name).
+*Abnahme:* `build.py --check` -> 0 und `mutoscpa.bin` == `mutos_io/mutosio.bin`; Schnelltest gruen.
+*Dauer:* ~1-2 h.
 
-### C4.2 Arbeitstests und Leistung
-*Haengt ab von:* C4.1, C5.1.  *Gastlauf:* ja (~2-5 Min. je Lauf, Hintergrund).
-*Tun/Abnahme:* `gastbau.TESTS` ueber den CP/A-Start (`tools/plus/cpa_lauf.py`, C5.1): `bewerten` ohne Fehlschlag mit dem Original-Kernel und dem P3.4-Kernel (sha256 `a0e2a9c5...`);
-Zeit Boot bis `#` und Takte je Plattenblock gegen den UDOS-Weg (`gastbau.py boot`).  Befund `doc/plus/cpa/c4_arbeitstests.md`.
+### C2.4 Bootdiskette (`tools/plus/cpa_disk.py`) und Abnahme C2
+*Haengt ab von:* C2.2, C2.3 (C2.1 `abbild`).  *Gastlauf:* ja, kurz.
+*Lesen:* `doc/plus/cpa/c2_2_system.md`, `c2_3_lader.md`, `tools/plus/cpa_system.py`, `tools/plus/cpa.py` (`diskette`), `mutos_io/cpa/build.py` (`abbild`), §9.0.
+*Erste Sonde:* Systemdiskette aus `cpa_system.systemdiskette()` + die drei Dateien mit `k1520disktool put`; `k1520disktool ls -l` zeigt Laengen 36 352 (MUTOS.SYS) und Laenge des Abbilds.
+*Tun:*
+1. `tools/plus/cpa_disk.py`: `bootdiskette(arbeit, kernel=None, io_quelle=None) -> pfad` (4-Floppy-Systemdiskette + `M8KBOOT.COM` aus `mutos_io/cpa/m8kboot.com`, `MUTOS.SYS` = `kernel` bytes oder Original,
+   `MUTOSIO.IMG` = `abbild()` der aktuellen `mutoscpa.mac`); Kommandozeile `cpa_disk.py diskette --arbeit DIR [--kernel DATEI]` und `cpa_disk.py kstart --arbeit DIR` (Abnahmelauf `M8KBOOT K`).
+   Exit 77 ohne Emulator/Workbench/Werkzeugkette.  Kein Autostart: `M8KBOOT` wird am Prompt getippt (Autostart ist nicht Teil von Plan 48).
+2. Abnahme C2 auf der 4-Floppy-Diskette: wie C2.3, zusaetzlich BIOS-Anfang CA00 gemessen und die Lage-Pruefung des Laders positiv (Vollbetrieb `M8KBOOT` erreicht 9000H; danach macht die unveraenderte
+   UDOS-Fassung noch nichts Sinnvolles -- nur der Sprung wird geprueft, Haltepunkt 9000H).
+3. `doc/plus/abweichungen.md`: Zeilen "Startkette CP/A statt UDOS (`M8KBOOT` statt `ACTIVATE`/`LOAD16`/`IFSSPR`)" und "CP/A-Variante 4 Floppy (`mutos_io/cpa/system/`)".
+*Schreibt:* `tools/plus/cpa_disk.py`, `tests/test_plus_cpa_disk.py` (schnell: Import/Exit 77; `gast`: `kstart`), `doc/plus/cpa/c2_4_bootdiskette.md`, `doc/plus/abweichungen.md`.
+*Abnahme:* `python3 -I tools/plus/cpa_disk.py kstart --arbeit /tmp/mplus/c2_4` -> 0 (EM == Kernel, U8001 laeuft, Anforderung steht an, BIOS CA00); Haltepunkt 9000H im Vollbetrieb erreicht, Bytes 9000..C967 == `MUTOSIO.IMG`.
+*Dauer:* ~2 h.
 
-### C5.1 Gastlauf-Werkzeug ueber CP/A `tools/plus/cpa_lauf.py`
-*Haengt ab von:* C2.2, C3.2 (Bedienmaske ueber CP/A); kann parallel zu C3.3 entstehen.  *Gastlauf:* ja.
-*Lesen:* `tools/kernel/gast_as.py` (`dbg_skript`, `gast_befehle`: Muster, nicht aendern), `tools/plus/gastlauf.py`, `tools/plus/gastbau.py` (`boot`, `testdateien`).
-*Tun:* wie `gastlauf.lauf`, aber Start: CP/A-Bootdiskette in A: (`--laderom ul4 --gide=0xD0`, Platte als Kopie, `--laufwerke K5601` x4), `M8KBOOT`, Bedienmaske, dann
-`eject A` + `mount A <tmp.hfe>` und die uebrigen Laufwerke wie heute; danach dieselben Befehle/Marken/Rueckholung.  `gastbau.boot` bekommt eine Option `--start cpa` **in
-`tools/plus/`** (nichts in `tools/kernel/`).
-*Abnahme:* Probe wie Plan 47 P1.0 (`cat a.txt`, Wechsel, `cat b.txt`) ueber den CP/A-Start.
+### C3.2 `mutoscpa`: Start, Lage, Interrupts, Konsolausgabe, Bedienmaske
+*Haengt ab von:* C3.1, C2.4.  *Gastlauf:* ja, Minuten (MUTOS-Start im Hintergrund, §6.3).
+*Lesen:* `c1_4` §3, §4, §5, §8; `c1_5` §1, §3, §4, §8; `c1_7` §1, §4; `cpa_analyse` §2, §3; `mutoscpa.mac` (Start 9000, `INIT`, `ISR_*`, `KONSOLE_AUS`, `DRUCKER`, `NUKLEUS_INIT`, `ROH`/`KMD_*`, `MASKE` ff.); `cpa_disk.py`; §9.0.
+*Erste Sonde:* nur Start + Bedienmaske umgebaut (Stapel, BIOS-Sprungleiste, `0BEBH`/`0BF1H`/`0BE8H` in der Maske, Meldezeile), `INIT` und Kernelstart noch hinter einem Halt: Maske erscheint ueber `CONOUT`,
+`r` wird angenommen (Haltepunkt nach `CALL MASKE`).  **Stapeltiefe:** der Start fuellt B936..C8B5 mit E5H (bleibt drin); nach dem Lauf Dump, tiefste benutzte Adresse in den Befund.
+*Tun* (je Punkt Fundstelle aus `c1_4` §3/§4 im Befund):
+1. Start: Stapel fuellen, `LD SP,0C8B6H`, BIOS-Sprungleiste anlegen (§9.0), BIOS-Tastaturpuffer leeren (`CONST`/`CONIN`-Schleife).
+2. `0BEBH` -> `PUTC` (BC, DE, HL retten, `LD C,A`, BIOS `CONOUT`); `0BF1H` -> Textausgabe (Laengenbyte + Text) ueber `PUTC`; `0BE8H` -> `CONST`/`CONIN` (Rueckgabe wie UDOS: Z = keine Taste, sonst A);
+   Meldezeile `0FF60H` -> Zeilenumbruch + Text ueber `PUTC`; `SIGNALTON` (5CH) bleibt.
+3. `INIT`: `I` pruefen, Vektoren nach §9.0 (`INTVEC+0EAH/0ECH/0FAH`, SIO `+30H..3EH`); `NUKLEUS_INIT`-Zeilen `[0003H]` streichen; `RST 38H` (2 Stellen) -> `FEHLERHALT` (Meldung, `DI`, Schleife);
+   Klasse 3 (`ROH`/`KMD_*`, 01B5H, `OUT 1CH`) durch einen Handler ersetzen, der sofort mit Fehlerstatus meldet.
+4. Stummel: `PLATTE` meldet sofort Fehler (Status wie `BR_ABBRUCH`), `DRUCKER` meldet sofort Status FFH (bis C3.3 bzw. C4.1).  `ISR_TAKT` vorerst ohne Tastatur (Aufruf `TASTE_LESEN` raus; C3.4).
+5. `INITSP` auf C8B6H; Seg.-Lage unveraendert.  `doc/plus/cpa/c3_2_start.md` mit allen Ersetzungen.
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `mutos_io/cpa/mutoscpa.bin`, `tests/test_plus_cpa_io.py` (ergaenzen: kein `0BEBH/0BF1H/0BE8H/0FF60H/[0003H]/01B5H/RST 38H/0FE2H/0FEAH/0FECH/0F3xH` mehr im Code;
+`gast`: Lauf bis zur Kernelmeldung), `versuche/dbg/cpa_c3_2_*.dbg`, `doc/plus/cpa/c3_2_start.md`.
+*Abnahme:* Boot ueber `cpa_disk.bootdiskette`: `M8KBOOT` -> Maske -> `r` -> erste Meldung des Kernels auf dem Schirm (Text wie im UDOS-Boot), danach Plattenfehler (erwartet); Logpunkte: `ISR_TAKT` ~50/s
+(Takte je Tick wie `c1_7` §2), `ISR_ANFRAGE` >= 1; BIOS-Uhr `0050H..0052H` laeuft weiter; Stapel nicht unter B936H.
+*Dauer:* ~4-6 h.
 
-### C5.2 Waechter, Doku, Abweichungen
-*Haengt ab von:* C4.2.  *Gastlauf:* Langtest.
-*Tun:* `tests/test_plus_cpa.py`: schnell (Rundlauf `mutos_io/cpa/build.py --check`, ASCII, Laufwerkstabelle vorhanden, keine UDOS-Einspruenge `0BE8H/0BEBH/0BF1H/0BFDH/0EB00H` mehr in
-`mutoscpa.mac`); lang (`gast`, nur mit `K1520_PLUS=1`): Boot ueber CP/A + `bewerten` ohne Fehlschlag.  `doc/plus/cpa.md` (Aufrufe, Laufzeiten, Speicherkarte),
-`mutos_io/cpa/README.md`, `doc/plus/abweichungen.md` (Startkette CP/A statt UDOS, `mutos_io` CP/A-Fassung, Lader, CP/A-Variante).
-*Abnahme:* schnelle Tests gruen; Langtest einmal gruen (Datum, Dauer im Dokument).  Optional, wenn Zeit: `gastbau.py fixpunkt` ueber den CP/A-Start (Selbstbau unter CP/A).
+### C3.3 `mutoscpa`: Plattenweg ueber das BIOS
+*Haengt ab von:* C3.2.  *Gastlauf:* ja, Minuten (Hintergrund).
+*Lesen:* `cpa_analyse` §4, `c1_6` §3, §4, §6, §7; `c1_4` §6, §7; `versuche/plus_cpa/blktest.mac` (Vorlage der Rechnung); `mutoscpa.mac` `PLATTE` .. `SEKTOR_BERECHNEN`, `PLATTE_FERTIG`, `TAB_RK_LAUFWERK`, `M_FERTIG`; §9.0.
+*Erste Sonde:* **voller ISR neben `READ`**: zuerst nur den Lesezweig einbauen (Schreiben meldet Fehler), Boot mit `root_mfm` in C:; Logpunkte auf BIOS-`READ` Ein-/Austritt (Adressen der eigenen Sprungleiste),
+`ISR_TAKT` und `ISR_ANFRAGE` mit Takt.  Erwartet: Ticks fallen in `READ`-Fenster, kein Tick verloren (Abstaende wie `c1_7` §2), jede Anforderung waehrend `READ` wird nach dem Block bedient, Daten richtig
+(Boot kommt weiter als in C3.2).  Faellt das anders aus: blockiert, melden.
+*Tun:*
+1. `PLATTE` synchron: Einheit -> CP/A-Laufwerk ueber `TAB_RK_LAUFWERK` (Werte 0..3 = A:-D:) und eine neue Tabelle `TAB_RK_CPA` mit 8 Eintraegen (rk4-7 = FFH = Fehler; Plan 49/51 tragen GIDE ein); Klasse 5 bleibt frei.
+2. **Anmeldung:** je Einheit ein Merker "angemeldet", geloescht am Ende der Bedienmaske; erster Zugriff -> `SELDSK` mit E Bit 0 = 0 (Formaterkennung), danach E = 1.  Nach **jedem** `SELDSK`: DPH -> DPB,
+   `SPT` (DPB+0) und `OFF` (DPB+13) lesen.  HL = 0 -> Fehlerstatus.
+3. Regel nach `cpa_analyse` §4: `SPT` = 26 -> 26 x 128 (inverse Tabelle `INV` ab Spur `OFF`), `SPT` = 32 oder 36 -> 8 x 512; sonst Fehlerstatus.  Je Block vier Saetze `SETTRK/SETSEC/SETDMA/READ`
+   bzw. `WRITE` mit `C = 0,0,0,1`.  Puffer wie heute (`IY+2/3`, A8B6..).  Fehler (`A` != 0) -> Status wie `BR_ABBRUCH` (Wert >= 40H), Abbruch des Blocks.
+4. Entfernen: `0BFDH`-Weg (`BLOCK_START`, `BLOCK_RUECKRUF`, `BR_*`, `SEKTOR_WEITER`, `V_RUECKRUF_*`, `NUK_AUFTRAG`); `V_BUSY` und Wiedervorlage `90F2` nur, wenn nichts anderes sie braucht.  Fertigmeldung direkt
+   (wie `KONSOLE_AUS` ueber `ENDE_WIEDER`), nicht mehr im Interruptkontext.
+5. Takte je Block und Zeit bis `login:` gegen den UDOS-Weg (`gastbau`/UDOS-Boot, `c1_4` §6) messen.
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `mutos_io/cpa/mutoscpa.bin`, `tests/test_plus_cpa_io.py` (ergaenzen: kein `0BFDH`; `gast`: Boot bis `login:`), `versuche/dbg/cpa_c3_3_*.dbg`, `doc/plus/cpa/c3_3_platte.md`.
+*Abnahme:* Boot bis `login:` mit `root_mfm` in C: (A/B/D wie `gast_as.PLATTEN`, A = leere `/tmp`-Diskette), 0 Plattenfehler (Logpunkt im Fehlerzweig); ebenso mit `root_8x512` in C: bis `login:`;
+Erste Sonde *gemessen*.
+*Dauer:* ~4-6 h.
+
+### C3.4 `mutoscpa`: Tastatur (E6d), Diskettenwechsel, Abnahme C3
+*Haengt ab von:* C3.3.  *Gastlauf:* ja, Minuten (Hintergrund).
+*Lesen:* `c1_7` §1, §2, §4 (`CONST` im ISR, `itest.mac`), `c1_5` §4; `mutoscpa.mac` `ISR_TAKT`, `TASTE_LESEN`, `TAB_TASTE`, `EING_TASTE`, `QUEUE_*`; `tools/plus/gastlauf.py` (Wechselablauf); §9.0.
+*Erste Sonde:* `ISR_TAKT` ruft `CONST`, bei Taste `CONIN` -> `QUEUE_TASTE` (alle Register retten; BIOS-Codes direkt, `TASTE_LESEN`/`TAB_TASTE` nicht mehr benutzt).  Boot, `keys root\r` am `login:` -> `#`.
+**Lange Tastenfolge:** danach `cat >/tmp/k` und eine Folge von 200 Zeichen mit allen Zeichen der Gastskripte (`a-z0-9 /.-;><|&=:*$_'"`, Ziffern) in Stuecken zu 40 waehrend `ls -lR /usr >/dev/null &`
+eintippen, `^D`; Host vergleicht `/tmp/k` (aus der `--rw`-Kopie) mit der Folge.  Verlust oder falsche Codes -> blockiert, melden.
+*Tun:*
+1. Tastatur wie in der Ersten Sonde; Steuerzeichen pruefen, die der Kernel braucht (CR -> Zeilenende, BS/DEL, `^C`, `^D`, `^\`); Abweichungen der BIOS-Codes gegen `TAB_TASTE` im Befund.
+2. **Diskettenwechsel im Betrieb** (Muster `gastlauf.skript`): `/etc/mount /dev/rk3 /mnt`, `ls /mnt`, `/etc/umount /dev/rk3`, im Debugger `eject D`/`mount D <andere Diskette gleichen Formats>`, mount, `ls /mnt` zeigt
+   den neuen Inhalt.  Liest es den alten oder falschen Inhalt: Neuanmeldung (`SELDSK` E Bit 0 = 0) bei jedem **Lesen von Block 1** (Superblock; `mount` liest ihn zuerst) einbauen und Kosten messen.
+   Eine andere Regel nur nach Rueckfrage (anhalten, melden).
+3. Abnahme C3 (unten), `doc/plus/abweichungen.md`: Zeile "`mutos_io` CP/A-Fassung" (BIOS statt UDOS-Nukleus, Stapel C8B6, Klasse 3 entfernt, Tastatur ueber BIOS-Codes, Plattenregel; Verweis auf die Befunde C3.1-C3.4).
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `mutos_io/cpa/mutoscpa.bin`, `tests/test_plus_cpa_io.py` (ergaenzen: kein Lesen von 5CH mehr ausser `SIGNALTON`), `versuche/dbg/cpa_c3_4_*.dbg`,
+`doc/plus/cpa/c3_4_tastatur.md`, `doc/plus/abweichungen.md`.
+*Abnahme:* Boot bis `#` mit `root_mfm` in C:, `ls -l /` vollstaendig, Datei auf `/tmp` und auf der Wurzel schreiben, `sync`; zweiter Emulatorlauf mit denselben Kopien: Dateien lesbar und auf dem Host
+(`k1520disktool get`) gleich; Wechsel (Punkt 2) richtig; Tastenfolge 200/200.
+*Dauer:* ~3-5 h.
+
+### C4.1 Drucker (E7a) und tty1
+*Haengt ab von:* C3.4.  Parallel zu C5.1.  *Gastlauf:* ja.
+*Lesen:* `doc/mutos_io/udos_lader.md` §2.3-§2.6, `c1_5` §5, `cpa_analyse` E7, `mutoscpa.mac` `DRUCKER`, `DRUCKER_FERTIG`, `INIT_SIO`, `TTY_AUS`; `versuche/dbg/ifsspr_lp.dbg` (Messmuster), `doc/mutos_io/analyse.md` §7.
+*Erste Sonde:* **`LIST` unter CP/A**, ohne MUTOS: `versuche/plus_cpa/lsttest.mac` setzt IOBYTE 80H und gibt `AB<TAB>C<CR><LF>` und 50 Zeichen ueber BIOS `LIST` aus; Logpunkte auf `OUT (5EH)`/`OUT (5FH)`.
+Vergleich mit `IFSSPR` (`udos_lader` §2.4): Port 5EH, SIO-Programmierung (WR4 4DH?, WR3/WR5), TAB unveraendert oder expandiert, NUL nach CR, Takte je Zeichen.  Kommt nichts an 5EH an oder ist die
+Programmierung anders als `IFSSPR` in Paritaet/Bits: Befund, blockiert, melden (Rueckfall E7 (b) braucht eine Entscheidung, §12).
+*Tun:*
+1. `INIT`: IOBYTE `0003H := 80H`.  `DRUCKER`: Puffer zeichenweise ueber BIOS `LIST` (synchron), danach Fertigmeldung direkt; `DRUCKER_FERTIG` und `CALL 0EB00H` entfallen.
+   Sichtbares Verhalten wie `IFSSPR` herstellen, wo `LIST` es nicht selbst tut: NUL nach CR, TAB auf 8er-Spalten mit Leerzeichen (nur wenn die Sonde zeigt, dass `LIST` das nicht tut).
+2. tty1: `cat /etc/motd > /dev/tty1` -> Zeichen an 50H (Zahl wie `analyse.md` §7); SIO-A-Takt messen (CTC 0CH des BIOS gegen 5AH von `mutos_io`, `c1_5` §5) -- nur Befund.
+3. `doc/plus/abweichungen.md`: Zeile "Drucker ueber BIOS `LIST` statt `IFSSPR`" (mit den Unterschieden aus der Sonde).
+*Schreibt:* `mutos_io/cpa/src/mutoscpa.mac`, `mutos_io/cpa/mutoscpa.bin`, `versuche/plus_cpa/lsttest.mac`, `versuche/dbg/cpa_c4_1_*.dbg`, `tests/test_plus_cpa_io.py` (ergaenzen: kein `0EB00H`),
+`doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md`.
+*Abnahme:* `cat /etc/motd > /dev/lp`: Bytefolge an 5EH == UDOS-Messung (`udos_lader` §2.4: 55 Zeichen des Kernels + NUL nach CR), abgesehen von im Befund belegten Unterschieden (z. B. NUL am Auftragsanfang);
+Text mit TAB wie `IFSSPR`; `cat /etc/motd > /dev/tty1` sendet alle Zeichen ueber 50H; Takte je Druckzeichen gemessen.
+*Dauer:* ~3 h.
+
+### C5.1 Gastlauf-Werkzeug ueber CP/A (`tools/plus/cpa_lauf.py`)
+*Haengt ab von:* C3.4 (Boot bis `#`, Tastatur, Wechsel).  Parallel zu C4.1.  *Gastlauf:* ja (~10 Min., Hintergrund).
+*Lesen:* `tools/kernel/gast_as.py` (`PLATTEN`, `dbg_skript`, `gast_befehle`), `tools/plus/gastlauf.py` (`skript`, `lauf`, `probe`), `tools/plus/gastbau.py` (`TESTS`, `testdateien`, `auswerten`, `boot`),
+`tools/plus/cpa_disk.py`, `doc/plus/cpa/c3_4_tastatur.md`, §9.0.  Diese Werkzeuge **nur importieren**.
+*Erste Sonde:* nur der neue Vorspann: CP/A-Boot von der Bootdiskette, `gscreen "A>"`, `keys M8KBOOT\r`, `gscreen` auf den Maskentext, `eject A` + `mount A <tmp.hfe> udos_ss77`, B/C/D mounten, `keys r`,
+`gscreen "login:"` -- erreicht in einem Lauf?
+*Tun:* `cpa_lauf.py` (Englisch): `skript(...)` = CP/A-Vorspann + der Teil von `gastlauf.skript` ab `keys root` (Text dort holen und am Anker schneiden; Anker genau einmal vorhanden, sonst Fehler);
+`gast_befehle(...)` und `lauf(...)` mit denselben Parametern und Rueckgaben wie `gast_as.gast_befehle` bzw. `gastlauf.lauf` (Dateivorbereitung neu schreiben, Hilfen `_lauf`, `disktool`, `disk` importieren),
+Emulatoraufruf nach §9.0 (Plattenkopie `.gz` im Arbeitsordner); `boot(arbeit, kernel_bytes)` wie `gastbau.boot` (gleiche `TESTS`, `testdateien`, `auswerten`).  Kommandozeile
+`cpa_lauf.py probe|boot --arbeit DIR [--kernel DATEI]`; Exit 77 ohne Emulator/Workbench/Werkzeugkette.
+*Schreibt:* `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py` (schnell: Skript enthaelt Vorspann und genau die Marken von `gastlauf.skript`; `gast`: `probe`), `doc/plus/cpa/c5_1_gastlauf.md`.
+*Abnahme:* `python3 -I tools/plus/cpa_lauf.py probe --arbeit /tmp/mplus/c5_1` -> 0 (Plan 47 P1.0: `cat a.txt`, Wechsel, `cat b.txt`, `ls /mnt` richtig); Laufzeit im Befund.
+*Dauer:* ~3 h.
+
+### C4.2 Arbeitstests und Leistung (Abnahme C4, O6)
+*Haengt ab von:* C4.1, C5.1.  *Gastlauf:* ja (je Lauf ~5-15 Min., Hintergrund; zwei Laeufe duerfen parallel, nicht in derselben Sekunde starten).
+*Lesen:* `doc/plus/gastbau.md` §5, §8; `tools/plus/cpa_lauf.py`; `doc/plus/cpa/c3_3_platte.md`, `c4_1_drucker.md`.
+*Erste Sonde:* `cpa_lauf.py boot` mit dem Original-Kernel, nur `b1` (`ls -l /`) -- laeuft der Werkzeugweg durch?
+*Tun:* `cpa_lauf.py boot` mit dem Original-Kernel und mit dem P3.4-Kernel (§9.0): `bewerten` ohne Fehlschlag.  Messen: Wanduhr und Takte Boot bis `#` und je Test gegen den UDOS-Weg
+(`gastbau.py boot` mit demselben Kernel); Takte je Plattenblock; tiefste Stapeladresse nach allen Tests (E5H-Fuellung, `d 0xB936 ...`); Verzoegerung der Konsolausgabe waehrend Plattenzugriff.
+Kein Code aendern: ein Fehlschlag, der `mutoscpa` betrifft -> Befund, blockiert, melden.
+*Schreibt:* `doc/plus/cpa/c4_2_arbeitstests.md` (nur Befund; Logauszuege).
+*Abnahme:* `bewerten: no failure` mit beiden Kerneln (Logpfad, Datum, Dauer im Befund); Stapel bleibt >= 100H Byte ueber B936H.
+*Dauer:* ~2-3 h (meist Laufzeit).
+
+### C5.2 Waechter, Doku, Abschluss
+*Haengt ab von:* C4.2.  *Gastlauf:* Langtest (~15-30 Min., Hintergrund).
+*Lesen:* alle Befunde `doc/plus/cpa/c2_*`..`c5_*`, `tests/test_plus_cpa_*.py`, `tests/test_plus_selbstbau.py` (Muster Langtest `K1520_PLUS=1`), `doc/plus/abweichungen.md`.
+*Tun:*
+1. `tests/test_plus_cpa_lang.py`: Langtest (`gast`, nur mit `K1520_PLUS=1`): `cpa_disk` + `cpa_lauf.boot` mit dem Original-Kernel, `bewerten` ohne Fehlschlag.
+2. `doc/plus/cpa.md` (Deutsch): Startkette, Aufrufe (`cpa_system`, `cpa_disk`, `cpa_lauf`), Speicherkarte (gemessen), Laufzeiten, Grenzen (kein Rueckweg nach CP/A, Autostart fehlt); `mutos_io/cpa/README.md` aktualisieren.
+3. `doc/plus/abweichungen.md` pruefen und vervollstaendigen (je Zeile Pruefung mit Test/Befund).  In `doc/plan/51_festplatte.md` die GIDE-Laufwerksbuchstaben fuer die 4-Floppy-Variante nachtragen (E: bis L: statt C: bis J:, `c1_8` §4).
+4. Optional (O6): `gastbau.py fixpunkt` ueber den CP/A-Start nur, wenn `cpa_lauf` es ohne Aenderung an `gastbau.py` kann; sonst als offen vermerken.
+*Schreibt:* `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md` (nur die Laufwerksbuchstaben), `doc/plus/cpa/c5_2_abschluss.md`.
+*Abnahme:* `python3 -m pytest -q tests` gruen (ausser dem bekannten Fall, §6.8); Langtest einmal gruen (Datum, Dauer im Befund).
+*Dauer:* ~2-3 h.
 
 ## 10. Ablauf und Stand
 
 Wellen (innerhalb einer Welle parallel):
-**C1-1:** C1.1, C1.2 [main], C1.3 [main], C1.4, C1.5, C1.8 -- **C1-2:** C1.6, C1.7 -- **C1-3:** C1.9 -- **Entscheidung (Projektinhaber)** --
-**C2:** C2.1 -> C2.2 -> C2.3 (C3.1 parallel zu C2.2) -- **C3:** C3.2 -> C3.3 (C5.1 parallel) -- **C4:** C4.1 -> C4.2 -- **C5:** C5.2.
+**C1-1:** C1.1, C1.2 [main], C1.3 [main], C1.4, C1.5, C1.8 -- **C1-2:** C1.6, C1.7 -- **C1-3:** C1.9 -- **Entscheidung (Projektinhaber, 2026-11-17)** --
+**C2-1:** C2.1, C2.2 -- **C2-2:** C2.3, C3.1 (C2.2 darf noch laufen) -- **C2-3:** C2.4 -- **C3-1:** C3.2 -- **C3-2:** C3.3 -- **C3-3:** C3.4 -- **C4-1:** C4.1, C5.1 -- **C4-2:** C4.2 -- **C5:** C5.2.
+Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> C3.4 -> C4.1.  `doc/plus/abweichungen.md` schreiben nur C2.4, C3.4, C4.1, C5.2 (nie in derselben Welle).
+
+**Ab C2 traegt die leitende Sitzung die Zeilen dieser Tabelle nach** (aus Kopfzeile und Bericht des Befunds); Agenten in C2-C5 aendern diesen Plan nicht (§6 Regel 9).
 
 | Schritt | Schreibt | Gastlauf | Dauer (Schaetzung) | Stand | Datum | Commit |
 |---------|----------|----------|--------------------|-------|-------|--------|
 | C1.1 | `tools/plus/cpa.py`, `versuche/plus_cpa/`, `tests/test_plus_cpa.py`, `doc/plus/cpa/c1_1_werkzeug.md` | Sekunden | 2 h | erledigt (probe: HALLO, EM256ADR/EM16ABL gleich unter GIDE-CP/A und normalem CP/A, 9 s; M80/LINKMT unterscheiden >= 7 Zeichen) | 2026-11-17 | s. git log |
-| C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | auf Zweig `plan48-udos` fertig (Merge nach `main` ausstehend) | 2026-11-17 | `c3c8fad` (Zweig `plan48-udos`) |
-| C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | auf Zweig `plan48-udos` fertig (Merge nach `main` ausstehend) | 2026-11-17 | `63e61e1`, `9ec23d4` (Zweig `plan48-udos`) |
+| C1.2 [main] | `mutos_io/udos/` (load16), `tests/test_udos_lader.py`, `doc/mutos_io/udos_lader.md` §1, `versuche/dbg/load16_*` | Sekunden | 3 h | erledigt, gemergt (main `7025b21`, nach `mutos-plus` `932ccf3`) | 2026-11-17 | `c3c8fad` |
+| C1.3 [main] | `mutos_io/udos/` (ifsspr, piopr), `doc/mutos_io/udos_lader.md` §2, `versuche/dbg/ifsspr_*` | Sekunden | 3 h | erledigt, gemergt (main `7025b21`, nach `mutos-plus` `932ccf3`) | 2026-11-17 | `63e61e1`, `9ec23d4` |
 | C1.4 | `doc/plus/cpa/c1_4_inventar.md` | -- | 2-3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.4" |
 | C1.5 | `doc/plus/cpa/c1_5_bios.md` | Sekunden | 3 h | fertig | 2026-11-17 | Betreff "Plan 48 C1.5" |
 | C1.6 | `versuche/plus_cpa/rdtest.mac`, `wrtest.mac`, `doc/plus/cpa/c1_6_formate.md` | Minuten | 3-4 h | fertig (alle Saetze gleich bei root_fm/mfm/8x512 und GIDE; Regel SETSEC: Tabelle ab OFF, Schreiben C=0,0,0,1) | 2026-11-17 | Betreff "Plan 48 C1.6" |
 | C1.7 | `versuche/plus_cpa/itest.mac`, `itest.py`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | erledigt (keine Tickverluste, groesste Verspaetung 0,68 ms; BIOS liest/schreibt mit Fremd-ISR richtig; E2 (a), E6 Tastatur ueber BIOS `CONST`) | 2026-11-17 | s. git log |
 | C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | erledigt | 2026-11-17 | 7f41132 |
-| C1.9 | `doc/plus/cpa_analyse.md`, §8-§10 | -- | 1-2 h | Vorlage fertig, Entscheidung offen (Punkt 1 Merge entfaellt vorerst: C1.2/C1.3 liegen auf Zweig `plan48-udos`, Merge nach `main` steht aus; Punkt 4 nach der Entscheidung) | 2026-11-17 | Betreff "Plan 48 C1.9" |
-| C2.1-C2.3 | `mutos_io/cpa/m8kboot.mac`, `build.py`, `tools/plus/cpa_disk.py` | Minuten | 1 Tag | vorlaeufig | | |
-| C3.1-C3.3 | `mutos_io/cpa/mutoscpa.mac` | Minuten | 1-2 Tage | vorlaeufig | | |
-| C4.1-C4.2 | `mutos_io/cpa/mutoscpa.mac`, `doc/plus/cpa/c4_*` | ~5 Min. je Lauf | 1 Tag | vorlaeufig | | |
-| C5.1-C5.2 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa.py`, Doku | Langtest | 1 Tag | vorlaeufig | | |
+| C1.9 | `doc/plus/cpa_analyse.md`, §8-§10, §12 | -- | 1-2 h | erledigt (Vorlage `a3789ba`; Entscheidung 2026-11-17: alle Empfehlungen; Punkt 4: §8 Ergebnis, §9 endgueltig, §10, §12) | 2026-11-18 | Betreff "Plan 48: C1.9 Punkt 4" |
+| C2.1 | `mutos_io/cpa/{src/mutoscpa.mac,build.py,mutoscpa.bin,README.md}`, `tests/test_plus_cpa_quelle.py` | -- | 1 h | offen | | |
+| C2.2 | `tools/plus/cpa_system.py`, `mutos_io/cpa/system/`, `tests/test_plus_cpa_system.py`, `doc/plus/cpa/c2_2_system.md` | Sekunden | 2 h | offen | | |
+| C2.3 | `mutos_io/cpa/src/m8kboot.mac`, `m8kboot.com`, `versuche/plus_cpa/emfenst.mac`, `versuche/dbg/cpa_c2_3_*`, `tests/test_plus_cpa_lader.py`, `doc/plus/cpa/c2_3_lader.md` | Sekunden | 3-4 h | offen | | |
+| C3.1 | `mutos_io/cpa/src/mutoscpa.mac`, `tests/test_plus_cpa_io.py`, `doc/plus/cpa/c3_1_namen.md` | -- | 1-2 h | offen | | |
+| C2.4 | `tools/plus/cpa_disk.py`, `tests/test_plus_cpa_disk.py`, `doc/plus/cpa/c2_4_bootdiskette.md`, `doc/plus/abweichungen.md` | Sekunden | 2 h | offen | | |
+| C3.2 | `mutos_io/cpa/{src/mutoscpa.mac,mutoscpa.bin}`, `tests/test_plus_cpa_io.py`, `versuche/dbg/cpa_c3_2_*`, `doc/plus/cpa/c3_2_start.md` | Minuten | 4-6 h | offen | | |
+| C3.3 | wie C3.2, `doc/plus/cpa/c3_3_platte.md` | Minuten | 4-6 h | offen | | |
+| C3.4 | wie C3.2, `doc/plus/cpa/c3_4_tastatur.md`, `doc/plus/abweichungen.md` | Minuten | 3-5 h | offen | | |
+| C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | offen | | |
+| C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | offen | | |
+| C4.2 | `doc/plus/cpa/c4_2_arbeitstests.md` | 5-15 Min. je Lauf | 2-3 h | offen | | |
+| C5.2 | `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md`, `doc/plus/cpa/c5_2_abschluss.md` | Langtest | 2-3 h | offen | | |
 
 ## 11. Offene Entscheidungen fuer den Projektinhaber (jetzt, vor C1)
 
@@ -457,3 +638,12 @@ Wellen (innerhalb einer Welle parallel):
 * **Anforderung an die CP/A-Variante (Projektinhaber, 2026-11-17):** vier Floppy-Laufwerke A:-D: **und** GIDE-Unterstuetzung (erstes GIDE-Laufwerk E:) **und** RTC.
   Stand C1.8 (*gemessen*, `doc/plus/cpa/c1_8_vier_floppy.md`): die gebaute Variante `anzdisk = 4` zeigt Disketten A:-D:, GIDE E: bis L: (`DIR E:` liest die Platte)
   und die RTC an D5H -- die Anforderung ist damit erfuellt; `tools/plus/cpa_system.py` (C5) und sein Waechter pruefen alle drei Punkte (Kopfzeile, `DIR E:`, Uhr).
+
+## 12. Offene Punkte nach E1-E9
+
+Keiner muss jetzt entschieden werden.  Bedingt vorzulegen ist nur:
+* **E7-Rueckfall:** zeigt die Erste Sonde von C4.1, dass BIOS `LIST` an 5EH nicht wie `IFSSPR` sendet (Port, Paritaet/Bits), haelt C4.1 an.  *Empfehlung dann:* (b) Treiberkern aus
+  `mutos_io/udos/src/ifsspr.mac` (ab `HWINIT`) in `mutoscpa` uebernehmen -- gleiche Hardware, bytegleich rekonstruiert, im Emulator am Port gemessen.
+Alle anderen Messpunkte aus `cpa_analyse` §8 sind als Erste Sonden eingeplant (voller ISR neben `READ` C3.3, Stapeltiefe C3.2/C4.2, lange Tastenfolgen C3.4, `LIST` C4.1,
+Diskettenwechsel C3.4 mit vorab festgelegtem Rueckfall).  `CONOUT` im ISR entfaellt mit E6 (d) (Ausgabe nur aus der Hauptschleife); C4.2 misst stattdessen die Verzoegerung der Ausgabe.
+Nicht untersucht bleibt `diskio` (nicht noetig, E1 (a)).

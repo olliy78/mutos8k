@@ -1,7 +1,7 @@
 # CP/A-Analyse und Entscheidungsvorlage (Plan 48 C1.9)
 
 Stand 2026-11-17, Branch `mutos-plus`.  Zusammenfuehrung von C1.1-C1.8 und Vorlage fuer die Entscheidungen E1-E9 (`doc/plan/48_mutos_io_cpa.md` §8).
-**Es ist nichts entschieden**; die Empfehlungen sind Vorschlaege fuer den Projektinhaber.  Jede Aussage ist *gemessen* (Befund/Lauf), *abgeleitet* (Quelle) oder
+**Entschieden 2026-11-17: alle Empfehlungen E1-E9 uebernommen** (Plan 48 §8 Ergebnis, Umsetzung §9).  Die Vorlagen unten bleiben als Begruendung stehen.  Jede Aussage ist *gemessen* (Befund/Lauf), *abgeleitet* (Quelle) oder
 *Annahme*; die Verweise nennen Befunddatei und Abschnitt (`c1_4` = `doc/plus/cpa/c1_4_inventar.md` usw.).
 
 Befunde zu den UDOS-Programmen (C1.2 `LOAD16`, C1.3 `IFSSPR`/`PIOPR`) stehen in `doc/mutos_io/udos_lader.md` §1/§2 (Pfad nach dem Merge; Zweig `plan48-udos`,
