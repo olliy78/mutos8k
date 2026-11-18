@@ -16,6 +16,7 @@ MUTOS 8000 laeuft hier mit der U880-Seite `mutoscpa` auf einem CP/A-System (BIOS
 
 * `python3 -I tools/plus/cpa_system.py bauen|pruefen --arbeit DIR` -- 4-Floppy-`@OS.COM` in frischer Workbench-Kopie bauen (`CPA_WORKBENCH`, Vorgabe `~/projects/CPA_Workbench`; SHA-1 `97bbdca9...`) bzw. booten und Kopfzeile/`DIR E:`/Uhr pruefen.
 * `python3 -I tools/plus/cpa_disk.py diskette --arbeit DIR [--kernel DATEI]` -- Bootdiskette `boot4.hfe` (Systemdiskette + `M8KBOOT.COM`, `MUTOS.SYS`, `MUTOSIO.IMG`); `kstart --arbeit DIR` -- Abnahmelauf `M8KBOOT K`.
+* `python3 -I tools/plus/cpa_export.py archiv --arbeit DIR --out a5120_mutos8000_boot_cpa.zip` -- baut `@OS.COM`, `M8KBOOT.COM`, `MUTOSIO.IMG` frisch und schreibt sie samt Bauangaben/Herkunft als Archiv fuer das Emulatorprojekt (dort `tools/mutos8000/bau_cpa.py` baut die Diskette; `MUTOS.SYS` = `mutos_1216` aus dessen `boot_udos.zip`, nicht im Archiv).  Waechter `tests/test_plus_cpa_export.py`.
 * `python3 -I tools/plus/cpa_lauf.py probe|boot --arbeit DIR [--kernel DATEI]` -- Gastlauf-Werkzeug (wie `gastlauf`/`gastbau.boot` ueber UDOS): `probe` zwei Disketten mit Wechsel, `boot` die Arbeitstests b1..b11, pp, pi, pf mit `bewerten`.
 * `python3 -I mutos_io/cpa/build.py [--check | abbild]` -- `mutoscpa.bin`, `m8kboot.com` bauen/pruefen (Bau ueber `tools/emu.py` -> M80/LINKMT im Emulator).
 * Langtest: `K1520_PLUS=1 python3 -m pytest -q tests/test_plus_cpa_lang.py` (Hintergrund).
