@@ -1055,6 +1055,24 @@ struct tnode *at;
 	return(0);
 }
 
+/*
+ * Not V7 (original at 577A, name *Annahme*): a NAME node for a register
+ * (class REG), type, register number in nloc.
+ */
+regnode(class, type, reg)
+{
+	struct tname *p;
+
+	p = getblk(sizeof(*p));
+	p->op = NAME;
+	p->type = type;
+	p->nloc = reg;
+	p->class = class;
+	p->offset = 0;
+	p->regno = 0;
+	return(p);
+}
+
 hardlongs(at)
 struct tnode *at;
 {
@@ -1080,34 +1098,4 @@ struct tnode *at;
 		return(t);
 	}
 	return(optim(t));
-}
-
-/*
- * Not V7 stubs: the originals (3C58, 3CAA in c12 of the binary) are not
- * reconstructed yet; outfp() in c10.c calls them.
- */
-fphead()
-{
-}
-
-fptail()
-{
-}
-
-/*
- * Not V7 (original at 577A, name *Annahme*): a NAME node for a register
- * (class REG), type, register number in nloc.
- */
-regnode(class, type, reg)
-{
-	struct tname *p;
-
-	p = getblk(sizeof(*p));
-	p->op = NAME;
-	p->type = type;
-	p->nloc = reg;
-	p->class = class;
-	p->offset = 0;
-	p->regno = 0;
-	return(p);
 }

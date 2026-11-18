@@ -19,6 +19,31 @@ int	yf2	0;	/* 7B46 */
 int	yf3	0;	/* 7B48 */
 int	yf4	0;	/* 7B4A */
 
+/*
+ * Not V7 (original at 229E, size 86; name *Annahme*): look up a floating
+ * constant in the pool fptab (filled by outfp) by its four value words;
+ * returns the label number kept there, 0 if absent.
+ * The word view of struct ftconst is a local invention (members w0..w3).
+ */
+struct fpw { int fw_op; int fw_type; int fw_value; int w0, w1, w2, w3; };
+extern struct fpw fptab[];
+extern int nfpool;
+
+fpfind(ap)
+struct fpw *ap;
+{
+	register struct fpw *p, *q;
+	register i;
+
+	p = ap;
+	for (i=0; i<nfpool; i++) {
+		q = &fptab[i];
+		if (p->w0==q->w0 && p->w1==q->w1 && p->w2==q->w2 && p->w3==q->w3)
+			return(q->fw_value);
+	}
+	return(0);
+}
+
 max(a, b)
 {
 	if (a>b)
@@ -507,6 +532,22 @@ ispow2(atree)
 	return(0);
 }
 
+/*
+ * Not V7 (original at 2DAE, name *Annahme*): bit number of a single-bit
+ * constant, else -1.  Placed between ispow2 and pow2 like in the binary.
+ */
+bitnum(v)
+unsigned v;
+{
+	register n;
+
+	if (v==0 || v>0100000 || (v&(v-1))!=0)
+		return(-1);
+	for (n=0; (v >>= 1)!=0; n++)
+		;
+	return(n);
+}
+
 pow2(atree)
 struct tnode *atree;
 {
@@ -553,6 +594,38 @@ struct tnode *atree;
 		tree = optim(tree);
 	}
 	return(tree);
+}
+
+/*
+ * Not V7 (original at 2EE4, name *Annahme*): turn the AND/OR/ASAND/ASOR
+ * with a single-bit constant into the bit reset/set operators 82/81/84/83
+ * (op numbers measured; no names in c1.h yet) with the bit number as the
+ * constant.  Placed after pow2 like in the binary.
+ */
+bitop(tree, n)
+struct tnode *tree;
+{
+	struct tnode *p;
+
+	p = tree;
+	if (p->tr1->type==CHAR && n>7)
+		return(p);
+	p->tr2->value = n;
+	switch (p->op) {
+	case AND:
+		p->op = 82;
+		break;
+	case OR:
+		p->op = 81;
+		break;
+	case ASAND:
+		p->op = 84;
+		break;
+	case ASOR:
+		p->op = 83;
+		break;
+	}
+	return(p);
 }
 
 cbranch(atree, albl, cond, areg)
@@ -1051,6 +1124,49 @@ getree()
 	}
 }
 
+/*
+ * Not V7 (original at 3C2A, 3C58, 3CAA; names *Annahme*): output of the
+ * assembler section directives.  yf0: section mode ($DATA/$SECTION/$CODE
+ * instead of the plain directives), yf1: next data is global (G, else I),
+ * yf2: a section is open.  Texts and flags measured, meaning guessed.
+ */
+secbss()
+{
+	if (yf0)
+		printf("$DATA\n$SECTION BSS_B\nI\n");
+	else {
+		printf("$SECTION BSS_B\nI\n");
+		yf1 = 0;
+	}
+	yf2 = 1;
+}
+
+fphead()
+{
+	if (yf0)
+		printf("$DATA\n$SECTION %s_d\nI\n", modname);
+	else if (yf2) {
+		printf("$SDEFAULT\n");
+		yf2 = 0;
+	}
+	if (!yf0) {
+		if (yf1)
+			printf("G\n");
+		else
+			printf("I\n");
+	}
+	yf1 = 0;
+}
+
+fptail()
+{
+	if (yf0)
+		printf("$CODE\n");
+	else if (yf2)
+		printf("$SDEFAULT\n");
+	yf2 = 0;
+}
+
 geti()
 {
 	register i;
@@ -1178,53 +1294,4 @@ decref(at)
 incref(t)
 {
 	return(((t&~TYPE)<<TYLEN) | (t&TYPE) | PTR);
-}
-
-/*
- * Not V7 (original at 2DAE, name *Annahme*): bit number of a single-bit
- * constant, else -1.  Belongs between ispow2 and pow2 in c11 (to be
- * placed when c11 is reconstructed).
- */
-bitnum(v)
-unsigned v;
-{
-	register n;
-
-	if (v==0 || v>0100000 || (v&(v-1))!=0)
-		return(-1);
-	for (n=0; (v >>= 1)!=0; n++)
-		;
-	return(n);
-}
-
-/*
- * Not V7 (original at 2EE4, name *Annahme*): turn the AND/OR/ASAND/ASOR
- * with a single-bit constant into the bit reset/set operators 82/81/84/83
- * (op numbers measured; no names in c1.h yet) with the bit number as the
- * constant.  Belongs after pow2 in c11.
- */
-bitop(tree, n)
-struct tnode *tree;
-{
-	struct tnode *p;
-
-	p = tree;
-	if (p->tr1->type==CHAR && n>7)
-		return(p);
-	p->tr2->value = n;
-	switch (p->op) {
-	case AND:
-		p->op = 82;
-		break;
-	case OR:
-		p->op = 81;
-		break;
-	case ASAND:
-		p->op = 84;
-		break;
-	case ASOR:
-		p->op = 83;
-		break;
-	}
-	return(p);
 }
