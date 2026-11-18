@@ -94,6 +94,7 @@ PROGRAMME = {
 # ld: R32 (1 site, symreloc) and R43 (1 site, getfile) would add an XORB the original does not have (measured, doc/userspace/wk_w13.md)
 C2_AUS = {"ld": {"R32", "R43"},
           "cpp": {"R42"},       # one site in dodef keeps `test r3`, doc/userspace/wk_w2.md
+          "c1": {"R5T", "R45"},  # match x2, sdelay, rcexpr keep `ld r13,r2 ; test r2`; rcexpr hash switch keeps `xor r2,r2` (doc/userspace/wk_w6.md part 5)
          "sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
