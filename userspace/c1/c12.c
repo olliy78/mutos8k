@@ -16,6 +16,11 @@ extern int isn;
  * returned as they are), Z8000 shift handling with the unsigned shift operators
  * ZRSH/ZLSH/ASZRSH/ASZLSH, ASAND with constant 0 becomes ASSIGN, and OR/ASOR
  * with constant 0 is dropped.
+ *
+ * W6i (measured at 5278..5666, 56DE..574C): const() and lconst() have no ANDN
+ * case (and lconst no LTIMES/LDIV/LMOD cases: the switch covers operators
+ * 40..49 only); insert() keeps d1, i, t in registers and tests
+ * isfloat(tree) != 'f'; isconstant() does not know SFCON.
  */
 optim(atree)
 struct tnode *atree;
@@ -784,9 +789,6 @@ int *vp;
 		*vp =<< v;
 		return;
 
-	case ANDN:
-		*vp =& ~ v;
-		return;
 	}
 	error("C error: const");
 }
@@ -826,12 +828,10 @@ register struct tnode *lp, *rp;
 		break;
 
 	case TIMES:
-	case LTIMES:
 		l *= r;
 		break;
 
 	case DIVIDE:
-	case LDIV:
 		if (r==0)
 			error("Divide check");
 		else
@@ -839,7 +839,6 @@ register struct tnode *lp, *rp;
 		break;
 
 	case MOD:
-	case LMOD:
 		if (r==0)
 			error("Divide check");
 		else
@@ -848,10 +847,6 @@ register struct tnode *lp, *rp;
 
 	case AND:
 		l &= r;
-		break;
-
-	case ANDN:
-		l &= ~r;
 		break;
 
 	case OR:
@@ -890,8 +885,8 @@ struct acl *alist;
 	register d;
 	register struct acl *list;
 	register struct tnode *tree;
-	int d1, i;
-	struct tnode *t;
+	register d1, i;
+	register struct tnode *t;
 
 	tree = atree;
 	list = alist;
@@ -904,7 +899,7 @@ ins:
 		insert(op, tree->tr2, list);
 		return;
 	}
-	if (!isfloat(tree)) {
+	if (isfloat(tree) != 'f') {
 		/* c1*(x+c2) -> c1*x+c1*c2 */
 		if ((tree->op==TIMES||tree->op==LSHIFT)
 		  && tree->tr2->op==CON && tree->tr2->value>0
@@ -992,7 +987,7 @@ struct tnode *at;
 	register struct tnode *t;
 
 	t = at;
-	if (t->op==CON || t->op==SFCON)
+	if (t->op==CON)
 		return(t);
 	if (t->op==ITOL && t->tr1->op==CON)
 		return(t->tr1);

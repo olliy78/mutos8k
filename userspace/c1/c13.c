@@ -33,8 +33,8 @@ int opdope[] {
 	000400,	/* double */
 	0000400,	/* long const */
 	000400,	/* long const <= 16 bits */
-	000400,	/* autoi, *r++ */
-	000400,	/* autod, *--r */
+	012253,	/* >>= unsigned (V7: autoi; opntab name, *Annahme*) */
+	012253,	/* <<= unsigned (V7: autod) */
 	000000,	/* 29 */
 	034203,	/* ++pre */
 	034203,	/* --pre */
@@ -87,18 +87,18 @@ int opdope[] {
 	012253,	/* =| */
 	012253,	/* =^ */
 	012213,	/* = */
-	030001, /* & for tests */
-	032001,	/*  * (long) */
-	032001,	/*  / (long) */
-	032001,	/* % (long) */
-	012253,	/* =& ~ */
-	012213,	/* =* (long) */
-	012213,	/* / (long) */
-	012213,	/* % (long) */
+	016161,	/* bitset (V7: & for tests); names from opntab, meaning *Annahme* */
+	020161,	/* bitclr */
+	012253,	/* bitset= */
+	012253,	/* bitclr= */
+	020161,	/* bittest */
+	000000,	/* 86 */
+	000000,	/* 87 */
+	000000,	/* 88 */
 	000000,	/* 89 */
 	014201,	/* ? */
-	026061,	/* long << */
-	012253,	/* long =<< */
+	000000,	/* 91 */
+	000000,	/* 92 */
 	000101,	/* max */
 	000101,	/* maxp */
 	000101,	/* min */
@@ -113,8 +113,8 @@ int opdope[] {
 	000000,	/* branch cond */
 	000400,	/* set nregs */
 	000000, /* 106 */
-	000000,	/* 107 */
-	000000,	/* 108 */
+	000001,	/* >> unsigned (ZRSH) */
+	000001,	/* << unsigned (ZLSH) */
 	000000,	/* int->char */
 	000000,	/* force r0 */
 	000000,	/* 111 */
@@ -123,6 +123,28 @@ int opdope[] {
 	000000,	/* 114 */
 	000000,	/* structure assign */
 	000001,	/* struct assignment setup */
+	000000,	/* 117 */
+	000000,	/* 118 */
+	000000,	/* 119 */
+	000000,	/* 120 */
+	000000,	/* 121 */
+	000000,	/* 122 */
+	000000,	/* 123 */
+	000000,	/* 124 */
+	000000,	/* 125 */
+	000000,	/* 126 */
+	000000,	/* 127 */
+	000000,	/* 128 */
+	000000,	/* 129 */
+	000000,	/* 130 */
+	000000,	/* 131 */
+	000000,	/* 132 */
+	000000,	/* 133 */
+	000000,	/* 134 */
+	000000,	/* 135 */
+	000000,	/* 136 */
+	012253,	/* >>= unsigned (ASZRSH) */
+	012253,	/* <<= unsigned (ASZLSH) */
 };
 
 char	*opntab[] {
@@ -143,8 +165,8 @@ char	*opntab[] {
 	"ptr->int",
 	"long->ptr",
 	"field assign",
-	">>",
-	">>",
+	">> unsigned",
+	"<< unsigned",
 	0,
 	"name",
 	"short constant",
@@ -153,9 +175,9 @@ char	*opntab[] {
 	"double",
 	"long constant",
 	"long constant",
-	"*r++",
-	"*--r",
-	0,
+	">>= unsigned",
+	"<<= unsigned",
+	"indirection",
 	"++pre",
 	"--pre",
 	"++post",
@@ -207,24 +229,24 @@ char	*opntab[] {
 	"|=",
 	"^=",
 	"=",
-	"& for tests",
-	"*",
-	"/",
-	"%",
-	"&= ~",
-	"*=",
-	"/=",
-	"%=",
+	"bitset",
+	"bitclr",
+	"bitset=",
+	"bitclr=",
+	"bittest",
 	0,
+	0,
+	0,
+	"load byte register",
 	"?",
-	"<<",
-	"<<=",
+	0,
+	0,
 	"\\/",
 	"\\/",
 	"/\\",
 	"/\\",
 	0,
-	"call",
+	0,
 	"call",
 	"call",
 	0,
@@ -233,8 +255,8 @@ char	*opntab[] {
 	"branch cond",
 	"set nregs",
 	"load value",
-	0,
-	0,
+	">>unsigned",
+	"<<unsigned",
 	"int->char",
 	"force register",
 	"",
@@ -243,143 +265,160 @@ char	*opntab[] {
 	"",
 	"=structure",
 	"= (struct setup)",
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	">>=unsigned",
+	"<<=unsigned",
 };
 
 /*
  * Strings for instruction tables.
+ * Not V7: Z8000 mnemonics instead of PDP-11 ones.  The names of the
+ * variables are lost with the original (Annahme: z_ prefix, so that they
+ * cannot collide with struct members); order, contents and padding are
+ * measured from the original data (c1 data at 83B4..8470).
+ * "sdal" and "jpl"/"jmi" are not referenced by any table (as in the original).
  */
-char	mov[]	"mov";
-char	clr[]	"clr";
-char	cmp[]	"cmp";
-char	tst[]	"tst";
-char	add[]	"add";
-char	sub[]	"sub";
-char	inc[]	"inc";
-char	dec[]	"dec";
-char	mul[]	"mul";
-char	div[]	"div";
-char	asr[]	"asr";
-char	ash[]	"ash";
-char	asl[]	"asl";
-char	bic[]	"bic";
-char	bic1[]	"bic $1,";
-char	bit[]	"bit";
-char	bit1[]	"bit $1,";
-char	bis[]	"bis";
-char	bis1[]	"bis $1,";
-char	xor[]	"xor";
-char	neg[]	"neg";
-char	com[]	"com";
-char	stdol[]	"*$";
-char	ashc[]	"ashc";
-char	slmul[]	"lmul";
-char	sldiv[]	"ldiv";
-char	slrem[]	"lrem";
-char	almul[]	"almul";
-char	aldiv[]	"aldiv";
-char	alrem[]	"alrem";
-char	jeq[]	"jeq";
-char	jne[]	"jne";
-char	jle[]	"jle";
-char	jgt[]	"jgt";
-char	jlt[]	"jlt";
-char	jge[]	"jge";
-char	jlos[]	"jlos";
-char	jhi[]	"jhi";
-char	jlo[]	"jlo";
-char	jhis[]	"jhis";
-char	nop[]	"/nop";
-char	jbr[]	"jbr";
+char	z_ld[]	"ld";
+char	z_clr[]	"clr";
+char	z_cp[]	"cp";
+char	z_test[]	"test";
+char	z_add[]	"add";
+char	z_sub[]	"sub";
+char	z_inc[]	"inc";
+char	z_dec[]	"dec";
+char	z_mul[]	"mul";
+char	z_div[]	"div";
+char	z_sra[]	"sra";
+char	z_sda[]	"sda";
+char	z_sla[]	"sla";
+char	z_sdl[]	"sdl";
+char	z_srl[]	"srl";
+char	z_sll[]	"sll";
+char	z_one[]	"#1";
+char	z_and[]	"and";
+char	z_or[]	"or";
+char	z_set[]	"set";
+char	z_res[]	"res";
+char	z_xor[]	"xor";
+char	z_neg[]	"neg";
+char	z_com[]	"com";
+char	z_sdal[]	"sdal";
+char	z_jeq[]	"jp\teq";
+char	z_jne[]	"jp\tne";
+char	z_jle[]	"jp\tle";
+char	z_jgt[]	"jp\tgt";
+char	z_jlt[]	"jp\tlt";
+char	z_jge[]	"jp\tge";
+char	z_jule[]	"jp\tule";
+char	z_jugt[]	"jp\tugt";
+char	z_jc[]	"jp\tc";
+char	z_juge[]	"jp\tuge";
+char	z_jpl[]	"jp\tpl";
+char	z_jmi[]	"jp\tmi";
+char	z_nop[]	"!nop";
+char	z_jbr[]	"jp";
 
 /*
  * Instruction tables, accessed by
  * I (first operand) or I' (second) macros.
+ * Not V7: the Z8000 table (measured from the original data at 8470..8594).
+ * Operators 81..84 (TAND, LTIMES, LDIV, LMOD in V7) are bit set/clear
+ * operators here (see opntab; names *Annahme*).
  */
-
 struct instab instab[] {
-	LOAD,	mov,	tst,
-	ASSIGN,	mov,	clr,
-	EQUAL,	cmp,	tst,
-	NEQUAL,	cmp,	tst,
-	LESSEQ,	cmp,	tst,
-	LESS,	cmp,	tst,
-	GREATEQ,cmp,	tst,
-	GREAT,	cmp,	tst,
-	LESSEQP,cmp,	tst,
-	LESSP,	cmp,	tst,
-	GREATQP,cmp,	tst,
-	GREATP,	cmp,	tst,
-	PLUS,	add,	inc,
-	ASPLUS,	add,	inc,
-	MINUS,	sub,	dec,
-	ASMINUS,sub,	dec,
-	INCBEF,	add,	inc,
-	DECBEF,	sub,	dec,
-	INCAFT,	add,	inc,
-	DECAFT,	sub,	dec,
-	TIMES,	mul,	mul,
-	ASTIMES,mul,	mul,
-	DIVIDE,	div,	div,
-	ASDIV,	div,	div,
-	MOD,	div,	div,
-	ASMOD,	div,	div,
-	PTOI,	div,	div,
-	RSHIFT,	ash,	asr,
-	ASRSH,	ash,	asr,
-	LSHIFT,	ash,	asl,
-	ASLSH,	ash,	asl,
-	AND,	bic,	bic1,
-	ANDN,	bic,	bic1,
-	ASANDN,	bic,	bic1,
-	TAND,	bit,	bit1,
-	OR,	bis,	bis1,
-	ASOR,	bis,	bis1,
-	EXOR,	xor,	xor,
-	ASXOR,	xor,	xor,
-	NEG,	neg,	neg,
-	COMPL,	com,	com,
-	CALL1,	stdol,	stdol,
-	CALL2,	"",	"",
-	LLSHIFT,ashc,	ashc,
-	ASLSHL,	ashc,	ashc,
-	LTIMES,	slmul,	slmul,
-	LDIV,	sldiv,	sldiv,
-	LMOD,	slrem,	slrem,
-	LASTIMES,almul,	almul,
-	LASDIV,	aldiv,	aldiv,
-	LASMOD,	alrem,	alrem,
-	ULSH,	ashc,	ashc,
-	ASULSH,	ashc,	ashc,
+	LOAD,	z_ld,	z_test,
+	ASSIGN,	z_ld,	z_clr,
+	EQUAL,	z_cp,	z_test,
+	NEQUAL,	z_cp,	z_test,
+	LESSEQ,	z_cp,	z_test,
+	LESS,	z_cp,	z_test,
+	GREATEQ,	z_cp,	z_test,
+	GREAT,	z_cp,	z_test,
+	LESSEQP,	z_cp,	z_test,
+	LESSP,	z_cp,	z_test,
+	GREATQP,	z_cp,	z_test,
+	GREATP,	z_cp,	z_test,
+	PLUS,	z_add,	z_inc,
+	ASPLUS,	z_add,	z_inc,
+	MINUS,	z_sub,	z_dec,
+	ASMINUS,	z_sub,	z_dec,
+	INCBEF,	z_add,	z_inc,
+	DECBEF,	z_sub,	z_dec,
+	INCAFT,	z_add,	z_inc,
+	DECAFT,	z_sub,	z_dec,
+	TIMES,	z_mul,	z_mul,
+	ASTIMES,	z_mul,	z_mul,
+	DIVIDE,	z_div,	z_div,
+	ASDIV,	z_div,	z_div,
+	MOD,	z_div,	z_div,
+	ASMOD,	z_div,	z_div,
+	PTOI,	z_div,	z_div,
+	RSHIFT,	z_sda,	z_sra,
+	ASRSH,	z_sda,	z_sra,
+	LSHIFT,	z_sda,	z_sla,
+	ASLSH,	z_sda,	z_sla,
+	ZRSH,	z_sdl,	z_srl,
+	ZLSH,	z_sdl,	z_sll,
+	ASZRSH,	z_sdl,	z_srl,
+	ASZLSH,	z_sdl,	z_sll,
+	AND,	z_and,	z_one,
+	ASAND,	z_and,	z_one,
+	OR,	z_or,	z_one,
+	ASOR,	z_or,	z_one,
+	TAND,	z_set,	z_set,
+	LDIV,	z_set,	z_set,
+	LTIMES,	z_res,	z_res,
+	LMOD,	z_res,	z_res,
+	EXOR,	z_xor,	z_xor,
+	ASXOR,	z_xor,	z_xor,
+	NEG,	z_neg,	z_neg,
+	COMPL,	z_com,	z_com,
 	0,	0,	0};
 
 /*
  * Similar table for relationals.
  * The first string is for the positive
  * test, the second for the inverted one.
- * The '200+' entries are 
- * used in tests against 0 where a 'tst'
- * instruction is used; it clears the c-bit
- * the c-bit so ptr tests are funny.
+ * The '200+' entries are used in tests against 0.
  */
 struct instab branchtab[] {
-	EQUAL,	jeq,	jne,
-	NEQUAL,	jne,	jeq,
-	LESSEQ,	jle,	jgt,
-	LESS,	jlt,	jge,
-	GREATEQ,jge,	jlt,
-	GREAT,	jgt,	jle,
-	LESSEQP,jlos,	jhi,
-	LESSP,	jlo,	jhis,
-	GREATQP,jhis,	jlo,
-	GREATP,	jhi,	jlos,
-	200+EQUAL,	jeq,	jne,
-	200+NEQUAL,	jne,	jeq,
-	200+LESSEQ,	jle,	jgt,
-	200+LESS,	jlt,	jge,
-	200+GREATEQ,	jge,	jlt,
-	200+GREAT,	jgt,	jle,
-	200+LESSEQP,	jeq,	jne,
-	200+LESSP,	nop,	jbr,
-	200+GREATQP,	jbr,	nop,
-	200+GREATP,	jne,	jeq,
+	EQUAL,	z_jeq,	z_jne,
+	NEQUAL,	z_jne,	z_jeq,
+	LESSEQ,	z_jle,	z_jgt,
+	LESS,	z_jlt,	z_jge,
+	GREATEQ,	z_jge,	z_jlt,
+	GREAT,	z_jgt,	z_jle,
+	LESSEQP,	z_jule,	z_jugt,
+	LESSP,	z_jc,	z_juge,
+	GREATQP,	z_juge,	z_jc,
+	GREATP,	z_jugt,	z_jule,
+	200+EQUAL,	z_jeq,	z_jne,
+	200+NEQUAL,	z_jne,	z_jeq,
+	200+LESSEQ,	z_jle,	z_jgt,
+	200+LESS,	z_jlt,	z_jge,
+	200+GREATEQ,	z_jge,	z_jlt,
+	200+GREAT,	z_jgt,	z_jle,
+	200+LESSEQP,	z_jeq,	z_jne,
+	200+LESSP,	z_nop,	z_jbr,
+	200+GREATQP,	z_jbr,	z_nop,
+	200+GREATP,	z_jne,	z_jeq,
 	0,	0,	0 };
