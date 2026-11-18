@@ -5,6 +5,9 @@
 
 #include "c1.h"
 
+/* Not V7: original data at 7B3E (3 bytes + pad) */
+char	modname[]	"c_";
+
 max(a, b)
 {
 	if (a>b)

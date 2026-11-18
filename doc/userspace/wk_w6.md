@@ -49,3 +49,14 @@ Verbleibend fuer den Gesamtbau: `table_z8k.s` als Quelle zwischen `c13` und den 
   Ergebnis: bindet, 33614 B (text 28948, data 4650, bss 1126; Original 30176/5582/1832), 6746 Befehle gegen 7970, 4027 gleich, 853 Bloecke, 383+193 s.
 * Danach je Funktion `c10.c..c13.c` an das Binary angleichen (Z8000-Codeausgabe, `opdope` 14 Eintraege, 12 Nicht-V7-Funktionen, Registervariablen wie in `wk_w4.md`, `c13.c`-Daten gegen 75E0..).
   **Keine** Funktion ist bisher rekonstruiert; keine neuen c2-Regeln (R230-R259 unbenutzt).
+
+## Teil 4: Regression und c10.c (W6b)
+
+**Regression (gemessen, sequentiell im Gast, nach der `pipeline.py`-Aenderung):** `sh` (`alles sh --c2emu --variante v7fix`), `ed`, `tar`, `cc`, `ld` (`--ist neu_c2_s`) und `c0` (`--ist neu_c2`) ganzdatei `cmp`-gleich dem Original.  Nur `c1` hat `link.txt`; fuer alle anderen bleibt der Pfad unveraendert.
+
+**c10.c (Stand: neu_c2 gebaut 33764 B, 6743 Befehle gegen 7970, 4080 gleich, 844 Bloecke; vorher 4027/853).**  Funktionen, die bis auf Datenadressen (Layout noch unvollstaendig) befehlsgleich sind:
+* `main` (0030): Z8000-Modulkopf mit 6 `printf` (nur das erste mit `modname`), kein `fltused`, `printf("end %s\n", modname)`; die Verschmelzung der Stack-Slots macht das c2-Modell von selbst.  Offen sind nur Speicheradressen (`coremax` usw.: BSS-Layout).
+* `comarg` (1B3E): Strukturkopie als Z8000-Code (`ld r0,#n` / `dec SP` / `dec rK` / `lddr`), kein `nstack`, kein `lsptab`-Zweig, `flagp` unbenutzt; `register i` vor `size` (belegt r11, `size` liegt in r10).  Nicht-V7-Hilfsfunktion `zreg` (21D6, Name *Annahme*; Registernummer 0..5 -> 2..7, 6..7 -> 0..1) am Dateiende (Binary: nach den c10-Funktionen, Reihenfolge noch nicht angeglichen).
+* `sdelay` (1A22): nur `PLUS` wird verfolgt (kein `STAR`); 1 Block offen: Original `TEST R2` hinter `LD R12,R2`, gebaut `TEST R12` (R5-Modell; Quellvariante ungeklaert).
+* Neue Daten: `char modname[] "c_"` (7B3E, 3 Bytes + Fuellbyte; *Annahme*: steht in `c11.c` vor `max`, da die Daten dort beginnen), in `c1.h` deklariert.
+**Offen (gemessen am Listing, nicht rekonstruiert):** `match` (0186) ist im Original anders aufgebaut (Sonderfall `LONG` mit Operatorliste `+ * , I H J . L - K`, andere Bitmasken); 9 Null-initialisierte Int-Flags in den Daten (760C, 760E, 7610, 7614, 7616, 761A..7622) und 5 weitere ab 7B42; `rcexpr`, `cexpr`, `doinit`, die uebrigen Nicht-V7-Funktionen (1EFC, 1F66, 2028, 21FC, 2228); der V7-`movreg` existiert im Original anderswo (die Zuordnung 2104 -> `movreg` ist falsch: 2104 druckt Registernamen `r%d`/`rr%d`/`f%d`/`rl%d`).  Keine neuen c2-Regeln.

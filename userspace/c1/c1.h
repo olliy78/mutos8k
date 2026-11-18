@@ -100,6 +100,7 @@ struct	swtab {
 };
 
 char	maprel[];
+char	modname[];	/* not V7: module name for the as header, "c_" (defined in c11.c) */
 char	notrel[];
 int	nreg;
 int	isn;

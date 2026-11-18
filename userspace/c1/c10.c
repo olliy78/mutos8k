@@ -48,13 +48,13 @@ char *argv[];
 		exit(1);
 	}
 	/* Differs from V7: Z8000 as module header instead of the PDP-11 ".globl" lines; no fltused reference.
-	   modname is a 3-byte array in the original (address 7B3E, "c_"); every call passes it again (the c2 merges the pushes). */
+	   modname is a 3-byte array in the original (address 7B3E, "c_"); only the first printf uses it; the c2 then reuses the pushed slot. */
 	printf("%s module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n", modname);
-	printf("\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n", modname);
-	printf("\tI\t:= internal\n\tA\t:= array\n\tPR\t:= procedure\n", modname);
-	printf("\tE\t:= entry\n\tB\t:= byte\n\tW\t:= word\n", modname);
-	printf("\tBV\t:= bval\n\tWV\t:= wval\n\tLV\t:= lval\n", modname);
-	printf("\tL\t:= label\nX\tcsv\tPR\nX\tcret\tPR;\n", modname);
+	printf("\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n");
+	printf("\tI\t:= internal\n\tA\t:= array\n\tPR\t:= procedure\n");
+	printf("\tE\t:= entry\n\tB\t:= byte\n\tW\t:= word\n");
+	printf("\tBV\t:= bval\n\tWV\t:= wval\n\tLV\t:= lval\n");
+	printf("\tL\t:= label\nX\tcsv\tPR\nX\tcret\tPR;\n");
 	funcbase = curbase = coremax = sbrk(0);
 	getree();
 	if (*argv[2] != '-') {
