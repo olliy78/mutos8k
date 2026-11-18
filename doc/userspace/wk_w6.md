@@ -110,3 +110,26 @@ Daraus: `nreg`, `isn` und `lsptab` gehoeren **nicht** in `c1.h` (`c11.c`/`c12.c`
 Deshalb stehen jetzt auch alle BSS-Zugriffe in `main` und `rcexpr` an den Original-Adressen.
 
 **Offen:** `cexpr` (0B9E, 2682 B, Befund oben), `doinit` (Z8000-Ausgabe), `c1.h`/Datenadressen (Zeichenketten und Schalttabellen verschieben sich mit `cexpr`), Eintrag `C2_AUS["c1"]`.
+
+## Teil 6: `cexpr` und `doinit` (W6d)
+
+Alles *gemessen* am Listing `userspace/c1/c1.lst` (Original), soweit nicht *Annahme*; Namen erfunden = *Annahme*.  Die Ausgabe ist im Dialekt des MUTOS-`as` (`BV`/`WV`/`LV`, Register `r%d`/`rr%d`/`rq%d`/`rh%d`/`f%d`).
+
+**`cexpr` (0B9E).**  Rahmen 22 Byte (11 Stack-Slots FFF2..FFDE, absteigend in der Deklarationsreihenfolge; FFF2 = `fl` nur in `M`, FFEE ungenutzt), Registervariablen r13 `p`, r12 `p1`, r11 `tree`, r10 `r`, r9 `k`, r8 `ctable`.
+`p` und `tree` zeigen bis zur Schleife auf denselben Knoten (`p = tree` am Anfang, `tree = p` danach); wer von beiden im Original steht, ist an den Registern abzulesen und so nachgebildet.
+* Vorspann: `zf9=1; lregf=0; wregf=0` (7622, 761E, 761A); `c = p->op`; `if (!(c&0400)) p1 = tree->tr2` (Test auf **`c`**, nicht auf `opd`); RELAT/LOGAND/LOGOR/EXCLA-Zweig und `QUEST` wie V7, aber **Misserfolg = -3** (nicht -1) und bei `QUEST` kein `nstack`, `r` ist Registervariable, `movreg` nur bei `p1->tr2->op != CALL`.
+* Neu: bei Zuweisungsoperatoren (`opd&ASSGOP`) auf `char`-Registervariable (`tr1->op==NAME`, `class==REG`) wird der Typ auf `int` gesetzt (auch bei `p1`); die V7-Sonderbehandlung `char = *intreg++` fehlt.
+* `x+(-n)`: `c==PLUS||c==ASPLUS`, `p1->op==CON`, `-16 <= value <= -1` -> `value = -value; c = ++p->op`.
+* Tabellenwahl: `efftab` wird bei `cctab` **nicht** versucht, wenn `c` in `INCAFT DECAFT MOD`, bei `type==LONG` und `AND OR EXOR`, oder bei `ASSIGN CALL LOAD 89 CALL2` (89: im Kopf `c1.h` ohne Namen).
+* Gleitkommakonstanten: statt `.data/.text`-Ausgabe `fpfind(p)` (neu, 229E, siehe unten) und sonst `outfp(p, 1)`.
+* Makro-Expansion: Schalter `switch (c)` mit Sprungtabelle 762C (0x5B Eintraege, Standardziel `putchar(c)`), `putchar` eingebettet.  Buchstaben (Reihenfolge der Faelle = Codereihenfolge):
+  `\n` setzt `bregf=0`; `\0` Ende (`MOD`/`ASMOD`: `reg--`, bei `LONG` nochmals); `@` `#` `"` drucken `@SP`, `#%`, `@`; `A`/`B` Adresse (`+` -> Flag 1, `'` -> `wregf=1`, `zf8=1` bei `INCAFT/DECAFT` ueber `STAR` mit `tr1->nloc<8`; `pname(p,c)`);
+  `M` `prins(op, fl, c, instab)` (neu: `fl` = Typ FLOAT/DOUBLE); `T` (`k` statt Byte-/Typbuchstaben, wenn `dcalc(p1,0)<6` und kein Blatt) faellt in `C` (Byte/Typ von `p1` oder `tree`), `P` (`k` wenn `dcalc(p2,0)<6`) faellt in `D` (`p2`): `b` + `bregf=1` fuer `CHAR`, dann `d`/`s`/`l` je nach `isfloat`;
+  `L` `l` wenn `isfloat==l`, `V` `f` wenn `isfloat==f`; `G K H` Teilbaum (wie V7 `F S H`, aber ohne `collcon`/`lsptab`, `!` setzt `r=k=1`, Zielregister `r += reg1|reg|areg`, `zf1/zf2` zaehlen CALL-Umwandlungen, `CALL`/`CALL2` ohne Nachbewegung, `movreg` nur bei Abweichung bzw. mit `k` auf `reg+1`);
+  `U` (`lregf=1`) / `I` / `J` / `N` Registername (`I`: `-` -> `r--` und bei `isfloat==l` nochmals; `+`; `'` -> `wregf=1`; Pruefung `(FLOAT||DOUBLE)&&r>=7 || r>nreg`; `N` = Register 6) ueber `preg`; `E R O Q F S Y W` feste Texte (`r1`, `f%d`+`nfloat++`, `rr0`, `rh0`, `r0`, `rh%d`, `rq4`/`rq0`, `SP`); `Z` `#%%%x` mit `~mask`; `X` Vorzeichen-/Nullerweiterung (`extsl rq`, `xor`, `exts rr`; nicht bei `TIMES/ASTIMES`).
+* Nicht uebernommen aus V7: `T`/`V`/`-`/`)`/`#`-Teilbaumformen der PDP-11-Ausgabe (`sxt`, `adc`, `X`-Langvergleich).
+
+**`fpfind` (229E, 86 Byte; Name *Annahme*; die Zuordnung `229E` = `max` in `v7zuordnung.txt` ist falsch, `max` liegt bei 22F4).**  Sucht in der Gleitkommatabelle `fptab` (`nfpool` Eintraege zu 14 Byte) einen Eintrag mit gleichen vier Wertworten (Offset 6..12); liefert dessen `value` (bei `outfp` negativ gespeichert) oder 0.  Steht in `c11.c` vor `max`.
+
+**`doinit` (1C74).**  `chrf=0`; `CHAR` -> `printf("BV")`, `chrf=1`; Schalter 76EA (0..7: `INT UNSIGN`, `FLOAT DOUBLE`, `LONG`); Ausgabe `" %%%x\n"` (Zeichen) bzw. `"WV %%%x\n"`, `WV <name>`, `LV %%%lx`; `FTOI`/`FTOL` ohne `SFCON`; Gleitkomma immer 4 Worte (`ltod`, `fcopy`, `WV %x;WV %x;WV %x;WV %x`), `CON`/`LCON` als Nullkonstante; Zweig `yf0` (7B42) mit `getblk(14)` und `outfp(tree,0)`.
+Der Aufruf `fcopy(tree->value, &fval)` im `yf0`-Zweig steht so im Binary (vermutlich nie ausgefuehrt, `yf0` wird nie gesetzt).  `ftol` wird in `doinit` vor seiner Definition (`long`) als `int` benutzt (`EXTS RR2`), wie im Original.  Fehlertext `"illegal initialization\n"` (mit Zeilenende).

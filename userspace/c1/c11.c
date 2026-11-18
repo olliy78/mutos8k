@@ -19,6 +19,31 @@ int	yf2	0;	/* 7B46 */
 int	yf3	0;	/* 7B48 */
 int	yf4	0;	/* 7B4A */
 
+/*
+ * Not V7 (original at 229E, size 86; name *Annahme*): look up a floating
+ * constant in the pool fptab (filled by outfp) by its four value words;
+ * returns the label number kept there, 0 if absent.
+ * The word view of struct ftconst is a local invention (members w0..w3).
+ */
+struct fpw { int fw_op; int fw_type; int fw_value; int w0, w1, w2, w3; };
+extern struct fpw fptab[];
+extern int nfpool;
+
+fpfind(ap)
+struct fpw *ap;
+{
+	register struct fpw *p, *q;
+	register i;
+
+	p = ap;
+	for (i=0; i<nfpool; i++) {
+		q = &fptab[i];
+		if (p->w0==q->w0 && p->w1==q->w1 && p->w2==q->w2 && p->w3==q->w3)
+			return(q->fw_value);
+	}
+	return(0);
+}
+
 max(a, b)
 {
 	if (a>b)

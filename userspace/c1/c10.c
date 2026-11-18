@@ -512,35 +512,49 @@ again:
 	return(reg);
 }
 
-/* Differs from V7: lsptab is not in c1.h (it would take BSS in front of nstack); only the
-   unreconstructed V7 text of cexpr below uses it */
+/* Differs from V7: lsptab is not in c1.h (it would take BSS in front of nstack); it is no longer used by any
+   reconstructed function but its BSS slot (original: before cexpr) is kept */
 struct	table	lsptab[1];
 
 /*
  * Try to compile the tree with the code table using
  * registers areg and up.  If successful,
  * return the register where the value actually ended up.
- * If unsuccessful, return -1.
+ * If unsuccessful, return -3 (Differs from V7: -1).
  *
  * Most of the work is the macro-expansion of the
  * code table.
+ *
+ * Differs from V7 (reconstructed from the binary at 0B9E, doc wk_w6.md part 6):
+ * Z8000 rewrite of the macro expansion.  The register variables are
+ * p, p1, tree (r13..r11), r, k (r10, r9) and ctable (r8); r13 and r11 hold
+ * the same tree up to the loop.  The names fl, unused, k and the flags zf*,
+ * wregf, bregf, lregf are *Annahme*, only the use is measured.
  */
 cexpr(atree, table, areg)
 struct tnode *atree;
 struct table *table;
 {
-	int c, r;
 	register struct tnode *p, *p1, *tree;
-	struct table *ctable;
+	register r, k;
+	register struct table *ctable;
+	int fl;
+	int c;
+	int unused;
 	struct tnode *p2;
 	char *string;
 	int reg, reg1, rreg, flag, opd;
 	char *opt;
 
+	zf9 = 1;
+	lregf = 0;
+	wregf = 0;
 	tree = atree;
+	p = tree;
+	c = p->op;
 	reg = areg;
-	p1 = tree->tr2;
-	c = tree->op;
+	if ((c&0400)==0)
+		p1 = tree->tr2;
 	opd = opdope[c];
 	/*
 	 * When the value of a relational or a logical expression is
@@ -557,82 +571,80 @@ struct table *table;
 	}
 	if(c==QUEST) {
 		if (table==cctab)
-			return(-1);
+			return(-3);
 		cbranch(tree->tr1, c=isn++, 0, reg);
-		flag = nstack;
 		rreg = rcexpr(p1->tr1, table, reg);
-		nstack = flag;
 		branch(r=isn++, 0);
 		label(c);
 		reg = rcexpr(p1->tr2, table, rreg);
-		if (rreg!=reg)
+		if (rreg!=reg && p1->tr2->op!=CALL)
 			movreg(reg, rreg, tree->tr2);
 		label(r);
 		return(rreg);
 	}
+	/*
+	 * Not V7: char register variables in assignment operators
+	 * are treated as int.
+	 */
+	if (opd&ASSGOP && p->tr1->type==CHAR && p->tr1->op==NAME
+	 && p->tr1->class==REG) {
+		p->tr1->type = INT;
+		if (p1->op==NAME && p1->class==REG && p1->type==CHAR)
+			p1->type = INT;
+	}
+	tree = p;
+	if ((p->op&0400)==0)
+		tree->tr2 = p1;
+	areg = reg;
 	reg = oddreg(tree, reg);
 	reg1 = reg+1;
 	/*
 	 * long values take 2 registers.
 	 */
-	if ((tree->type==LONG||opd&RELAT&&tree->tr1->type==LONG) && tree->op!=ITOL)
+	if ((p->type==LONG||opd&RELAT&&p->tr1->type==LONG) && p->op!=ITOL)
 		reg1++;
 	/*
 	 * Leaves of the expression tree
 	 */
-	if ((r = chkleaf(tree, table, reg)) >= 0)
+	if ((r = chkleaf(p, table, reg)) >= 0)
 		return(r);
 	/*
-	 * x + (-1) is better done as x-1.
+	 * x + (-n) is better done as x-n.
 	 */
-
-	if ((tree->op==PLUS||tree->op==ASPLUS) &&
-	    (p1=tree->tr2)->op == CON && p1->value == -1) {
-		p1->value = 1;
-		tree->op =+ (MINUS-PLUS);
+	if ((c==PLUS||c==ASPLUS) && p1->op==CON
+	 && p1->value<=-1 && p1->value>=-16) {
+		p1->value = -p1->value;
+		c = ++p->op;
 	}
-	/*
-	 * Because of a peculiarity of the PDP11 table
-	 * char = *intreg++ and *--intreg cannot go through.
- 	 */
-	if (tree->tr1->type==CHAR && tree->tr2->type!=CHAR
-	 && (tree->tr2->op==AUTOI||tree->tr2->op==AUTOD))
-		tree->tr2 = tnode(LOAD, tree->tr2->type, tree->tr2);
 	if (table==cregtab)
 		table = regtab;
-	/*
-	 * The following peculiar code depends on the fact that
-	 * if you just want the codition codes set, efftab
-	 * will generate the right code unless the operator is
-	 * a shift or
-	 * postfix ++ or --. Unravelled, if the table is
-	 * cctab and the operator is not special, try first
-	 * for efftab;  if the table isn't, if the operator is,
-	 * or the first match fails, try to match
-	 * with the table actually asked for.
-	 */
 	/*
 	 * Account for longs and oddregs; below is really
 	 * r = nreg - reg - (reg-areg) - (reg1-reg-1);
 	 */
 	r = nreg - reg + areg - reg1 + 1;
-	if (table!=cctab || c==INCAFT || c==DECAFT || tree->type==LONG
-	 || c==ASRSH || c==ASLSH || c==ASULSH
-	 || (opt = match(tree, efftab, r, 0)) == 0)
-		if ((opt=match(tree, table, r, 0))==0)
-			return(-1);
+	if (table!=cctab || c==INCAFT || c==DECAFT || c==MOD
+	 || p->type==LONG && (c==AND || c==OR || c==EXOR)
+	 || c==ASSIGN || c==CALL || c==LOAD || c==89 || c==CALL2
+	 || (opt = match(p, efftab, r, 0)) == 0)
+		if ((opt=match(p, table, r, 0))==0)
+			return(-3);
 	string = opt->tabstring;
-	p1 = tree->tr1;
+	p1 = p->tr1;
 	if (p1->op==FCON && p1->value>0) {
-		printf(".data\nL%d:%o;%o;%o;%o\n.text\n", p1->value, p1->fvalue);
-		p1->value = -p1->value;
+		if (k = fpfind(p1))
+			p1->value = k;
+		else
+			outfp(p1, 1);
 	}
 	p2 = 0;
 	if (opdope[tree->op]&BINARY) {
-		p2 = tree->tr2;
+		p2 = p->tr2;
 		if (p2->op==FCON && p2->value>0) {
-			printf(".data\nL%d:%o;%o;%o;%o\n.text\n", p2->value, p2->fvalue);
-			p2->value = -p2->value;
+			if (k = fpfind(p2))
+				p2->value = k;
+			else
+				outfp(p2, 1);
 		}
 	}
 loop:
@@ -646,37 +658,54 @@ loop:
 	switch (c) {
 
 	case '\n':
-		dbprint(tree->op);
+		bregf = 0;
 		break;
 
 	case '\0':
-		if (!isfloat(tree))
-			if (tree->op==DIVIDE||tree->op==ASDIV||tree->op==PTOI)
+		if (isfloat(tree)!='f')
+			if (tree->op==MOD||tree->op==ASMOD) {
 				reg--;
+				if (tree->type==LONG)
+					reg--;
+			}
 		return(reg);
+
+	case '@':
+		printf("@SP");
+		goto loop;
+
+	case '#':
+		printf("#%%");
+		goto loop;
+
+	case '"':
+		printf("@");
+		goto loop;
 
 	/* A1 */
 	case 'A':
 		p = p1;
-		goto adr;
+	adr:
+		c = 0;
+		if (*string=='+') {
+			c = 1;
+			string++;
+		}
+		if (*string=='\'') {
+			wregf = 1;
+			string++;
+		}
+		if ((tree->op==INCAFT||tree->op==DECAFT) && p->op==STAR
+		 && p->tr1->nloc<8)
+			zf8 = 1;
+		pname(p, c);
+		wregf = 0;
+		goto loop;
 
 	/* A2 */
 	case 'B':
 		p = p2;
 		goto adr;
-
-	adr:
-		c = 0;
-		while (*string=='\'') {
-			c++;
-			string++;
-		}
-		if (*string=='+') {
-			c = 100;
-			string++;
-		}
-		pname(p, c);
-		goto loop;
 
 	/* I */
 	case 'M':
@@ -684,8 +713,18 @@ loop:
 			string++;
 		else
 			c = 0;
-		prins(tree->op, c, instab);
+		if (tree->type==FLOAT || tree->type==DOUBLE)
+			fl = 1;
+		else
+			fl = 0;
+		prins(tree->op, fl, c, instab);
 		goto loop;
+
+	case 'T':
+		if ((opd&LEAF)==0 && dcalc(p1, 0)<6) {
+			putchar('k');
+			goto loop;
+		}
 
 	/* B1 */
 	case 'C':
@@ -695,28 +734,44 @@ loop:
 			p = p1;
 		goto pbyte;
 
-	/* BF */
 	case 'P':
-		p = tree;
-		goto pb1;
+		if (dcalc(p2, 0)<6) {
+			putchar('k');
+			goto loop;
+		}
 
 	/* B2 */
 	case 'D':
 		p = p2;
 	pbyte:
-		if (p->type==CHAR)
+		if (p->type==CHAR) {
 			putchar('b');
-	pb1:
-		if (isfloat(p))
-			putchar('f');
+			bregf = 1;
+		}
+		if (isfloat(p)) {
+			if (p->type==DOUBLE)
+				putchar('d');
+			else if (p->type==FLOAT)
+				putchar('s');
+			else
+				putchar('l');
+		}
 		goto loop;
 
 	/* BE */
 	case 'L':
-		if (p1->type==CHAR || p2->type==CHAR)
-			putchar('b');
-		p = tree;
-		goto pb1;
+		if ((opd&LEAF) != 0)
+			p = tree;
+		else
+			p = p1;
+		if (isfloat(p)=='l')
+			putchar('l');
+		goto loop;
+
+	case 'V':
+		if (isfloat(p)=='f')
+			putchar('f');
+		goto loop;
 
 	/* F */
 	case 'G':
@@ -740,53 +795,57 @@ loop:
 		if (flag&04)
 			ctable = cregtab;
 		c = *string++ - 'A';
+		r = 0;
+		k = 0;
 		if (*string=='!') {
 			string++;
-			c =| 020;	/* force right register */
+			r = 1;
+			k = 1;
 		}
 		if ((c&02)!=0)
 			ctable = sptab;
 		if ((c&04)!=0)
 			ctable = cctab;
 		if ((flag&01) && ctable==regtab && (c&01)==0
-		  && (tree->op==DIVIDE||tree->op==MOD
-		   || tree->op==ASDIV||tree->op==ASMOD||tree->op==ITOL))
+		  && (tree->op==TIMES||tree->op==DIVIDE
+		   || tree->op==ASTIMES||tree->op==ASDIV||tree->op==ITOL))
 			ctable = cregtab;
-		if ((c&01)!=0) {
-			p = p->tr1;
-			if(collcon(p) && ctable!=sptab) {
-				if (p->op==STAR)
-					p = p->tr1;
-				p = p->tr1;
+		if (p->type==LONG || opdope[p->op]&RELAT && p->tr1->type==LONG)
+			if (p->op!=ITOL) {
+				reg = (reg+1) & ~01;
+				reg1 = reg+2;
 			}
-		}
-		if (table==lsptab && ctable==sptab)
-			ctable = lsptab;
 		if (c&010)
-			r = reg1;
+			r =+ reg1;
 		else
 			if (opdope[p->op]&LEAF || p->degree < 2)
-				r = reg;
+				r =+ reg;
 			else
-				r = areg;
+				r =+ areg;
+		if (p->op==CALL) {
+			if (tree->op==FTOL || tree->op==FTOI)
+				zf1++;
+			else if (tree->op==ITOF)
+				zf2++;
+		}
 		rreg = rcexpr(p, ctable, r);
+		if (p->op==CALL || p->op==CALL2)
+			goto loop;
 		if (ctable!=regtab && ctable!=cregtab)
 			goto loop;
 		if (c&010) {
-			if (c&020 && rreg!=reg1)
-				movreg(rreg, reg1, p);
-			else
-				reg1 = rreg;
-		} else if (rreg!=reg)
-			if ((c&020)==0 && oddreg(tree, 0)==0 && tree->type!=LONG
-			&& (flag&04
-			  || flag&01&&xdcalc(p2,nreg-rreg-1)<=(opt->tabdeg2&077)
-			  || flag&02&&xdcalc(p1,nreg-rreg-1)<=(opt->tabdeg1&077))) {
-				reg = rreg;
-				reg1 = rreg+1;
-			} else
+			if (rreg!=r)
+				movreg(rreg, r, p);
+		} else if (rreg!=reg) {
+			if (k==0)
 				movreg(rreg, reg, p);
+			else if (rreg!=reg+1)
+				movreg(rreg, reg+1, p);
+		}
 		goto loop;
+
+	case 'U':
+		lregf = 1;
 
 	/* R */
 	case 'I':
@@ -794,132 +853,91 @@ loop:
 		if (*string=='-') {
 			string++;
 			r--;
+			if (isfloat(tree)=='l')
+				r--;
 		}
-		goto preg;
+		goto prg;
+
+	case 'E':
+		printf("r1");
+		goto loop;
+
+	case 'R':
+		printf("f%d", reg);
+		nfloat++;
+		goto loop;
+
+	case 'O':
+		printf("rr0");
+		goto loop;
+
+	case 'Q':
+		printf("rh0");
+		goto loop;
+
+	case 'F':
+		printf("r0");
+		goto loop;
+
+	case 'S':
+		printf("rh%d", zreg(reg));
+		goto loop;
+
+	case 'Y':
+		if (reg>0)
+			printf("rq4");
+		else
+			printf("rq0");
+		goto loop;
+
+	case 'N':
+		r = 6;
+		goto pregp;
 
 	/* R1 */
 	case 'J':
 		r = reg1;
-	preg:
+	prg:
 		if (*string=='+') {
 			string++;
 			r++;
 		}
-		if (r>nreg || r>=4 && tree->type==DOUBLE)
+		if (*string=='\'') {
+			string++;
+			wregf = 1;
+		}
+		if ((tree->type==FLOAT || tree->type==DOUBLE) && r>=7 || r>nreg)
 			error("Register overflow: simplify expression");
-		printf("r%d", r);
+	pregp:
+		preg(tree, r);
 		goto loop;
 
-	case '-':		/* check -(sp) */
-		if (*string=='(') {
-			nstack++;
-			if (table!=lsptab)
-				putchar('-');
-			goto loop;
-		}
-		break;
-
-	case ')':		/* check (sp)+ */
-		putchar(')');
-		if (*string=='+')
-			nstack--;
-		goto loop;
-
-	/* #1 */
-	case '#':
-		p = p1->tr1;
-		goto nmbr;
-
-	/* #2 */
-	case '"':
-		p = p2->tr1;
-
-	nmbr:
-		if(collcon(p)) {
-			if (p->op==STAR) {
-				printf("*");
-				p = p->tr1;
-			}
-			if ((p = p->tr2)->op == CON) {
-				if (p->value)
-					psoct(p->value);
-			} else if (p->op==AMPER)
-				pname(p->tr1, 0);
-		}
-		goto loop;
-
-	/*
-	 * Certain adjustments for / % and PTOI
-	 */
-	case 'T':
-		c = reg-1;
-		if (tree->op == PTOI) {
-			printf("bic	r%d,r%d\nsbc	r%d\n", c,c,c);
-			goto loop;
-		}
-		if (p1->type==UNSIGN || p1->type&XTYPE) {
-			printf("clr	r%d\n", c);
-			goto loop;
-		}
-		if (dcalc(p1, 5)>12 && !match(p1, cctab, 10, 0))
-			printf("tst	r%d\n", reg);
-		printf("sxt	r%d\n", c);
-		goto loop;
-
-	case 'V':	/* adc sbc, clr, or sxt as required for longs */
-		switch(tree->op) {
-		case PLUS:
-		case ASPLUS:
-		case INCBEF:
-		case INCAFT:
-			printf("adc");
-			break;
-
-		case MINUS:
-		case ASMINUS:
-		case NEG:
-		case DECBEF:
-		case DECAFT:
-			printf("sbc");
-			break;
-
-		case ASSIGN:
-			p = tree->tr2;
-			goto lcasev;
-
-		case ASDIV:
-		case ASMOD:
-		case ASULSH:
-			p = tree->tr1;
-		lcasev:
-			if (p->type!=LONG) {
-				if (p->type==UNSIGN || p->type&XTYPE)
-					printf("clr");
-				else
-					printf("sxt");
-				goto loop;
-			}
-		default:
-			while ((c = *string++)!='\n' && c!='\0');
-			break;
-		}
+	case 'W':
+		printf("SP");
 		goto loop;
 
 	/*
 	 * Mask used in field assignments
 	 */
 	case 'Z':
-		printf("$%o", tree->mask);
+		printf("#%%%x", ~tree->mask);
 		goto loop;
 
 	/*
-	 * Relational on long values.
-	 * Might bug out early. E.g.,
-	 * (long<0) can be determined with only 1 test.
+	 * Sign/zero extension for / % and PTOI
 	 */
 	case 'X':
-		if (xlongrel(*string++ - '0'))
-			return(reg);
+		if (tree->op==TIMES || tree->op==ASTIMES)
+			goto loop;
+		if (tree->type==LONG) {
+			printf("extsl\trq%d\n", zreg(reg-2));
+			goto loop;
+		}
+		if (tree->type==UNSIGN) {
+			printf("xor\tr%d,r%d\n", zreg(reg-1), zreg(reg-1));
+			goto loop;
+		}
+		printf("exts\trr%d\n", zreg(reg-1));
 		goto loop;
 	}
 	putchar(c);
@@ -1206,8 +1224,16 @@ struct tnode *atp;
 	return(tnode(STAR, STRUCT, tp));
 }
 
+extern int yf0;	/* defined in c11.c */
+
 /*
  * Compile an initializing expression
+ *
+ * Differs from V7 (reconstructed from the binary at 1C74, doc wk_w6.md part 6):
+ * Z8000 as syntax (BV/WV/LV), no SFCON, FLOAT and DOUBLE are output alike
+ * (four words), floating constants can be pooled via yf0.  The suspicious
+ * fcopy(tree->value, &fval) in the yf0 branch is as in the binary (the
+ * branch is probably never run: yf0 is never set).
  */
 doinit(atype, atree)
 struct tnode *atree;
@@ -1217,11 +1243,14 @@ struct tnode *atree;
 	float sfval;
 	double fval;
 	long lval;
+	int chrf;
 
+	chrf = 0;
 	tree = atree;
 	type = atype;
 	if (type==CHAR) {
-		printf(".byte ");
+		printf("BV");
+		chrf = 1;
 		if (tree->type&XTYPE)
 			goto illinit;
 		type = INT;
@@ -1232,10 +1261,10 @@ struct tnode *atree;
 	case INT:
 	case UNSIGN:
 		if (tree->op==FTOI) {
-			if (tree->tr1->op!=FCON && tree->tr1->op!=SFCON)
+			if (tree->tr1->op!=FCON)
 				goto illinit;
 			tree = tree->tr1;
-			tree->value = tree->fvalue;
+			tree->value = ftol(&tree->fvalue);
 			tree->op = CON;
 		} else if (tree->op==LTOI) {
 			if (tree->tr1->op!=LCON)
@@ -1245,9 +1274,13 @@ struct tnode *atree;
 			tree->op = CON;
 			tree->value = lval;
 		}
-		if (tree->op == CON)
-			printf("%o\n", tree->value);
-		else if (tree->op==AMPER) {
+		if (tree->op == CON) {
+			if (chrf)
+				printf(" %%%x\n", tree->value);
+			else
+				printf("WV %%%x\n", tree->value);
+		} else if (tree->op==AMPER) {
+			printf("WV ");
 			pname(tree->tr1, 0);
 			putchar('\n');
 		} else
@@ -1257,33 +1290,40 @@ struct tnode *atree;
 	case DOUBLE:
 	case FLOAT:
 		if (tree->op==ITOF) {
-			if (tree->tr1->op==CON) {
-				fval = tree->tr1->value;
-			} else
+			if (tree->tr1->op!=CON)
 				goto illinit;
-		} else if (tree->op==FCON || tree->op==SFCON)
-			fval = tree->fvalue;
+			ltod((long)tree->tr1->value, &fval);
+		} else if (tree->op==FCON)
+			fcopy(&fval, &tree->fvalue);
 		else if (tree->op==LTOF) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
-			fval = tree->tr1->lvalue;
+			ltod(tree->tr1->lvalue, &fval);
+		} else if (tree->op==CON || tree->op==LCON) {
+			printf("WV %%0;WV %%0;WV %%0;WV %%0\n");
+			return;
 		} else
 			goto illinit;
-		if (type==FLOAT) {
-			sfval = fval;
-			printf("%o; %o\n", sfval);
-		} else
-			printf("%o; %o; %o; %o\n", fval);
+		if (yf0==0) {
+			if (tree->op==FCON)
+				printf("L%d:\n", tree->value);
+			printf("WV %%%x;WV %%%x;WV %%%x;WV %%%x\n", fval);
+			return;
+		}
+		if (tree->op!=FCON) {
+			tree = getblk(sizeof(struct ftconst));
+			tree->value = isn++;
+			fcopy(tree->value, &fval);
+		}
+		outfp(tree, 0);
 		return;
 
 	case LONG:
 		if (tree->op==FTOL) {
 			tree = tree->tr1;
-			if (tree->op==SFCON)
-				tree->op = FCON;
-			if (tree->op!= FCON)
+			if (tree->op!=FCON)
 				goto illinit;
-			lval = tree->fvalue;
+			lval = ftol(&tree->fvalue);
 		} else if (tree->op==ITOL) {
 			if (tree->tr1->op != CON)
 				goto illinit;
@@ -1292,11 +1332,11 @@ struct tnode *atree;
 			lval = tree->lvalue;
 		else
 			goto illinit;
-		printf("%o; %o\n", lval);
+		printf("LV %%%lx\n", lval);
 		return;
 	}
 illinit:
-	error("Illegal initialization");
+	error("illegal initialization\n");
 }
 
 /*
