@@ -152,7 +152,8 @@ def gast(namen, art, frist=20_000_000_000):
                 rueck.append(n + ".err")
                 continue
         else:
-            pf = os.path.join(WORK, "bau", n + ".m.s") if art == "m" else os.path.join(LIBC, n + ".s")
+            pf = (os.path.join(WORK, "bau", n + ".m.s") if art == "m" else
+                  os.path.join(WORK, "var", n + ".s") if "__" in n else os.path.join(LIBC, n + ".s"))
             quellen[n + ".s"] = open(pf, "rb").read()
             befehle.append("cd /tmp;>asm.out;as -u /mnt/%s.s >%s.err 2>&1;cat asm.out >%s.o;cd /mnt" % (n, n, n))
         rueck += [n + ".o", n + ".err"]
@@ -165,9 +166,44 @@ def gast(namen, art, frist=20_000_000_000):
     return {n: ((r.get(n + ".err") or b"").decode("latin-1").strip(), r.get(n + (".s" if art == "S" else ".o"))) for n in namen}
 
 
+def asm_varianten(namen):
+    """Distinct userspace/libc_alt/**/NAME.s texts (reconstructed from program images) as variants work/var/NAME__vK.s."""
+    import glob
+    import hashlib
+    os.makedirs(os.path.join(WORK, "var"), exist_ok=True)
+    erg = []
+    for n in namen:
+        seen = {}
+        for f in sorted(glob.glob(os.path.join(REPO, "userspace", "libc_alt", "*", n + ".s"))):
+            t = open(f, "rb").read()
+            seen.setdefault(hashlib.md5(t).hexdigest(), (f, t))
+        for k, (f, t) in enumerate(seen.values()):
+            v = "%s__v%d" % (n, k)
+            open(os.path.join(WORK, "var", v + ".s"), "wb").write(t)
+            open(os.path.join(WORK, "var", v + ".from"), "w").write(os.path.relpath(f, REPO) + "\n")
+            erg.append(v)
+    return erg
+
+
+def stapel(namen, art, grenze=110_000):
+    """split the names into guest runs whose sources fit on the source disk"""
+    gr, cur, size = [], [], 0
+    for n in namen:
+        f = os.path.join(WORK, "var", n + (".c" if art == "c" else ".s")) if "__" in n else os.path.join(LIBC, n + (".c" if art == "c" else ".s"))
+        z = os.path.getsize(f) if os.path.isfile(f) else 4000
+        if cur and (size + z > grenze or len(cur) >= 40):
+            gr.append(cur)
+            cur, size = [], 0
+        cur.append(n)
+        size += z
+    return gr + ([cur] if cur else [])
+
+
 def bauen(namen, art):
     os.makedirs(os.path.join(WORK, "bau"), exist_ok=True)
-    erg = gast(namen, art)
+    erg = {}
+    for st in stapel(namen, art):
+        erg.update(gast(st, art))
     for n in namen:
         err, ob = erg[n]
         if ob:
@@ -178,7 +214,7 @@ def bauen(namen, art):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau"):
+    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau"):
         print(__doc__)
         return 2
     try:
@@ -192,6 +228,8 @@ def main(argv):
                 open(os.path.join(WORK, "bau", n + ".m.s"), "w").write(t)
                 print(n, {k: v for k, v in c.items() if v})
             return bauen(argv[1:], "m")
+        elif argv[0] == "abau":      # libc_alt .s variants of the given members -> guest as -> compare
+            return bauen(asm_varianten(argv[1:]), "s")
         elif argv[0] == "ssau":
             erg = gast(argv[1:], "S")
             for n in argv[1:]:
