@@ -1,88 +1,3 @@
-; Marke mitten im Befehl: L0700 EQU %700
-; Marke mitten im Befehl: L0704 EQU %704
-; Marke mitten im Befehl: L070A EQU %70A
-; Marke mitten im Befehl: L0902 EQU %902
-; Marke mitten im Befehl: L0924 EQU %924
-; Marke mitten im Befehl: L0940 EQU %940
-; Marke mitten im Befehl: L096C EQU %96C
-; Marke mitten im Befehl: L0970 EQU %970
-; Marke mitten im Befehl: L0A4C EQU %A4C
-; Marke mitten im Befehl: L0A56 EQU %A56
-; Marke mitten im Befehl: L0B02 EQU %B02
-; Marke mitten im Befehl: L0B0A EQU %B0A
-; Marke mitten im Befehl: L0BD0 EQU %BD0
-; Marke mitten im Befehl: L0DD4 EQU %DD4
-; Marke mitten im Befehl: L1008 EQU %1008
-; Marke mitten im Befehl: L13F8 EQU %13F8
-; Marke mitten im Befehl: L13FC EQU %13FC
-; Marke mitten im Befehl: L1400 EQU %1400
-; Marke mitten im Befehl: L1404 EQU %1404
-; Marke mitten im Befehl: L1408 EQU %1408
-; Marke mitten im Befehl: L2008 EQU %2008
-; Marke mitten im Befehl: L2072 EQU %2072
-; Marke mitten im Befehl: L2076 EQU %2076
-; Marke mitten im Befehl: L208A EQU %208A
-; Marke mitten im Befehl: L210C EQU %210C
-; Marke mitten im Befehl: L2134 EQU %2134
-; Marke mitten im Befehl: L21B8 EQU %21B8
-; Marke mitten im Befehl: L2444 EQU %2444
-; Marke mitten im Befehl: L274C EQU %274C
-; Marke mitten im Befehl: L290A EQU %290A
-; Marke mitten im Befehl: L2B32 EQU %2B32
-; Marke mitten im Befehl: L2C4E EQU %2C4E
-; Marke mitten im Befehl: L2D3E EQU %2D3E
-; Marke mitten im Befehl: L300A EQU %300A
-; Marke mitten im Befehl: L3100 EQU %3100
-; Marke mitten im Befehl: L310A EQU %310A
-; Marke mitten im Befehl: L312C EQU %312C
-; Marke mitten im Befehl: L332C EQU %332C
-; Marke mitten im Befehl: L350A EQU %350A
-; Marke mitten im Befehl: L380A EQU %380A
-; Marke mitten im Befehl: L3882 EQU %3882
-; Marke mitten im Befehl: L3A0A EQU %3A0A
-; Marke mitten im Befehl: L3E00 EQU %3E00
-; Marke mitten im Befehl: L3E70 EQU %3E70
-; Marke mitten im Befehl: L400A EQU %400A
-; Marke mitten im Befehl: L4014 EQU %4014
-; Marke mitten im Befehl: L4166 EQU %4166
-; Marke mitten im Befehl: L4170 EQU %4170
-; Marke mitten im Befehl: L4178 EQU %4178
-; Marke mitten im Befehl: L41E4 EQU %41E4
-; Marke mitten im Befehl: L420A EQU %420A
-; Marke mitten im Befehl: L4342 EQU %4342
-; Marke mitten im Befehl: L4358 EQU %4358
-; Marke mitten im Befehl: L43EA EQU %43EA
-; Marke mitten im Befehl: L4544 EQU %4544
-; Marke mitten im Befehl: L454C EQU %454C
-; Marke mitten im Befehl: L460A EQU %460A
-; Marke mitten im Befehl: L4908 EQU %4908
-; Marke mitten im Befehl: L4958 EQU %4958
-; Marke mitten im Befehl: L496E EQU %496E
-; Marke mitten im Befehl: L4BC0 EQU %4BC0
-; Marke mitten im Befehl: L4BCA EQU %4BCA
-; Marke mitten im Befehl: L4BE2 EQU %4BE2
-; Marke mitten im Befehl: L4BEA EQU %4BEA
-; Marke mitten im Befehl: L4D08 EQU %4D08
-; Marke mitten im Befehl: L4D84 EQU %4D84
-; Marke mitten im Befehl: L4D88 EQU %4D88
-; Marke mitten im Befehl: L4DA4 EQU %4DA4
-; Marke mitten im Befehl: L4DD8 EQU %4DD8
-; Marke mitten im Befehl: L4DE8 EQU %4DE8
-; Marke mitten im Befehl: L4E20 EQU %4E20
-; Marke mitten im Befehl: L4F4E EQU %4F4E
-; Marke mitten im Befehl: L4FEC EQU %4FEC
-; Marke mitten im Befehl: L500A EQU %500A
-; Marke mitten im Befehl: L53E4 EQU %53E4
-; Marke mitten im Befehl: L53F8 EQU %53F8
-; Marke mitten im Befehl: L5402 EQU %5402
-; Marke mitten im Befehl: L54E2 EQU %54E2
-; Marke mitten im Befehl: L566C EQU %566C
-; Marke mitten im Befehl: L5756 EQU %5756
-; Marke mitten im Befehl: L5A0A EQU %5A0A
-; Marke mitten im Befehl: L6C00 EQU %6C00
-; Marke mitten im Befehl: L6C64 EQU %6C64
-; Marke mitten im Befehl: L6C78 EQU %6C78
-; Marke mitten im Befehl: L7408 EQU %7408
 ; Marke mitten im Befehl: L75A6 EQU %75A6
 L0000:
 0000  21F6                  LD R6,@R15
@@ -263,9 +178,7 @@ L01BE:
 01F6  0B0D 0049             CP R13,#%0049
 01FA  E675                  JR Z,L02E6
 01FC  0B0D 0048             CP R13,#%0048
-L0200:
 0200  E672                  JR Z,L02E6
-L0202:
 0202  0B0D 004A             CP R13,#%004A
 0206  E66F                  JR Z,L02E6
 0208  0B0D 002E             CP R13,#%002E
@@ -357,10 +270,7 @@ L02E6:
 L02F8:
 02F8  61E2 0006             LD R2,%0006(R14)
 02FC  0D24                  TEST @R2
-02FE  5E06                  DW %5E06
-L0300:
-0300  0194                  ADD R4,@R9
-L0302:
+02FE  5E06 0194             JP Z,L0194
 0302  69E3 0006             INC %0006(R14),#4
 L0306:
 0306  61E2 0006             LD R2,%0006(R14)
@@ -452,9 +362,7 @@ L03DC:
 L03E0:
 03E0  0DB1 000C             CP @R11,#%000C
 03E4  EE0F                  JR NZ,L0404
-03E6  0B08                  DW %0B08
-L03E8:
-03E8  896C                  XOR R12,R6
+03E6  0B08 896C             CP R8,#%896C
 03EA  EE03                  JR NZ,L03F2
 03EC  61BB 0006             LD R11,%0006(R11)
 03F0  E807                  JR L0400
@@ -469,7 +377,6 @@ L0400:
 L0404:
 0404  21B2                  LD R2,@R11
 0406  A123                  LD R3,R2
-L0408:
 0408  8922                  XOR R2,R2
 040A  1B02 0004             DIV RR2,#%0004
 040E  AD32                  EX R2,R3
@@ -566,9 +473,7 @@ L04F2:
 04F2  4DE8 FFF0             CLR %FFF0(R14)
 04F6  4DE8 FFF2             CLR %FFF2(R14)
 04FA  61B2 0006             LD R2,%0006(R11)
-04FE  0D21                  DW %0D21
-L0500:
-0500  0014                  ADDB RH4,@R1
+04FE  0D21 0014             CP @R2,#%0014
 0502  EE08                  JR NZ,L0514
 0504  61B2 0006             LD R2,%0006(R11)
 0508  A923                  INC R2,#4
@@ -669,9 +574,7 @@ L05EC:
 05FC  E812                  JR L0622
 L05FE:
 05FE  8DC4                  TEST R12
-L0600:
 0600  E606                  JR Z,L060E
-L0602:
 0602  93FD                  PUSH @R15,R13
 0604  0DF9 7895             PUSH @R15,#%7895
 0608  5F00 69DE             CALL _printf
@@ -856,11 +759,8 @@ L07DC:
 07F6  8D24                  TEST R2
 07F8  5E06 098C             JP Z,L098C
 07FC  0B08 89BE             CP R8,#%89BE
-L0800:
 0800  5E0E 098C             JP NZ,L098C
-L0804:
 0804  61E2 0004             LD R2,%0004(R14)
-L0808:
 0808  0D21 0014             CP @R2,#%0014
 080C  5E0E 098C             JP NZ,L098C
 L0810:
@@ -942,7 +842,6 @@ L08F4:
 08F8  E6AF                  JR Z,L0858
 08FA  0B02 000C             CP R2,#%000C
 08FE  E6C0                  JR Z,L0880
-L0900:
 0900  0B02 0012             CP R2,#%0012
 0904  E6AE                  JR Z,L0862
 0906  0B02 0013             CP R2,#%0013
@@ -966,12 +865,9 @@ L0942:
 0942  0B02 000A             CP R2,#%000A
 0946  E68D                  JR Z,L0862
 0948  0B02 000B             CP R2,#%000B
-L094C:
 094C  5E06 0820             JP Z,L0820
-L0950:
 0950  0B02 0012             CP R2,#%0012
 0954  5E06 0858             JP Z,L0858
-L0958:
 0958  0B02 0013             CP R2,#%0013
 095C  E691                  JR Z,L0880
 095E  0B02 001B             CP R2,#%001B
@@ -979,9 +875,7 @@ L0958:
 0966  5E08 0648             JP L0648
 L096A:
 096A  0B02 000A             CP R2,#%000A
-L096E:
 096E  5E06 0858             JP Z,L0858
-L0972:
 0972  0B02 000B             CP R2,#%000B
 0976  E6A4                  JR Z,L08C0
 0978  0B02 0012             CP R2,#%0012
@@ -1030,11 +924,9 @@ L09EE:
 09F6  6FE2 FFF2             LD %FFF2(R14),R2
 09FA  0B08 8A2C             CP R8,#%8A2C
 09FE  EE1E                  JR NZ,L0A3C
-L0A00:
 0A00  4DE1 FFF2 0066        CP %FFF2(R14),#%0066
 0A06  EE09                  JR NZ,L0A1A
 0A08  93FD                  PUSH @R15,R13
-L0A0A:
 0A0A  0DF9 78BA             PUSH @R15,#%78BA
 0A0E  5F00 69DE             CALL _printf
 0A12  A9F3                  INC R15,#4
@@ -1043,12 +935,10 @@ L0A0A:
 L0A1A:
 0A1A  53FE FFF2             PUSH @R15,%FFF2(R14)
 0A1E  0DF9 78D2             PUSH @R15,#%78D2
-0A22  5F00                  DW %5F00
-L0A24:
-0A24  69DE A9F1             INC %A9F1(R13),#15
+0A22  5F00 69DE             CALL _printf
+0A26  A9F1                  INC R15,#2
 0A28  2FFD                  LD @R15,R13
 0A2A  93FB                  PUSH @R15,R11
-L0A2C:
 0A2C  5F00 2104             CALL L2104
 0A30  A9F1                  INC R15,#2
 0A32  0DF5 78DE             LD @R15,#%78DE
@@ -1063,24 +953,17 @@ L0A3C:
 0A4E  4D05 761C 0001        LD L761C,#%0001
 L0A54:
 0A54  0DB1 0046             CP @R11,#%0046
-L0A58:
 0A58  E618                  JR Z,L0A8A
 0A5A  0DB1 0047             CP @R11,#%0047
 0A5E  E615                  JR Z,L0A8A
 0A60  0DB1 004B             CP @R11,#%004B
-L0A64:
 0A64  E612                  JR Z,L0A8A
-L0A66:
 0A66  0DB1 004C             CP @R11,#%004C
-L0A6A:
 0A6A  E60F                  JR Z,L0A8A
-L0A6C:
 0A6C  0DB1 004D             CP @R11,#%004D
-L0A70:
 0A70  E60C                  JR Z,L0A8A
 0A72  0DB1 004E             CP @R11,#%004E
 0A76  E609                  JR Z,L0A8A
-L0A78:
 0A78  0DB1 004F             CP @R11,#%004F
 0A7C  E606                  JR Z,L0A8A
 0A7E  0DB1 0049             CP @R11,#%0049
@@ -1128,13 +1011,10 @@ L0AEC:
 0AF8  A9F1                  INC R15,#2
 0AFA  2FFD                  LD @R15,R13
 0AFC  93FB                  PUSH @R15,R11
-0AFE  5F00                  DW %5F00
-L0B00:
-0B00  2104 A9F1             LD R4,#%A9F1
+0AFE  5F00 2104             CALL L2104
+0B02  A9F1                  INC R15,#2
 0B04  0DF5 78F3             LD @R15,#%78F3
-L0B08:
 0B08  5F00 69DE             CALL _printf
-L0B0C:
 0B0C  A9F1                  INC R15,#2
 L0B0E:
 0B0E  4D05 7616 0001        LD L7616,#%0001
@@ -1150,7 +1030,6 @@ L0B26:
 0B26  0DB1 003B             CP @R11,#%003B
 0B2A  EE0F                  JR NZ,L0B4A
 0B2C  53FE 0008             PUSH @R15,%0008(R14)
-L0B30:
 0B30  0DF9 88AE             PUSH @R15,#%88AE
 0B34  53FB 0006             PUSH @R15,%0006(R11)
 0B38  5F00 039E             CALL L039E
@@ -1232,7 +1111,6 @@ L0C04:
 0C20  6FE2 FFF0             LD %FFF0(R14),R2
 0C24  93F2                  PUSH @R15,R2
 0C26  93FB                  PUSH @R15,R11
-L0C28:
 0C28  5F00 2F6C             CALL L2F6C
 0C2C  A9F7                  INC R15,#8
 0C2E  53FE FFE8             PUSH @R15,%FFE8(R14)
@@ -1299,7 +1177,6 @@ L0C84:
 0CF6  6FE2 FFE8             LD %FFE8(R14),R2
 0CFA  61E0 FFE4             LD R0,%FFE4(R14)
 0CFE  8B20                  CP R0,R2
-L0D00:
 0D00  E60E                  JR Z,L0D1E
 0D02  61C2 0008             LD R2,%0008(R12)
 0D06  0D21 0064             CP @R2,#%0064
@@ -1318,7 +1195,6 @@ L0D2A:
 0D2A  5E08 75D2             JP cret
 L0D2E:
 0D2E  4DE1 FFF0 005A        CP %FFF0(R14),#%005A
-L0D34:
 0D34  E6A7                  JR Z,L0C84
 0D36  67E3 FFE0             BIT %FFE0(R14),#3
 0D3A  E626                  JR Z,L0D88
@@ -1363,7 +1239,6 @@ L0D92:
 0DA8  A920                  INC R2,#1
 0DAA  6FE2 FFE6             LD %FFE6(R14),R2
 0DAE  4DD1 0002 0006        CP %0002(R13),#%0006
-L0DB4:
 0DB4  E609                  JR Z,L0DC8
 0DB6  67E2 FFE0             BIT %FFE0(R14),#2
 0DBA  E60B                  JR Z,L0DD2
@@ -1397,11 +1272,8 @@ L0DFC:
 0E02  61C0 0004             LD R0,%0004(R12)
 0E06  0B00 FFFF             CP R0,#%FFFF
 0E0A  EA0E                  JR GT,L0E28
-0E0C  61C0                  DW %61C0
-; nicht kanonisch kodiert: ADDB RH4,#%00
-L0E0E:
-0E0E  0004 0B00             DW %0004,%0B00
-0E12  FFF0                  DJNZ R15,L0D34
+0E0C  61C0 0004             LD R0,%0004(R12)
+0E10  0B00 FFF0             CP R0,#%FFF0
 0E14  E109                  JR LT,L0E28
 0E16  61C2 0004             LD R2,%0004(R12)
 0E1A  8D22                  NEG R2
@@ -1557,7 +1429,9 @@ L0FC6:
 0FD2  8122                  ADD R2,R2
 0FD4  6121 762C             LD R1,L762C(R2)
 0FD8  1E18                  JP @R1
-0FDA  4D08 761C 5E08 15EC   DW %4D08,%761C,%5E08,%15EC
+L0FDA:
+0FDA  4D08 761C             CLR L761C
+0FDE  5E08 15EC             JP L15EC
 L0FE2:
 0FE2  93FB                  PUSH @R15,R11
 0FE4  5F00 28EE             CALL L28EE
@@ -1570,7 +1444,6 @@ L0FE2:
 0FFC  5E0E 0C78             JP NZ,L0C78
 L1000:
 1000  6BE0 FFE8             DEC %FFE8(R14),#1
-L1004:
 1004  4DB1 0002 0006        CP %0002(R11),#%0006
 100A  5E0E 0C78             JP NZ,L0C78
 100E  6BE0 FFE8             DEC %FFE8(R14),#1
@@ -1581,10 +1454,15 @@ L101A:
 101A  5F00 69DE             CALL _printf
 101E  A9F1                  INC R15,#2
 1020  E8AC                  JR L0F7A
-1022  0DF9 7949 E8F9 0DF9   DW %0DF9,%7949,%E8F9,%0DF9
-102A  794D E8F6             DW %794D,%E8F6
+L1022:
+1022  0DF9 7949             PUSH @R15,#%7949
+1026  E8F9                  JR L101A
+L1028:
+1028  0DF9 794D             PUSH @R15,#%794D
+102C  E8F6                  JR L101A
 L102E:
 102E  A1CD                  LD R13,R12
+L1030:
 1030  4DE8 FFF0             CLR %FFF0(R14)
 1034  61E2 FFEA             LD R2,%FFEA(R14)
 1038  202B                  LDB RL3,@R2
@@ -1621,7 +1499,9 @@ L1088:
 1092  A9F3                  INC R15,#4
 1094  4D08 761A             CLR L761A
 1098  5E08 0F7A             JP L0F7A
-109C  61ED FFEC E8C7        DW %61ED,%FFEC,%E8C7
+L109C:
+109C  61ED FFEC             LD R13,%FFEC(R14)
+10A0  E8C7                  JR L1030
 L10A2:
 10A2  61E2 FFEA             LD R2,%FFEA(R14)
 10A6  202B                  LDB RL3,@R2
@@ -1814,12 +1694,18 @@ L12A6:
 12A8  0DF9 8A90             PUSH @R15,#%8A90
 12AC  0DF9 0066             PUSH @R15,#%0066
 12B0  5E08 1132             JP L1132
-12B4  A1CD 4DE5 FFE2 0001   DW %A1CD,%4DE5,%FFE2,%0001
-12BC  E80A 61ED FFEC 4DE5   DW %E80A,%61ED,%FFEC,%4DE5
-12C4  FFE2 0002 E804        DW %FFE2,%0002,%E804
+L12B4:
+12B4  A1CD                  LD R13,R12
+12B6  4DE5 FFE2 0001        LD %FFE2(R14),#%0001
+12BC  E80A                  JR L12D2
+L12BE:
+12BE  61ED FFEC             LD R13,%FFEC(R14)
+12C2  4DE5 FFE2 0002        LD %FFE2(R14),#%0002
+12C8  E804                  JR L12D2
 L12CA:
 12CA  A1BD                  LD R13,R11
 12CC  4DE5 FFE2 0004        LD %FFE2(R14),#%0004
+L12D2:
 12D2  2108 88AE             LD R8,#%88AE
 12D6  67E2 FFE2             BIT %FFE2(R14),#2
 12DA  E602                  JR Z,L12E0
@@ -1928,9 +1814,7 @@ L13EA:
 13EA  93FA                  PUSH @R15,R10
 13EC  93F8                  PUSH @R15,R8
 13EE  93FD                  PUSH @R15,R13
-13F0  5F00                  DW %5F00
-L13F2:
-13F2  039E                  SUB R14,@R9
+13F0  5F00 039E             CALL L039E
 13F4  A9F5                  INC R15,#6
 13F6  6FE2 FFE4             LD %FFE4(R14),R2
 13FA  0DD1 0064             CP @R13,#%0064
@@ -1940,7 +1824,6 @@ L13F2:
 140A  0B08 88AE             CP R8,#%88AE
 140E  E604                  JR Z,L1418
 1410  4B08 8BD6             CP R8,%8BD6
-L1414:
 1414  5E0E 0F7A             JP NZ,L0F7A
 L1418:
 1418  67E3 FFF0             BIT %FFF0(R14),#3
@@ -1993,7 +1876,9 @@ L1470:
 1494  EE38                  JR NZ,L1506
 1496  ABA0                  DEC R10,#1
 1498  E836                  JR L1506
-149A  0DF9 794F 5E08 101A   DW %0DF9,%794F,%5E08,%101A
+L149A:
+149A  0DF9 794F             PUSH @R15,#%794F
+149E  5E08 101A             JP L101A
 L14A2:
 14A2  53FE FFE8             PUSH @R15,%FFE8(R14)
 14A6  0DF9 7952             PUSH @R15,#%7952
@@ -2001,9 +1886,15 @@ L14A2:
 14AE  A9F3                  INC R15,#4
 14B0  6900 8E94             INC %8E94,#1
 14B4  5E08 0F7A             JP L0F7A
-14B8  0DF9 7956 5E08 101A   DW %0DF9,%7956,%5E08,%101A
-14C0  0DF9 795A 5E08 101A   DW %0DF9,%795A,%5E08,%101A
-14C8  0DF9 795E 5E08 101A   DW %0DF9,%795E,%5E08,%101A
+L14B8:
+14B8  0DF9 7956             PUSH @R15,#%7956
+14BC  5E08 101A             JP L101A
+L14C0:
+14C0  0DF9 795A             PUSH @R15,#%795A
+14C4  5E08 101A             JP L101A
+L14C8:
+14C8  0DF9 795E             PUSH @R15,#%795E
+14CC  5E08 101A             JP L101A
 L14D0:
 14D0  53FE FFE8             PUSH @R15,%FFE8(R14)
 14D4  5F00 21D6             CALL L21D6
@@ -2021,7 +1912,9 @@ L14E6:
 L14F6:
 14F6  0DF9 796A             PUSH @R15,#%796A
 14FA  5E08 101A             JP L101A
-14FE  BDA6 E82B             DW %BDA6,%E82B
+L14FE:
+14FE  BDA6                  LDK R10,#6
+1500  E82B                  JR L1558
 L1502:
 1502  61EA FFE6             LD R10,%FFE6(R14)
 L1506:
@@ -2060,7 +1953,9 @@ L1558:
 155A  93FB                  PUSH @R15,R11
 155C  5F00 2104             CALL L2104
 1560  5E08 0F78             JP L0F78
-1564  0DF9 7995 5E08 101A   DW %0DF9,%7995,%5E08,%101A
+L1564:
+1564  0DF9 7995             PUSH @R15,#%7995
+1568  5E08 101A             JP L101A
 L156C:
 156C  61B2 000A             LD R2,%000A(R11)
 1570  8D20                  COM R2
@@ -2406,7 +2301,6 @@ L18D8:
 L18FA:
 18FA  0B02 0014             CP R2,#%0014
 18FE  5E06 17FE             JP Z,L17FE
-L1902:
 1902  0B02 0016             CP R2,#%0016
 1906  5E06 17F2             JP Z,L17F2
 190A  0B02 0017             CP R2,#%0017
@@ -2617,7 +2511,6 @@ L1B0C:
 1B2A  53FE 0006             PUSH @R15,%0006(R14)
 1B2E  A1E2                  LD R2,R14
 1B30  0102 FFEA             ADD R2,#%FFEA
-L1B34:
 1B34  93F2                  PUSH @R15,R2
 1B36  5F00 039E             CALL L039E
 1B3A  A9F5                  INC R15,#6
@@ -2708,7 +2601,6 @@ L1BB8:
 1C1E  0DF9 79F2             PUSH @R15,#%79F2
 1C22  5F00 69DE             CALL _printf
 1C26  A9F1                  INC R15,#2
-L1C28:
 1C28  2FFC                  LD @R15,R12
 1C2A  5F00 21D6             CALL L21D6
 1C2E  2FF2                  LD @R15,R2
@@ -2795,7 +2687,6 @@ L1CF4:
 L1D1E:
 1D1E  0DD1 0015             CP @R13,#%0015
 1D22  EE11                  JR NZ,L1D46
-L1D24:
 1D24  4DE4 FFE2             TEST %FFE2(R14)
 1D28  E609                  JR Z,L1D3C
 1D2A  53FD 0004             PUSH @R15,%0004(R13)
@@ -3056,9 +2947,7 @@ L1FC8:
 1FCA  0702 8000             AND R2,#%8000
 1FCE  0B02 8000             CP R2,#%8000
 1FD2  EEF3                  JR NZ,L1FBA
-1FD4  010C                  DW %010C
-L1FD6:
-1FD6  03FF                  SUB R15,@R15
+1FD4  010C 03FF             ADD R12,#%03FF
 1FD8  B3C9 0004             SLA R12,#4
 1FDC  61E2 0008             LD R2,%0008(R14)
 1FE0  A923                  INC R2,#4
@@ -3070,7 +2959,6 @@ L1FD6:
 1FF4  54E0 0004             LDL RR0,%0004(R14)
 1FF8  B30F 0200             SDAL RR0,R2
 1FFC  5DE0 0004             LDL %0004(R14),RR0
-L2000:
 2000  61E2 0008             LD R2,%0008(R14)
 2004  21D3                  LD R3,@R13
 2006  0703 000F             AND R3,#%000F
@@ -3093,7 +2981,6 @@ L2028:
 2030  ABDF                  DEC R13,#16
 2032  61E2 0004             LD R2,%0004(R14)
 2036  A925                  INC R2,#6
-L2038:
 2038  0D24                  TEST @R2
 203A  EE14                  JR NZ,L2064
 203C  61E2 0004             LD R2,%0004(R14)
@@ -3114,16 +3001,11 @@ L2038:
 L2060:
 2060  5E08 75D2             JP cret
 L2064:
-2064  61E2                  DW %61E2
-; nicht kanonisch kodiert: ADDB RH4,#%AA
-L2066:
-2066  0004 89AA             DW %0004,%89AA
+2064  61E2 0004             LD R2,%0004(R14)
+2068  89AA                  XOR R10,R10
 206A  212B                  LD R11,@R2
-L206C:
 206C  070B 7FF0             AND R11,#%7FF0
-L2070:
 2070  B3B1 FFFC             SRL R11,#4
-L2074:
 2074  010B FC01             ADD R11,#%FC01
 2078  0B0B 001F             CP R11,#%001F
 207C  E205                  JR LE,L2088
@@ -3156,9 +3038,7 @@ L209E:
 20C0  41E4 0004             ADD R4,%0004(R14)
 20C4  A943                  INC R4,#4
 20C6  2145                  LD R5,@R4
-20C8  B351                  DW %B351
-L20CA:
-20CA  FFFB                  DJNZ R15,L1FD6
+20C8  B351 FFFB             SRL R5,#5
 20CC  A154                  LD R4,R5
 20CE  8553                  OR R3,R5
 20D0  2F23                  LD @R2,R3
@@ -3181,26 +3061,19 @@ L20D4:
 2102  E8AE                  JR L2060
 L2104:
 2104  5F00 75C4             CALL csv
-L2108:
 2108  ABF1                  DEC R15,#2
-L210A:
 210A  4D08 7614             CLR L7614
 210E  61ED 0004             LD R13,%0004(R14)
 2112  4DE1 0006 000E        CP %0006(R14),#%000E
 2118  EE06                  JR NZ,L2126
 211A  0DF9 7AD4             PUSH @R15,#%7AD4
 211E  5F00 69DE             CALL _printf
+L2122:
 2122  A9F1                  INC R15,#2
 2124  E856                  JR L21D2
 L2126:
-2126  53FE                  DW %53FE
-; nicht kanonisch kodiert: ADDB RH6,#%00
-L2128:
-2128  0006                  DW %0006
-L212A:
-212A  5F00                  DW %5F00
-L212C:
-212C  21D6                  LD R6,@R13
+2126  53FE 0006             PUSH @R15,%0006(R14)
+212A  5F00 21D6             CALL L21D6
 212E  A9F1                  INC R15,#2
 2130  A12C                  LD R12,R2
 2132  4D04 761A             TEST L761A
@@ -3225,7 +3098,6 @@ L2162:
 2164  5F00 28EE             CALL L28EE
 2168  A9F1                  INC R15,#2
 216A  6EEA FFF3             LDB %FFF3(R14),RL2
-L216E:
 216E  0B02 006C             CP R2,#%006C
 2172  EE04                  JR NZ,L217C
 2174  93FC                  PUSH @R15,R12
@@ -3233,13 +3105,10 @@ L216E:
 217A  E828                  JR L21CC
 L217C:
 217C  60EA FFF3             LDB RL2,%FFF3(R14)
-L2180:
 2180  8822                  XORB RH2,RH2
-L2182:
 2182  0B02 0066             CP R2,#%0066
 2186  EE0A                  JR NZ,L219C
 2188  53FE 0006             PUSH @R15,%0006(R14)
-L218C:
 218C  0DF9 7AE5             PUSH @R15,#%7AE5
 2190  5F00 69DE             CALL _printf
 2194  A9F3                  INC R15,#4
@@ -3248,7 +3117,6 @@ L218C:
 L219C:
 219C  4D04 761C             TEST L761C
 21A0  E612                  JR Z,L21C6
-L21A2:
 21A2  0B0C 0009             CP R12,#%0009
 21A6  E90A                  JR GE,L21BC
 21A8  93FC                  PUSH @R15,R12
@@ -3259,9 +3127,8 @@ L21A2:
 21BA  E80B                  JR L21D2
 L21BC:
 21BC  0DF9 7AEE             PUSH @R15,#%7AEE
-21C0  5F00                  DW %5F00
-L21C2:
-21C2  3354 E8AE             LD R5(#%E8AE),R4
+21C0  5F00 3354             CALL L3354
+21C4  E8AE                  JR L2122
 L21C6:
 21C6  93FC                  PUSH @R15,R12
 21C8  0DF9 7B13             PUSH @R15,#%7B13
@@ -3413,7 +3280,6 @@ L233A:
 2344  E6F7                  JR Z,L2334
 2346  0DD1 003A             CP @R13,#%003A
 234A  EE25                  JR NZ,L2396
-L234C:
 234C  93FD                  PUSH @R15,R13
 234E  5F00 574C             CALL L574C
 2352  A9F1                  INC R15,#2
@@ -3578,7 +3444,6 @@ L24F4:
 24F4  4D05 7B48 0001        LD L7B48,#%0001
 24FA  93FC                  PUSH @R15,R12
 24FC  5F00 2660             CALL L2660
-L2500:
 2500  A9F1                  INC R15,#2
 L2502:
 2502  60CA 0005             LDB RL2,%0005(R12)
@@ -3597,12 +3462,8 @@ L2520:
 L2526:
 2526  4D04 7B48             TEST L7B48
 252A  E60B                  JR Z,L2542
-252C  60C8                  DW %60C8
-; nicht kanonisch kodiert: ADDB RH5,#%00
-L252E:
-252E  0005                  DW %0005
-L2530:
-2530  8800                  DW %8800
+252C  60C8 0005             LDB RL0,%0005(R12)
+2530  8800                  XORB RH0,RH0
 2532  93F0                  PUSH @R15,R0
 2534  5F00 21D6             CALL L21D6
 2538  2FF2                  LD @R15,R2
@@ -3616,8 +3477,10 @@ L2542:
 254E  2FF2                  LD @R15,R2
 2550  0DF9 7CB0             PUSH @R15,#%7CB0
 2554  5E08 23FE             JP L23FE
-2558  93FC 5F00 2660 5E08   DW %93FC,%5F00,%2660,%5E08
-2560  2648                  DW %2648
+L2558:
+2558  93FC                  PUSH @R15,R12
+255A  5F00 2660             CALL L2660
+255E  5E08 2648             JP L2648
 L2562:
 2562  53FC 0008             PUSH @R15,%0008(R12)
 2566  93FC                  PUSH @R15,R12
@@ -3672,9 +3535,7 @@ L25C8:
 L25F8:
 25F8  93F2                  PUSH @R15,R2
 25FA  0DF9 8A90             PUSH @R15,#%8A90
-25FE  0DF9                  DW %0DF9
-L2600:
-2600  0040                  ADDB RH0,@R4
+25FE  0DF9 0040             PUSH @R15,#%0040
 2602  5F00 6E0C             CALL L6E0C
 2606  A9F3                  INC R15,#4
 2608  A123                  LD R3,R2
@@ -3777,7 +3638,9 @@ L26FC:
 L2708:
 2708  BD2C                  LDK R2,#12
 270A  E82B                  JR L2762
-270C  BD2B E829             DW %BD2B,%E829
+L270C:
+270C  BD2B                  LDK R2,#11
+270E  E829                  JR L2762
 L2710:
 2710  4DD4 0004             TEST %0004(R13)
 2714  EE02                  JR NZ,L271A
@@ -3786,9 +3649,7 @@ L2710:
 L271A:
 271A  4DD4 0004             TEST %0004(R13)
 271E  E5F4                  JR MI,L2708
-L2720:
 2720  E6F3                  JR Z,L2708
-L2722:
 2722  4DD1 0004 0010        CP %0004(R13),#%0010
 2728  E902                  JR GE,L272E
 272A  BD25                  LDK R2,#5
@@ -3863,7 +3724,6 @@ L27CA:
 27D0  8DD4                  TEST R13
 27D2  E60B                  JR Z,L27EA
 27D4  0B0D 0007             CP R13,#%0007
-L27D8:
 27D8  E608                  JR Z,L27EA
 27DA  0B0D 0008             CP R13,#%0008
 27DE  E905                  JR GE,L27EA
@@ -3933,7 +3793,6 @@ L285E:
 286A  20CA                  LDB RL2,@R12
 286C  8822                  XORB RH2,RH2
 286E  0B02 006D             CP R2,#%006D
-L2872:
 2872  EE1A                  JR NZ,L28A8
 2874  4DE4 0006             TEST %0006(R14)
 2878  EE17                  JR NZ,L28A8
@@ -3988,7 +3847,6 @@ L28EE:
 28F6  21D2                  LD R2,@R13
 28F8  B329 0001             SLA R2,#1
 28FC  0102 8188             ADD R2,#%8188
-L2900:
 2900  2123                  LD R3,@R2
 2902  0703 0004             AND R3,#%0004
 2906  E602                  JR Z,L290C
@@ -4068,7 +3926,6 @@ L29C8:
 29C8  8DD4                  TEST R13
 29CA  EEFB                  JR NZ,L29C2
 29CC  61E2 0004             LD R2,%0004(R14)
-L29D0:
 29D0  0D21 002C             CP @R2,#%002C
 29D4  E6F6                  JR Z,L29C2
 29D6  0D21 004A             CP @R2,#%004A
@@ -4087,20 +3944,26 @@ L29EC:
 29EC  5F00 75C4             CALL csv
 29F0  4DE1 0004 0008        CP %0004(R14),#%0008
 29F6  E103                  JR LT,L29FE
+L29F8:
 29F8  BD22                  LDK R2,#2
+L29FA:
 29FA  5E08 75D2             JP cret
 L29FE:
-29FE  61E2                  DW %61E2
-; nicht kanonisch kodiert: ADDB RH4,#%02
-L2A00:
-2A00  0004 0B02             DW %0004,%0B02
-; nicht kanonisch kodiert: ADDB RH7,#%08
-2A04  0007 EB08             DW %0007,%EB08
+29FE  61E2 0004             LD R2,%0004(R14)
+2A02  0B02 0007             CP R2,#%0007
+2A06  EB08                  JR UGT,L2A18
 2A08  8122                  ADD R2,R2
 2A0A  6121 7BA6             LD R1,L7BA6(R2)
 2A0E  1E18                  JP @R1
-2A10  BD24 E8F3 BD28 E8F1   DW %BD24,%E8F3,%BD28,%E8F1
-2A18  2102 0400 E8EE        DW %2102,%0400,%E8EE
+L2A10:
+2A10  BD24                  LDK R2,#4
+2A12  E8F3                  JR L29FA
+L2A14:
+2A14  BD28                  LDK R2,#8
+2A16  E8F1                  JR L29FA
+L2A18:
+2A18  2102 0400             LD R2,#%0400
+2A1C  E8EE                  JR L29FA
 L2A1E:
 2A1E  5F00 75C4             CALL csv
 2A22  ABF9                  DEC R15,#10
@@ -4185,13 +4048,11 @@ L2AEC:
 L2AFA:
 2AFA  13FC                  PUSH @R15,@R12
 2AFC  53FC 0002             PUSH @R15,%0002(R12)
-L2B00:
 2B00  5F00 2C70             CALL L2C70
 2B04  A9F3                  INC R15,#4
 2B06  A9C3                  INC R12,#4
 L2B08:
 2B08  8BBC                  CP R12,R11
-L2B0A:
 2B0A  E3F7                  JR ULE,L2AFA
 2B0C  53FE 0008             PUSH @R15,%0008(R14)
 2B10  0DF9 7D85             PUSH @R15,#%7D85
@@ -4199,7 +4060,6 @@ L2B0A:
 L2B16:
 2B16  4DE5 FFEC 7FFF        LD %FFEC(R14),#%7FFF
 2B1C  61E3 FFF2             LD R3,%FFF2(R14)
-L2B20:
 2B20  A931                  INC R3,#2
 2B22  B12A                  EXTS RR2
 2B24  1B02 0002             DIV RR2,#%0002
@@ -4295,7 +4155,6 @@ L2BF8:
 2BF8  6102 7618             LD R2,L7618
 2BFC  81A2                  ADD R2,R10
 2BFE  93F2                  PUSH @R15,R2
-L2C00:
 2C00  0DF9 7D8D             PUSH @R15,#%7D8D
 2C04  5F00 69DE             CALL _printf
 2C08  A9F3                  INC R15,#4
@@ -4319,16 +4178,11 @@ L2C36:
 2C36  61D3 0002             LD R3,%0002(R13)
 2C3A  8922                  XOR R2,R2
 2C3C  5BE2 FFF0             DIV RR2,%FFF0(R14)
-L2C40:
 2C40  8BA2                  CP R2,R10
-L2C42:
 2C42  EE0A                  JR NZ,L2C58
 2C44  13FD                  PUSH @R15,@R13
-L2C46:
 2C46  61D3 0002             LD R3,%0002(R13)
-L2C4A:
 2C4A  8922                  XOR R2,R2
-L2C4C:
 2C4C  5BE2 FFF0             DIV RR2,%FFF0(R14)
 2C50  93F3                  PUSH @R15,R3
 2C52  5F00 2C70             CALL L2C70
@@ -4340,7 +4194,6 @@ L2C5A:
 2C5C  E3EC                  JR ULE,L2C36
 2C5E  53FE 0008             PUSH @R15,%0008(R14)
 2C62  0DF9 7D9B             PUSH @R15,#%7D9B
-L2C66:
 2C66  5F00 69DE             CALL _printf
 2C6A  A9F3                  INC R15,#4
 2C6C  A9A0                  INC R10,#1
@@ -4398,14 +4251,12 @@ L2CDC:
 2CF8  21D9                  LD R9,@R13
 2CFA  61D2 0004             LD R2,%0004(R13)
 2CFE  2FD2                  LD @R13,R2
-L2D00:
 2D00  6FD9 0004             LD %0004(R13),R9
 L2D04:
 2D04  A9D3                  INC R13,#4
 L2D06:
 2D06  8BBD                  CP R13,R11
 2D08  E7DA                  JR C,L2CBE
-L2D0A:
 2D0A  8DA4                  TEST R10
 2D0C  EED2                  JR NZ,L2CB2
 L2D0E:
@@ -4417,12 +4268,10 @@ L2D12:
 2D18  61E2 0004             LD R2,%0004(R14)
 2D1C  A927                  INC R2,#8
 2D1E  2123                  LD R3,@R2
-L2D20:
 2D20  0D31 0015             CP @R3,#%0015
 2D24  E607                  JR Z,L2D34
 2D26  61E2 0004             LD R2,%0004(R14)
 2D2A  A927                  INC R2,#8
-L2D2C:
 2D2C  2123                  LD R3,@R2
 2D2E  0D31 0019             CP @R3,#%0019
 2D32  EE1B                  JR NZ,L2D6A
@@ -4453,7 +4302,6 @@ L2D48:
 L2D6A:
 2D6A  61E2 0004             LD R2,%0004(R14)
 2D6E  A927                  INC R2,#8
-L2D70:
 2D70  2123                  LD R3,@R2
 2D72  0D31 003A             CP @R3,#%003A
 2D76  E6E8                  JR Z,L2D48
@@ -4516,7 +4364,6 @@ L2DEA:
 2DF6  5F00 2D12             CALL L2D12
 2DFA  A9F1                  INC R15,#2
 2DFC  5DE2 FFF0             LDL %FFF0(R14),RR2
-L2E00:
 2E00  9C28                  TESTL RR2
 2E02  E66D                  JR Z,L2EDE
 2E04  89DD                  XOR R13,R13
@@ -4538,9 +4385,7 @@ L2E0A:
 2E2E  E633                  JR Z,L2E96
 2E30  0B02 0048             CP R2,#%0048
 2E34  E616                  JR Z,L2E62
-2E36  0B02                  DW %0B02
-L2E38:
-2E38  0049                  ADDB RL1,@R4
+2E36  0B02 0049             CP R2,#%0049
 2E3A  E626                  JR Z,L2E88
 2E3C  0B02 004A             CP R2,#%004A
 2E40  E62D                  JR Z,L2E9C
@@ -4590,7 +4435,6 @@ L2EA0:
 2EA0  BD21                  LDK R2,#1
 2EA2  B32B 0D00             SDA R2,R13
 2EA6  A12D                  LD R13,R2
-L2EA8:
 2EA8  ABD0                  DEC R13,#1
 L2EAA:
 2EAA  61C2 0008             LD R2,%0008(R12)
@@ -4642,16 +4486,11 @@ L2F12:
 2F18  2123                  LD R3,@R2
 2F1A  A933                  INC R3,#4
 2F1C  A132                  LD R2,R3
-2F1E  61E3                  DW %61E3
-; nicht kanonisch kodiert: ADDB RH6,#%23
-L2F20:
-2F20  0006 2F23             DW %0006,%2F23
-L2F24:
+2F1E  61E3 0006             LD R3,%0006(R14)
+2F22  2F23                  LD @R2,R3
 2F24  61E2 FFF2             LD R2,%FFF2(R14)
-L2F28:
 2F28  2123                  LD R3,@R2
 2F2A  A132                  LD R2,R3
-L2F2C:
 2F2C  0B02 002F             CP R2,#%002F
 2F30  EE10                  JR NZ,L2F52
 2F32  61E2 FFF2             LD R2,%FFF2(R14)
@@ -4683,7 +4522,6 @@ L2F6C:
 L2F7C:
 2F7C  61E8 0004             LD R8,%0004(R14)
 2F80  8D84                  TEST R8
-L2F82:
 2F82  5E06 31E4             JP Z,L31E4
 2F86  0D81 0015             CP @R8,#%0015
 2F8A  EE03                  JR NZ,L2F92
@@ -4708,14 +4546,11 @@ L2FB0:
 L2FBC:
 2FBC  0D81 0015             CP @R8,#%0015
 2FC0  E6F3                  JR Z,L2FA8
-L2FC2:
 2FC2  0D81 0019             CP @R8,#%0019
 2FC6  E6F0                  JR Z,L2FA8
 2FC8  2182                  LD R2,@R8
-L2FCA:
 2FCA  0B02 0022             CP R2,#%0022
 2FCE  5E06 30DE             JP Z,L30DE
-L2FD2:
 2FD2  0B02 0035             CP R2,#%0035
 2FD6  E62D                  JR Z,L3032
 2FD8  0B02 0036             CP R2,#%0036
@@ -4726,12 +4561,9 @@ L2FD2:
 2FEA  5E06 30F8             JP Z,L30F8
 L2FEE:
 2FEE  0D81 002F             CP @R8,#%002F
-L2FF2:
 2FF2  5E0E 3128             JP NZ,L3128
 2FF6  4D81 0002 0006        CP %0002(R8),#%0006
-L2FFC:
 2FFC  5E06 3128             JP Z,L3128
-L3000:
 3000  6182 0008             LD R2,%0008(R8)
 3004  0D21 0015             CP @R2,#%0015
 3008  5E0E 3128             JP NZ,L3128
@@ -4943,7 +4775,6 @@ L3218:
 3224  E607                  JR Z,L3234
 L3226:
 3226  4DE1 FFF2 003E        CP %FFF2(R14),#%003E
-L322C:
 322C  EE18                  JR NZ,L325E
 322E  4DE4 0008             TEST %0008(R14)
 3232  E615                  JR Z,L325E
@@ -5110,7 +4941,6 @@ L33F2:
 33F4  0DF9 8A90             PUSH @R15,#%8A90
 33F8  0DF9 002D             PUSH @R15,#%002D
 33FC  5F00 6E0C             CALL L6E0C
-L3400:
 3400  A9F3                  INC R15,#4
 3402  A123                  LD R3,R2
 3404  97F2                  POP R2,@R15
@@ -5241,14 +5071,21 @@ L352C:
 3556  8122                  ADD R2,R2
 3558  6121 7C6E             LD R1,L7C6E(R2)
 355C  1E18                  JP @R1
-355E  0DF9 7EA5 E8BA 0DF9   DW %0DF9,%7EA5,%E8BA,%0DF9
-3566  7EA8 E8B7 0DF9 7EAB   DW %7EA8,%E8B7,%0DF9,%7EAB
-356E  E8B4                  DW %E8B4
+L355E:
+355E  0DF9 7EA5             PUSH @R15,#%7EA5
+3562  E8BA                  JR L34D8
+L3564:
+3564  0DF9 7EA8             PUSH @R15,#%7EA8
+3568  E8B7                  JR L34D8
+L356A:
+356A  0DF9 7EAB             PUSH @R15,#%7EAB
+356E  E8B4                  JR L34D8
 L3570:
 3570  93FC                  PUSH @R15,R12
 3572  0DF9 7EB1             PUSH @R15,#%7EB1
 3576  E88B                  JR L348E
-3578  5E08 3434             DW %5E08,%3434
+L3578:
+3578  5E08 3434             JP L3434
 L357C:
 357C  5F00 3CD2             CALL L3CD2
 3580  A12C                  LD R12,R2
@@ -5545,7 +5382,6 @@ L3874:
 3878  93F2                  PUSH @R15,R2
 387A  0DF9 0000             PUSH @R15,#%0000
 387E  93FA                  PUSH @R15,R10
-L3880:
 3880  5F00 56B4             CALL L56B4
 3884  A9F1                  INC R15,#2
 3886  2FF2                  LD @R15,R2
@@ -5695,7 +5531,6 @@ L3A10:
 3A18  A9F1                  INC R15,#2
 3A1A  A12C                  LD R12,R2
 3A1C  4DE4 FED8             TEST %FED8(R14)
-L3A20:
 3A20  E609                  JR Z,L3A34
 3A22  0DF9 9298             PUSH @R15,#%9298
 3A26  0DF9 7F86             PUSH @R15,#%7F86
@@ -5774,7 +5609,6 @@ L3AE0:
 3AF6  E309                  JR ULE,L3B0A
 3AF8  0DF9 7FBF             PUSH @R15,#%7FBF
 3AFC  5F00 3354             CALL L3354
-L3B00:
 3B00  0DF5 0001             LD @R15,#%0001
 3B04  5F00 7264             CALL _exit
 3B08  A9F1                  INC R15,#2
@@ -6087,7 +5921,6 @@ L3E5E:
 L3E64:
 3E64  53FD 0008             PUSH @R15,%0008(R13)
 3E68  5F00 1C42             CALL L1C42
-L3E6C:
 3E6C  A9F1                  INC R15,#2
 3E6E  6FD2 0008             LD %0008(R13),R2
 3E72  0B0C 0001             CP R12,#%0001
@@ -6142,12 +5975,9 @@ L3EC8:
 3EF4  0DD5 0074             LD @R13,#%0074
 3EF8  4DD5 0002 000C        LD %0002(R13),#%000C
 3EFE  93FD                  PUSH @R15,R13
-L3F00:
 3F00  5F00 3FD6             CALL L3FD6
-L3F04:
 3F04  A9F1                  INC R15,#2
 3F06  A12D                  LD R13,R2
-L3F08:
 3F08  0DF9 0000             PUSH @R15,#%0000
 3F0C  0DF9 896C             PUSH @R15,#%896C
 3F10  93FD                  PUSH @R15,R13
@@ -6166,7 +5996,6 @@ L3F2E:
 3F36  61EC 0006             LD R12,%0006(R14)
 L3F3A:
 3F3A  6FDC 0002             LD %0002(R13),R12
-L3F3E:
 3F3E  0DD1 0023             CP @R13,#%0023
 3F42  EE0A                  JR NZ,L3F58
 3F44  93FC                  PUSH @R15,R12
@@ -6238,7 +6067,6 @@ L3FE8:
 3FE8  218D                  LD R13,@R8
 3FEA  8DD4                  TEST R13
 3FEC  5E06 42D6             JP Z,L42D6
-L3FF0:
 3FF0  0B0D 0014             CP R13,#%0014
 3FF4  EE10                  JR NZ,L4016
 3FF6  608A 0004             LDB RL2,%0004(R8)
@@ -6255,7 +6083,6 @@ L4016:
 401C  0102 8188             ADD R2,#%8188
 4020  212C                  LD R12,@R2
 4022  A1C2                  LD R2,R12
-L4024:
 4024  0702 0100             AND R2,#%0100
 4028  5E0E 42D6             JP NZ,L42D6
 402C  A1C2                  LD R2,R12
@@ -6269,12 +6096,9 @@ L403C:
 4040  E62D                  JR Z,L409C
 4042  E843                  JR L40CA
 L4044:
-4044  6182                  DW %6182
-; nicht kanonisch kodiert: ADDB RH6,#%21
-L4046:
-4046  0006 0D21             DW %0006,%0D21
-; nicht kanonisch kodiert: ADDB RL2,#%47
-404A  000A EE47             DW %000A,%EE47
+4044  6182 0006             LD R2,%0006(R8)
+4048  0D21 000A             CP @R2,#%000A
+404C  EE47                  JR NZ,L40DC
 404E  93F8                  PUSH @R15,R8
 4050  5F00 4BFC             CALL L4BFC
 L4054:
@@ -6289,7 +6113,6 @@ L4066:
 4068  0B02 000D             CP R2,#%000D
 406C  E614                  JR Z,L4096
 406E  0B02 000F             CP R2,#%000F
-L4072:
 4072  EEE4                  JR NZ,L403C
 4074  0D85 000D             LD @R8,#%000D
 4078  53F8 0006             PUSH @R15,%0006(R8)
@@ -6311,12 +6134,11 @@ L409C:
 40A6  A129                  LD R9,R2
 40A8  8D24                  TEST R2
 40AA  E60F                  JR Z,L40CA
-40AC  4D91 0002             DW %4D91,%0002
-; nicht kanonisch kodiert: ADDB RH7,#%04
-L40B0:
-40B0  0007 EE04             DW %0007,%EE04
+40AC  4D91 0002 0007        CP %0002(R9),#%0007
+40B2  EE04                  JR NZ,L40BC
 40B4  4D81 0002 0006        CP %0002(R8),#%0006
 40BA  E607                  JR Z,L40CA
+L40BC:
 40BC  0D85 0028             LD @R8,#%0028
 40C0  6192 0004             LD R2,%0004(R9)
 40C4  8D22                  NEG R2
@@ -6329,6 +6151,7 @@ L40CA:
 40D6  212C                  LD R12,@R2
 40D8  A7C1                  BIT R12,#1
 40DA  EEB4                  JR NZ,L4044
+L40DC:
 40DC  A1C2                  LD R2,R12
 40DE  0702 0040             AND R2,#%0040
 40E2  5E06 4268             JP Z,L4268
@@ -6345,7 +6168,6 @@ L40CA:
 L4104:
 4104  A1C2                  LD R2,R12
 4106  0702 0004             AND R2,#%0004
-L410A:
 410A  E650                  JR Z,L41AC
 410C  53F8 0006             PUSH @R15,%0006(R8)
 4110  5F00 230E             CALL L230E
@@ -6353,7 +6175,6 @@ L410A:
 4116  A12B                  LD R11,R2
 4118  53F8 0008             PUSH @R15,%0008(R8)
 411C  5F00 230E             CALL L230E
-L4120:
 4120  A9F1                  INC R15,#2
 4122  A12A                  LD R10,R2
 4124  8BAB                  CP R11,R10
@@ -6372,28 +6193,21 @@ L4140:
 4148  6F82 0006             LD %0006(R8),R2
 414C  6F89 0008             LD %0008(R8),R9
 4150  60DA 75A6             LDB RL2,%75A6(R13)
-L4154:
 4154  8822                  XORB RH2,RH2
-L4156:
 4156  2F82                  LD @R8,R2
 L4158:
 4158  6182 0006             LD R2,%0006(R8)
 415C  A921                  INC R2,#2
 415E  0D21 0001             CP @R2,#%0001
-L4162:
 4162  EE24                  JR NZ,L41AC
-L4164:
 4164  6182 0008             LD R2,%0008(R8)
 4168  0D21 0015             CP @R2,#%0015
-L416C:
 416C  EE1F                  JR NZ,L41AC
 416E  0DF9 0000             PUSH @R15,#%0000
-L4172:
 4172  53F8 0006             PUSH @R15,%0006(R8)
 4176  5F00 26D8             CALL L26D8
 417A  A9F3                  INC R15,#4
 417C  0B02 000C             CP R2,#%000C
-L4180:
 4180  E205                  JR LE,L418C
 4182  6182 0006             LD R2,%0006(R8)
 4186  0D21 0024             CP @R2,#%0024
@@ -6429,7 +6243,6 @@ L41AC:
 41DC  A12A                  LD R10,R2
 41DE  A1D3                  LD R3,R13
 41E0  8922                  XOR R2,R2
-L41E2:
 41E2  1B02 0008             DIV RR2,#%0008
 41E6  AD32                  EX R2,R3
 41E8  8133                  ADD R3,R3
@@ -6466,17 +6279,14 @@ L4234:
 4238  0D21 0015             CP @R2,#%0015
 423C  E6ED                  JR Z,L4218
 L423E:
-423E  4D85 0004             DW %4D85,%0004
-; nicht kanonisch kodiert: ADDB RL2,#%48
-L4242:
-4242  000A E848             DW %000A,%E848
+423E  4D85 0004 000A        LD %0004(R8),#%000A
+4244  E848                  JR L42D6
 L4246:
 4246  53F8 0008             PUSH @R15,%0008(R8)
 424A  5F00 574C             CALL L574C
 424E  A9F1                  INC R15,#2
 4250  8D24                  TEST R2
 4252  5E06 449C             JP Z,L449C
-L4256:
 4256  6182 0008             LD R2,%0008(R8)
 425A  A923                  INC R2,#4
 425C  0D24                  TEST @R2
@@ -6575,7 +6385,6 @@ L4340:
 L434C:
 434C  6182 0008             LD R2,%0008(R8)
 4350  0D21 0015             CP @R2,#%0015
-L4354:
 4354  EE1B                  JR NZ,L438C
 4356  4D81 0002 0006        CP %0002(R8),#%0006
 435C  EE0C                  JR NZ,L4376
@@ -6617,12 +6426,10 @@ L43B0:
 L43BC:
 43BC  0D81 004B             CP @R8,#%004B
 43C0  EE02                  JR NZ,L43C6
-L43C2:
 43C2  0D85 0089             LD @R8,#%0089
 L43C6:
 43C6  6182 0008             LD R2,%0008(R8)
 43CA  0D21 0015             CP @R2,#%0015
-L43CE:
 43CE  EE06                  JR NZ,L43DC
 43D0  6182 0008             LD R2,%0008(R8)
 43D4  A923                  INC R2,#4
@@ -6632,7 +6439,6 @@ L43CE:
 L43DC:
 43DC  0B0D 002E             CP R13,#%002E
 43E0  E618                  JR Z,L4412
-L43E2:
 43E2  0B0D 004C             CP R13,#%004C
 43E6  E615                  JR Z,L4412
 43E8  0B0D 006C             CP R13,#%006C
@@ -6665,8 +6471,12 @@ L4412:
 4438  5F00 5278             CALL L5278
 443C  A9F5                  INC R15,#6
 443E  5E08 42E6             JP L42E6
-4442  2102 75FC 5E08 42EA   DW %2102,%75FC,%5E08,%42EA
-444A  2102 75F6 5E08 42EA   DW %2102,%75F6,%5E08,%42EA
+L4442:
+4442  2102 75FC             LD R2,#%75FC
+4446  5E08 42EA             JP L42EA
+L444A:
+444A  2102 75F6             LD R2,#%75F6
+444E  5E08 42EA             JP L42EA
 L4452:
 4452  2182                  LD R2,@R8
 4454  0102 75B0             ADD R2,#%75B0
@@ -6674,7 +6484,8 @@ L4452:
 445A  8833                  XORB RH3,RH3
 445C  2F83                  LD @R8,R3
 445E  5E08 42D6             JP L42D6
-4462  5E08 42D6             DW %5E08,%42D6
+L4462:
+4462  5E08 42D6             JP L42D6
 L4466:
 4466  8BAB                  CP R11,R10
 4468  5E0E 42C8             JP NZ,L42C8
@@ -6732,7 +6543,6 @@ L44F0:
 L4502:
 4502  0B02 0009             CP R2,#%0009
 4506  5E06 42F8             JP Z,L42F8
-L450A:
 450A  0B02 000B             CP R2,#%000B
 450E  5E06 42C8             JP Z,L42C8
 4512  0B02 0011             CP R2,#%0011
@@ -6849,7 +6659,6 @@ L4646:
 L464A:
 464A  0DD1 0019             CP @R13,#%0019
 464E  EE03                  JR NZ,L4656
-L4650:
 4650  5CD8 0004             TESTL %0004(R13)
 4654  E6C2                  JR Z,L45DA
 L4656:
@@ -6861,7 +6670,6 @@ L4662:
 4662  0DD1 0019             CP @R13,#%0019
 4666  E604                  JR Z,L4670
 4668  0DD1 0015             CP @R13,#%0015
-L466C:
 466C  5E0E 47D6             JP NZ,L47D6
 L4670:
 4670  0DF9 000E             PUSH @R15,#%000E
@@ -6996,7 +6804,6 @@ L47D6:
 47D8  B329 0001             SLA R2,#1
 47DC  0102 8188             ADD R2,#%8188
 47E0  2123                  LD R3,@R2
-L47E2:
 47E2  0703 0100             AND R3,#%0100
 47E6  EE0E                  JR NZ,L4804
 47E8  93FD                  PUSH @R15,R13
@@ -7097,10 +6904,8 @@ L48C0:
 48F4  4DC8 0002             CLR %0002(R12)
 48F8  4DC8 0004             CLR %0004(R12)
 48FC  61D2 0006             LD R2,%0006(R13)
-L4900:
 4900  6FC2 0004             LD %0004(R12),R2
 4904  4CD5 0004 0E0E        LDB %0004(R13),#%0E
-L490A:
 490A  60DA 0005             LDB RL2,%0005(R13)
 490E  8822                  XORB RH2,RH2
 4910  6FD2 0008             LD %0008(R13),R2
@@ -7125,16 +6930,13 @@ L4930:
 494A  EE0D                  JR NZ,L4966
 494C  61C2 0002             LD R2,%0002(R12)
 4950  6FD2 0002             LD %0002(R13),R2
-4954  4CD5                  DW %4CD5
-L4956:
-4956  0004 1414             ADDB RH4,#%14
+4954  4CD5 0004 1414        LDB %0004(R13),#%14
 495A  61D2 0008             LD R2,%0008(R13)
 495E  6EDA 0005             LDB %0005(R13),RL2
 4962  5E08 4646             JP L4646
 L4966:
 4966  21D2                  LD R2,@R13
 4968  B329 0001             SLA R2,#1
-L496C:
 496C  0102 8188             ADD R2,#%8188
 4970  2123                  LD R3,@R2
 4972  0703 0100             AND R3,#%0100
@@ -7168,7 +6970,6 @@ L49D0:
 49D8  5E0E 47D6             JP NZ,L47D6
 49DC  61D2 0008             LD R2,%0008(R13)
 49E0  A925                  INC R2,#6
-L49E2:
 49E2  212D                  LD R13,@R2
 49E4  60DA 0004             LDB RL2,%0004(R13)
 49E8  8822                  XORB RH2,RH2
@@ -7182,7 +6983,6 @@ L49E2:
 L4A04:
 4A04  21D2                  LD R2,@R13
 4A06  B329 0001             SLA R2,#1
-L4A0A:
 4A0A  0102 8188             ADD R2,#%8188
 4A0E  2123                  LD R3,@R2
 4A10  0703 0004             AND R3,#%0004
@@ -7273,10 +7073,7 @@ L4AF6:
 4AF6  21C0                  LD R0,@R12
 4AF8  0BD0                  CP R0,@R13
 4AFA  5E06 48B8             JP Z,L48B8
-4AFE  0DD1                  DW %0DD1
-L4B00:
-4B00  0015                  ADDB RH5,@R1
-L4B02:
+4AFE  0DD1 0015             CP @R13,#%0015
 4B02  EE04                  JR NZ,L4B0C
 4B04  61D2 0004             LD R2,%0004(R13)
 4B08  8D22                  NEG R2
@@ -7322,12 +7119,9 @@ L4B6E:
 4B78  E89C                  JR L4AB2
 L4B7A:
 4B7A  0DD1 0017             CP @R13,#%0017
-4B7E  5E0E                  DW %5E0E
-L4B80:
-4B80  47D6 61D2             AND R6,L61D2(R13)
-; nicht kanonisch kodiert: ADDB RH6,#%02
-4B84  0006 0902             DW %0006,%0902
-4B88  8000                  ADDB RH0,RH0
+4B7E  5E0E 47D6             JP NZ,L47D6
+4B82  61D2 0006             LD R2,%0006(R13)
+4B86  0902 8000             XOR R2,#%8000
 4B8A  6FD2 0006             LD %0006(R13),R2
 4B8E  5E08 4646             JP L4646
 L4B92:
@@ -7353,11 +7147,9 @@ L4BAE:
 L4BD8:
 4BD8  0B02 0003             CP R2,#%0003
 4BDC  5E06 486A             JP Z,L486A
-L4BE0:
 4BE0  0B02 000B             CP R2,#%000B
 4BE4  5E06 48B2             JP Z,L48B2
 4BE8  0B02 000C             CP R2,#%000C
-L4BEC:
 4BEC  5E06 4A2A             JP Z,L4A2A
 4BF0  0B02 0013             CP R2,#%0013
 4BF4  5E06 46EC             JP Z,L46EC
@@ -7365,7 +7157,6 @@ L4BEC:
 L4BFC:
 4BFC  5F00 75C4             CALL csv
 4C00  61ED 0004             LD R13,%0004(R14)
-L4C04:
 4C04  0DD1 004D             CP @R13,#%004D
 4C08  EE0F                  JR NZ,L4C28
 4C0A  0DF9 0000             PUSH @R15,#%0000
@@ -7394,7 +7185,6 @@ L4C3C:
 4C48  0DB5 0010             LD @R11,#%0010
 4C4C  4DB5 0002 0007        LD %0002(R11),#%0007
 4C52  61D2 0006             LD R2,%0006(R13)
-L4C56:
 4C56  A927                  INC R2,#8
 4C58  212C                  LD R12,@R2
 4C5A  61C2 0008             LD R2,%0008(R12)
@@ -7412,7 +7202,6 @@ L4C56:
 4C7C  61D2 0006             LD R2,%0006(R13)
 4C80  6FB2 0006             LD %0006(R11),R2
 4C84  61D2 0008             LD R2,%0008(R13)
-L4C88:
 4C88  6FB2 0008             LD %0008(R11),R2
 4C8C  A1BD                  LD R13,R11
 L4C8E:
@@ -7435,7 +7224,6 @@ L4C8E:
 4CC6  61C2 0006             LD R2,%0006(R12)
 4CCA  A923                  INC R2,#4
 4CCC  13F2                  PUSH @R15,@R2
-L4CCE:
 4CCE  5F00 56B4             CALL L56B4
 4CD2  A9F1                  INC R15,#2
 4CD4  2FF2                  LD @R15,R2
@@ -7453,7 +7241,6 @@ L4CCE:
 4CFA  13F2                  PUSH @R15,@R2
 4CFC  0DF9 0026             PUSH @R15,#%0026
 4D00  5F00 5666             CALL L5666
-L4D04:
 4D04  A9F7                  INC R15,#8
 4D06  6FD2 0008             LD %0008(R13),R2
 L4D0A:
@@ -7478,11 +7265,9 @@ L4D28:
 4D3A  0B02 0027             CP R2,#%0027
 4D3E  E6A7                  JR Z,L4C8E
 4D40  0B02 0028             CP R2,#%0028
-L4D44:
 4D44  5E06 4C3C             JP Z,L4C3C
 L4D48:
 4D48  0DF9 8122             PUSH @R15,#%8122
-L4D4C:
 4D4C  5F00 3354             CALL L3354
 4D50  A9F1                  INC R15,#2
 4D52  A1D2                  LD R2,R13
@@ -7495,7 +7280,6 @@ L4D56:
 4D62  0B02 0023             CP R2,#%0023
 4D66  E693                  JR Z,L4C8E
 4D68  0B02 0026             CP R2,#%0026
-L4D6C:
 4D6C  E690                  JR Z,L4C8E
 4D6E  0B02 0027             CP R2,#%0027
 4D72  E68D                  JR Z,L4C8E
@@ -7523,7 +7307,6 @@ L4D76:
 4DB0  B329 0001             SLA R2,#1
 4DB4  A12C                  LD R12,R2
 4DB6  81EC                  ADD R12,R14
-L4DB8:
 4DB8  010C FFCA             ADD R12,#%FFCA
 4DBC  0B09 0066             CP R9,#%0066
 4DC0  E631                  JR Z,L4E24
@@ -7534,13 +7317,11 @@ L4DCC:
 4DCC  E62B                  JR Z,L4E24
 4DCE  21C2                  LD R2,@R12
 4DD0  0D21 0015             CP @R2,#%0015
-L4DD4:
 4DD4  EE14                  JR NZ,L4DFE
 4DD6  61C2 FFFE             LD R2,%FFFE(R12)
 4DDA  0D21 0015             CP @R2,#%0015
 4DDE  EE0F                  JR NZ,L4DFE
 4DE0  6BE0 FF9E             DEC %FF9E(R14),#1
-L4DE4:
 4DE4  ABC1                  DEC R12,#2
 4DE6  61C2 0002             LD R2,%0002(R12)
 4DEA  A923                  INC R2,#4
@@ -7557,7 +7338,6 @@ L4DFE:
 4E00  53FC FFFE             PUSH @R15,%FFFE(R12)
 4E04  93F8                  PUSH @R15,R8
 4E06  5F00 536C             CALL L536C
-L4E0A:
 4E0A  A9F5                  INC R15,#6
 4E0C  A12A                  LD R10,R2
 4E0E  8D24                  TEST R2
@@ -7663,10 +7443,8 @@ L4EE8:
 4EFC  93FB                  PUSH @R15,R11
 4EFE  5F00 230E             CALL L230E
 4F02  2FF2                  LD @R15,R2
-L4F04:
 4F04  5F00 22F4             CALL L22F4
 4F08  A9F3                  INC R15,#4
-L4F0A:
 4F0A  6FE2 FF9C             LD %FF9C(R14),R2
 4F0E  0B08 002A             CP R8,#%002A
 4F12  EE05                  JR NZ,L4F1E
@@ -7741,9 +7519,8 @@ L4FD4:
 4FD4  0B08 002A             CP R8,#%002A
 4FD8  5E0E 4ECE             JP NZ,L4ECE
 4FDC  4DD1 0004 0001        CP %0004(R13),#%0001
-4FE2  5E0E                  DW %5E0E
-L4FE4:
-4FE4  4ECE 4DE4 FF9E        EXT4E #%0E,#%4DE4,%FF9E(R12)
+4FE2  5E0E 4ECE             JP NZ,L4ECE
+4FE6  4DE4 FF9E             TEST %FF9E(R14)
 4FEA  5E05 4ECE             JP MI,L4ECE
 4FEE  5E06 4ECE             JP Z,L4ECE
 4FF2  6BE0 FF9E             DEC %FF9E(R14),#1
@@ -7751,7 +7528,6 @@ L4FE4:
 4FF8  5E0D 4ECE             JP PL,L4ECE
 L4FFC:
 4FFC  61ED FFCA             LD R13,%FFCA(R14)
-L5000:
 5000  4DB1 0002 0007        CP %0002(R11),#%0007
 5006  EEE3                  JR NZ,L4FCE
 5008  61B2 0002             LD R2,%0002(R11)
@@ -7766,7 +7542,6 @@ L5020:
 5020  6FE2 FF9C             LD %FF9C(R14),R2
 5024  6FD2 0004             LD %0004(R13),R2
 5028  6FDB 0006             LD %0006(R13),R11
-L502C:
 502C  A1DB                  LD R11,R13
 502E  4DB1 0002 0006        CP %0002(R11),#%0006
 5034  EE21                  JR NZ,L5078
@@ -7780,7 +7555,6 @@ L502C:
 504A  E616                  JR Z,L5078
 504C  4DA4 0004             TEST %0004(R10)
 5050  ED13                  JR PL,L5078
-L5052:
 5052  4DA1 0002 0007        CP %0002(R10),#%0007
 5058  E60F                  JR Z,L5078
 505A  0DB5 0029             LD @R11,#%0029
@@ -7957,13 +7731,11 @@ L51D4:
 51F4  212B                  LD R11,@R2
 51F6  A18D                  LD R13,R8
 51F8  61EC FFF2             LD R12,%FFF2(R14)
-L51FC:
 51FC  0DB5 0028             LD @R11,#%0028
 5200  21D2                  LD R2,@R13
 5202  A921                  INC R2,#2
 5204  2123                  LD R3,@R2
 5206  6FB3 0002             LD %0002(R11),R3
-L520A:
 520A  21D2                  LD R2,@R13
 520C  6FB2 0006             LD %0006(R11),R2
 5210  21C2                  LD R2,@R12
@@ -8084,7 +7856,6 @@ L5302:
 5302  61E2 0006             LD R2,%0006(R14)
 5306  A1D3                  LD R3,R13
 5308  8D32                  NEG R3
-L530A:
 530A  2120                  LD R0,@R2
 530C  B30B 0300             SDA R0,R3
 5310  2F20                  LD @R2,R0
@@ -8178,15 +7949,11 @@ L53E6:
 53E6  0DC1 003A             CP @R12,#%003A
 53EA  EEFA                  JR NZ,L53E0
 53EC  61C2 0006             LD R2,%0006(R12)
-L53F0:
 53F0  0D21 0015             CP @R2,#%0015
 53F4  EEF5                  JR NZ,L53E0
 53F6  61C2 0006             LD R2,%0006(R12)
-L53FA:
 53FA  A921                  INC R2,#2
-L53FC:
 53FC  0D24                  TEST @R2
-L53FE:
 53FE  EE07                  JR NZ,L540E
 5400  61C2 0006             LD R2,%0006(R12)
 5404  A923                  INC R2,#4
@@ -8207,9 +7974,14 @@ L541A:
 L5422:
 5422  5DE2 FFF0             LDL %FFF0(R14),RR2
 5426  E849                  JR L54BA
-5428  54E2 FFF0 52E2 FFEC   DW %54E2,%FFF0,%52E2,%FFEC
-5430  E8F8 54E2 FFF0 58E0   DW %E8F8,%54E2,%FFF0,%58E0
-5438  FFEC E8F3             DW %FFEC,%E8F3
+L5428:
+5428  54E2 FFF0             LDL RR2,%FFF0(R14)
+542C  52E2 FFEC             SUBL RR2,%FFEC(R14)
+5430  E8F8                  JR L5422
+L5432:
+5432  54E2 FFF0             LDL RR2,%FFF0(R14)
+5436  58E0 FFEC             MULTL RQ0,%FFEC(R14)
+543A  E8F3                  JR L5422
 L543C:
 543C  5CE8 FFEC             TESTL %FFEC(R14)
 5440  EE09                  JR NZ,L5454
@@ -8251,24 +8023,25 @@ L5492:
 549E  E8C1                  JR L5422
 L54A0:
 54A0  61E2 FFEE             LD R2,%FFEE(R14)
+L54A4:
 54A4  54E0 FFF0             LDL RR0,%FFF0(R14)
 54A8  B30F 0200             SDAL RR0,R2
 54AC  5DE0 FFF0             LDL %FFF0(R14),RR0
 54B0  E804                  JR L54BA
-54B2  61E2 FFEE 8D22 E8F5   DW %61E2,%FFEE,%8D22,%E8F5
+L54B2:
+54B2  61E2 FFEE             LD R2,%FFEE(R14)
+54B6  8D22                  NEG R2
+54B8  E8F5                  JR L54A4
 L54BA:
 54BA  0DD1 0019             CP @R13,#%0019
 54BE  EE07                  JR NZ,L54CE
 L54C0:
-54C0  54E2                  DW %54E2
-L54C2:
-54C2  FFF0                  DJNZ R15,%53E4
+54C0  54E2 FFF0             LDL RR2,%FFF0(R14)
 54C4  5DD2 0004             LDL %0004(R13),RR2
 54C8  A1D2                  LD R2,R13
 54CA  5E08 53E2             JP L53E2
 L54CE:
 54CE  0DF9 0008             PUSH @R15,#%0008
-L54D2:
 54D2  5F00 56DE             CALL L56DE
 54D6  A9F1                  INC R15,#2
 54D8  A12D                  LD R13,R2
@@ -8290,7 +8063,6 @@ L54F2:
 L5504:
 5504  21B0                  LD R0,@R11
 5506  4BE0 0004             CP R0,%0004(R14)
-L550A:
 550A  EE1F                  JR NZ,L554A
 550C  4DC1 0002 0012        CP %0002(R12),#%0012
 5512  E91B                  JR GE,L554A
@@ -8313,7 +8085,6 @@ L550A:
 5546  5E08 5662             JP L5662
 L554A:
 554A  93FB                  PUSH @R15,R11
-L554C:
 554C  5F00 28EE             CALL L28EE
 5550  A9F1                  INC R15,#2
 5552  0B02 0066             CP R2,#%0066
@@ -8326,7 +8097,6 @@ L5564:
 5564  61B2 0008             LD R2,%0008(R11)
 5568  0D21 0015             CP @R2,#%0015
 556C  EE4B                  JR NZ,L5604
-L556E:
 556E  61B2 0008             LD R2,%0008(R11)
 5572  A923                  INC R2,#4
 5574  0D24                  TEST @R2
@@ -8398,7 +8168,6 @@ L5612:
 5618  81C2                  ADD R2,R12
 561A  0102 002C             ADD R2,#%002C
 561E  13F2                  PUSH @R15,@R2
-L5620:
 5620  5F00 230E             CALL L230E
 5624  A9F1                  INC R15,#2
 5626  A12A                  LD R10,R2
@@ -8470,7 +8239,6 @@ L56B4:
 56DA  5E08 75D2             JP cret
 L56DE:
 56DE  5F00 75C4             CALL csv
-L56E2:
 56E2  67E0 0004             BIT %0004(R14),#0
 56E6  E602                  JR Z,L56EC
 56E8  5F00 7272             CALL _abort
@@ -8484,7 +8252,6 @@ L56EC:
 5700  E717                  JR C,L5730
 5702  0DF9 0400             PUSH @R15,#%0400
 5706  5F00 7564             CALL _sbrk
-L570A:
 570A  A9F1                  INC R15,#2
 570C  0B02 FFFF             CP R2,#%FFFF
 5710  EE09                  JR NZ,L5724
@@ -8655,9 +8422,7 @@ L58D4:
 58D8  202B                  LDB RL3,@R2
 58DA  8833                  XORB RH3,RH3
 58DC  A13C                  LD R12,R3
-58DE  0B0C                  DW %0B0C
-L58E0:
-58E0  002B                  ADDB RL3,@R2
+58DE  0B0C 002B             CP R12,#%002B
 58E2  E610                  JR Z,L5904
 58E4  0B0C 002D             CP R12,#%002D
 58E8  EE03                  JR NZ,L58F0
@@ -8749,9 +8514,7 @@ L59B8:
 59DA  A1A2                  LD R2,R10
 59DC  A185                  LD R5,R8
 59DE  59E4 FFCC             MULT RR4,%FFCC(R14)
-L59E2:
 59E2  A153                  LD R3,R5
-L59E4:
 59E4  8152                  ADD R2,R5
 59E6  A12A                  LD R10,R2
 59E8  010A 03FF             ADD R10,#%03FF
@@ -8782,497 +8545,495 @@ L5A0E:
 5A36  61E3 FFE2             LD R3,%FFE2(R14)
 5A3A  2F23                  LD @R2,R3
 5A3C  5E08 75D2             JP cret
-5A40  4741 4D43 C92C 420A   DW %4741,%4D43,%C92C,%420A
-5A48  0047 414D 43C9 2C42   DW %0047,%414D,%43C9,%2C42
-5A50  0A6C 6443 C12C 490A   DW %0A6C,%6443,%C12C,%490A
-5A58  006A 70C1 0A00 6361   DW %006A,%70C1,%0A00,%6361
-5A60  6C6C C10A 0047 4163   DW %6C6C,%C10A,%0047,%4163
-5A68  616C 6CA2 490A 0078   DW %616C,%6CA2,%490A,%0078
-5A70  6F72 C92C 490A 006C   DW %6F72,%C92C,%490A,%006C
-5A78  6443 C92C 410A 786F   DW %6443,%C92C,%410A,%786F
-5A80  7262 D32C 530A 006C   DW %7262,%D32C,%530A,%006C
-5A88  64C9 2C41 0A00 566C   DW %64C9,%2C41,%0A00,%566C
-5A90  6454 C92C 410A 0066   DW %6454,%C92C,%410A,%0066
-5A98  6C64 43C9 2C41 0A00   DW %6C64,%43C9,%2C41,%0A00
-5AA0  4741 004D 2743 C12C   DW %4741,%004D,%2743,%C12C
-5AA8  420A 4741 0047 414D   DW %420A,%4741,%0047,%414D
-5AB0  27C1 2C42 0A00 4741   DW %27C1,%2C42,%0A00,%4741
-5AB8  4D27 43C1 2C42 0A00   DW %4D27,%43C1,%2C42,%0A00
-5AC0  6C64 43C9 2C41 0A4D   DW %6C64,%43C9,%2C41,%0A4D
-5AC8  43C1 2C42 0A00 6C64   DW %43C1,%2C42,%0A00,%6C64
-5AD0  43C9 2C41 0A6C 6443   DW %43C9,%2C41,%0A6C,%6443
-5AD8  CA2C 490A 4D43 CA2C   DW %CA2C,%490A,%4D43,%CA2C
-5AE0  420A 6C64 43C1 2C4A   DW %420A,%6C64,%43C1,%2C4A
-5AE8  0A00 666C 6443 C92C   DW %0A00,%666C,%6443,%C92C
-5AF0  410A 666C 64CA 2C49   DW %410A,%666C,%64CA,%2C49
-5AF8  0A66 6164 6464 CA2C   DW %0A66,%6164,%6464,%CA2C
-5B00  420A 666C 6443 C12C   DW %420A,%666C,%6443,%C12C
-5B08  4A0A 0047 414B 494D   DW %4A0A,%0047,%414B,%494D
-5B10  C92C 4A0A 6578 43C9   DW %C92C,%4A0A,%6578,%43C9
-5B18  2C41 0A00 4B49 2165   DW %2C41,%0A00,%4B49,%2165
-5B20  7874 73CA 0A6C 646C   DW %7874,%73CA,%0A6C,%646C
-5B28  C92C 410A 4D6C C92C   DW %C92C,%410A,%4D6C,%C92C
-5B30  4A0A 6578 C927 2C41   DW %4A0A,%6578,%C927,%2C41
-5B38  270A 6578 C92B 272C   DW %270A,%6578,%C92B,%272C
-5B40  412B 270A 0047 414D   DW %412B,%270A,%0047,%414D
-5B48  C90A 0047 414D C92B   DW %C90A,%0047,%414D,%C92B
-5B50  270A 4DC9 270A 0066   DW %270A,%4DC9,%270A,%0066
-5B58  6E65 6743 C92C 410A   DW %6E65,%6743,%C92C,%410A
-5B60  0047 4166 6E65 67C9   DW %0047,%4166,%6E65,%67C9
-5B68  2C49 0A00 4741 636F   DW %2C49,%0A00,%4741,%636F
-5B70  6DC9 2B27 0A63 6F6D   DW %6DC9,%2B27,%0A63,%6F6D
-5B78  C927 0A61 6464 6CC9   DW %C927,%0A61,%6464,%6CC9
-5B80  2C23 310A 0066 636C   DW %2C23,%310A,%0066,%636C
-5B88  72C9 0A66 6C64 43C1   DW %72C9,%0A66,%6C64,%43C1
-5B90  2C49 0A00 4B41 4DC1   DW %2C49,%0A00,%4B41,%4DC1
-5B98  2C49 0A00 616E 6443   DW %2C49,%0A00,%616E,%6443
-5BA0  C12C 5A0A 6F72 43C1   DW %C12C,%5A0A,%6F72,%43C1
-5BA8  2C42 0A6C 6443 C92C   DW %2C42,%0A6C,%6443,%C92C
-5BB0  410A 004B 4161 6E64   DW %410A,%004B,%4161,%6E64
-5BB8  43C1 2C5A 0A6F 7243   DW %43C1,%2C5A,%0A6F,%7243
-5BC0  C92C 410A 6C64 43C1   DW %C92C,%410A,%6C64,%43C1
-5BC8  2C49 0A00 4B41 6C64   DW %2C49,%0A00,%4B41,%6C64
-5BD0  43CE 2C41 0A61 6E64   DW %43CE,%2C41,%0A61,%6E64
-5BD8  43CE 2C5A 0A6F 7243   DW %43CE,%2C5A,%0A6F,%7243
-5BE0  C92C 4E0A 6C64 43C1   DW %C92C,%4E0A,%6C64,%43C1
-5BE8  2C49 0A00 4741 006C   DW %2C49,%0A00,%4741,%006C
-5BF0  6454 C92C 410A 4D27   DW %6454,%C92C,%410A,%4D27
-5BF8  4CC9 2C42 0A00 4741   DW %4CC9,%2C42,%0A00,%4741
-5C00  4D27 4CC9 2C42 0A00   DW %4D27,%4CC9,%2C42,%0A00
-5C08  4741 4DC9 2C42 0A00   DW %4741,%4DC9,%2C42,%0A00
-5C10  4741 4D43 C92C 420A   DW %4741,%4D43,%C92C,%420A
-5C18  0047 4156 4D44 C92C   DW %0047,%4156,%4D44,%C92C
-5C20  420A 0047 416C 6450   DW %420A,%0047,%416C,%6450
-5C28  C52C 420A 6578 7473   DW %C52C,%420A,%6578,%7473
-5C30  CF0A 4D43 C92C 4E0A   DW %CF0A,%4D43,%C92C,%4E0A
-5C38  0047 414B 4956 4D4C   DW %0047,%414B,%4956,%4D4C
-5C40  C92C 4A0A 004B 4347   DW %C92C,%4A0A,%004B,%4347
-5C48  4170 6F70 43CE 2C40   DW %4170,%6F70,%43CE,%2C40
-5C50  0A4D 4CC9 2C4E 0A00   DW %0A4D,%4CC9,%2C4E,%0A00
-5C58  4B43 4741 666C 6464   DW %4B43,%4741,%666C,%6464
-5C60  CA2C 400A 696E 63D7   DW %CA2C,%400A,%696E,%63D7
-5C68  2C23 380A 564D C92C   DW %2C23,%380A,%564D,%C92C
-5C70  4A0A 004B 4121 6578   DW %4A0A,%004B,%4121,%6578
-5C78  7473 C90A 4DC9 272C   DW %7473,%C90A,%4DC9,%272C
-5C80  4127 0A4D C92B 272C   DW %4127,%0A4D,%C92B,%272C
-5C88  412B 270A 0047 414B   DW %412B,%270A,%0047,%414B
-5C90  494D C927 2C4A 270A   DW %494D,%C927,%2C4A,%270A
-5C98  4DC9 2B27 2C4A 2B27   DW %4DC9,%2B27,%2C4A,%2B27
-5CA0  0A00 4B43 4741 706F   DW %0A00,%4B43,%4741,%706F
-5CA8  706C CF2C 400A 4DC9   DW %706C,%CF2C,%400A,%4DC9
-5CB0  272C 460A 4DC9 2B27   DW %272C,%460A,%4DC9,%2B27
-5CB8  2C45 0A00 4741 0047   DW %2C45,%0A00,%4741,%0047
-5CC0  414D 4CC9 2C42 270A   DW %414D,%4CC9,%2C42,%270A
-5CC8  0047 414B 494D 4CC9   DW %0047,%414B,%494D,%4CC9
-5CD0  2C4A 270A 004B 4347   DW %2C4A,%270A,%004B,%4347
-5CD8  4170 6F70 C52C 400A   DW %4170,%6F70,%C52C,%400A
-5CE0  4D4C C92C 450A 0047   DW %4D4C,%C92C,%450A,%0047
-5CE8  4158 4DD5 2D2C 420A   DW %4158,%4DD5,%2D2C,%420A
-5CF0  0047 414B 4958 4DD5   DW %0047,%414B,%4958,%4DD5
-5CF8  2D2C 4A0A 004B 4347   DW %2D2C,%4A0A,%004B,%4347
-5D00  4158 4DD5 2D2C 400A   DW %4158,%4DD5,%2D2C,%400A
-5D08  696E 63D7 2C23 320A   DW %696E,%63D7,%2C23,%320A
-5D10  0047 4158 4D6C D92C   DW %0047,%4158,%4D6C,%D92C
-5D18  420A 0047 414B 4958   DW %420A,%0047,%414B,%4958
-5D20  4D6C D92C 4A0A 004B   DW %4D6C,%D92C,%4A0A,%004B
-5D28  4347 4158 4D6C D92C   DW %4347,%4158,%4D6C,%D92C
-5D30  400A 696E 63D7 2C23   DW %400A,%696E,%63D7,%2C23
-5D38  340A 0047 4166 636C   DW %340A,%0047,%4166,%636C
-5D40  72CA 0A56 4DC9 2C4A   DW %72CA,%0A56,%4DC9,%2C4A
-5D48  0A00 4741 0047 414D   DW %0A00,%4741,%0047,%414D
-5D50  27C9 2C42 0A6C 6443   DW %27C9,%2C42,%0A6C,%6443
-5D58  C12C 490A 004D 27C1   DW %C12C,%490A,%004D,%27C1
-5D60  2C42 0A47 4100 4D4C   DW %2C42,%0A47,%4100,%4D4C
-5D68  C12C 420A 6C64 43C9   DW %C12C,%420A,%6C64,%43C9
-5D70  2C41 0A00 4741 4D4C   DW %2C41,%0A00,%4741,%4D4C
-5D78  C92C 420A 6C64 43C1   DW %C92C,%420A,%6C64,%43C1
-5D80  2C49 0A00 4741 564D   DW %2C49,%0A00,%4741,%564D
-5D88  44C9 2C42 0A56 6C64   DW %44C9,%2C42,%0A56,%6C64
-5D90  43C1 2C49 0A00 4741   DW %43C1,%2C49,%0A00,%4741
-5D98  4B49 564D 4CC9 2C4A   DW %4B49,%564D,%4CC9,%2C4A
-5DA0  0A56 6C64 43C1 2C49   DW %0A56,%6C64,%43C1,%2C49
-5DA8  0A00 4741 584D D52D   DW %0A00,%4741,%584D,%D52D
-5DB0  2C42 0A6C 6443 C12C   DW %2C42,%0A6C,%6443,%C12C
-5DB8  490A 0047 414B 4958   DW %490A,%0047,%414B,%4958
-5DC0  4DD5 2D2C 4A0A 6C64   DW %4DD5,%2D2C,%4A0A,%6C64
-5DC8  43C1 2C49 0A00 4741   DW %43C1,%2C49,%0A00,%4741
-5DD0  4B43 584D D52D 2C40   DW %4B43,%584D,%D52D,%2C40
-5DD8  0A69 6E63 D72C 2332   DW %0A69,%6E63,%D72C,%2332
-5DE0  0A6C 6443 C12C 490A   DW %0A6C,%6443,%C12C,%490A
-5DE8  0047 4158 4D6C D92C   DW %0047,%4158,%4D6C,%D92C
-5DF0  420A 6C64 6CC1 2C49   DW %420A,%6C64,%6CC1,%2C49
-5DF8  0A00 4B49 4741 584D   DW %0A00,%4B49,%4741,%584D
-5E00  6CD9 2C4A 0A6C 646C   DW %6CD9,%2C4A,%0A6C,%646C
-5E08  C12C 490A 004B 4347   DW %C12C,%490A,%004B,%4347
-5E10  4158 4D6C D92C 400A   DW %4158,%4D6C,%D92C,%400A
-5E18  696E 63D7 2C23 340A   DW %696E,%63D7,%2C23,%340A
-5E20  6C64 6CC1 2C49 0A00   DW %6C64,%6CC1,%2C49,%0A00
-5E28  6663 6C72 C90A 666C   DW %6663,%6C72,%C90A,%666C
-5E30  6443 C12C 490A 0047   DW %6443,%C12C,%490A,%0047
-5E38  4158 4DD5 2D2C 420A   DW %4158,%4DD5,%2D2C,%420A
-5E40  6C64 43C1 2C49 2D0A   DW %6C64,%43C1,%2C49,%2D0A
-5E48  0047 414B 4958 4DD5   DW %0047,%414B,%4958,%4DD5
-5E50  2D2C 4A0A 6C64 43C1   DW %2D2C,%4A0A,%6C64,%43C1
-5E58  2C49 2D0A 0047 414B   DW %2C49,%2D0A,%0047,%414B
-5E60  4358 4DD5 2D2C 400A   DW %4358,%4DD5,%2D2C,%400A
-5E68  696E 63D7 2C23 320A   DW %696E,%63D7,%2C23,%320A
-5E70  6C64 43C1 2C49 2D0A   DW %6C64,%43C1,%2C49,%2D0A
-5E78  0047 4158 4D6C D92C   DW %0047,%4158,%4D6C,%D92C
-5E80  420A 6C64 6CC1 2C49   DW %420A,%6C64,%6CC1,%2C49
-5E88  2D0A 004B 4947 4158   DW %2D0A,%004B,%4947,%4158
-5E90  4D6C D92C 4A0A 6C64   DW %4D6C,%D92C,%4A0A,%6C64
-5E98  6CC1 2C49 2D0A 004B   DW %6CC1,%2C49,%2D0A,%004B
-5EA0  4347 4158 4D6C D92C   DW %4347,%4158,%4D6C,%D92C
-5EA8  400A 696E 63D7 2C23   DW %400A,%696E,%63D7,%2C23
-5EB0  340A 6C64 6CC1 2C49   DW %340A,%6C64,%6CC1,%2C49
-5EB8  2D0A 0047 4166 636C   DW %2D0A,%0047,%4166,%636C
-5EC0  72CA 0A56 4DC9 2C4A   DW %72CA,%0A56,%4DC9,%2C4A
-5EC8  0A56 6C64 43C1 2C49   DW %0A56,%6C64,%43C1,%2C49
-5ED0  0A00 4B41 4DC9 2C41   DW %0A00,%4B41,%4DC9,%2C41
-5ED8  0A6C 64C1 2C49 0A00   DW %0A6C,%64C1,%2C49,%0A00
-5EE0  6C64 6CC9 2C41 0A4D   DW %6C64,%6CC9,%2C41,%0A4D
-5EE8  C927 2C23 300A 4DC9   DW %C927,%2C23,%300A,%4DC9
-5EF0  2B27 2C42 270A 6C64   DW %2B27,%2C42,%270A,%6C64
-5EF8  6CC1 2C49 0A00 6C64   DW %6CC1,%2C49,%0A00,%6C64
-5F00  6CC9 2C41 0A4D C927   DW %6CC9,%2C41,%0A4D,%C927
-5F08  2C42 270A 4DC9 2B27   DW %2C42,%270A,%4DC9,%2B27
-5F10  2C42 2B27 0A6C 646C   DW %2C42,%2B27,%0A6C,%646C
-5F18  C12C 490A 004B 4121   DW %C12C,%490A,%004B,%4121
-5F20  6578 7473 C90A 6C64   DW %6578,%7473,%C90A,%6C64
-5F28  6CCF 2C41 0A4D C927   DW %6CCF,%2C41,%0A4D,%C927
-5F30  2C46 0A4D C92B 272C   DW %2C46,%0A4D,%C92B,%272C
-5F38  450A 6C64 6CC1 2C49   DW %450A,%6C64,%6CC1,%2C49
-5F40  0A00 4B41 6C64 6CCF   DW %0A00,%4B41,%6C64,%6CCF
-5F48  2C41 0A4D C927 2C46   DW %2C41,%0A4D,%C927,%2C46
-5F50  0A4D C92B 272C 450A   DW %0A4D,%C92B,%272C,%450A
-5F58  6C64 6CC1 2C49 0A00   DW %6C64,%6CC1,%2C49,%0A00
-5F60  4741 4D27 4CC9 2C42   DW %4741,%4D27,%4CC9,%2C42
-5F68  0A6C 6443 C12C 490A   DW %0A6C,%6443,%C12C,%490A
-5F70  004D 274C C12C 420A   DW %004D,%274C,%C12C,%420A
-5F78  6C64 43C9 2C41 0A00   DW %6C64,%43C9,%2C41,%0A00
-5F80  4741 4D4C C92C 4227   DW %4741,%4D4C,%C92C,%4227
-5F88  0A6C 6443 C12C 490A   DW %0A6C,%6443,%C12C,%490A
-5F90  004B 416C 64C6 2C49   DW %004B,%416C,%64C6,%2C49
-5F98  0A6C 6443 C92C 410A   DW %0A6C,%6443,%C92C,%410A
-5FA0  786F 7262 D32C 530A   DW %786F,%7262,%D32C,%530A
-5FA8  4DC9 2C46 0A6C 6443   DW %4DC9,%2C46,%0A6C,%6443
-5FB0  C12C 490A 004B 416C   DW %C12C,%490A,%004B,%416C
-5FB8  64C6 2C49 270A 6C64   DW %64C6,%2C49,%270A,%6C64
-5FC0  54C9 2C41 0A4D 4CC9   DW %54C9,%2C41,%0A4D,%4CC9
-5FC8  2C46 0A6C 6443 C12C   DW %2C46,%0A6C,%6443,%C12C
-5FD0  490A 0066 636C 72C9   DW %490A,%0066,%636C,%72C9
-5FD8  0A00 4741 2178 6F72   DW %0A00,%4741,%2178,%6F72
-5FE0  C927 2C49 270A 666C   DW %C927,%2C49,%270A,%666C
-5FE8  6469 6CC9 2C55 0A00   DW %6469,%6CC9,%2C55,%0A00
-5FF0  4741 2165 7874 73D5   DW %4741,%2165,%7874,%73D5
-5FF8  0A66 6C64 696C C92C   DW %0A66,%6C64,%696C,%C92C
-6000  550A 0047 4166 6C64   DW %550A,%0047,%4166,%6C64
-6008  6374 6CCF 2C75 7365   DW %6374,%6CCF,%2C75,%7365
-6010  720A 6673 6574 6D6F   DW %720A,%6673,%6574,%6D6F
-6018  6465 F27A 0A66 6C64   DW %6465,%F27A,%0A66,%6C64
-6020  696C D52C 520A 666C   DW %696C,%D52C,%520A,%666C
-6028  6463 746C F573 6572   DW %6463,%746C,%F573,%6572
-6030  2C4F 0A6C 64C9 272C   DW %2C4F,%0A6C,%64C9,%272C
-6038  492B 270A 0047 4166   DW %492B,%270A,%0047,%4166
-6040  6C64 696C C92C 550A   DW %6C64,%696C,%C92C,%550A
-6048  0047 4166 6C64 6374   DW %0047,%4166,%6C64,%6374
-6050  6CCF 2C75 7365 720A   DW %6CCF,%2C75,%7365,%720A
-6058  6673 6574 6D6F 6465   DW %6673,%6574,%6D6F,%6465
-6060  F27A 0A66 6C64 696C   DW %F27A,%0A66,%6C64,%696C
-6068  D52C 520A 666C 6463   DW %D52C,%520A,%666C,%6463
-6070  746C F573 6572 2C4F   DW %746C,%F573,%6572,%2C4F
-6078  0A00 4741 2178 6F72   DW %0A00,%4741,%2178,%6F72
-6080  C927 2C49 270A 0047   DW %C927,%2C49,%270A,%0047
-6088  4121 6578 7473 D50A   DW %4121,%6578,%7473,%D50A
-6090  006C 64C9 2C41 2B0A   DW %006C,%64C9,%2C41,%2B0A
-6098  0047 416C 64C9 272C   DW %0047,%416C,%64C9,%272C
-60A0  492B 270A 0047 4178   DW %492B,%270A,%0047,%4178
-60A8  6F72 62D3 2C53 0A00   DW %6F72,%62D3,%2C53,%0A00
-60B0  4D27 43C1 2C42 0A00   DW %4D27,%43C1,%2C42,%0A00
-60B8  786F 72C1 2C41 0A00   DW %786F,%72C1,%2C41,%0A00
-60C0  4D27 43C1 0A00 786F   DW %4D27,%43C1,%0A00,%786F
-60C8  72C6 2C46 0A6C 64C5   DW %72C6,%2C46,%0A6C,%64C5
-60D0  2C46 0A6C 646C C12C   DW %2C46,%0A6C,%646C,%C12C
-60D8  4F0A 004B 4156 4D43   DW %4F0A,%004B,%4156,%4D43
-60E0  C12C 490A 004D 50C1   DW %C12C,%490A,%004D,%50C1
-60E8  2C42 0A00 4D43 C12C   DW %2C42,%0A00,%4D43,%C12C
-60F0  420A 0000 4D27 4CC1   DW %420A,%0000,%4D27,%4CC1
-60F8  2C42 0A00 4D27 4CC1   DW %2C42,%0A00,%4D27,%4CC1
-6100  2C42 0A00 4B41 6C64   DW %2C42,%0A00,%4B41,%6C64
-6108  43CE 2C41 0A4D 4CCE   DW %43CE,%2C41,%0A4D,%4CCE
-6110  2C49 270A 6C64 43C1   DW %2C49,%270A,%6C64,%43C1
-6118  2C4E 0A00 6C64 44C9   DW %2C4E,%0A00,%6C64,%44C9
-6120  2C42 270A 4D4C C12C   DW %2C42,%270A,%4D4C,%C12C
-6128  4927 0A00 4B41 4D4C   DW %4927,%0A00,%4B41,%4D4C
-6130  C12C 4927 0A00 616E   DW %C12C,%4927,%0A00,%616E
-6138  6443 C12C 5A0A 6F72   DW %6443,%C12C,%5A0A,%6F72
-6140  43C1 2C42 0A00 6C64   DW %43C1,%2C42,%0A00,%6C64
-6148  54C9 2C41 0A61 6E64   DW %54C9,%2C41,%0A61,%6E64
-6150  43C9 2C5A 0A6F 7243   DW %43C9,%2C5A,%0A6F,%7243
-6158  C92C 420A 6C64 43C1   DW %C92C,%420A,%6C64,%43C1
-6160  2C49 0A00 4B41 616E   DW %2C49,%0A00,%4B41,%616E
-6168  6443 C12C 5A0A 6F72   DW %6443,%C12C,%5A0A,%6F72
-6170  43C1 2C49 0A00 4741   DW %43C1,%2C49,%0A00,%4741
-6178  6C64 CA2C 420A 0047   DW %6C64,%CA2C,%420A,%0047
-6180  414B 4900 4B43 4741   DW %414B,%4900,%4B43,%4741
-6188  706F 70CA 2C40 0A00   DW %706F,%70CA,%2C40,%0A00
-6190  6269 74C1 2C42 0A00   DW %6269,%74C1,%2C42,%0A00
-6198  6269 7443 C12C 420A   DW %6269,%7443,%C12C,%420A
-61A0  0047 4162 6974 43C9   DW %0047,%4162,%6974,%43C9
-61A8  2C42 0A00 4741 6663   DW %2C42,%0A00,%4741,%6663
-61B0  707A 78C9 0A00 4741   DW %707A,%78C9,%0A00,%4741
-61B8  4B49 6663 7066 78C9   DW %4B49,%6663,%7066,%78C9
-61C0  2C4A 0A00 4B43 4741   DW %2C4A,%0A00,%4B43,%4741
-61C8  666C 6464 CA2C 400A   DW %666C,%6464,%CA2C,%400A
-61D0  696E                  DW %696E
-L61D2:
-61D2  63D7 2C23 380A 6663   DW %63D7,%2C23,%380A,%6663
-61DA  7066 78C9 2C4A 0A00   DW %7066,%78C9,%2C4A,%0A00
-61E2  4D27 C10A 004D 2743   DW %4D27,%C10A,%004D,%2743
-61EA  C10A 0047 4500 4DC1   DW %C10A,%0047,%4500,%4DC1
-61F2  2C42 0A00 4741 4DC9   DW %2C42,%0A00,%4741,%4DC9
-61FA  2C42 0A00 4B41 4DC1   DW %2C42,%0A00,%4B41,%4DC1
-6202  2C49 0A00 6C64 43CE   DW %2C49,%0A00,%6C64,%43CE
-620A  2C41 0A4D 43CE 2C42   DW %2C41,%0A4D,%43CE,%2C42
-6212  0A00 6C64 54CE 2C41   DW %0A00,%6C64,%54CE,%2C41
-621A  0A4D 43CE 2C42 0A00   DW %0A4D,%43CE,%2C42,%0A00
-6222  4741 786F 72C6 2C46   DW %4741,%786F,%72C6,%2C46
-622A  0A6C 6450 C52C 420A   DW %0A6C,%6450,%C52C,%420A
-6232  6370 6CC9 2C4F 0A00   DW %6370,%6CC9,%2C4F,%0A00
-623A  4841 0047 4370 7573   DW %4841,%0047,%4370,%7573
-6242  68C0 2C23 300A 0047   DW %68C0,%2C23,%300A,%0047
-624A  4166 6C64 6374 6CCF   DW %4166,%6C64,%6374,%6CCF
-6252  2C75 7365 720A 6673   DW %2C75,%7365,%720A,%6673
-625A  6574 6D6F 6465 F27A   DW %6574,%6D6F,%6465,%F27A
-6262  0A66 6C64 696C D52C   DW %0A66,%6C64,%696C,%D52C
-626A  520A 666C 6463 746C   DW %520A,%666C,%6463,%746C
-6272  F573 6572 2C4F 0A70   DW %F573,%6572,%2C4F,%0A70
-627A  7573 68C0 2C49 270A   DW %7573,%68C0,%2C49,%270A
-6282  0047 4166 6C64 6374   DW %0047,%4166,%6C64,%6374
-628A  6CCF 2C75 7365 720A   DW %6CCF,%2C75,%7365,%720A
-6292  6673 6574 6D6F 6465   DW %6673,%6574,%6D6F,%6465
-629A  F27A 0A66 6C64 696C   DW %F27A,%0A66,%6C64,%696C
-62A2  D52C 520A 666C 6463   DW %D52C,%520A,%666C,%6463
-62AA  746C F573 6572 2C4F   DW %746C,%F573,%6572,%2C4F
-62B2  0A70 7573 686C C02C   DW %0A70,%7573,%686C,%C02C
-62BA  490A 0070 7573 68C0   DW %490A,%0070,%7573,%68C0
-62C2  2C23 300A 0070 7573   DW %2C23,%300A,%0070,%7573
-62CA  68C0 2C41 0A00 6C64   DW %68C0,%2C41,%0A00,%6C64
-62D2  43CE 2C41 0A78 6F72   DW %43CE,%2C41,%0A78,%6F72
-62DA  62D1 2C51 0A70 7573   DW %62D1,%2C51,%0A70,%7573
-62E2  68C0 2C4E 0A00 7075   DW %68C0,%2C4E,%0A00,%7075
-62EA  7368 C02C 410A 0047   DW %7368,%C02C,%410A,%0047
-62F2  4170 7573 686C C02C   DW %4170,%7573,%686C,%C02C
-62FA  490A 0070 7573 6843   DW %490A,%0070,%7573,%6843
-6302  C02C 410A 0047 4164   DW %C02C,%410A,%0047,%4164
-630A  6563 D72C 2338 0A66   DW %6563,%D72C,%2338,%0A66
-6312  6C64 64C0 2C49 0A00   DW %6C64,%64C0,%2C49,%0A00
-631A  0000 3F00 0600 5A40   DW %0000,%3F00,%0600,%5A40
-6322  0000 3F00 0600 5A49   DW %0000,%3F00,%0600,%5A49
-632A  0000 1000 3F00 5A59   DW %0000,%1000,%3F00,%5A59
-6332  0000 1000 3F00 5A5E   DW %0000,%1000,%3F00,%5A5E
-633A  3F00 3F00 5A65 0000   DW %3F00,%3F00,%5A65,%0000
-6342  0400 3F00 5A6F 4903   DW %0400,%3F00,%5A6F,%4903
-634A  3F00 5A77 0903 3F00   DW %3F00,%5A77,%0903,%3F00
-6352  5A87 1003 3F00 5A77   DW %5A87,%1003,%3F00,%5A77
-635A  1000 3F00 5A8E 1008   DW %1000,%3F00,%5A8E,%1008
-6362  3F00 5A8E 1004 3F00   DW %3F00,%5A8E,%1004,%3F00
-636A  5A97 3F00 3F00 5AA0   DW %5A97,%3F00,%3F00,%5AA0
-6372  3F08 3F00 5AA0 3F04   DW %3F08,%3F00,%5AA0,%3F04
-637A  3F00 5AA0 0000 0900   DW %3F00,%5AA0,%0000,%0900
-6382  0600 5D5D 1000 0600   DW %0600,%5D5D,%1000,%0600
-638A  5AA3 1000 1001 5D74   DW %5AA3,%1000,%1001,%5D74
-6392  1000 3F00 5D96 4908   DW %1000,%3F00,%5D96,%4908
-639A  0600 5D74 1008 0600   DW %0600,%5D74,%1008,%0600
-63A2  5D74 1008 3F08 5D96   DW %5D74,%1008,%3F08,%5D96
-63AA  1004 1004 5D84 0000   DW %1004,%1004,%5D84,%0000
-63B2  0900 0600 5AAD 1000   DW %0900,%0600,%5AAD,%1000
-63BA  0600 5AB6 0900 1001   DW %0600,%5AB6,%0900,%1001
-63C2  5AC0 1000 1001 5ACE   DW %5AC0,%1000,%1001,%5ACE
-63CA  1008 0800 5ACE 1004   DW %1008,%0800,%5ACE,%1004
-63D2  1004 5AEA 1000 3F00   DW %1004,%5AEA,%1000,%3F00
-63DA  5B0B 1008 3F00 5B1C   DW %5B0B,%1008,%3F00,%5B1C
-63E2  0000 3F00 3F00 5B45   DW %0000,%3F00,%3F00,%5B45
-63EA  3F08 3F00 5B4B 0000   DW %3F08,%3F00,%5B4B,%0000
-63F2  3F00 3F00 5B45 1004   DW %3F00,%3F00,%5B45,%1004
-63FA  3F00 5B57 3F04 3F00   DW %3F00,%5B57,%3F04,%3F00
-6402  5B61 3F08 3F00 5B6C   DW %5B61,%3F08,%3F00,%5B6C
-640A  0000 1004 0400 5B85   DW %0000,%1004,%0400,%5B85
-6412  0903 0900 5B94 1000   DW %0903,%0900,%5B94,%1000
-641A  3F00 60DB 1008 3F08   DW %3F00,%60DB,%1008,%3F08
-6422  60DB 1004 3F04 60DB   DW %60DB,%1004,%3F04,%60DB
-642A  0000 4900 1000 6146   DW %0000,%4900,%1000,%6146
-6432  0900 1000 5B9C 1000   DW %0900,%1000,%5B9C,%1000
-643A  1000 6146 4900 3F00   DW %1000,%6146,%4900,%3F00
-6442  5BCC 0900 3F00 5BB3   DW %5BCC,%0900,%3F00,%5BB3
-644A  1000 3F00 5BCC 0000   DW %1000,%3F00,%5BCC,%0000
-6452  3F00 0400 5BEC 3F08   DW %3F00,%0400,%5BEC,%3F08
-645A  0400 5BEC 3F04 0400   DW %0400,%5BEC,%3F04,%0400
-6462  5BEC 1001 0600 5BEF   DW %5BEC,%1001,%0600,%5BEF
-646A  3F04 0804 5C39 3F00   DW %3F04,%0804,%5C39,%3F00
-6472  0600 5BFE 3F00 1001   DW %0600,%5BFE,%3F00,%1001
-647A  5C08 3F08 0800 5C10   DW %5C08,%3F08,%0800,%5C10
-6482  3F08 1008 5C10 3F04   DW %3F08,%1008,%5C10,%3F04
-648A  1004 5C19 3F08 1001   DW %1004,%5C19,%3F08,%1001
-6492  5C23 3F04 1404 5C39   DW %5C23,%3F04,%1404,%5C39
-649A  3F00 1400 5C39 3F08   DW %3F00,%1400,%5C39,%3F08
-64A2  1408 5C39 3F00 3F00   DW %1408,%5C39,%3F00,%3F00
-64AA  5C45 3F08 3F08 5C45   DW %5C45,%3F08,%3F08,%5C45
-64B2  3F04 3F04 5C58 0000   DW %3F04,%3F04,%5C58,%0000
-64BA  3F00 1001 5C08 3F00   DW %3F00,%1001,%5C08,%3F00
-64C2  1400 5C39 1400 3F00   DW %1400,%5C39,%1400,%3F00
-64CA  5C39 3F00 3F00 5C45   DW %5C39,%3F00,%3F00,%5C45
-64D2  1008 3F00 5C73 3F08   DW %1008,%3F00,%5C73,%3F08
-64DA  1408 5C8D 1408 3F08   DW %1408,%5C8D,%1408,%3F08
-64E2  5C8D 3F08 3F08 5CA2   DW %5C8D,%3F08,%3F08,%5CA2
-64EA  0000 3F00 0400 5CBC   DW %0000,%3F00,%0400,%5CBC
-64F2  3F08 0400 5CBC 1001   DW %3F08,%0400,%5CBC,%1001
-64FA  0600 5BEF 1008 0700   DW %0600,%5BEF,%1008,%0700
-6502  5BEF 3F00 0600 5BFE   DW %5BEF,%3F00,%0600,%5BFE
-650A  3F08 0700 5BFE 3F00   DW %3F08,%0700,%5BFE,%3F00
-6512  0900 5CBF 3F08 0900   DW %0900,%5CBF,%3F08,%0900
-651A  5CBF 1400 3F00 5CC9   DW %5CBF,%1400,%3F00,%5CC9
-6522  1408 3F00 5CC9 3F00   DW %1408,%3F00,%5CC9,%3F00
-652A  1400 5CC9 3F08 1400   DW %1400,%5CC9,%3F08,%1400
-6532  5CC9 3F00 3F00 5CD5   DW %5CC9,%3F00,%3F00,%5CD5
-653A  3F08 3F00 5CD5 0000   DW %3F08,%3F00,%5CD5,%0000
-6542  3F00 1001 5CE7 3F00   DW %3F00,%1001,%5CE7,%3F00
-654A  1400 5CF1 3F00 3F00   DW %1400,%5CF1,%3F00,%3F00
-6552  5CFD 3F08 1008 5D11   DW %5CFD,%3F08,%1008,%5D11
-655A  3F08 1408 5D1B 3F08   DW %3F08,%1408,%5D1B,%3F08
-6562  3F08 5D27 3F04 0400   DW %3F08,%5D27,%3F04,%0400
-656A  5D3B 3F04 1004 5C19   DW %5D3B,%3F04,%1004,%5C19
-6572  3F04 1404 5C39 3F04   DW %3F04,%1404,%5C39,%3F04
-657A  3F04 5C58 0000 1000   DW %3F04,%5C58,%0000,%1000
-6582  0400 5D4A 1008 0400   DW %0400,%5D4A,%1008,%0400
-658A  5D4A 1004 0400 5D4A   DW %5D4A,%1004,%0400,%5D4A
-6592  1003 0600 5D4D 1001   DW %1003,%0600,%5D4D,%1001
-659A  0600 5D5D 1008 0600   DW %0600,%5D5D,%1008,%0600
-65A2  5D74 0900 1001 5D66   DW %5D74,%0900,%1001,%5D66
-65AA  1000 1001 5D74 1008   DW %1000,%1001,%5D74,%1008
-65B2  1008 5D74 1004 1004   DW %1008,%5D74,%1004,%1004
-65BA  5D84 1000 3F00 5D96   DW %5D84,%1000,%3F00,%5D96
-65C2  1008 3F08 5D96 1004   DW %1008,%3F08,%5D96,%1004
-65CA  3F04 5D96 0000 1000   DW %3F04,%5D96,%0000,%1000
-65D2  1001 5DAA 1000 1400   DW %1001,%5DAA,%1000,%1400
-65DA  5DBB 1000 3F00 5DCE   DW %5DBB,%1000,%3F00,%5DCE
-65E2  1008 1008 5DE9 1008   DW %1008,%1008,%5DE9,%1008
-65EA  1408 5DFA 1008 3F08   DW %1408,%5DFA,%1008,%3F08
-65F2  5E0D 1004 0400 5E28   DW %5E0D,%1004,%0400,%5E28
-65FA  1004 1004 5D84 3F04   DW %1004,%1004,%5D84,%3F04
-6602  3F04 5D96 0000 1000   DW %3F04,%5D96,%0000,%1000
-660A  1001 5E37 1000 1400   DW %1001,%5E37,%1000,%1400
-6612  5E49 1000 3F00 5E5D   DW %5E49,%1000,%3F00,%5E5D
-661A  1008 1008 5E79 1008   DW %1008,%1008,%5E79,%1008
-6622  1408 5E8B 1008 3F08   DW %1408,%5E8B,%1008,%3F08
-662A  5E9F 1004 0400 5EBB   DW %5E9F,%1004,%0400,%5EBB
-6632  1004 1004 5D84 1004   DW %1004,%1004,%5D84,%1004
-663A  3F04 5D96 0000 1003   DW %3F04,%5D96,%0000,%1003
-6642  1001 5D74 1003 3F00   DW %1001,%5D74,%1003,%3F00
-664A  5D96 0900 1001 5D66   DW %5D96,%0900,%1001,%5D66
-6652  1000 1001 5D74 1001   DW %1000,%1001,%5D74,%1001
-665A  3F00 5ED2 1008 1009   DW %3F00,%5ED2,%1008,%1009
-6662  5EE0 1008 1008 5EFE   DW %5EE0,%1008,%1008,%5EFE
-666A  1008 3F00 5F1D 1008   DW %1008,%3F00,%5F1D,%1008
-6672  3F08 5F42 0000 4900   DW %3F08,%5F42,%0000,%4900
-667A  0600 5F60 4908 0700   DW %0600,%5F60,%4908,%0700
-6682  5F60 0900 0600 5F71   DW %5F60,%0900,%0600,%5F71
-668A  1000 0600 5F60 1008   DW %1000,%0600,%5F60,%1008
-6692  0700 5F60 1000 0900   DW %0700,%5F60,%1000,%0900
-669A  5F80 1008 0900 5F80   DW %5F80,%1008,%0900,%5F80
-66A2  1003 3F00 5F91 1001   DW %1003,%3F00,%5F91,%1001
-66AA  3F00 5FB5 1008 3F00   DW %3F00,%5FB5,%1008,%3F00
-66B2  5FB5 0000 0400 3F00   DW %5FB5,%0000,%0400,%3F00
-66BA  5FD3 3F09 3F00 5FDA   DW %5FD3,%3F09,%3F00,%5FDA
-66C2  3F00 3F00 5FF0 0000   DW %3F00,%3F00,%5FF0,%0000
-66CA  3F04 3F00 6003 0000   DW %3F04,%3F00,%6003,%0000
-66D2  0408 3F00 5FD3 3F08   DW %0408,%3F00,%5FD3,%3F08
-66DA  3F00 603D 0000 3F04   DW %3F00,%603D,%0000,%3F04
-66E2  3F00 6049 0000 3F09   DW %3F00,%6049,%0000,%3F09
-66EA  3F00 607A 3F00 3F00   DW %3F00,%607A,%3F00,%3F00
-66F2  6087 0000 1008 3F00   DW %6087,%0000,%1008,%3F00
-66FA  6091 3F08 3F00 6099   DW %6091,%3F08,%3F00,%6099
-6702  0000 3F00 3F00 60A5   DW %0000,%3F00,%3F00,%60A5
-670A  0000 0903 0600 61F0   DW %0000,%0903,%0600,%61F0
-6712  1000 0600 60B0 0900   DW %1000,%0600,%60B0,%0900
-671A  1001 60EC 1000 1001   DW %1001,%60EC,%1000,%1001
-6722  5D74 1000 3F00 5D96   DW %5D74,%1000,%3F00,%5D96
-672A  1004 1004 5D84 1008   DW %1004,%1004,%5D84,%1008
-6732  0600 5D74 0000 0903   DW %0600,%5D74,%0000,%0903
-673A  0400 60B8 1000 0400   DW %0400,%60B8,%1000,%0400
-6742  60C0 1004 0400 5B85   DW %60C0,%1004,%0400,%5B85
-674A  1008 0400 60C6 4900   DW %1008,%0400,%60C6,%4900
-6752  4900 60DB 4908 4908   DW %4900,%60DB,%4908,%4908
-675A  60DB 1000 4903 60DB   DW %60DB,%1000,%4903,%60DB
-6762  4903 1000 60DB 1004   DW %4903,%1000,%60DB,%1004
-676A  3F04 60DB 0900 0800   DW %3F04,%60DB,%0900,%0800
-6772  60E5 0900 4901 60EC   DW %60E5,%0900,%4901,%60EC
-677A  4901 0900 60EC 1000   DW %4901,%0900,%60EC,%1000
-6782  0800 60EC 0900 0900   DW %0800,%60EC,%0900,%0900
-678A  61F0 4901 1000 60DB   DW %61F0,%4901,%1000,%60DB
-6792  1000 4901 60DB 1003   DW %1000,%4901,%60DB,%1003
-679A  0900 60DB 0900 1003   DW %0900,%60DB,%0900,%1003
-67A2  60DB 1001 0900 60EC   DW %60DB,%1001,%0900,%60EC
-67AA  0900 1001 60EC 0000   DW %0900,%1001,%60EC,%0000
-67B2  0900 1001 60EC 0000   DW %0900,%1001,%60EC,%0000
-67BA  1000 0400 60F3 1008   DW %1000,%0400,%60F3,%1008
-67C2  0400 60F3 1003 0600   DW %0400,%60F3,%1003,%0600
-67CA  5D4D 1000 0600 60F4   DW %5D4D,%1000,%0600,%60F4
-67D2  0900 1001 60EC 4908   DW %0900,%1001,%60EC,%4908
-67DA  0600 5D74 0000 4900   DW %0600,%5D74,%0000,%4900
-67E2  0600 5F60 4908 0700   DW %0600,%5F60,%4908,%0700
-67EA  5F60 0900 0600 60FC   DW %5F60,%0900,%0600,%60FC
-67F2  1000 0600 5F60 1008   DW %1000,%0600,%5F60,%1008
-67FA  0700 5F60 1003 3F00   DW %0700,%5F60,%1003,%3F00
-6802  5F91 4901 3F00 6104   DW %5F91,%4901,%3F00,%6104
-680A  4908 3F00 6104 0901   DW %4908,%3F00,%6104,%0901
-6812  1000 611C 0901 3F00   DW %1000,%611C,%0901,%3F00
-681A  612C 1001 0900 5F80   DW %612C,%1001,%0900,%5F80
-6822  1008 0900 5F80 1001   DW %1008,%0900,%5F80,%1001
-682A  3F00 6104 1008 3F00   DW %3F00,%6104,%1008,%3F00
-6832  6104 0000 4900 1000   DW %6104,%0000,%4900,%1000
-683A  6146 0900 1000 6136   DW %6146,%0900,%1000,%6136
-6842  1000 1000 6146 4900   DW %1000,%1000,%6146,%4900
-684A  3F00 5BCC 0900 3F00   DW %3F00,%5BCC,%0900,%3F00
-6852  6164 0000 3F00 1000   DW %6164,%0000,%3F00,%1000
-685A  6176 3F00 1400 617F   DW %6176,%3F00,%1400,%617F
-6862  3F00 3F00 6184 0000   DW %3F00,%3F00,%6184,%0000
-686A  0903 0600 6190 1000   DW %0903,%0600,%6190,%1000
-6872  0600 6198 3F00 0600   DW %0600,%6198,%3F00,%0600
-687A  61A1 0000 3F04 0400   DW %61A1,%0000,%3F04,%0400
-6882  61AC 3F04 1404 61B6   DW %61AC,%3F04,%1404,%61B6
-688A  3F04 3F04 61C4 0903   DW %3F04,%3F04,%61C4,%0903
-6892  0400 61E2 1000 0400   DW %0400,%61E2,%1000,%0400
-689A  61E7 1008 0400 61E7   DW %61E7,%1008,%0400,%61E7
-68A2  1008 0408 61E7 3F00   DW %1008,%0408,%61E7,%3F00
-68AA  0400 61ED 3F08 0400   DW %0400,%61ED,%3F08,%0400
-68B2  61ED 0903 0800 61F0   DW %61ED,%0903,%0800,%61F0
-68BA  1003 0800 61F6 1000   DW %1003,%0800,%61F6,%1000
-68C2  0800 60EC 0903 0903   DW %0800,%60EC,%0903,%0903
-68CA  61F0 0903 1001 61F0   DW %61F0,%0903,%1001,%61F0
-68D2  1000 0903 61F6 1003   DW %1000,%0903,%61F6,%1003
-68DA  1001 61F6 0903 1003   DW %1001,%61F6,%0903,%1003
-68E2  61FE 1003 1003 6206   DW %61FE,%1003,%1003,%6206
-68EA  0901 1001 60EC 1000   DW %0901,%1001,%60EC,%1000
-68F2  1000 6214 1008 1008   DW %1000,%6214,%1008,%1008
-68FA  6214 3F00 1001 5C08   DW %6214,%3F00,%1001,%5C08
-6902  3F08 0800 6222 3F08   DW %3F08,%0800,%6222,%3F08
-690A  1009 6222 3F08 1008   DW %1009,%6222,%3F08,%1008
-6912  5C10 3F00 1400 5C39   DW %5C10,%3F00,%1400,%5C39
-691A  3F08 1408 5C39 3F00   DW %3F08,%1408,%5C39,%3F00
-6922  3F00 5C45 3F08 3F08   DW %3F00,%5C45,%3F08,%3F08
-692A  5C45 3F00 3F00 623A   DW %5C45,%3F00,%3F00,%623A
-6932  3F04 0400 623A 3F04   DW %3F04,%0400,%623A,%3F04
-693A  3F04 623A 0000 3F09   DW %3F04,%623A,%0000,%3F09
-6942  3F00 623D 0000 3F04   DW %3F00,%623D,%0000,%3F04
-694A  3F00 6249 0000 3F04   DW %3F00,%6249,%0000,%3F04
-6952  3F00 6283 0000 0400   DW %3F00,%6283,%0000,%0400
-695A  3F00 62BD 0903 3F00   DW %3F00,%62BD,%0903,%3F00
-6962  62C7 1003 3F00 62D0   DW %62C7,%1003,%3F00,%62D0
-696A  0900 3F00 62E8 0B08   DW %0900,%3F00,%62E8,%0B08
-6972  3F00 62F1 1001 3F00   DW %3F00,%62F1,%1001,%3F00
-697A  62FD 1008 3F00 62FD   DW %62FD,%1008,%3F00,%62FD
-6982  1004 3F00 6307        DW %1004,%3F00,%6307
+5A40  4741 4D43 C92C 420A   DB %47,%41,%4D,%43,%C9,%2C,%42,%0A
+5A48  0047 414D 43C9 2C42   DB %00,%47,%41,%4D,%43,%C9,%2C,%42
+5A50  0A6C 6443 C12C 490A   DB %0A,%6C,%64,%43,%C1,%2C,%49,%0A
+5A58  006A 70C1 0A00 6361   DB %00,%6A,%70,%C1,%0A,%00,%63,%61
+5A60  6C6C C10A 0047 4163   DB %6C,%6C,%C1,%0A,%00,%47,%41,%63
+5A68  616C 6CA2 490A 0078   DB %61,%6C,%6C,%A2,%49,%0A,%00,%78
+5A70  6F72 C92C 490A 006C   DB %6F,%72,%C9,%2C,%49,%0A,%00,%6C
+5A78  6443 C92C 410A 786F   DB %64,%43,%C9,%2C,%41,%0A,%78,%6F
+5A80  7262 D32C 530A 006C   DB %72,%62,%D3,%2C,%53,%0A,%00,%6C
+5A88  64C9 2C41 0A00 566C   DB %64,%C9,%2C,%41,%0A,%00,%56,%6C
+5A90  6454 C92C 410A 0066   DB %64,%54,%C9,%2C,%41,%0A,%00,%66
+5A98  6C64 43C9 2C41 0A00   DB %6C,%64,%43,%C9,%2C,%41,%0A,%00
+5AA0  4741 004D 2743 C12C   DB %47,%41,%00,%4D,%27,%43,%C1,%2C
+5AA8  420A 4741 0047 414D   DB %42,%0A,%47,%41,%00,%47,%41,%4D
+5AB0  27C1 2C42 0A00 4741   DB %27,%C1,%2C,%42,%0A,%00,%47,%41
+5AB8  4D27 43C1 2C42 0A00   DB %4D,%27,%43,%C1,%2C,%42,%0A,%00
+5AC0  6C64 43C9 2C41 0A4D   DB %6C,%64,%43,%C9,%2C,%41,%0A,%4D
+5AC8  43C1 2C42 0A00 6C64   DB %43,%C1,%2C,%42,%0A,%00,%6C,%64
+5AD0  43C9 2C41 0A6C 6443   DB %43,%C9,%2C,%41,%0A,%6C,%64,%43
+5AD8  CA2C 490A 4D43 CA2C   DB %CA,%2C,%49,%0A,%4D,%43,%CA,%2C
+5AE0  420A 6C64 43C1 2C4A   DB %42,%0A,%6C,%64,%43,%C1,%2C,%4A
+5AE8  0A00 666C 6443 C92C   DB %0A,%00,%66,%6C,%64,%43,%C9,%2C
+5AF0  410A 666C 64CA 2C49   DB %41,%0A,%66,%6C,%64,%CA,%2C,%49
+5AF8  0A66 6164 6464 CA2C   DB %0A,%66,%61,%64,%64,%64,%CA,%2C
+5B00  420A 666C 6443 C12C   DB %42,%0A,%66,%6C,%64,%43,%C1,%2C
+5B08  4A0A 0047 414B 494D   DB %4A,%0A,%00,%47,%41,%4B,%49,%4D
+5B10  C92C 4A0A 6578 43C9   DB %C9,%2C,%4A,%0A,%65,%78,%43,%C9
+5B18  2C41 0A00 4B49 2165   DB %2C,%41,%0A,%00,%4B,%49,%21,%65
+5B20  7874 73CA 0A6C 646C   DB %78,%74,%73,%CA,%0A,%6C,%64,%6C
+5B28  C92C 410A 4D6C C92C   DB %C9,%2C,%41,%0A,%4D,%6C,%C9,%2C
+5B30  4A0A 6578 C927 2C41   DB %4A,%0A,%65,%78,%C9,%27,%2C,%41
+5B38  270A 6578 C92B 272C   DB %27,%0A,%65,%78,%C9,%2B,%27,%2C
+5B40  412B 270A 0047 414D   DB %41,%2B,%27,%0A,%00,%47,%41,%4D
+5B48  C90A 0047 414D C92B   DB %C9,%0A,%00,%47,%41,%4D,%C9,%2B
+5B50  270A 4DC9 270A 0066   DB %27,%0A,%4D,%C9,%27,%0A,%00,%66
+5B58  6E65 6743 C92C 410A   DB %6E,%65,%67,%43,%C9,%2C,%41,%0A
+5B60  0047 4166 6E65 67C9   DB %00,%47,%41,%66,%6E,%65,%67,%C9
+5B68  2C49 0A00 4741 636F   DB %2C,%49,%0A,%00,%47,%41,%63,%6F
+5B70  6DC9 2B27 0A63 6F6D   DB %6D,%C9,%2B,%27,%0A,%63,%6F,%6D
+5B78  C927 0A61 6464 6CC9   DB %C9,%27,%0A,%61,%64,%64,%6C,%C9
+5B80  2C23 310A 0066 636C   DB %2C,%23,%31,%0A,%00,%66,%63,%6C
+5B88  72C9 0A66 6C64 43C1   DB %72,%C9,%0A,%66,%6C,%64,%43,%C1
+5B90  2C49 0A00 4B41 4DC1   DB %2C,%49,%0A,%00,%4B,%41,%4D,%C1
+5B98  2C49 0A00 616E 6443   DB %2C,%49,%0A,%00,%61,%6E,%64,%43
+5BA0  C12C 5A0A 6F72 43C1   DB %C1,%2C,%5A,%0A,%6F,%72,%43,%C1
+5BA8  2C42 0A6C 6443 C92C   DB %2C,%42,%0A,%6C,%64,%43,%C9,%2C
+5BB0  410A 004B 4161 6E64   DB %41,%0A,%00,%4B,%41,%61,%6E,%64
+5BB8  43C1 2C5A 0A6F 7243   DB %43,%C1,%2C,%5A,%0A,%6F,%72,%43
+5BC0  C92C 410A 6C64 43C1   DB %C9,%2C,%41,%0A,%6C,%64,%43,%C1
+5BC8  2C49 0A00 4B41 6C64   DB %2C,%49,%0A,%00,%4B,%41,%6C,%64
+5BD0  43CE 2C41 0A61 6E64   DB %43,%CE,%2C,%41,%0A,%61,%6E,%64
+5BD8  43CE 2C5A 0A6F 7243   DB %43,%CE,%2C,%5A,%0A,%6F,%72,%43
+5BE0  C92C 4E0A 6C64 43C1   DB %C9,%2C,%4E,%0A,%6C,%64,%43,%C1
+5BE8  2C49 0A00 4741 006C   DB %2C,%49,%0A,%00,%47,%41,%00,%6C
+5BF0  6454 C92C 410A 4D27   DB %64,%54,%C9,%2C,%41,%0A,%4D,%27
+5BF8  4CC9 2C42 0A00 4741   DB %4C,%C9,%2C,%42,%0A,%00,%47,%41
+5C00  4D27 4CC9 2C42 0A00   DB %4D,%27,%4C,%C9,%2C,%42,%0A,%00
+5C08  4741 4DC9 2C42 0A00   DB %47,%41,%4D,%C9,%2C,%42,%0A,%00
+5C10  4741 4D43 C92C 420A   DB %47,%41,%4D,%43,%C9,%2C,%42,%0A
+5C18  0047 4156 4D44 C92C   DB %00,%47,%41,%56,%4D,%44,%C9,%2C
+5C20  420A 0047 416C 6450   DB %42,%0A,%00,%47,%41,%6C,%64,%50
+5C28  C52C 420A 6578 7473   DB %C5,%2C,%42,%0A,%65,%78,%74,%73
+5C30  CF0A 4D43 C92C 4E0A   DB %CF,%0A,%4D,%43,%C9,%2C,%4E,%0A
+5C38  0047 414B 4956 4D4C   DB %00,%47,%41,%4B,%49,%56,%4D,%4C
+5C40  C92C 4A0A 004B 4347   DB %C9,%2C,%4A,%0A,%00,%4B,%43,%47
+5C48  4170 6F70 43CE 2C40   DB %41,%70,%6F,%70,%43,%CE,%2C,%40
+5C50  0A4D 4CC9 2C4E 0A00   DB %0A,%4D,%4C,%C9,%2C,%4E,%0A,%00
+5C58  4B43 4741 666C 6464   DB %4B,%43,%47,%41,%66,%6C,%64,%64
+5C60  CA2C 400A 696E 63D7   DB %CA,%2C,%40,%0A,%69,%6E,%63,%D7
+5C68  2C23 380A 564D C92C   DB %2C,%23,%38,%0A,%56,%4D,%C9,%2C
+5C70  4A0A 004B 4121 6578   DB %4A,%0A,%00,%4B,%41,%21,%65,%78
+5C78  7473 C90A 4DC9 272C   DB %74,%73,%C9,%0A,%4D,%C9,%27,%2C
+5C80  4127 0A4D C92B 272C   DB %41,%27,%0A,%4D,%C9,%2B,%27,%2C
+5C88  412B 270A 0047 414B   DB %41,%2B,%27,%0A,%00,%47,%41,%4B
+5C90  494D C927 2C4A 270A   DB %49,%4D,%C9,%27,%2C,%4A,%27,%0A
+5C98  4DC9 2B27 2C4A 2B27   DB %4D,%C9,%2B,%27,%2C,%4A,%2B,%27
+5CA0  0A00 4B43 4741 706F   DB %0A,%00,%4B,%43,%47,%41,%70,%6F
+5CA8  706C CF2C 400A 4DC9   DB %70,%6C,%CF,%2C,%40,%0A,%4D,%C9
+5CB0  272C 460A 4DC9 2B27   DB %27,%2C,%46,%0A,%4D,%C9,%2B,%27
+5CB8  2C45 0A00 4741 0047   DB %2C,%45,%0A,%00,%47,%41,%00,%47
+5CC0  414D 4CC9 2C42 270A   DB %41,%4D,%4C,%C9,%2C,%42,%27,%0A
+5CC8  0047 414B 494D 4CC9   DB %00,%47,%41,%4B,%49,%4D,%4C,%C9
+5CD0  2C4A 270A 004B 4347   DB %2C,%4A,%27,%0A,%00,%4B,%43,%47
+5CD8  4170 6F70 C52C 400A   DB %41,%70,%6F,%70,%C5,%2C,%40,%0A
+5CE0  4D4C C92C 450A 0047   DB %4D,%4C,%C9,%2C,%45,%0A,%00,%47
+5CE8  4158 4DD5 2D2C 420A   DB %41,%58,%4D,%D5,%2D,%2C,%42,%0A
+5CF0  0047 414B 4958 4DD5   DB %00,%47,%41,%4B,%49,%58,%4D,%D5
+5CF8  2D2C 4A0A 004B 4347   DB %2D,%2C,%4A,%0A,%00,%4B,%43,%47
+5D00  4158 4DD5 2D2C 400A   DB %41,%58,%4D,%D5,%2D,%2C,%40,%0A
+5D08  696E 63D7 2C23 320A   DB %69,%6E,%63,%D7,%2C,%23,%32,%0A
+5D10  0047 4158 4D6C D92C   DB %00,%47,%41,%58,%4D,%6C,%D9,%2C
+5D18  420A 0047 414B 4958   DB %42,%0A,%00,%47,%41,%4B,%49,%58
+5D20  4D6C D92C 4A0A 004B   DB %4D,%6C,%D9,%2C,%4A,%0A,%00,%4B
+5D28  4347 4158 4D6C D92C   DB %43,%47,%41,%58,%4D,%6C,%D9,%2C
+5D30  400A 696E 63D7 2C23   DB %40,%0A,%69,%6E,%63,%D7,%2C,%23
+5D38  340A 0047 4166 636C   DB %34,%0A,%00,%47,%41,%66,%63,%6C
+5D40  72CA 0A56 4DC9 2C4A   DB %72,%CA,%0A,%56,%4D,%C9,%2C,%4A
+5D48  0A00 4741 0047 414D   DB %0A,%00,%47,%41,%00,%47,%41,%4D
+5D50  27C9 2C42 0A6C 6443   DB %27,%C9,%2C,%42,%0A,%6C,%64,%43
+5D58  C12C 490A 004D 27C1   DB %C1,%2C,%49,%0A,%00,%4D,%27,%C1
+5D60  2C42 0A47 4100 4D4C   DB %2C,%42,%0A,%47,%41,%00,%4D,%4C
+5D68  C12C 420A 6C64 43C9   DB %C1,%2C,%42,%0A,%6C,%64,%43,%C9
+5D70  2C41 0A00 4741 4D4C   DB %2C,%41,%0A,%00,%47,%41,%4D,%4C
+5D78  C92C 420A 6C64 43C1   DB %C9,%2C,%42,%0A,%6C,%64,%43,%C1
+5D80  2C49 0A00 4741 564D   DB %2C,%49,%0A,%00,%47,%41,%56,%4D
+5D88  44C9 2C42 0A56 6C64   DB %44,%C9,%2C,%42,%0A,%56,%6C,%64
+5D90  43C1 2C49 0A00 4741   DB %43,%C1,%2C,%49,%0A,%00,%47,%41
+5D98  4B49 564D 4CC9 2C4A   DB %4B,%49,%56,%4D,%4C,%C9,%2C,%4A
+5DA0  0A56 6C64 43C1 2C49   DB %0A,%56,%6C,%64,%43,%C1,%2C,%49
+5DA8  0A00 4741 584D D52D   DB %0A,%00,%47,%41,%58,%4D,%D5,%2D
+5DB0  2C42 0A6C 6443 C12C   DB %2C,%42,%0A,%6C,%64,%43,%C1,%2C
+5DB8  490A 0047 414B 4958   DB %49,%0A,%00,%47,%41,%4B,%49,%58
+5DC0  4DD5 2D2C 4A0A 6C64   DB %4D,%D5,%2D,%2C,%4A,%0A,%6C,%64
+5DC8  43C1 2C49 0A00 4741   DB %43,%C1,%2C,%49,%0A,%00,%47,%41
+5DD0  4B43 584D D52D 2C40   DB %4B,%43,%58,%4D,%D5,%2D,%2C,%40
+5DD8  0A69 6E63 D72C 2332   DB %0A,%69,%6E,%63,%D7,%2C,%23,%32
+5DE0  0A6C 6443 C12C 490A   DB %0A,%6C,%64,%43,%C1,%2C,%49,%0A
+5DE8  0047 4158 4D6C D92C   DB %00,%47,%41,%58,%4D,%6C,%D9,%2C
+5DF0  420A 6C64 6CC1 2C49   DB %42,%0A,%6C,%64,%6C,%C1,%2C,%49
+5DF8  0A00 4B49 4741 584D   DB %0A,%00,%4B,%49,%47,%41,%58,%4D
+5E00  6CD9 2C4A 0A6C 646C   DB %6C,%D9,%2C,%4A,%0A,%6C,%64,%6C
+5E08  C12C 490A 004B 4347   DB %C1,%2C,%49,%0A,%00,%4B,%43,%47
+5E10  4158 4D6C D92C 400A   DB %41,%58,%4D,%6C,%D9,%2C,%40,%0A
+5E18  696E 63D7 2C23 340A   DB %69,%6E,%63,%D7,%2C,%23,%34,%0A
+5E20  6C64 6CC1 2C49 0A00   DB %6C,%64,%6C,%C1,%2C,%49,%0A,%00
+5E28  6663 6C72 C90A 666C   DB %66,%63,%6C,%72,%C9,%0A,%66,%6C
+5E30  6443 C12C 490A 0047   DB %64,%43,%C1,%2C,%49,%0A,%00,%47
+5E38  4158 4DD5 2D2C 420A   DB %41,%58,%4D,%D5,%2D,%2C,%42,%0A
+5E40  6C64 43C1 2C49 2D0A   DB %6C,%64,%43,%C1,%2C,%49,%2D,%0A
+5E48  0047 414B 4958 4DD5   DB %00,%47,%41,%4B,%49,%58,%4D,%D5
+5E50  2D2C 4A0A 6C64 43C1   DB %2D,%2C,%4A,%0A,%6C,%64,%43,%C1
+5E58  2C49 2D0A 0047 414B   DB %2C,%49,%2D,%0A,%00,%47,%41,%4B
+5E60  4358 4DD5 2D2C 400A   DB %43,%58,%4D,%D5,%2D,%2C,%40,%0A
+5E68  696E 63D7 2C23 320A   DB %69,%6E,%63,%D7,%2C,%23,%32,%0A
+5E70  6C64 43C1 2C49 2D0A   DB %6C,%64,%43,%C1,%2C,%49,%2D,%0A
+5E78  0047 4158 4D6C D92C   DB %00,%47,%41,%58,%4D,%6C,%D9,%2C
+5E80  420A 6C64 6CC1 2C49   DB %42,%0A,%6C,%64,%6C,%C1,%2C,%49
+5E88  2D0A 004B 4947 4158   DB %2D,%0A,%00,%4B,%49,%47,%41,%58
+5E90  4D6C D92C 4A0A 6C64   DB %4D,%6C,%D9,%2C,%4A,%0A,%6C,%64
+5E98  6CC1 2C49 2D0A 004B   DB %6C,%C1,%2C,%49,%2D,%0A,%00,%4B
+5EA0  4347 4158 4D6C D92C   DB %43,%47,%41,%58,%4D,%6C,%D9,%2C
+5EA8  400A 696E 63D7 2C23   DB %40,%0A,%69,%6E,%63,%D7,%2C,%23
+5EB0  340A 6C64 6CC1 2C49   DB %34,%0A,%6C,%64,%6C,%C1,%2C,%49
+5EB8  2D0A 0047 4166 636C   DB %2D,%0A,%00,%47,%41,%66,%63,%6C
+5EC0  72CA 0A56 4DC9 2C4A   DB %72,%CA,%0A,%56,%4D,%C9,%2C,%4A
+5EC8  0A56 6C64 43C1 2C49   DB %0A,%56,%6C,%64,%43,%C1,%2C,%49
+5ED0  0A00 4B41 4DC9 2C41   DB %0A,%00,%4B,%41,%4D,%C9,%2C,%41
+5ED8  0A6C 64C1 2C49 0A00   DB %0A,%6C,%64,%C1,%2C,%49,%0A,%00
+5EE0  6C64 6CC9 2C41 0A4D   DB %6C,%64,%6C,%C9,%2C,%41,%0A,%4D
+5EE8  C927 2C23 300A 4DC9   DB %C9,%27,%2C,%23,%30,%0A,%4D,%C9
+5EF0  2B27 2C42 270A 6C64   DB %2B,%27,%2C,%42,%27,%0A,%6C,%64
+5EF8  6CC1 2C49 0A00 6C64   DB %6C,%C1,%2C,%49,%0A,%00,%6C,%64
+5F00  6CC9 2C41 0A4D C927   DB %6C,%C9,%2C,%41,%0A,%4D,%C9,%27
+5F08  2C42 270A 4DC9 2B27   DB %2C,%42,%27,%0A,%4D,%C9,%2B,%27
+5F10  2C42 2B27 0A6C 646C   DB %2C,%42,%2B,%27,%0A,%6C,%64,%6C
+5F18  C12C 490A 004B 4121   DB %C1,%2C,%49,%0A,%00,%4B,%41,%21
+5F20  6578 7473 C90A 6C64   DB %65,%78,%74,%73,%C9,%0A,%6C,%64
+5F28  6CCF 2C41 0A4D C927   DB %6C,%CF,%2C,%41,%0A,%4D,%C9,%27
+5F30  2C46 0A4D C92B 272C   DB %2C,%46,%0A,%4D,%C9,%2B,%27,%2C
+5F38  450A 6C64 6CC1 2C49   DB %45,%0A,%6C,%64,%6C,%C1,%2C,%49
+5F40  0A00 4B41 6C64 6CCF   DB %0A,%00,%4B,%41,%6C,%64,%6C,%CF
+5F48  2C41 0A4D C927 2C46   DB %2C,%41,%0A,%4D,%C9,%27,%2C,%46
+5F50  0A4D C92B 272C 450A   DB %0A,%4D,%C9,%2B,%27,%2C,%45,%0A
+5F58  6C64 6CC1 2C49 0A00   DB %6C,%64,%6C,%C1,%2C,%49,%0A,%00
+5F60  4741 4D27 4CC9 2C42   DB %47,%41,%4D,%27,%4C,%C9,%2C,%42
+5F68  0A6C 6443 C12C 490A   DB %0A,%6C,%64,%43,%C1,%2C,%49,%0A
+5F70  004D 274C C12C 420A   DB %00,%4D,%27,%4C,%C1,%2C,%42,%0A
+5F78  6C64 43C9 2C41 0A00   DB %6C,%64,%43,%C9,%2C,%41,%0A,%00
+5F80  4741 4D4C C92C 4227   DB %47,%41,%4D,%4C,%C9,%2C,%42,%27
+5F88  0A6C 6443 C12C 490A   DB %0A,%6C,%64,%43,%C1,%2C,%49,%0A
+5F90  004B 416C 64C6 2C49   DB %00,%4B,%41,%6C,%64,%C6,%2C,%49
+5F98  0A6C 6443 C92C 410A   DB %0A,%6C,%64,%43,%C9,%2C,%41,%0A
+5FA0  786F 7262 D32C 530A   DB %78,%6F,%72,%62,%D3,%2C,%53,%0A
+5FA8  4DC9 2C46 0A6C 6443   DB %4D,%C9,%2C,%46,%0A,%6C,%64,%43
+5FB0  C12C 490A 004B 416C   DB %C1,%2C,%49,%0A,%00,%4B,%41,%6C
+5FB8  64C6 2C49 270A 6C64   DB %64,%C6,%2C,%49,%27,%0A,%6C,%64
+5FC0  54C9 2C41 0A4D 4CC9   DB %54,%C9,%2C,%41,%0A,%4D,%4C,%C9
+5FC8  2C46 0A6C 6443 C12C   DB %2C,%46,%0A,%6C,%64,%43,%C1,%2C
+5FD0  490A 0066 636C 72C9   DB %49,%0A,%00,%66,%63,%6C,%72,%C9
+5FD8  0A00 4741 2178 6F72   DB %0A,%00,%47,%41,%21,%78,%6F,%72
+5FE0  C927 2C49 270A 666C   DB %C9,%27,%2C,%49,%27,%0A,%66,%6C
+5FE8  6469 6CC9 2C55 0A00   DB %64,%69,%6C,%C9,%2C,%55,%0A,%00
+5FF0  4741 2165 7874 73D5   DB %47,%41,%21,%65,%78,%74,%73,%D5
+5FF8  0A66 6C64 696C C92C   DB %0A,%66,%6C,%64,%69,%6C,%C9,%2C
+6000  550A 0047 4166 6C64   DB %55,%0A,%00,%47,%41,%66,%6C,%64
+6008  6374 6CCF 2C75 7365   DB %63,%74,%6C,%CF,%2C,%75,%73,%65
+6010  720A 6673 6574 6D6F   DB %72,%0A,%66,%73,%65,%74,%6D,%6F
+6018  6465 F27A 0A66 6C64   DB %64,%65,%F2,%7A,%0A,%66,%6C,%64
+6020  696C D52C 520A 666C   DB %69,%6C,%D5,%2C,%52,%0A,%66,%6C
+6028  6463 746C F573 6572   DB %64,%63,%74,%6C,%F5,%73,%65,%72
+6030  2C4F 0A6C 64C9 272C   DB %2C,%4F,%0A,%6C,%64,%C9,%27,%2C
+6038  492B 270A 0047 4166   DB %49,%2B,%27,%0A,%00,%47,%41,%66
+6040  6C64 696C C92C 550A   DB %6C,%64,%69,%6C,%C9,%2C,%55,%0A
+6048  0047 4166 6C64 6374   DB %00,%47,%41,%66,%6C,%64,%63,%74
+6050  6CCF 2C75 7365 720A   DB %6C,%CF,%2C,%75,%73,%65,%72,%0A
+6058  6673 6574 6D6F 6465   DB %66,%73,%65,%74,%6D,%6F,%64,%65
+6060  F27A 0A66 6C64 696C   DB %F2,%7A,%0A,%66,%6C,%64,%69,%6C
+6068  D52C 520A 666C 6463   DB %D5,%2C,%52,%0A,%66,%6C,%64,%63
+6070  746C F573 6572 2C4F   DB %74,%6C,%F5,%73,%65,%72,%2C,%4F
+6078  0A00 4741 2178 6F72   DB %0A,%00,%47,%41,%21,%78,%6F,%72
+6080  C927 2C49 270A 0047   DB %C9,%27,%2C,%49,%27,%0A,%00,%47
+6088  4121 6578 7473 D50A   DB %41,%21,%65,%78,%74,%73,%D5,%0A
+6090  006C 64C9 2C41 2B0A   DB %00,%6C,%64,%C9,%2C,%41,%2B,%0A
+6098  0047 416C 64C9 272C   DB %00,%47,%41,%6C,%64,%C9,%27,%2C
+60A0  492B 270A 0047 4178   DB %49,%2B,%27,%0A,%00,%47,%41,%78
+60A8  6F72 62D3 2C53 0A00   DB %6F,%72,%62,%D3,%2C,%53,%0A,%00
+60B0  4D27 43C1 2C42 0A00   DB %4D,%27,%43,%C1,%2C,%42,%0A,%00
+60B8  786F 72C1 2C41 0A00   DB %78,%6F,%72,%C1,%2C,%41,%0A,%00
+60C0  4D27 43C1 0A00 786F   DB %4D,%27,%43,%C1,%0A,%00,%78,%6F
+60C8  72C6 2C46 0A6C 64C5   DB %72,%C6,%2C,%46,%0A,%6C,%64,%C5
+60D0  2C46 0A6C 646C C12C   DB %2C,%46,%0A,%6C,%64,%6C,%C1,%2C
+60D8  4F0A 004B 4156 4D43   DB %4F,%0A,%00,%4B,%41,%56,%4D,%43
+60E0  C12C 490A 004D 50C1   DB %C1,%2C,%49,%0A,%00,%4D,%50,%C1
+60E8  2C42 0A00 4D43 C12C   DB %2C,%42,%0A,%00,%4D,%43,%C1,%2C
+60F0  420A 0000 4D27 4CC1   DB %42,%0A,%00,%00,%4D,%27,%4C,%C1
+60F8  2C42 0A00 4D27 4CC1   DB %2C,%42,%0A,%00,%4D,%27,%4C,%C1
+6100  2C42 0A00 4B41 6C64   DB %2C,%42,%0A,%00,%4B,%41,%6C,%64
+6108  43CE 2C41 0A4D 4CCE   DB %43,%CE,%2C,%41,%0A,%4D,%4C,%CE
+6110  2C49 270A 6C64 43C1   DB %2C,%49,%27,%0A,%6C,%64,%43,%C1
+6118  2C4E 0A00 6C64 44C9   DB %2C,%4E,%0A,%00,%6C,%64,%44,%C9
+6120  2C42 270A 4D4C C12C   DB %2C,%42,%27,%0A,%4D,%4C,%C1,%2C
+6128  4927 0A00 4B41 4D4C   DB %49,%27,%0A,%00,%4B,%41,%4D,%4C
+6130  C12C 4927 0A00 616E   DB %C1,%2C,%49,%27,%0A,%00,%61,%6E
+6138  6443 C12C 5A0A 6F72   DB %64,%43,%C1,%2C,%5A,%0A,%6F,%72
+6140  43C1 2C42 0A00 6C64   DB %43,%C1,%2C,%42,%0A,%00,%6C,%64
+6148  54C9 2C41 0A61 6E64   DB %54,%C9,%2C,%41,%0A,%61,%6E,%64
+6150  43C9 2C5A 0A6F 7243   DB %43,%C9,%2C,%5A,%0A,%6F,%72,%43
+6158  C92C 420A 6C64 43C1   DB %C9,%2C,%42,%0A,%6C,%64,%43,%C1
+6160  2C49 0A00 4B41 616E   DB %2C,%49,%0A,%00,%4B,%41,%61,%6E
+6168  6443 C12C 5A0A 6F72   DB %64,%43,%C1,%2C,%5A,%0A,%6F,%72
+6170  43C1 2C49 0A00 4741   DB %43,%C1,%2C,%49,%0A,%00,%47,%41
+6178  6C64 CA2C 420A 0047   DB %6C,%64,%CA,%2C,%42,%0A,%00,%47
+6180  414B 4900 4B43 4741   DB %41,%4B,%49,%00,%4B,%43,%47,%41
+6188  706F 70CA 2C40 0A00   DB %70,%6F,%70,%CA,%2C,%40,%0A,%00
+6190  6269 74C1 2C42 0A00   DB %62,%69,%74,%C1,%2C,%42,%0A,%00
+6198  6269 7443 C12C 420A   DB %62,%69,%74,%43,%C1,%2C,%42,%0A
+61A0  0047 4162 6974 43C9   DB %00,%47,%41,%62,%69,%74,%43,%C9
+61A8  2C42 0A00 4741 6663   DB %2C,%42,%0A,%00,%47,%41,%66,%63
+61B0  707A 78C9 0A00 4741   DB %70,%7A,%78,%C9,%0A,%00,%47,%41
+61B8  4B49 6663 7066 78C9   DB %4B,%49,%66,%63,%70,%66,%78,%C9
+61C0  2C4A 0A00 4B43 4741   DB %2C,%4A,%0A,%00,%4B,%43,%47,%41
+61C8  666C 6464 CA2C 400A   DB %66,%6C,%64,%64,%CA,%2C,%40,%0A
+61D0  696E 63D7 2C23 380A   DB %69,%6E,%63,%D7,%2C,%23,%38,%0A
+61D8  6663 7066 78C9 2C4A   DB %66,%63,%70,%66,%78,%C9,%2C,%4A
+61E0  0A00 4D27 C10A 004D   DB %0A,%00,%4D,%27,%C1,%0A,%00,%4D
+61E8  2743 C10A 0047 4500   DB %27,%43,%C1,%0A,%00,%47,%45,%00
+61F0  4DC1 2C42 0A00 4741   DB %4D,%C1,%2C,%42,%0A,%00,%47,%41
+61F8  4DC9 2C42 0A00 4B41   DB %4D,%C9,%2C,%42,%0A,%00,%4B,%41
+6200  4DC1 2C49 0A00 6C64   DB %4D,%C1,%2C,%49,%0A,%00,%6C,%64
+6208  43CE 2C41 0A4D 43CE   DB %43,%CE,%2C,%41,%0A,%4D,%43,%CE
+6210  2C42 0A00 6C64 54CE   DB %2C,%42,%0A,%00,%6C,%64,%54,%CE
+6218  2C41 0A4D 43CE 2C42   DB %2C,%41,%0A,%4D,%43,%CE,%2C,%42
+6220  0A00 4741 786F 72C6   DB %0A,%00,%47,%41,%78,%6F,%72,%C6
+6228  2C46 0A6C 6450 C52C   DB %2C,%46,%0A,%6C,%64,%50,%C5,%2C
+6230  420A 6370 6CC9 2C4F   DB %42,%0A,%63,%70,%6C,%C9,%2C,%4F
+6238  0A00 4841 0047 4370   DB %0A,%00,%48,%41,%00,%47,%43,%70
+6240  7573 68C0 2C23 300A   DB %75,%73,%68,%C0,%2C,%23,%30,%0A
+6248  0047 4166 6C64 6374   DB %00,%47,%41,%66,%6C,%64,%63,%74
+6250  6CCF 2C75 7365 720A   DB %6C,%CF,%2C,%75,%73,%65,%72,%0A
+6258  6673 6574 6D6F 6465   DB %66,%73,%65,%74,%6D,%6F,%64,%65
+6260  F27A 0A66 6C64 696C   DB %F2,%7A,%0A,%66,%6C,%64,%69,%6C
+6268  D52C 520A 666C 6463   DB %D5,%2C,%52,%0A,%66,%6C,%64,%63
+6270  746C F573 6572 2C4F   DB %74,%6C,%F5,%73,%65,%72,%2C,%4F
+6278  0A70 7573 68C0 2C49   DB %0A,%70,%75,%73,%68,%C0,%2C,%49
+6280  270A 0047 4166 6C64   DB %27,%0A,%00,%47,%41,%66,%6C,%64
+6288  6374 6CCF 2C75 7365   DB %63,%74,%6C,%CF,%2C,%75,%73,%65
+6290  720A 6673 6574 6D6F   DB %72,%0A,%66,%73,%65,%74,%6D,%6F
+6298  6465 F27A 0A66 6C64   DB %64,%65,%F2,%7A,%0A,%66,%6C,%64
+62A0  696C D52C 520A 666C   DB %69,%6C,%D5,%2C,%52,%0A,%66,%6C
+62A8  6463 746C F573 6572   DB %64,%63,%74,%6C,%F5,%73,%65,%72
+62B0  2C4F 0A70 7573 686C   DB %2C,%4F,%0A,%70,%75,%73,%68,%6C
+62B8  C02C 490A 0070 7573   DB %C0,%2C,%49,%0A,%00,%70,%75,%73
+62C0  68C0 2C23 300A 0070   DB %68,%C0,%2C,%23,%30,%0A,%00,%70
+62C8  7573 68C0 2C41 0A00   DB %75,%73,%68,%C0,%2C,%41,%0A,%00
+62D0  6C64 43CE 2C41 0A78   DB %6C,%64,%43,%CE,%2C,%41,%0A,%78
+62D8  6F72 62D1 2C51 0A70   DB %6F,%72,%62,%D1,%2C,%51,%0A,%70
+62E0  7573 68C0 2C4E 0A00   DB %75,%73,%68,%C0,%2C,%4E,%0A,%00
+62E8  7075 7368 C02C 410A   DB %70,%75,%73,%68,%C0,%2C,%41,%0A
+62F0  0047 4170 7573 686C   DB %00,%47,%41,%70,%75,%73,%68,%6C
+62F8  C02C 490A 0070 7573   DB %C0,%2C,%49,%0A,%00,%70,%75,%73
+6300  6843 C02C 410A 0047   DB %68,%43,%C0,%2C,%41,%0A,%00,%47
+6308  4164 6563 D72C 2338   DB %41,%64,%65,%63,%D7,%2C,%23,%38
+6310  0A66 6C64 64C0 2C49   DB %0A,%66,%6C,%64,%64,%C0,%2C,%49
+6318  0A00 0000 3F00 0600   DB %0A,%00,%00,%00,%3F,%00,%06,%00
+6320  5A40 0000 3F00 0600   DB %5A,%40,%00,%00,%3F,%00,%06,%00
+6328  5A49 0000 1000 3F00   DB %5A,%49,%00,%00,%10,%00,%3F,%00
+6330  5A59 0000 1000 3F00   DB %5A,%59,%00,%00,%10,%00,%3F,%00
+6338  5A5E 3F00 3F00 5A65   DB %5A,%5E,%3F,%00,%3F,%00,%5A,%65
+6340  0000 0400 3F00 5A6F   DB %00,%00,%04,%00,%3F,%00,%5A,%6F
+6348  4903 3F00 5A77 0903   DB %49,%03,%3F,%00,%5A,%77,%09,%03
+6350  3F00 5A87 1003 3F00   DB %3F,%00,%5A,%87,%10,%03,%3F,%00
+6358  5A77 1000 3F00 5A8E   DB %5A,%77,%10,%00,%3F,%00,%5A,%8E
+6360  1008 3F00 5A8E 1004   DB %10,%08,%3F,%00,%5A,%8E,%10,%04
+6368  3F00 5A97 3F00 3F00   DB %3F,%00,%5A,%97,%3F,%00,%3F,%00
+6370  5AA0 3F08 3F00 5AA0   DB %5A,%A0,%3F,%08,%3F,%00,%5A,%A0
+6378  3F04 3F00 5AA0 0000   DB %3F,%04,%3F,%00,%5A,%A0,%00,%00
+6380  0900 0600 5D5D 1000   DB %09,%00,%06,%00,%5D,%5D,%10,%00
+6388  0600 5AA3 1000 1001   DB %06,%00,%5A,%A3,%10,%00,%10,%01
+6390  5D74 1000 3F00 5D96   DB %5D,%74,%10,%00,%3F,%00,%5D,%96
+6398  4908 0600 5D74 1008   DB %49,%08,%06,%00,%5D,%74,%10,%08
+63A0  0600 5D74 1008 3F08   DB %06,%00,%5D,%74,%10,%08,%3F,%08
+63A8  5D96 1004 1004 5D84   DB %5D,%96,%10,%04,%10,%04,%5D,%84
+63B0  0000 0900 0600 5AAD   DB %00,%00,%09,%00,%06,%00,%5A,%AD
+63B8  1000 0600 5AB6 0900   DB %10,%00,%06,%00,%5A,%B6,%09,%00
+63C0  1001 5AC0 1000 1001   DB %10,%01,%5A,%C0,%10,%00,%10,%01
+63C8  5ACE 1008 0800 5ACE   DB %5A,%CE,%10,%08,%08,%00,%5A,%CE
+63D0  1004 1004 5AEA 1000   DB %10,%04,%10,%04,%5A,%EA,%10,%00
+63D8  3F00 5B0B 1008 3F00   DB %3F,%00,%5B,%0B,%10,%08,%3F,%00
+63E0  5B1C 0000 3F00 3F00   DB %5B,%1C,%00,%00,%3F,%00,%3F,%00
+63E8  5B45 3F08 3F00 5B4B   DB %5B,%45,%3F,%08,%3F,%00,%5B,%4B
+63F0  0000 3F00 3F00 5B45   DB %00,%00,%3F,%00,%3F,%00,%5B,%45
+63F8  1004 3F00 5B57 3F04   DB %10,%04,%3F,%00,%5B,%57,%3F,%04
+6400  3F00 5B61 3F08 3F00   DB %3F,%00,%5B,%61,%3F,%08,%3F,%00
+6408  5B6C 0000 1004 0400   DB %5B,%6C,%00,%00,%10,%04,%04,%00
+6410  5B85 0903 0900 5B94   DB %5B,%85,%09,%03,%09,%00,%5B,%94
+6418  1000 3F00 60DB 1008   DB %10,%00,%3F,%00,%60,%DB,%10,%08
+6420  3F08 60DB 1004 3F04   DB %3F,%08,%60,%DB,%10,%04,%3F,%04
+6428  60DB 0000 4900 1000   DB %60,%DB,%00,%00,%49,%00,%10,%00
+6430  6146 0900 1000 5B9C   DB %61,%46,%09,%00,%10,%00,%5B,%9C
+6438  1000 1000 6146 4900   DB %10,%00,%10,%00,%61,%46,%49,%00
+6440  3F00 5BCC 0900 3F00   DB %3F,%00,%5B,%CC,%09,%00,%3F,%00
+6448  5BB3 1000 3F00 5BCC   DB %5B,%B3,%10,%00,%3F,%00,%5B,%CC
+6450  0000 3F00 0400 5BEC   DB %00,%00,%3F,%00,%04,%00,%5B,%EC
+6458  3F08 0400 5BEC 3F04   DB %3F,%08,%04,%00,%5B,%EC,%3F,%04
+6460  0400 5BEC 1001 0600   DB %04,%00,%5B,%EC,%10,%01,%06,%00
+6468  5BEF 3F04 0804 5C39   DB %5B,%EF,%3F,%04,%08,%04,%5C,%39
+6470  3F00 0600 5BFE 3F00   DB %3F,%00,%06,%00,%5B,%FE,%3F,%00
+6478  1001 5C08 3F08 0800   DB %10,%01,%5C,%08,%3F,%08,%08,%00
+6480  5C10 3F08 1008 5C10   DB %5C,%10,%3F,%08,%10,%08,%5C,%10
+6488  3F04 1004 5C19 3F08   DB %3F,%04,%10,%04,%5C,%19,%3F,%08
+6490  1001 5C23 3F04 1404   DB %10,%01,%5C,%23,%3F,%04,%14,%04
+6498  5C39 3F00 1400 5C39   DB %5C,%39,%3F,%00,%14,%00,%5C,%39
+64A0  3F08 1408 5C39 3F00   DB %3F,%08,%14,%08,%5C,%39,%3F,%00
+64A8  3F00 5C45 3F08 3F08   DB %3F,%00,%5C,%45,%3F,%08,%3F,%08
+64B0  5C45 3F04 3F04 5C58   DB %5C,%45,%3F,%04,%3F,%04,%5C,%58
+64B8  0000 3F00 1001 5C08   DB %00,%00,%3F,%00,%10,%01,%5C,%08
+64C0  3F00 1400 5C39 1400   DB %3F,%00,%14,%00,%5C,%39,%14,%00
+64C8  3F00 5C39 3F00 3F00   DB %3F,%00,%5C,%39,%3F,%00,%3F,%00
+64D0  5C45 1008 3F00 5C73   DB %5C,%45,%10,%08,%3F,%00,%5C,%73
+64D8  3F08 1408 5C8D 1408   DB %3F,%08,%14,%08,%5C,%8D,%14,%08
+64E0  3F08 5C8D 3F08 3F08   DB %3F,%08,%5C,%8D,%3F,%08,%3F,%08
+64E8  5CA2 0000 3F00 0400   DB %5C,%A2,%00,%00,%3F,%00,%04,%00
+64F0  5CBC 3F08 0400 5CBC   DB %5C,%BC,%3F,%08,%04,%00,%5C,%BC
+64F8  1001 0600 5BEF 1008   DB %10,%01,%06,%00,%5B,%EF,%10,%08
+6500  0700 5BEF 3F00 0600   DB %07,%00,%5B,%EF,%3F,%00,%06,%00
+6508  5BFE 3F08 0700 5BFE   DB %5B,%FE,%3F,%08,%07,%00,%5B,%FE
+6510  3F00 0900 5CBF 3F08   DB %3F,%00,%09,%00,%5C,%BF,%3F,%08
+6518  0900 5CBF 1400 3F00   DB %09,%00,%5C,%BF,%14,%00,%3F,%00
+6520  5CC9 1408 3F00 5CC9   DB %5C,%C9,%14,%08,%3F,%00,%5C,%C9
+6528  3F00 1400 5CC9 3F08   DB %3F,%00,%14,%00,%5C,%C9,%3F,%08
+6530  1400 5CC9 3F00 3F00   DB %14,%00,%5C,%C9,%3F,%00,%3F,%00
+6538  5CD5 3F08 3F00 5CD5   DB %5C,%D5,%3F,%08,%3F,%00,%5C,%D5
+6540  0000 3F00 1001 5CE7   DB %00,%00,%3F,%00,%10,%01,%5C,%E7
+6548  3F00 1400 5CF1 3F00   DB %3F,%00,%14,%00,%5C,%F1,%3F,%00
+6550  3F00 5CFD 3F08 1008   DB %3F,%00,%5C,%FD,%3F,%08,%10,%08
+6558  5D11 3F08 1408 5D1B   DB %5D,%11,%3F,%08,%14,%08,%5D,%1B
+6560  3F08 3F08 5D27 3F04   DB %3F,%08,%3F,%08,%5D,%27,%3F,%04
+6568  0400 5D3B 3F04 1004   DB %04,%00,%5D,%3B,%3F,%04,%10,%04
+6570  5C19 3F04 1404 5C39   DB %5C,%19,%3F,%04,%14,%04,%5C,%39
+6578  3F04 3F04 5C58 0000   DB %3F,%04,%3F,%04,%5C,%58,%00,%00
+6580  1000 0400 5D4A 1008   DB %10,%00,%04,%00,%5D,%4A,%10,%08
+6588  0400 5D4A 1004 0400   DB %04,%00,%5D,%4A,%10,%04,%04,%00
+6590  5D4A 1003 0600 5D4D   DB %5D,%4A,%10,%03,%06,%00,%5D,%4D
+6598  1001 0600 5D5D 1008   DB %10,%01,%06,%00,%5D,%5D,%10,%08
+65A0  0600 5D74 0900 1001   DB %06,%00,%5D,%74,%09,%00,%10,%01
+65A8  5D66 1000 1001 5D74   DB %5D,%66,%10,%00,%10,%01,%5D,%74
+65B0  1008 1008 5D74 1004   DB %10,%08,%10,%08,%5D,%74,%10,%04
+65B8  1004 5D84 1000 3F00   DB %10,%04,%5D,%84,%10,%00,%3F,%00
+65C0  5D96 1008 3F08 5D96   DB %5D,%96,%10,%08,%3F,%08,%5D,%96
+65C8  1004 3F04 5D96 0000   DB %10,%04,%3F,%04,%5D,%96,%00,%00
+65D0  1000 1001 5DAA 1000   DB %10,%00,%10,%01,%5D,%AA,%10,%00
+65D8  1400 5DBB 1000 3F00   DB %14,%00,%5D,%BB,%10,%00,%3F,%00
+65E0  5DCE 1008 1008 5DE9   DB %5D,%CE,%10,%08,%10,%08,%5D,%E9
+65E8  1008 1408 5DFA 1008   DB %10,%08,%14,%08,%5D,%FA,%10,%08
+65F0  3F08 5E0D 1004 0400   DB %3F,%08,%5E,%0D,%10,%04,%04,%00
+65F8  5E28 1004 1004 5D84   DB %5E,%28,%10,%04,%10,%04,%5D,%84
+6600  3F04 3F04 5D96 0000   DB %3F,%04,%3F,%04,%5D,%96,%00,%00
+6608  1000 1001 5E37 1000   DB %10,%00,%10,%01,%5E,%37,%10,%00
+6610  1400 5E49 1000 3F00   DB %14,%00,%5E,%49,%10,%00,%3F,%00
+6618  5E5D 1008 1008 5E79   DB %5E,%5D,%10,%08,%10,%08,%5E,%79
+6620  1008 1408 5E8B 1008   DB %10,%08,%14,%08,%5E,%8B,%10,%08
+6628  3F08 5E9F 1004 0400   DB %3F,%08,%5E,%9F,%10,%04,%04,%00
+6630  5EBB 1004 1004 5D84   DB %5E,%BB,%10,%04,%10,%04,%5D,%84
+6638  1004 3F04 5D96 0000   DB %10,%04,%3F,%04,%5D,%96,%00,%00
+6640  1003 1001 5D74 1003   DB %10,%03,%10,%01,%5D,%74,%10,%03
+6648  3F00 5D96 0900 1001   DB %3F,%00,%5D,%96,%09,%00,%10,%01
+6650  5D66 1000 1001 5D74   DB %5D,%66,%10,%00,%10,%01,%5D,%74
+6658  1001 3F00 5ED2 1008   DB %10,%01,%3F,%00,%5E,%D2,%10,%08
+6660  1009 5EE0 1008 1008   DB %10,%09,%5E,%E0,%10,%08,%10,%08
+6668  5EFE 1008 3F00 5F1D   DB %5E,%FE,%10,%08,%3F,%00,%5F,%1D
+6670  1008 3F08 5F42 0000   DB %10,%08,%3F,%08,%5F,%42,%00,%00
+6678  4900 0600 5F60 4908   DB %49,%00,%06,%00,%5F,%60,%49,%08
+6680  0700 5F60 0900 0600   DB %07,%00,%5F,%60,%09,%00,%06,%00
+6688  5F71 1000 0600 5F60   DB %5F,%71,%10,%00,%06,%00,%5F,%60
+6690  1008 0700 5F60 1000   DB %10,%08,%07,%00,%5F,%60,%10,%00
+6698  0900 5F80 1008 0900   DB %09,%00,%5F,%80,%10,%08,%09,%00
+66A0  5F80 1003 3F00 5F91   DB %5F,%80,%10,%03,%3F,%00,%5F,%91
+66A8  1001 3F00 5FB5 1008   DB %10,%01,%3F,%00,%5F,%B5,%10,%08
+66B0  3F00 5FB5 0000 0400   DB %3F,%00,%5F,%B5,%00,%00,%04,%00
+66B8  3F00 5FD3 3F09 3F00   DB %3F,%00,%5F,%D3,%3F,%09,%3F,%00
+66C0  5FDA 3F00 3F00 5FF0   DB %5F,%DA,%3F,%00,%3F,%00,%5F,%F0
+66C8  0000 3F04 3F00 6003   DB %00,%00,%3F,%04,%3F,%00,%60,%03
+66D0  0000 0408 3F00 5FD3   DB %00,%00,%04,%08,%3F,%00,%5F,%D3
+66D8  3F08 3F00 603D 0000   DB %3F,%08,%3F,%00,%60,%3D,%00,%00
+66E0  3F04 3F00 6049 0000   DB %3F,%04,%3F,%00,%60,%49,%00,%00
+66E8  3F09 3F00 607A 3F00   DB %3F,%09,%3F,%00,%60,%7A,%3F,%00
+66F0  3F00 6087 0000 1008   DB %3F,%00,%60,%87,%00,%00,%10,%08
+66F8  3F00 6091 3F08 3F00   DB %3F,%00,%60,%91,%3F,%08,%3F,%00
+6700  6099 0000 3F00 3F00   DB %60,%99,%00,%00,%3F,%00,%3F,%00
+6708  60A5 0000 0903 0600   DB %60,%A5,%00,%00,%09,%03,%06,%00
+6710  61F0 1000 0600 60B0   DB %61,%F0,%10,%00,%06,%00,%60,%B0
+6718  0900 1001 60EC 1000   DB %09,%00,%10,%01,%60,%EC,%10,%00
+6720  1001 5D74 1000 3F00   DB %10,%01,%5D,%74,%10,%00,%3F,%00
+6728  5D96 1004 1004 5D84   DB %5D,%96,%10,%04,%10,%04,%5D,%84
+6730  1008 0600 5D74 0000   DB %10,%08,%06,%00,%5D,%74,%00,%00
+6738  0903 0400 60B8 1000   DB %09,%03,%04,%00,%60,%B8,%10,%00
+6740  0400 60C0 1004 0400   DB %04,%00,%60,%C0,%10,%04,%04,%00
+6748  5B85 1008 0400 60C6   DB %5B,%85,%10,%08,%04,%00,%60,%C6
+6750  4900 4900 60DB 4908   DB %49,%00,%49,%00,%60,%DB,%49,%08
+6758  4908 60DB 1000 4903   DB %49,%08,%60,%DB,%10,%00,%49,%03
+6760  60DB 4903 1000 60DB   DB %60,%DB,%49,%03,%10,%00,%60,%DB
+6768  1004 3F04 60DB 0900   DB %10,%04,%3F,%04,%60,%DB,%09,%00
+6770  0800 60E5 0900 4901   DB %08,%00,%60,%E5,%09,%00,%49,%01
+6778  60EC 4901 0900 60EC   DB %60,%EC,%49,%01,%09,%00,%60,%EC
+6780  1000 0800 60EC 0900   DB %10,%00,%08,%00,%60,%EC,%09,%00
+6788  0900 61F0 4901 1000   DB %09,%00,%61,%F0,%49,%01,%10,%00
+6790  60DB 1000 4901 60DB   DB %60,%DB,%10,%00,%49,%01,%60,%DB
+6798  1003 0900 60DB 0900   DB %10,%03,%09,%00,%60,%DB,%09,%00
+67A0  1003 60DB 1001 0900   DB %10,%03,%60,%DB,%10,%01,%09,%00
+67A8  60EC 0900 1001 60EC   DB %60,%EC,%09,%00,%10,%01,%60,%EC
+67B0  0000 0900 1001 60EC   DB %00,%00,%09,%00,%10,%01,%60,%EC
+67B8  0000 1000 0400 60F3   DB %00,%00,%10,%00,%04,%00,%60,%F3
+67C0  1008 0400 60F3 1003   DB %10,%08,%04,%00,%60,%F3,%10,%03
+67C8  0600 5D4D 1000 0600   DB %06,%00,%5D,%4D,%10,%00,%06,%00
+67D0  60F4 0900 1001 60EC   DB %60,%F4,%09,%00,%10,%01,%60,%EC
+67D8  4908 0600 5D74 0000   DB %49,%08,%06,%00,%5D,%74,%00,%00
+67E0  4900 0600 5F60 4908   DB %49,%00,%06,%00,%5F,%60,%49,%08
+67E8  0700 5F60 0900 0600   DB %07,%00,%5F,%60,%09,%00,%06,%00
+67F0  60FC 1000 0600 5F60   DB %60,%FC,%10,%00,%06,%00,%5F,%60
+67F8  1008 0700 5F60 1003   DB %10,%08,%07,%00,%5F,%60,%10,%03
+6800  3F00 5F91 4901 3F00   DB %3F,%00,%5F,%91,%49,%01,%3F,%00
+6808  6104 4908 3F00 6104   DB %61,%04,%49,%08,%3F,%00,%61,%04
+6810  0901 1000 611C 0901   DB %09,%01,%10,%00,%61,%1C,%09,%01
+6818  3F00 612C 1001 0900   DB %3F,%00,%61,%2C,%10,%01,%09,%00
+6820  5F80 1008 0900 5F80   DB %5F,%80,%10,%08,%09,%00,%5F,%80
+6828  1001 3F00 6104 1008   DB %10,%01,%3F,%00,%61,%04,%10,%08
+6830  3F00 6104 0000 4900   DB %3F,%00,%61,%04,%00,%00,%49,%00
+6838  1000 6146 0900 1000   DB %10,%00,%61,%46,%09,%00,%10,%00
+6840  6136 1000 1000 6146   DB %61,%36,%10,%00,%10,%00,%61,%46
+6848  4900 3F00 5BCC 0900   DB %49,%00,%3F,%00,%5B,%CC,%09,%00
+6850  3F00 6164 0000 3F00   DB %3F,%00,%61,%64,%00,%00,%3F,%00
+6858  1000 6176 3F00 1400   DB %10,%00,%61,%76,%3F,%00,%14,%00
+6860  617F 3F00 3F00 6184   DB %61,%7F,%3F,%00,%3F,%00,%61,%84
+6868  0000 0903 0600 6190   DB %00,%00,%09,%03,%06,%00,%61,%90
+6870  1000 0600 6198 3F00   DB %10,%00,%06,%00,%61,%98,%3F,%00
+6878  0600 61A1 0000 3F04   DB %06,%00,%61,%A1,%00,%00,%3F,%04
+6880  0400 61AC 3F04 1404   DB %04,%00,%61,%AC,%3F,%04,%14,%04
+6888  61B6 3F04 3F04 61C4   DB %61,%B6,%3F,%04,%3F,%04,%61,%C4
+6890  0903 0400 61E2 1000   DB %09,%03,%04,%00,%61,%E2,%10,%00
+6898  0400 61E7 1008 0400   DB %04,%00,%61,%E7,%10,%08,%04,%00
+68A0  61E7 1008 0408 61E7   DB %61,%E7,%10,%08,%04,%08,%61,%E7
+68A8  3F00 0400 61ED 3F08   DB %3F,%00,%04,%00,%61,%ED,%3F,%08
+68B0  0400 61ED 0903 0800   DB %04,%00,%61,%ED,%09,%03,%08,%00
+68B8  61F0 1003 0800 61F6   DB %61,%F0,%10,%03,%08,%00,%61,%F6
+68C0  1000 0800 60EC 0903   DB %10,%00,%08,%00,%60,%EC,%09,%03
+68C8  0903 61F0 0903 1001   DB %09,%03,%61,%F0,%09,%03,%10,%01
+68D0  61F0 1000 0903 61F6   DB %61,%F0,%10,%00,%09,%03,%61,%F6
+68D8  1003 1001 61F6 0903   DB %10,%03,%10,%01,%61,%F6,%09,%03
+68E0  1003 61FE 1003 1003   DB %10,%03,%61,%FE,%10,%03,%10,%03
+68E8  6206 0901 1001 60EC   DB %62,%06,%09,%01,%10,%01,%60,%EC
+68F0  1000 1000 6214 1008   DB %10,%00,%10,%00,%62,%14,%10,%08
+68F8  1008 6214 3F00 1001   DB %10,%08,%62,%14,%3F,%00,%10,%01
+6900  5C08 3F08 0800 6222   DB %5C,%08,%3F,%08,%08,%00,%62,%22
+6908  3F08 1009 6222 3F08   DB %3F,%08,%10,%09,%62,%22,%3F,%08
+6910  1008 5C10 3F00 1400   DB %10,%08,%5C,%10,%3F,%00,%14,%00
+6918  5C39 3F08 1408 5C39   DB %5C,%39,%3F,%08,%14,%08,%5C,%39
+6920  3F00 3F00 5C45 3F08   DB %3F,%00,%3F,%00,%5C,%45,%3F,%08
+6928  3F08 5C45 3F00 3F00   DB %3F,%08,%5C,%45,%3F,%00,%3F,%00
+6930  623A 3F04 0400 623A   DB %62,%3A,%3F,%04,%04,%00,%62,%3A
+6938  3F04 3F04 623A 0000   DB %3F,%04,%3F,%04,%62,%3A,%00,%00
+6940  3F09 3F00 623D 0000   DB %3F,%09,%3F,%00,%62,%3D,%00,%00
+6948  3F04 3F00 6249 0000   DB %3F,%04,%3F,%00,%62,%49,%00,%00
+6950  3F04 3F00 6283 0000   DB %3F,%04,%3F,%00,%62,%83,%00,%00
+6958  0400 3F00 62BD 0903   DB %04,%00,%3F,%00,%62,%BD,%09,%03
+6960  3F00 62C7 1003 3F00   DB %3F,%00,%62,%C7,%10,%03,%3F,%00
+6968  62D0 0900 3F00 62E8   DB %62,%D0,%09,%00,%3F,%00,%62,%E8
+6970  0B08 3F00 62F1 1001   DB %0B,%08,%3F,%00,%62,%F1,%10,%01
+6978  3F00 62FD 1008 3F00   DB %3F,%00,%62,%FD,%10,%08,%3F,%00
+6980  62FD 1004 3F00 6307   DB %62,%FD,%10,%04,%3F,%00,%63,%07
 _freopen:
 6988  5F00 75C4             CALL csv
 698C  61ED 0008             LD R13,%0008(R14)
@@ -9507,6 +9268,7 @@ L6BC2:
 6BC4  E802                  JR L6BCA
 L6BC6:
 6BC6  97D6                  POP R6,@R13
+L6BC8:
 6BC8  B330                  RL R3,#1
 L6BCA:
 6BCA  97D7                  POP R7,@R13
@@ -9559,15 +9321,18 @@ L6C16:
 6C16  97F0                  POP R0,@R15
 6C18  0100 0030             ADD R0,#%0030
 6C1C  0B00 0039             CP R0,#%0039
-L6C20:
 6C20  E202                  JR LE,L6C26
 6C22  0100 0007             ADD R0,#%0007
 L6C26:
 6C26  2EA8                  LDB @R10,RL0
 6C28  A9A0                  INC R10,#1
 6C2A  9E08                  RET
-6C2C  5F00 6CDC E827 5F00   DW %5F00,%6CDC,%E827,%5F00
-6C34  6CDC E824             DW %6CDC,%E824
+L6C2C:
+6C2C  5F00 6CDC             CALL L6CDC
+6C30  E827                  JR L6C80
+L6C32:
+6C32  5F00 6CDC             CALL L6CDC
+6C36  E824                  JR L6C80
 L6C38:
 6C38  A9B0                  INC R11,#1
 6C3A  8D94                  TEST R9
@@ -9577,7 +9342,10 @@ L6C38:
 L6C42:
 6C42  5F00 6CDC             CALL L6CDC
 6C46  E81C                  JR L6C80
-6C48  21DD 97DC 5E08 6B12   DW %21DD,%97DC,%5E08,%6B12
+L6C48:
+6C48  21DD                  LD R13,@R13
+6C4A  97DC                  POP R12,@R13
+6C4C  5E08 6B12             JP L6B12
 L6C50:
 6C50  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
 6C56  97D0                  POP R0,@R13
@@ -9590,13 +9358,11 @@ L6C62:
 6C62  4DE5 FFEE 0020        LD %FFEE(R14),#%0020
 6C68  97D2                  POP R2,@R13
 6C6A  8D24                  TEST R2
-L6C6C:
 6C6C  EE02                  JR NZ,L6C72
 6C6E  2102 8A82             LD R2,#%8A82
 L6C72:
 6C72  A12A                  LD R10,R2
 6C74  8888                  XORB RL0,RL0
-L6C76:
 6C76  BAA4 0B86             CPIRB RL0,@R10,R11,Z
 6C7A  EE03                  JR NZ,L6C82
 6C7C  ABA0                  DEC R10,#1
@@ -10283,9 +10049,7 @@ L72F4:
 72FC  EBE6                  JR UGT,L72CA
 72FE  4B0C 92CE             CP R12,%92CE
 7302  EE03                  JR NZ,L730A
-7304  0B0D                  DW %0B0D
-L7306:
-7306  92C8                  SUBL RR8,RR12
+7304  0B0D 92C8             CP R13,#%92C8
 7308  E603                  JR Z,L7310
 L730A:
 730A  8922                  XOR R2,R2
@@ -10375,71 +10139,23 @@ L73CE:
 73E8  5F00 75C4 61ED 0004   DW %5F00,%75C4,%61ED,%0004
 73F0  67D0 FFFE E604 93FD   DW %67D0,%FFFE,%E604,%93FD
 73F8  5F00 73CE A9F1 61D3   DW %5F00,%73CE,%A9F1,%61D3
-L7400:
-7400  FFFE                  DJNZ R15,L7306
-7402  83D3                  SUB R3,R13
-7404  B12A                  EXTS RR2
-7406  1B02 0002             DIV RR2,#%0002
-L740A:
-740A  A13A                  LD R10,R3
-740C  53FE 0006             PUSH @R15,%0006(R14)
-7410  5F00 7284             CALL L7284
-7414  A9F1                  INC R15,#2
-7416  A12C                  LD R12,R2
-7418  8DC4                  TEST R12
-741A  E602                  JR Z,L7420
-741C  8BDC                  CP R12,R13
-741E  EE03                  JR NZ,L7426
-L7420:
-7420  A1C2                  LD R2,R12
-7422  5E08 75D2             JP cret
-L7426:
-7426  A1D9                  LD R9,R13
-7428  A1C8                  LD R8,R12
-742A  61E2 0006             LD R2,%0006(R14)
-742E  A920                  INC R2,#1
-7430  2103 FFFF             LD R3,#%FFFF
-7434  B323 0300             SDL R2,R3
-7438  A12B                  LD R11,R2
-743A  8BAB                  CP R11,R10
-743C  EF08                  JR NC,L744E
-743E  A1BA                  LD R10,R11
-7440  E806                  JR L744E
-L7442:
-7442  A182                  LD R2,R8
-7444  A981                  INC R8,#2
-7446  A193                  LD R3,R9
-7448  A991                  INC R9,#2
-744A  2134                  LD R4,@R3
-744C  2F24                  LD @R2,R4
-L744E:
-744E  A1A2                  LD R2,R10
-7450  ABA0                  DEC R10,#1
-7452  8D24                  TEST R2
-7454  EEF6                  JR NZ,L7442
-7456  8BDC                  CP R12,R13
-7458  EFE3                  JR NC,L7420
-745A  A1B2                  LD R2,R11
-745C  B321 0001             SLL R2,#1
-7460  81C2                  ADD R2,R12
-7462  8BD2                  CP R2,R13
-7464  E7DD                  JR C,L7420
-7466  A1B2                  LD R2,R11
-7468  B321 0001             SLL R2,#1
-L746C:
-746C  81C2                  ADD R2,R12
-746E  83D2                  SUB R2,R13
-7470  A123                  LD R3,R2
-L7472:
-7472  B12A                  EXTS RR2
-L7474:
-7474  1B02 0002             DIV RR2,#%0002
-7478  A132                  LD R2,R3
-747A  B329 0001             SLA R2,#1
-747E  81C2                  ADD R2,R12
-7480  6103 92D0             LD R3,%92D0
-7484  2F23                  LD @R2,R3
-7486  E8CC                  JR L7420
+7400  FFFE 83D3 B12A 1B02   DW %FFFE,%83D3,%B12A,%1B02
+7408  0002 A13A 53FE 0006   DW %0002,%A13A,%53FE,%0006
+7410  5F00 7284 A9F1 A12C   DW %5F00,%7284,%A9F1,%A12C
+7418  8DC4 E602 8BDC EE03   DW %8DC4,%E602,%8BDC,%EE03
+7420  A1C2 5E08 75D2 A1D9   DW %A1C2,%5E08,%75D2,%A1D9
+7428  A1C8 61E2 0006 A920   DW %A1C8,%61E2,%0006,%A920
+7430  2103 FFFF B323 0300   DW %2103,%FFFF,%B323,%0300
+7438  A12B 8BAB EF08 A1BA   DW %A12B,%8BAB,%EF08,%A1BA
+7440  E806 A182 A981 A193   DW %E806,%A182,%A981,%A193
+7448  A991 2134 2F24 A1A2   DW %A991,%2134,%2F24,%A1A2
+7450  ABA0 8D24 EEF6 8BDC   DW %ABA0,%8D24,%EEF6,%8BDC
+7458  EFE3 A1B2 B321 0001   DW %EFE3,%A1B2,%B321,%0001
+7460  81C2 8BD2 E7DD A1B2   DW %81C2,%8BD2,%E7DD,%A1B2
+7468  B321 0001 81C2 83D2   DW %B321,%0001,%81C2,%83D2
+7470  A123 B12A 1B02 0002   DW %A123,%B12A,%1B02,%0002
+7478  A132 B329 0001 81C2   DW %A132,%B329,%0001,%81C2
+7480  6103 92D0 2F23 E8CC   DW %6103,%92D0,%2F23,%E8CC
 _isatty:
 7488  5F00 75C4             CALL csv
 748C  ABFB                  DEC R15,#12
@@ -10540,9 +10256,15 @@ L7582:
 7584  97FE                  POP R14,@R15
 7586  9E08                  RET
 _brk:
-7588  93FE A1FE 61E0 0004   DW %93FE,%A1FE,%61E0,%0004
-7590  7F11 5E07 75B6 6F00   DW %7F11,%5E07,%75B6,%6F00
-7598  8BAC 8922 97FE 9E08   DW %8BAC,%8922,%97FE,%9E08
+7588  93FE                  PUSH @R15,R14
+758A  A1FE                  LD R14,R15
+758C  61E0 0004             LD R0,%0004(R14)
+7590  7F11                  SC #%11
+7592  5E07 75B6             JP C,cerror
+7596  6F00 8BAC             LD L8BAC,R0
+759A  8922                  XOR R2,R2
+759C  97FE                  POP R14,@R15
+759E  9E08                  RET
 _write:
 75A0  93FE                  PUSH @R15,R14
 75A2  A1FE                  LD R14,R15
@@ -10604,38 +10326,48 @@ L7620:
 L7622:
 7622  0000                  DW %0000
 L7624:
-7624  08F4 0922 0942 096A   DW %08F4,%0922,%0942,%096A
+7624  08F4 0922 0942        DW L08F4,L0922,L0942
+762A  09                    DB %09
+762B  6A                    DB %6A
 L762C:
-762C  0FE2 15EC 15EC 15EC   DW %0FE2,%15EC,%15EC,%15EC
-7634  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-763C  15EC 15EC 0FDA 15EC   DW %15EC,%15EC,%0FDA,%15EC
-7644  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-764C  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-7654  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-765C  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-7664  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-766C  15EC 15EC 1028 1022   DW %15EC,%15EC,%1028,%1022
-7674  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-767C  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-7684  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-768C  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-7694  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-769C  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-76A4  15EC 15EC 15EC 15EC   DW %15EC,%15EC,%15EC,%15EC
-76AC  1016 102E 109C 1140   DW %1016,%102E,%109C,%1140
-76B4  1174 149A 14C8 12B4   DW %1174,%149A,%14C8,%12B4
-76BC  12CA 1470 1502 12BE   DW %12CA,%1470,%1502,%12BE
-76C4  124C 10A2 14FE 14B8   DW %124C,%10A2,%14FE,%14B8
-76CC  1152 14C0 14A2 14D0   DW %1152,%14C0,%14A2,%14D0
-76D4  10F4 146A 127A 1564   DW %10F4,%146A,%127A,%1564
-76DC  157A 14E6 156C        DW %157A,%14E6,%156C
+762C  0FE2 15EC 15EC 15EC   DW L0FE2,L15EC,L15EC,L15EC
+7634  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+763C  15EC 15EC 0FDA 15EC   DW L15EC,L15EC,L0FDA,L15EC
+7644  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+764C  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+7654  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+765C  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+7664  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+766C  15EC 15EC 1028 1022   DW L15EC,L15EC,L1028,L1022
+7674  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+767C  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+7684  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+768C  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+7694  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+769C  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+76A4  15EC 15EC 15EC 15EC   DW L15EC,L15EC,L15EC,L15EC
+76AC  1016 102E 109C 1140   DW L1016,L102E,L109C,L1140
+76B4  1174 149A 14C8 12B4   DW L1174,L149A,L14C8,L12B4
+76BC  12CA 1470 1502 12BE   DW L12CA,L1470,L1502,L12BE
+76C4  124C 10A2 14FE 14B8   DW L124C,L10A2,L14FE,L14B8
+76CC  1152 14C0 14A2 14D0   DW L1152,L14C0,L14A2,L14D0
+76D4  10F4 146A 127A 1564   DW L10F4,L146A,L127A,L1564
+76DC  157A 14E6             DW L157A,L14E6
+76E0  15                    DB %15
+76E1  6C                    DB %6C
 L76E2:
-76E2  18A6 18FA             DW %18A6,%18FA
+76E2  18A6                  DW L18A6
+76E4  18                    DB %18
+76E5  FA                    DB %FA
 L76E6:
-76E6  1934 1960             DW %1934,%1960
+76E6  1934                  DW L1934
+76E8  19                    DB %19
+76E9  60                    DB %60
 L76EA:
-76EA  1CC8 1EEE 1D98 1D98   DW %1CC8,%1EEE,%1D98,%1D98
-76F2  1EEE 1EEE 1E8E 1CC8   DW %1EEE,%1EEE,%1E8E,%1CC8
+76EA  1CC8 1EEE 1D98 1D98   DW L1CC8,L1EEE,L1D98,L1D98
+76F2  1EEE 1EEE 1E8E        DW L1EEE,L1EEE,L1E8E
+76F8  1C                    DB %1C
+76F9  C8                    DB %C8
 76FA  4172 6720 636F 756E   DW %4172,%6720,%636F,%756E
 7702  7400 7200 4D69 7373   DW %7400,%7200,%4D69,%7373
 770A  696E 6720 7465 6D70   DW %696E,%6720,%7465,%6D70
@@ -10784,24 +10516,30 @@ L7B48:
 L7B4A:
 7B4A  0000                  DW %0000
 L7B4C:
-7B4C  2558 2558 2562 2570   DW %2558,%2558,%2562,%2570
-7B54  2570 2570 2570 2570   DW %2570,%2570,%2570,%2570
-7B5C  2502 24F4 24F4        DW %2502,%24F4,%24F4
+7B4C  2558 2558 2562 2570   DW L2558,L2558,L2562,L2570
+7B54  2570 2570 2570 2570   DW L2570,L2570,L2570,L2570
+7B5C  2502 24F4             DW L2502,L24F4
+7B60  24                    DB %24
+7B61  F4                    DB %F4
 L7B62:
-7B62  2456 2412 2640 243A   DW %2456,%2412,%2640,%243A
-7B6A  2640 23CC 2640 2640   DW %2640,%23CC,%2640,%2640
-7B72  2640 2640 2640 2640   DW %2640,%2640,%2640,%2640
-7B7A  2640 2640 2640 2578   DW %2640,%2640,%2640,%2578
-7B82  25C8                  DW %25C8
+7B62  2456 2412 2640 243A   DW L2456,L2412,L2640,L243A
+7B6A  2640 23CC 2640 2640   DW L2640,L23CC,L2640,L2640
+7B72  2640 2640 2640 2640   DW L2640,L2640,L2640,L2640
+7B7A  2640 2640 2640 2578   DW L2640,L2640,L2640,L2578
+7B82  25                    DB %25
+7B83  C8                    DB %C8
 L7B84:
-7B84  26FC 2710 277A 2708   DW %26FC,%2710,%277A,%2708
-7B8C  277A 270C 277A 277A   DW %277A,%270C,%277A,%277A
-7B94  277A 277A 277A 277A   DW %277A,%277A,%277A,%277A
-7B9C  277A 277A 277A 2708   DW %277A,%277A,%277A,%2708
-7BA4  274A                  DW %274A
+7B84  26FC 2710 277A 2708   DW L26FC,L2710,L277A,L2708
+7B8C  277A 270C 277A 277A   DW L277A,L270C,L277A,L277A
+7B94  277A 277A 277A 277A   DW L277A,L277A,L277A,L277A
+7B9C  277A 277A 277A 2708   DW L277A,L277A,L277A,L2708
+7BA4  27                    DB %27
+7BA5  4A                    DB %4A
 L7BA6:
-7BA6  29F8 29F8 2A14 2A14   DW %29F8,%29F8,%2A14,%2A14
-7BAE  2A18 2A18 2A10 29F8   DW %2A18,%2A18,%2A10,%29F8
+7BA6  29F8 29F8 2A14 2A14   DW L29F8,L29F8,L2A14,L2A14
+7BAE  2A18 2A18 2A10        DW L2A18,L2A18,L2A10
+7BB4  29                    DB %29
+7BB5  F8                    DB %F8
 7BB6  6370 0972 322C 2325   DW %6370,%0972,%322C,%2325
 7BBE  2525 780A 6A70 0975   DW %2525,%780A,%6A70,%0975
 7BC6  6774 2C4C 2564 0A61   DW %6774,%2C4C,%2564,%0A61
@@ -10826,405 +10564,423 @@ L7BA6:
 7C5E  4E20 2573 5F64 0A49   DW %4E20,%2573,%5F64,%0A49
 7C66  0A4C 2564 3A0A 0000   DW %0A4C,%2564,%3A0A,%0000
 L7C6E:
-7C6E  355E 3564 3570 356A   DW %355E,%3564,%3570,%356A
+7C6E  355E 3564 3570        DW L355E,L3564,L3570
+7C74  35                    DB %35
+7C75  6A                    DB %6A
 L7C76:
-7C76  3ACA 3B2C 3B46 3B68   DW %3ACA,%3B2C,%3B46,%3B68
-7C7E  3B8A 3BAC 3BCE 3BF2   DW %3B8A,%3BAC,%3BCE,%3BF2
-7C86  3C16 2325 2525 6C78   DW %3C16,%2325,%2525,%6C78
-7C8E  0023 2525 2578 0023   DW %0023,%2525,%2578,%0023
-7C96  2525 2578 0023 004C   DW %2525,%2578,%0023,%004C
-7C9E  2564 0028 4650 2900   DW %2564,%0028,%4650,%2900
-7CA6  4046 5000 2872 2564   DW %4046,%5000,%2872,%2564
-7CAE  2900 4072 2564 0043   DW %2900,%4072,%2564,%0043
-7CB6  6F6D 7069 6C65 7220   DW %6F6D,%7069,%6C65,%7220
-7CBE  6572 726F 723A 2070   DW %6572,%726F,%723A,%2070
-7CC6  6E61 6D65 0069 6C6C   DW %6E61,%6D65,%0069,%6C6C
-7CCE  6567 616C 2069 6E64   DW %6567,%616C,%2069,%6E64
-7CD6  6972 6563 7469 6F6E   DW %6972,%6563,%7469,%6F6E
-7CDE  0070 6E61 6D65 2063   DW %0070,%6E61,%6D65,%2063
-7CE6  616C 6C65 6420 696C   DW %616C,%6C65,%6420,%696C
-7CEE  6C65 6761 6C6C 7900   DW %6C65,%6761,%6C6C,%7900
-7CF6  496C 6C65 6761 6C20   DW %496C,%6C65,%6761,%6C20
-7CFE  7573 6520 6F66 2072   DW %7573,%6520,%6F66,%2072
-7D06  6567 6973 7465 7200   DW %6567,%6973,%7465,%7200
-7D0E  4C25 6400 252E 3873   DW %4C25,%6400,%252E,%3873
-7D16  0025 7300 4E6F 206D   DW %0025,%7300,%4E6F,%206D
-7D1E  6174 6368 2720 666F   DW %6174,%6368,%2720,%666F
-7D26  7220 6F70 2025 6400   DW %7220,%6F70,%2025,%6400
-7D2E  5265 6769 7374 6572   DW %5265,%6769,%7374,%6572
-7D36  206F 7665 7266 6C6F   DW %206F,%7665,%7266,%6C6F
-7D3E  7720 666F 7220 6C6F   DW %7720,%666F,%7220,%6C6F
-7D46  6E67 733A 2073 696D   DW %6E67,%733A,%2073,%696D
-7D4E  706C 6966 7920 6578   DW %706C,%6966,%7920,%6578
-7D56  7072 6573 7369 6F6E   DW %7072,%6573,%7369,%6F6E
-7D5E  006A 7009 4C25 640A   DW %006A,%7009,%4C25,%640A
-7D66  0073 7562 0972 322C   DW %0073,%7562,%0972,%322C
-7D6E  2325 2525 780A 0057   DW %2325,%2525,%780A,%0057
-7D76  5620 4C25 640A 0057   DW %5620,%4C25,%640A,%0057
-7D7E  5620 4C25 640A 006A   DW %5620,%4C25,%640A,%006A
-7D86  7009 4C25 640A 0057   DW %7009,%4C25,%640A,%0057
-7D8E  5620 4C25 640A 004C   DW %5620,%4C25,%640A,%004C
-7D96  2564 3A0A 006A 7009   DW %2564,%3A0A,%006A,%7009
-7D9E  4C25 640A 0074 6573   DW %4C25,%640A,%0074,%6573
-7DA6  7409 7232 0A00 6370   DW %7409,%7232,%0A00,%6370
-7DAE  0972 322C 2325 2525   DW %0972,%322C,%2325,%2525
-7DB6  780A 006A 7009 6571   DW %780A,%006A,%7009,%6571
-7DBE  094C 2564 0A00 4475   DW %094C,%2564,%0A00,%4475
-7DC6  706C 6963 6174 6520   DW %706C,%6963,%6174,%6520
-7DCE  6361 7365 2028 2564   DW %6361,%7365,%2028,%2564
-7DD6  2900 706F 7732 2062   DW %2900,%706F,%7732,%2062
-7DDE  6F74 6368 006A 7009   DW %6F74,%6368,%006A,%7009
-7DE6  6571 094C 2564 0A00   DW %6571,%094C,%2564,%0A00
-7DEE  6A70 0970 6C09 4C25   DW %6A70,%0970,%6C09,%4C25
-7DF6  640A 004C 2564 3A0A   DW %640A,%004C,%2564,%3A0A
-7DFE  006A 7009 6D69 094C   DW %006A,%7009,%6D69,%094C
-7E06  2564 0A00 6A70 0965   DW %2564,%0A00,%6A70,%0965
-7E0E  7100 6A70 0970 6C00   DW %7100,%6A70,%0970,%6C00
-7E16  6A70 096D 6900 6A70   DW %6A70,%096D,%6900,%6A70
-7E1E  0009 4C25 640A 004C   DW %0009,%4C25,%640A,%004C
-7E26  2564 3A0A 0069 6E63   DW %2564,%3A0A,%0069,%6E63
-7E2E  0953 502C 2325 2525   DW %0953,%502C,%2325,%2525
-7E36  780A 0061 6464 0953   DW %780A,%0061,%6464,%0953
-7E3E  502C 2325 2525 780A   DW %502C,%2325,%2525,%780A
-7E46  0025 643A 2000 2525   DW %0025,%643A,%2000,%2525
-7E4E  2578 0053 7461 636B   DW %2578,%0053,%7461,%636B
-7E56  206F 7665 7266 6C6F   DW %206F,%7665,%7266,%6C6F
-7E5E  7720 626F 7463 6800   DW %7720,%626F,%7463,%6800
-7E66  496E 7465 726D 6564   DW %496E,%7465,%726D,%6564
-7E6E  6961 7465 2066 696C   DW %6961,%7465,%2066,%696C
-7E76  6520 6572 726F 7200   DW %6520,%6572,%726F,%7200
-7E7E  5756 2025 2525 780A   DW %5756,%2025,%2525,%780A
-7E86  0042 5620 0025 2525   DW %0042,%5620,%0025,%2525
-7E8E  7800 3B00 0A00 6A70   DW %7800,%3B00,%0A00,%6A70
-7E96  0963 7265 740A 0058   DW %0963,%7265,%740A,%0058
-7E9E  0925 2E38 7309 0042   DW %0925,%2E38,%7309,%0042
-7EA6  0A00 570A 006C 6F6E   DW %0A00,%570A,%006C,%6F6E
-7EAE  670A 0041 5B25 2525   DW %670A,%0041,%5B25,%2525
-7EB6  7820 425D 0A00 2452   DW %7820,%425D,%0A00,%2452
-7EBE  454C 0924 2B25 2525   DW %454C,%0924,%2B25,%2525
-7EC6  780A 0024 4556 454E   DW %780A,%0024,%4556,%454E
-7ECE  0A00 6361 6C6C 0963   DW %0A00,%6361,%6C6C,%0963
-7ED6  7376 0A00 6465 6309   DW %7376,%0A00,%6465,%6309
-7EDE  5350 2C23 2525 2578   DW %5350,%2C23,%2525,%2578
-7EE6  0A00 7375 6209 5350   DW %0A00,%7375,%6209,%5350
-7EEE  2C23 2525 2578 0A00   DW %2C23,%2525,%2578,%0A00
-7EF6  6C64 0972 322C 234C   DW %6C64,%0972,%322C,%234C
-7EFE  2564 0A2C 6361 6C6C   DW %2564,%0A2C,%6361,%6C6C
-7F06  096D 636F 756E 740A   DW %096D,%636F,%756E,%740A
-7F0E  004C 2564 3A0A 2452   DW %004C,%2564,%3A0A,%2452
-7F16  454C 0924 2B32 0A00   DW %454C,%0924,%2B32,%0A00
-7F1E  7E25 733A 3D4C 2564   DW %7E25,%733A,%3D4C,%2564
-7F26  0A00 7E25 733A 3D25   DW %0A00,%7E25,%733A,%3D25
-7F2E  2525 780A 007E 2573   DW %2525,%780A,%007E,%2573
-7F36  3A3D 7225 640A 0045   DW %3A3D,%7225,%640A,%0045
-7F3E  7870 7265 7373 696F   DW %7870,%7265,%7373,%696F
-7F46  6E20 696E 7075 7420   DW %6E20,%696E,%7075,%7420
-7F4E  626F 7463 6800 7465   DW %626F,%7463,%6800,%7465
-7F56  7374 6C09 7272 320A   DW %7374,%6C09,%7272,%320A
-7F5E  0066 6370 7A78 0966   DW %0066,%6370,%7A78,%0966
-7F66  300A 006A 7009 6774   DW %300A,%006A,%7009,%6774
-7F6E  094C 2564 0A00 6A70   DW %094C,%2564,%0A00,%6A70
-7F76  096C 7409 4C25 640A   DW %096C,%7409,%4C25,%640A
-7F7E  6A70 094C 2564 0A00   DW %6A70,%094C,%2564,%0A00
-7F86  252E 3873 094C 0A00   DW %252E,%3873,%094C,%0A00
-7F8E  252E 3873 3A0A 0047   DW %252E,%3873,%3A0A,%0047
-7F96  0009 252E 3873 0950   DW %0009,%252E,%3873,%0950
-7F9E  520A 0049 0925 7309   DW %520A,%0049,%0925,%7309
-7FA6  5052 0A00 7E7E 2573   DW %5052,%0A00,%7E7E,%2573
-7FAE  3A0A 450A 0065 6E64   DW %3A0A,%450A,%0065,%6E64
-7FB6  2025 2E38 730A 490A   DW %2025,%2E38,%730A,%490A
-7FBE  0042 696E 6172 7920   DW %0042,%696E,%6172,%7920
-7FC6  6578 7072 6573 7369   DW %6578,%7072,%6573,%7369
-7FCE  6F6E 2062 6F74 6368   DW %6F6E,%2062,%6F74,%6368
-7FD6  0024 4441 5441 0A24   DW %0024,%4441,%5441,%0A24
-7FDE  5345 4354 494F 4E20   DW %5345,%4354,%494F,%4E20
-7FE6  4253 535F 420A 490A   DW %4253,%535F,%420A,%490A
-7FEE  0024 5345 4354 494F   DW %0024,%5345,%4354,%494F
-7FF6  4E20 4253 535F 420A   DW %4E20,%4253,%535F,%420A
-7FFE  490A 0024 4441 5441   DW %490A,%0024,%4441,%5441
-8006  0A24 5345 4354 494F   DW %0A24,%5345,%4354,%494F
-800E  4E20 2573 5F64 0A49   DW %4E20,%2573,%5F64,%0A49
-8016  0A00 2453 4445 4641   DW %0A00,%2453,%4445,%4641
-801E  554C 540A 0047 0A00   DW %554C,%540A,%0047,%0A00
-8026  490A 0024 434F 4445   DW %490A,%0024,%434F,%4445
-802E  0A00 2453 4445 4641   DW %0A00,%2453,%4445,%4641
-8036  554C 540A 004C 2564   DW %554C,%540A,%004C,%2564
-803E  3A0A 2452 454C 0924   DW %3A0A,%2452,%454C,%0924
-8046  2B25 2525 780A 006C   DW %2B25,%2525,%780A,%006C
-804E  6409 7232 2C23 4C25   DW %6409,%7232,%2C23,%4C25
-8056  640A 0049 6C6C 6567   DW %640A,%0049,%6C6C,%6567
-805E  616C 2073 7472 7563   DW %616C,%2073,%7472,%7563
-8066  7475 7265 206F 7065   DW %7475,%7265,%206F,%7065
-806E  7261 7469 6F6E 0075   DW %7261,%7469,%6F6E,%0075
-8076  6E69 6D70 6C65 6D65   DW %6E69,%6D70,%6C65,%6D65
-807E  6E74 6564 2073 7472   DW %6E74,%6564,%2073,%7472
-8086  7563 7475 7265 2061   DW %7563,%7475,%7265,%2061
-808E  7373 6967 6E6D 656E   DW %7373,%6967,%6E6D,%656E
-8096  7400 6C64 0972 302C   DW %7400,%6C64,%0972,%302C
-809E  2325 2525 780A 006C   DW %2325,%2525,%780A,%006C
-80A6  6469 7209 4072 322C   DW %6469,%7209,%4072,%322C
-80AE  4072 332C 7230 0A00   DW %4072,%332C,%7230,%0A00
-80B6  496C 6C65 6761 6C20   DW %496C,%6C65,%6761,%6C20
-80BE  696E 6469 7265 6374   DW %696E,%6469,%7265,%6374
-80C6  696F 6E00             DW %696F,%6E00
+7C76  3ACA 3B2C 3B46 3B68   DW L3ACA,L3B2C,L3B46,L3B68
+7C7E  3B8A 3BAC 3BCE 3BF2   DW L3B8A,L3BAC,L3BCE,L3BF2
+7C86  3C                    DB %3C
+7C87  16                    DB %16
+7C88  2325 2525 6C78 0023   DW %2325,%2525,%6C78,%0023
+7C90  2525 2578 0023 2525   DW %2525,%2578,%0023,%2525
+7C98  2578 0023 004C 2564   DW %2578,%0023,%004C,%2564
+7CA0  0028 4650 2900 4046   DW %0028,%4650,%2900,%4046
+7CA8  5000 2872 2564 2900   DW %5000,%2872,%2564,%2900
+7CB0  4072 2564 0043 6F6D   DW %4072,%2564,%0043,%6F6D
+7CB8  7069 6C65 7220 6572   DW %7069,%6C65,%7220,%6572
+7CC0  726F 723A 2070 6E61   DW %726F,%723A,%2070,%6E61
+7CC8  6D65 0069 6C6C 6567   DW %6D65,%0069,%6C6C,%6567
+7CD0  616C 2069 6E64 6972   DW %616C,%2069,%6E64,%6972
+7CD8  6563 7469 6F6E 0070   DW %6563,%7469,%6F6E,%0070
+7CE0  6E61 6D65 2063 616C   DW %6E61,%6D65,%2063,%616C
+7CE8  6C65 6420 696C 6C65   DW %6C65,%6420,%696C,%6C65
+7CF0  6761 6C6C 7900 496C   DW %6761,%6C6C,%7900,%496C
+7CF8  6C65 6761 6C20 7573   DW %6C65,%6761,%6C20,%7573
+7D00  6520 6F66 2072 6567   DW %6520,%6F66,%2072,%6567
+7D08  6973 7465 7200 4C25   DW %6973,%7465,%7200,%4C25
+7D10  6400 252E 3873 0025   DW %6400,%252E,%3873,%0025
+7D18  7300 4E6F 206D 6174   DW %7300,%4E6F,%206D,%6174
+7D20  6368 2720 666F 7220   DW %6368,%2720,%666F,%7220
+7D28  6F70 2025 6400 5265   DW %6F70,%2025,%6400,%5265
+7D30  6769 7374 6572 206F   DW %6769,%7374,%6572,%206F
+7D38  7665 7266 6C6F 7720   DW %7665,%7266,%6C6F,%7720
+7D40  666F 7220 6C6F 6E67   DW %666F,%7220,%6C6F,%6E67
+7D48  733A 2073 696D 706C   DW %733A,%2073,%696D,%706C
+7D50  6966 7920 6578 7072   DW %6966,%7920,%6578,%7072
+7D58  6573 7369 6F6E 006A   DW %6573,%7369,%6F6E,%006A
+7D60  7009 4C25 640A 0073   DW %7009,%4C25,%640A,%0073
+7D68  7562 0972 322C 2325   DW %7562,%0972,%322C,%2325
+7D70  2525 780A 0057 5620   DW %2525,%780A,%0057,%5620
+7D78  4C25 640A 0057 5620   DW %4C25,%640A,%0057,%5620
+7D80  4C25 640A 006A 7009   DW %4C25,%640A,%006A,%7009
+7D88  4C25 640A 0057 5620   DW %4C25,%640A,%0057,%5620
+7D90  4C25 640A 004C 2564   DW %4C25,%640A,%004C,%2564
+7D98  3A0A 006A 7009 4C25   DW %3A0A,%006A,%7009,%4C25
+7DA0  640A 0074 6573 7409   DW %640A,%0074,%6573,%7409
+7DA8  7232 0A00 6370 0972   DW %7232,%0A00,%6370,%0972
+7DB0  322C 2325 2525 780A   DW %322C,%2325,%2525,%780A
+7DB8  006A 7009 6571 094C   DW %006A,%7009,%6571,%094C
+7DC0  2564 0A00 4475 706C   DW %2564,%0A00,%4475,%706C
+7DC8  6963 6174 6520 6361   DW %6963,%6174,%6520,%6361
+7DD0  7365 2028 2564 2900   DW %7365,%2028,%2564,%2900
+7DD8  706F 7732 2062 6F74   DW %706F,%7732,%2062,%6F74
+7DE0  6368 006A 7009 6571   DW %6368,%006A,%7009,%6571
+7DE8  094C 2564 0A00 6A70   DW %094C,%2564,%0A00,%6A70
+7DF0  0970 6C09 4C25 640A   DW %0970,%6C09,%4C25,%640A
+7DF8  004C 2564 3A0A 006A   DW %004C,%2564,%3A0A,%006A
+7E00  7009 6D69 094C 2564   DW %7009,%6D69,%094C,%2564
+7E08  0A00 6A70 0965 7100   DW %0A00,%6A70,%0965,%7100
+7E10  6A70 0970 6C00 6A70   DW %6A70,%0970,%6C00,%6A70
+7E18  096D 6900 6A70 0009   DW %096D,%6900,%6A70,%0009
+7E20  4C25 640A 004C 2564   DW %4C25,%640A,%004C,%2564
+7E28  3A0A 0069 6E63 0953   DW %3A0A,%0069,%6E63,%0953
+7E30  502C 2325 2525 780A   DW %502C,%2325,%2525,%780A
+7E38  0061 6464 0953 502C   DW %0061,%6464,%0953,%502C
+7E40  2325 2525 780A 0025   DW %2325,%2525,%780A,%0025
+7E48  643A 2000 2525 2578   DW %643A,%2000,%2525,%2578
+7E50  0053 7461 636B 206F   DW %0053,%7461,%636B,%206F
+7E58  7665 7266 6C6F 7720   DW %7665,%7266,%6C6F,%7720
+7E60  626F 7463 6800 496E   DW %626F,%7463,%6800,%496E
+7E68  7465 726D 6564 6961   DW %7465,%726D,%6564,%6961
+7E70  7465 2066 696C 6520   DW %7465,%2066,%696C,%6520
+7E78  6572 726F 7200 5756   DW %6572,%726F,%7200,%5756
+7E80  2025 2525 780A 0042   DW %2025,%2525,%780A,%0042
+7E88  5620 0025 2525 7800   DW %5620,%0025,%2525,%7800
+7E90  3B00 0A00 6A70 0963   DW %3B00,%0A00,%6A70,%0963
+7E98  7265 740A 0058 0925   DW %7265,%740A,%0058,%0925
+7EA0  2E38 7309 0042 0A00   DW %2E38,%7309,%0042,%0A00
+7EA8  570A 006C 6F6E 670A   DW %570A,%006C,%6F6E,%670A
+7EB0  0041 5B25 2525 7820   DW %0041,%5B25,%2525,%7820
+7EB8  425D 0A00 2452 454C   DW %425D,%0A00,%2452,%454C
+7EC0  0924 2B25 2525 780A   DW %0924,%2B25,%2525,%780A
+7EC8  0024 4556 454E 0A00   DW %0024,%4556,%454E,%0A00
+7ED0  6361 6C6C 0963 7376   DW %6361,%6C6C,%0963,%7376
+7ED8  0A00 6465 6309 5350   DW %0A00,%6465,%6309,%5350
+7EE0  2C23 2525 2578 0A00   DW %2C23,%2525,%2578,%0A00
+7EE8  7375 6209 5350 2C23   DW %7375,%6209,%5350,%2C23
+7EF0  2525 2578 0A00 6C64   DW %2525,%2578,%0A00,%6C64
+7EF8  0972 322C 234C 2564   DW %0972,%322C,%234C,%2564
+7F00  0A2C 6361 6C6C 096D   DW %0A2C,%6361,%6C6C,%096D
+7F08  636F 756E 740A 004C   DW %636F,%756E,%740A,%004C
+7F10  2564 3A0A 2452 454C   DW %2564,%3A0A,%2452,%454C
+7F18  0924 2B32 0A00 7E25   DW %0924,%2B32,%0A00,%7E25
+7F20  733A 3D4C 2564 0A00   DW %733A,%3D4C,%2564,%0A00
+7F28  7E25 733A 3D25 2525   DW %7E25,%733A,%3D25,%2525
+7F30  780A 007E 2573 3A3D   DW %780A,%007E,%2573,%3A3D
+7F38  7225 640A 0045 7870   DW %7225,%640A,%0045,%7870
+7F40  7265 7373 696F 6E20   DW %7265,%7373,%696F,%6E20
+7F48  696E 7075 7420 626F   DW %696E,%7075,%7420,%626F
+7F50  7463 6800 7465 7374   DW %7463,%6800,%7465,%7374
+7F58  6C09 7272 320A 0066   DW %6C09,%7272,%320A,%0066
+7F60  6370 7A78 0966 300A   DW %6370,%7A78,%0966,%300A
+7F68  006A 7009 6774 094C   DW %006A,%7009,%6774,%094C
+7F70  2564 0A00 6A70 096C   DW %2564,%0A00,%6A70,%096C
+7F78  7409 4C25 640A 6A70   DW %7409,%4C25,%640A,%6A70
+7F80  094C 2564 0A00 252E   DW %094C,%2564,%0A00,%252E
+7F88  3873 094C 0A00 252E   DW %3873,%094C,%0A00,%252E
+7F90  3873 3A0A 0047 0009   DW %3873,%3A0A,%0047,%0009
+7F98  252E 3873 0950 520A   DW %252E,%3873,%0950,%520A
+7FA0  0049 0925 7309 5052   DW %0049,%0925,%7309,%5052
+7FA8  0A00 7E7E 2573 3A0A   DW %0A00,%7E7E,%2573,%3A0A
+7FB0  450A 0065 6E64 2025   DW %450A,%0065,%6E64,%2025
+7FB8  2E38 730A 490A 0042   DW %2E38,%730A,%490A,%0042
+7FC0  696E 6172 7920 6578   DW %696E,%6172,%7920,%6578
+7FC8  7072 6573 7369 6F6E   DW %7072,%6573,%7369,%6F6E
+7FD0  2062 6F74 6368 0024   DW %2062,%6F74,%6368,%0024
+7FD8  4441 5441 0A24 5345   DW %4441,%5441,%0A24,%5345
+7FE0  4354 494F 4E20 4253   DW %4354,%494F,%4E20,%4253
+7FE8  535F 420A 490A 0024   DW %535F,%420A,%490A,%0024
+7FF0  5345 4354 494F 4E20   DW %5345,%4354,%494F,%4E20
+7FF8  4253 535F 420A 490A   DW %4253,%535F,%420A,%490A
+8000  0024 4441 5441 0A24   DW %0024,%4441,%5441,%0A24
+8008  5345 4354 494F 4E20   DW %5345,%4354,%494F,%4E20
+8010  2573 5F64 0A49 0A00   DW %2573,%5F64,%0A49,%0A00
+8018  2453 4445 4641 554C   DW %2453,%4445,%4641,%554C
+8020  540A 0047 0A00 490A   DW %540A,%0047,%0A00,%490A
+8028  0024 434F 4445 0A00   DW %0024,%434F,%4445,%0A00
+8030  2453 4445 4641 554C   DW %2453,%4445,%4641,%554C
+8038  540A 004C 2564 3A0A   DW %540A,%004C,%2564,%3A0A
+8040  2452 454C 0924 2B25   DW %2452,%454C,%0924,%2B25
+8048  2525 780A 006C 6409   DW %2525,%780A,%006C,%6409
+8050  7232 2C23 4C25 640A   DW %7232,%2C23,%4C25,%640A
+8058  0049 6C6C 6567 616C   DW %0049,%6C6C,%6567,%616C
+8060  2073 7472 7563 7475   DW %2073,%7472,%7563,%7475
+8068  7265 206F 7065 7261   DW %7265,%206F,%7065,%7261
+8070  7469 6F6E 0075 6E69   DW %7469,%6F6E,%0075,%6E69
+8078  6D70 6C65 6D65 6E74   DW %6D70,%6C65,%6D65,%6E74
+8080  6564 2073 7472 7563   DW %6564,%2073,%7472,%7563
+8088  7475 7265 2061 7373   DW %7475,%7265,%2061,%7373
+8090  6967 6E6D 656E 7400   DW %6967,%6E6D,%656E,%7400
+8098  6C64 0972 302C 2325   DW %6C64,%0972,%302C,%2325
+80A0  2525 780A 006C 6469   DW %2525,%780A,%006C,%6469
+80A8  7209 4072 322C 4072   DW %7209,%4072,%322C,%4072
+80B0  332C 7230 0A00 496C   DW %332C,%7230,%0A00,%496C
+80B8  6C65 6761 6C20 696E   DW %6C65,%6761,%6C20,%696E
+80C0  6469 7265 6374 696F   DW %6469,%7265,%6374,%696F
+80C8  6E00                  DW %6E00
 L80CA:
-80CA  4452 42D6 4452 444A   DW %4452,%42D6,%4452,%444A
-80D2  4442                  DW %4442
+80CA  4452 42D6 4452 444A   DW L4452,L42D6,L4452,L444A
+80D2  44                    DB %44
+80D3  42                    DB %42
 L80D4:
-80D4  447C 44F0 4502 451C   DW %447C,%44F0,%4502,%451C
-80DC  4536 4558 456A 449C   DW %4536,%4558,%456A,%449C
+80D4  447C 44F0 4502 451C   DW L447C,L44F0,L4502,L451C
+80DC  4536 4558 456A        DW L4536,L4558,L456A
+80E2  44                    DB %44
+80E3  9C                    DB %9C
 L80E4:
-80E4  47B2 480A             DW %47B2,%480A
+80E4  47B2                  DW L47B2
+80E6  48                    DB %48
+80E7  0A                    DB %0A
 L80E8:
-80E8  4B92 4BAE 4BD8        DW %4B92,%4BAE,%4BD8
+80E8  4B92 4BAE             DW L4B92,L4BAE
+80EC  4B                    DB %4B
+80ED  D8                    DB %D8
 L80EE:
-80EE  4D28 4D56             DW %4D28,%4D56
+80EE  4D28                  DW L4D28
+80F0  4D                    DB %4D
+80F1  56                    DB %56
 L80F2:
-80F2  5320 5352             DW %5320,%5352
+80F2  5320                  DW L5320
+80F4  53                    DB %53
+80F5  52                    DB %52
 L80F6:
-80F6  541A 5428 5432 543C   DW %541A,%5428,%5432,%543C
-80FE  5460 54B2 54A0 5476   DW %5460,%54B2,%54A0,%5476
-8106  5484 5492 466C 6F61   DW %5484,%5492,%466C,%6F61
-810E  7469 6E67 2025 2520   DW %7469,%6E67,%2025,%2520
-8116  6E6F 7420 6465 6669   DW %6E6F,%7420,%6465,%6669
-811E  6E65 6400 556E 696D   DW %6E65,%6400,%556E,%696D
-8126  706C 656D 656E 7465   DW %706C,%656D,%656E,%7465
-812E  6420 6669 656C 6420   DW %6420,%6669,%656C,%6420
-8136  6F70 6572 6174 6F72   DW %6F70,%6572,%6174,%6F72
-813E  0044 6976 6964 6520   DW %0044,%6976,%6964,%6520
-8146  6368 6563 6B00 4320   DW %6368,%6563,%6B00,%4320
-814E  6572 726F 723A 2063   DW %6572,%726F,%723A,%2063
-8156  6F6E 7374 0044 6976   DW %6F6E,%7374,%0044,%6976
-815E  6964 6520 6368 6563   DW %6964,%6520,%6368,%6563
-8166  6B00 4469 7669 6465   DW %6B00,%4469,%7669,%6465
-816E  2063 6865 636B 004F   DW %2063,%6865,%636B,%004F
-8176  7574 206F 6620 7370   DW %7574,%206F,%6620,%7370
-817E  6163 652D 2D20 6331   DW %6163,%652D,%2D20,%6331
-8186  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-818E  0000 3C00 0400 3C00   DW %0000,%3C00,%0400,%3C00
-8196  0400 1881 0E01 0000   DW %0400,%1881,%0E01,%0000
-819E  0000 0001 0001 0001   DW %0000,%0001,%0001,%0001
-81A6  0001 0001 0001 0001   DW %0001,%0001,%0001,%0001
-81AE  0000 0100 0100 0100   DW %0000,%0100,%0100,%0100
-81B6  0100 0100 0100 0100   DW %0100,%0100,%0100,%0100
-81BE  14AB 14AB 0000 3883   DW %14AB,%14AB,%0000,%3883
-81C6  3883 3883 3883 3890   DW %3883,%3883,%3883,%3890
-81CE  3882 3890 3880 3890   DW %3882,%3890,%3880,%3890
-81D6  3C01 3041 3001 3441   DW %3C01,%3041,%3001,%3441
-81DE  3401 3401 2C31 2C31   DW %3401,%3401,%2C31,%2C31
-81E6  2071 1C71 1C71 3C01   DW %2071,%1C71,%1C71,%3C01
-81EE  0200 0200 0001 0001   DW %0200,%0200,%0001,%0001
-81F6  3001 0200 0200 0200   DW %3001,%0200,%0200,%0200
-81FE  0000 2405 2405 2805   DW %0000,%2405,%2405,%2805
-8206  2805 2805 2805 2805   DW %2805,%2805,%2805,%2805
-820E  2805 2805 2805 148B   DW %2805,%2805,%2805,%148B
-8216  148B 148B 148B 148B   DW %148B,%148B,%148B,%148B
-821E  14AB 14AB 14AB 14AB   DW %14AB,%14AB,%14AB,%14AB
-8226  14AB 148B 1C71 2071   DW %14AB,%148B,%1C71,%2071
-822E  14AB 14AB 2071 0000   DW %14AB,%14AB,%2071,%0000
-8236  0000 0000 0000 1881   DW %0000,%0000,%0000,%1881
-823E  0000 0000 0041 0041   DW %0000,%0000,%0041,%0041
-8246  0041 0041 0001 0000   DW %0041,%0041,%0001,%0000
-824E  0000 3C01 3C00 0000   DW %0000,%3C01,%3C00,%0000
-8256  0000 0000 0100 0000   DW %0000,%0000,%0100,%0000
-825E  0001 0001 0000 0000   DW %0001,%0001,%0000,%0000
-8266  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-826E  0000 0001 0000 0000   DW %0000,%0001,%0000,%0000
-8276  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-827E  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-8286  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-828E  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-8296  0000 0000 14AB 14AB   DW %0000,%0000,%14AB,%14AB
-829E  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-82A6  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-82AE  8612 8614 8616 0000   DW %8612,%8614,%8616,%0000
-82B6  0000 8623 862C 8635   DW %0000,%8623,%862C,%8635
-82BE  863F 864C 8658 0000   DW %863F,%864C,%8658,%0000
-82C6  8664 8669 8678 867F   DW %8664,%8669,%8678,%867F
-82CE  8685 868C 869A 86A8   DW %8685,%868C,%869A,%86A8
-82D6  86B5 86C2 86CE 86D4   DW %86B5,%86C2,%86CE,%86D4
-82DE  86DA 86E1 86E8 86EC   DW %86DA,%86E1,%86E8,%86EC
-82E6  86EE 86F0 86F2 86F4   DW %86EE,%86F0,%86F2,%86F4
-82EE  86F6 86F8 86FA 86FC   DW %86F6,%86F8,%86FA,%86FC
-82F6  86FE 8700 8703 8706   DW %86FE,%8700,%8703,%8706
-82FE  8708 870A 870C 870F   DW %8708,%870A,%870C,%870F
-8306  871B 8727 872A 872D   DW %871B,%8727,%872A,%872D
-830E  8730 873D 874A 8758   DW %8730,%873D,%874A,%8758
-8316  8766 8769 876C 876F   DW %8766,%8769,%876C,%876F
-831E  8771 8774 8776 8779   DW %8771,%8774,%8776,%8779
-8326  877D 8780 8784 8787   DW %877D,%8780,%8784,%8787
-832E  878A 878D 8790 8793   DW %878A,%878D,%8790,%8793
-8336  8797 879B 879E 87A1   DW %8797,%879B,%879E,%87A1
-833E  87A4 87A6 87AD 87B4   DW %87A4,%87A6,%87AD,%87B4
-8346  87BC 87C4 0000 0000   DW %87BC,%87C4,%0000,%0000
-834E  0000 87CC 87DF 0000   DW %0000,%87CC,%87DF,%0000
-8356  0000 87E1 87E4 87E7   DW %0000,%87E1,%87E4,%87E7
-835E  87EA 0000 0000 87ED   DW %87EA,%0000,%0000,%87ED
-8366  87F2 0000 87F7 87FC   DW %87F2,%0000,%87F7,%87FC
-836E  8806 8812 881C 8827   DW %8806,%8812,%881C,%8827
-8376  8832 883D 8847 8856   DW %8832,%883D,%8847,%8856
-837E  8857 8858 8859 885A   DW %8857,%8858,%8859,%885A
-8386  8865 0000 0000 0000   DW %8865,%0000,%0000,%0000
-838E  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-8396  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-839E  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-83A6  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
-83AE  0000 8876 8882 6C64   DW %0000,%8876,%8882,%6C64
-83B6  0000 636C 7200 6370   DW %0000,%636C,%7200,%6370
-83BE  0000 7465 7374 0000   DW %0000,%7465,%7374,%0000
-83C6  6164 6400 7375 6200   DW %6164,%6400,%7375,%6200
-83CE  696E 6300 6465 6300   DW %696E,%6300,%6465,%6300
-83D6  6D75 6C00 6469 7600   DW %6D75,%6C00,%6469,%7600
-83DE  7372 6100 7364 6100   DW %7372,%6100,%7364,%6100
-83E6  736C 6100 7364 6C00   DW %736C,%6100,%7364,%6C00
-83EE  7372 6C00 736C 6C00   DW %7372,%6C00,%736C,%6C00
-83F6  2331 0000 616E 6400   DW %2331,%0000,%616E,%6400
-83FE  6F72 0000 7365 7400   DW %6F72,%0000,%7365,%7400
-8406  7265 7300 786F 7200   DW %7265,%7300,%786F,%7200
-840E  6E65 6700 636F 6D00   DW %6E65,%6700,%636F,%6D00
-8416  7364 616C 0000 6A70   DW %7364,%616C,%0000,%6A70
-841E  0965 7100 6A70 096E   DW %0965,%7100,%6A70,%096E
-8426  6500 6A70 096C 6500   DW %6500,%6A70,%096C,%6500
-842E  6A70 0967 7400 6A70   DW %6A70,%0967,%7400,%6A70
-8436  096C 7400 6A70 0967   DW %096C,%7400,%6A70,%0967
-843E  6500 6A70 0975 6C65   DW %6500,%6A70,%0975,%6C65
-8446  0000 6A70 0975 6774   DW %0000,%6A70,%0975,%6774
-844E  0000 6A70 0963 0000   DW %0000,%6A70,%0963,%0000
-8456  6A70 0975 6765 0000   DW %6A70,%0975,%6765,%0000
-845E  6A70 0970 6C00 6A70   DW %6A70,%0970,%6C00,%6A70
-8466  096D 6900 216E 6F70   DW %096D,%6900,%216E,%6F70
-846E  0000 6A70 0000 006A   DW %0000,%6A70,%0000,%006A
-8476  83B4 83C0 0050 83B4   DW %83B4,%83C0,%0050,%83B4
-847E  83B8 003C 83BC 83C0   DW %83B8,%003C,%83BC,%83C0
-8486  003D 83BC 83C0 003E   DW %003D,%83BC,%83C0,%003E
-848E  83BC 83C0 003F 83BC   DW %83BC,%83C0,%003F,%83BC
-8496  83C0 0040 83BC 83C0   DW %83C0,%0040,%83BC,%83C0
-849E  0041 83BC 83C0 0042   DW %0041,%83BC,%83C0,%0042
-84A6  83BC 83C0 0043 83BC   DW %83BC,%83C0,%0043,%83BC
-84AE  83C0 0044 83BC 83C0   DW %83C0,%0044,%83BC,%83C0
-84B6  0045 83BC 83C0 0028   DW %0045,%83BC,%83C0,%0028
-84BE  83C6 83CE 0046 83C6   DW %83C6,%83CE,%0046,%83C6
-84C6  83CE 0029 83CA 83D2   DW %83CE,%0029,%83CA,%83D2
-84CE  0047 83CA 83D2 001E   DW %0047,%83CA,%83D2,%001E
-84D6  83C6 83CE 001F 83CA   DW %83C6,%83CE,%001F,%83CA
-84DE  83D2 0020 83C6 83CE   DW %83D2,%0020,%83C6,%83CE
-84E6  0021 83CA 83D2 002A   DW %0021,%83CA,%83D2,%002A
-84EE  83D6 83D6 0048 83D6   DW %83D6,%83D6,%0048,%83D6
-84F6  83D6 002B 83DA 83DA   DW %83D6,%002B,%83DA,%83DA
-84FE  0049 83DA 83DA 002C   DW %0049,%83DA,%83DA,%002C
-8506  83DA 83DA 004A 83DA   DW %83DA,%83DA,%004A,%83DA
-850E  83DA 000E 83DA 83DA   DW %83DA,%000E,%83DA,%83DA
-8516  002D 83E2 83DE 004B   DW %002D,%83E2,%83DE,%004B
-851E  83E2 83DE 002E 83E2   DW %83E2,%83DE,%002E,%83E2
-8526  83E6 004C 83E2 83E6   DW %83E6,%004C,%83E2,%83E6
-852E  006B 83EA 83EE 006C   DW %006B,%83EA,%83EE,%006C
-8536  83EA 83F2 0089 83EA   DW %83EA,%83F2,%0089,%83EA
-853E  83EE 008A 83EA 83F2   DW %83EE,%008A,%83EA,%83F2
-8546  002F 83FA 83F6 004D   DW %002F,%83FA,%83F6,%004D
-854E  83FA 83F6 0030 83FE   DW %83FA,%83F6,%0030,%83FE
-8556  83F6 004E 83FE 83F6   DW %83F6,%004E,%83FE,%83F6
-855E  0051 8402 8402 0053   DW %0051,%8402,%8402,%0053
-8566  8402 8402 0052 8406   DW %8402,%8402,%0052,%8406
-856E  8406 0054 8406 8406   DW %8406,%0054,%8406,%8406
-8576  0031 840A 840A 004F   DW %0031,%840A,%840A,%004F
-857E  840A 840A 0025 840E   DW %840A,%840A,%0025,%840E
-8586  840E 0026 8412 8412   DW %840E,%0026,%8412,%8412
-858E  0000 0000 0000 003C   DW %0000,%0000,%0000,%003C
-8596  841C 8422 003D 8422   DW %841C,%8422,%003D,%8422
-859E  841C 003E 8428 842E   DW %841C,%003E,%8428,%842E
-85A6  003F 8434 843A 0040   DW %003F,%8434,%843A,%0040
-85AE  843A 8434 0041 842E   DW %843A,%8434,%0041,%842E
-85B6  8428 0042 8440 8448   DW %8428,%0042,%8440,%8448
-85BE  0043 8450 8456 0044   DW %0043,%8450,%8456,%0044
-85C6  8456 8450 0045 8448   DW %8456,%8450,%0045,%8448
-85CE  8440 0104 841C 8422   DW %8440,%0104,%841C,%8422
-85D6  0105 8422 841C 0106   DW %0105,%8422,%841C,%0106
-85DE  8428 842E 0107 8434   DW %8428,%842E,%0107,%8434
-85E6  843A 0108 843A 8434   DW %843A,%0108,%843A,%8434
-85EE  0109 842E 8428 010A   DW %0109,%842E,%8428,%010A
-85F6  841C 8422 010B 846A   DW %841C,%8422,%010B,%846A
-85FE  8470 010C 8470 846A   DW %8470,%010C,%8470,%846A
-8606  010D 8422 841C 0000   DW %010D,%8422,%841C,%0000
-860E  0000 0000 3A00 2C00   DW %0000,%0000,%3A00,%2C00
-8616  6669 656C 6420 7365   DW %6669,%656C,%6420,%7365
-861E  6C65 6374 0069 6E74   DW %6C65,%6374,%0069,%6E74
-8626  2D3E 7074 7200 7074   DW %2D3E,%7074,%7200,%7074
-862E  722D 3E69 6E74 006C   DW %722D,%3E69,%6E74,%006C
-8636  6F6E 672D 3E70 7472   DW %6F6E,%672D,%3E70,%7472
-863E  0066 6965 6C64 2061   DW %0066,%6965,%6C64,%2061
-8646  7373 6967 6E00 3E3E   DW %7373,%6967,%6E00,%3E3E
-864E  2075 6E73 6967 6E65   DW %2075,%6E73,%6967,%6E65
-8656  6400 3C3C 2075 6E73   DW %6400,%3C3C,%2075,%6E73
-865E  6967 6E65 6400 6E61   DW %6967,%6E65,%6400,%6E61
-8666  6D65 0073 686F 7274   DW %6D65,%0073,%686F,%7274
-866E  2063 6F6E 7374 616E   DW %2063,%6F6E,%7374,%616E
-8676  7400 7374 7269 6E67   DW %7400,%7374,%7269,%6E67
-867E  0066 6C6F 6174 0064   DW %0066,%6C6F,%6174,%0064
-8686  6F75 626C 6500 6C6F   DW %6F75,%626C,%6500,%6C6F
-868E  6E67 2063 6F6E 7374   DW %6E67,%2063,%6F6E,%7374
-8696  616E 7400 6C6F 6E67   DW %616E,%7400,%6C6F,%6E67
-869E  2063 6F6E 7374 616E   DW %2063,%6F6E,%7374,%616E
-86A6  7400 3E3E 3D20 756E   DW %7400,%3E3E,%3D20,%756E
-86AE  7369 676E 6564 003C   DW %7369,%676E,%6564,%003C
-86B6  3C3D 2075 6E73 6967   DW %3C3D,%2075,%6E73,%6967
-86BE  6E65 6400 696E 6469   DW %6E65,%6400,%696E,%6469
-86C6  7265 6374 696F 6E00   DW %7265,%6374,%696F,%6E00
-86CE  2B2B 7072 6500 2D2D   DW %2B2B,%7072,%6500,%2D2D
-86D6  7072 6500 2B2B 706F   DW %7072,%6500,%2B2B,%706F
-86DE  7374 002D 2D70 6F73   DW %7374,%002D,%2D70,%6F73
-86E6  7400 2175 6E00 2600   DW %7400,%2175,%6E00,%2600
-86EE  2A00 2D00 7E00 2E00   DW %2A00,%2D00,%7E00,%2E00
-86F6  2B00 2D00 2A00 2F00   DW %2B00,%2D00,%2A00,%2F00
-86FE  2500 3E3E 003C 3C00   DW %2500,%3E3E,%003C,%3C00
-8706  2600 7C00 5E00 2D3E   DW %2600,%7C00,%5E00,%2D3E
-870E  0069 6E74 2D3E 646F   DW %0069,%6E74,%2D3E,%646F
-8716  7562 6C65 0064 6F75   DW %7562,%6C65,%0064,%6F75
-871E  626C 652D 3E69 6E74   DW %626C,%652D,%3E69,%6E74
-8726  0026 2600 7C7C 0026   DW %0026,%2600,%7C7C,%0026
-872E  7E00 646F 7562 6C65   DW %7E00,%646F,%7562,%6C65
-8736  2D3E 6C6F 6E67 006C   DW %2D3E,%6C6F,%6E67,%006C
-873E  6F6E 672D 3E64 6F75   DW %6F6E,%672D,%3E64,%6F75
-8746  626C 6500 696E 7465   DW %626C,%6500,%696E,%7465
-874E  6765 722D 3E6C 6F6E   DW %6765,%722D,%3E6C,%6F6E
-8756  6700 6C6F 6E67 2D3E   DW %6700,%6C6F,%6E67,%2D3E
-875E  696E 7465 6765 7200   DW %696E,%7465,%6765,%7200
-8766  3D3D 0021 3D00 3C3D   DW %3D3D,%0021,%3D00,%3C3D
-876E  003C 003E 3D00 3E00   DW %003C,%003E,%3D00,%3E00
-8776  3C70 003C 3D70 003E   DW %3C70,%003C,%3D70,%003E
-877E  7000 3E3D 7000 2B3D   DW %7000,%3E3D,%7000,%2B3D
-8786  002D 3D00 2A3D 002F   DW %002D,%3D00,%2A3D,%002F
-878E  3D00 253D 003E 3E3D   DW %3D00,%253D,%003E,%3E3D
-8796  003C 3C3D 0026 3D00   DW %003C,%3C3D,%0026,%3D00
-879E  7C3D 005E 3D00 3D00   DW %7C3D,%005E,%3D00,%3D00
-87A6  6269 7473 6574 0062   DW %6269,%7473,%6574,%0062
-87AE  6974 636C 7200 6269   DW %6974,%636C,%7200,%6269
-87B6  7473 6574 3D00 6269   DW %7473,%6574,%3D00,%6269
-87BE  7463 6C72 3D00 6269   DW %7463,%6C72,%3D00,%6269
-87C6  7474 6573 7400 6C6F   DW %7474,%6573,%7400,%6C6F
-87CE  6164 2062 7974 6520   DW %6164,%2062,%7974,%6520
-87D6  7265 6769 7374 6572   DW %7265,%6769,%7374,%6572
-87DE  003F 005C 2F00 5C2F   DW %003F,%005C,%2F00,%5C2F
-87E6  002F 5C00 2F5C 0063   DW %002F,%5C00,%2F5C,%0063
-87EE  616C 6C00 6361 6C6C   DW %616C,%6C00,%6361,%6C6C
-87F6  0067 6F74 6F00 6A75   DW %0067,%6F74,%6F00,%6A75
-87FE  6D70 2063 6F6E 6400   DW %6D70,%2063,%6F6E,%6400
-8806  6272 616E 6368 2063   DW %6272,%616E,%6368,%2063
-880E  6F6E 6400 7365 7420   DW %6F6E,%6400,%7365,%7420
-8816  6E72 6567 7300 6C6F   DW %6E72,%6567,%7300,%6C6F
-881E  6164 2076 616C 7565   DW %6164,%2076,%616C,%7565
-8826  003E 3E75 6E73 6967   DW %003E,%3E75,%6E73,%6967
-882E  6E65 6400 3C3C 756E   DW %6E65,%6400,%3C3C,%756E
-8836  7369 676E 6564 0069   DW %7369,%676E,%6564,%0069
-883E  6E74 2D3E 6368 6172   DW %6E74,%2D3E,%6368,%6172
-8846  0066 6F72 6365 2072   DW %0066,%6F72,%6365,%2072
-884E  6567 6973 7465 7200   DW %6567,%6973,%7465,%7200
-8856  0000 0000 3D73 7472   DW %0000,%0000,%3D73,%7472
-885E  7563 7475 7265 003D   DW %7563,%7475,%7265,%003D
-8866  2028 7374 7275 6374   DW %2028,%7374,%7275,%6374
-886E  2073 6574 7570 2900   DW %2073,%6574,%7570,%2900
-8876  3E3E 3D75 6E73 6967   DW %3E3E,%3D75,%6E73,%6967
-887E  6E65 6400 3C3C 3D75   DW %6E65,%6400,%3C3C,%3D75
-8886  6E73 6967 6E65 6400   DW %6E73,%6967,%6E65,%6400
+80F6  541A 5428 5432 543C   DW L541A,L5428,L5432,L543C
+80FE  5460 54B2 54A0 5476   DW L5460,L54B2,L54A0,L5476
+8106  5484                  DW L5484
+8108  54                    DB %54
+8109  92                    DB %92
+810A  466C 6F61 7469 6E67   DW %466C,%6F61,%7469,%6E67
+8112  2025 2520 6E6F 7420   DW %2025,%2520,%6E6F,%7420
+811A  6465 6669 6E65 6400   DW %6465,%6669,%6E65,%6400
+8122  556E 696D 706C 656D   DW %556E,%696D,%706C,%656D
+812A  656E 7465 6420 6669   DW %656E,%7465,%6420,%6669
+8132  656C 6420 6F70 6572   DW %656C,%6420,%6F70,%6572
+813A  6174 6F72 0044 6976   DW %6174,%6F72,%0044,%6976
+8142  6964 6520 6368 6563   DW %6964,%6520,%6368,%6563
+814A  6B00 4320 6572 726F   DW %6B00,%4320,%6572,%726F
+8152  723A 2063 6F6E 7374   DW %723A,%2063,%6F6E,%7374
+815A  0044 6976 6964 6520   DW %0044,%6976,%6964,%6520
+8162  6368 6563 6B00 4469   DW %6368,%6563,%6B00,%4469
+816A  7669 6465 2063 6865   DW %7669,%6465,%2063,%6865
+8172  636B 004F 7574 206F   DW %636B,%004F,%7574,%206F
+817A  6620 7370 6163 652D   DW %6620,%7370,%6163,%652D
+8182  2D20 6331 0000 0000   DW %2D20,%6331,%0000,%0000
+818A  0000 0000 0000 3C00   DW %0000,%0000,%0000,%3C00
+8192  0400 3C00 0400 1881   DW %0400,%3C00,%0400,%1881
+819A  0E01 0000 0000 0001   DW %0E01,%0000,%0000,%0001
+81A2  0001 0001 0001 0001   DW %0001,%0001,%0001,%0001
+81AA  0001 0001 0000 0100   DW %0001,%0001,%0000,%0100
+81B2  0100 0100 0100 0100   DW %0100,%0100,%0100,%0100
+81BA  0100 0100 14AB 14AB   DW %0100,%0100,%14AB,%14AB
+81C2  0000 3883 3883 3883   DW %0000,%3883,%3883,%3883
+81CA  3883 3890 3882 3890   DW %3883,%3890,%3882,%3890
+81D2  3880 3890 3C01 3041   DW %3880,%3890,%3C01,%3041
+81DA  3001 3441 3401 3401   DW %3001,%3441,%3401,%3401
+81E2  2C31 2C31 2071 1C71   DW %2C31,%2C31,%2071,%1C71
+81EA  1C71 3C01 0200 0200   DW %1C71,%3C01,%0200,%0200
+81F2  0001 0001 3001 0200   DW %0001,%0001,%3001,%0200
+81FA  0200 0200 0000 2405   DW %0200,%0200,%0000,%2405
+8202  2405 2805 2805 2805   DW %2405,%2805,%2805,%2805
+820A  2805 2805 2805 2805   DW %2805,%2805,%2805,%2805
+8212  2805 148B 148B 148B   DW %2805,%148B,%148B,%148B
+821A  148B 148B 14AB 14AB   DW %148B,%148B,%14AB,%14AB
+8222  14AB 14AB 14AB 148B   DW %14AB,%14AB,%14AB,%148B
+822A  1C71 2071 14AB 14AB   DW %1C71,%2071,%14AB,%14AB
+8232  2071 0000 0000 0000   DW %2071,%0000,%0000,%0000
+823A  0000 1881 0000 0000   DW %0000,%1881,%0000,%0000
+8242  0041 0041 0041 0041   DW %0041,%0041,%0041,%0041
+824A  0001 0000 0000 3C01   DW %0001,%0000,%0000,%3C01
+8252  3C00 0000 0000 0000   DW %3C00,%0000,%0000,%0000
+825A  0100 0000 0001 0001   DW %0100,%0000,%0001,%0001
+8262  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+826A  0000 0000 0000 0001   DW %0000,%0000,%0000,%0001
+8272  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+827A  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+8282  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+828A  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+8292  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+829A  14AB 14AB 0000 0000   DW %14AB,%14AB,%0000,%0000
+82A2  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+82AA  0000 0000 8612 8614   DW %0000,%0000,%8612,%8614
+82B2  8616 0000 0000 8623   DW %8616,%0000,%0000,%8623
+82BA  862C 8635 863F 864C   DW %862C,%8635,%863F,%864C
+82C2  8658 0000 8664 8669   DW %8658,%0000,%8664,%8669
+82CA  8678 867F 8685 868C   DW %8678,%867F,%8685,%868C
+82D2  869A 86A8 86B5 86C2   DW %869A,%86A8,%86B5,%86C2
+82DA  86CE 86D4 86DA 86E1   DW %86CE,%86D4,%86DA,%86E1
+82E2  86E8 86EC 86EE 86F0   DW %86E8,%86EC,%86EE,%86F0
+82EA  86F2 86F4 86F6 86F8   DW %86F2,%86F4,%86F6,%86F8
+82F2  86FA 86FC 86FE 8700   DW %86FA,%86FC,%86FE,%8700
+82FA  8703 8706 8708 870A   DW %8703,%8706,%8708,%870A
+8302  870C 870F 871B 8727   DW %870C,%870F,%871B,%8727
+830A  872A 872D 8730 873D   DW %872A,%872D,%8730,%873D
+8312  874A 8758 8766 8769   DW %874A,%8758,%8766,%8769
+831A  876C 876F 8771 8774   DW %876C,%876F,%8771,%8774
+8322  8776 8779 877D 8780   DW %8776,%8779,%877D,%8780
+832A  8784 8787 878A 878D   DW %8784,%8787,%878A,%878D
+8332  8790 8793 8797 879B   DW %8790,%8793,%8797,%879B
+833A  879E 87A1 87A4 87A6   DW %879E,%87A1,%87A4,%87A6
+8342  87AD 87B4 87BC 87C4   DW %87AD,%87B4,%87BC,%87C4
+834A  0000 0000 0000 87CC   DW %0000,%0000,%0000,%87CC
+8352  87DF 0000 0000 87E1   DW %87DF,%0000,%0000,%87E1
+835A  87E4 87E7 87EA 0000   DW %87E4,%87E7,%87EA,%0000
+8362  0000 87ED 87F2 0000   DW %0000,%87ED,%87F2,%0000
+836A  87F7 87FC 8806 8812   DW %87F7,%87FC,%8806,%8812
+8372  881C 8827 8832 883D   DW %881C,%8827,%8832,%883D
+837A  8847 8856 8857 8858   DW %8847,%8856,%8857,%8858
+8382  8859 885A 8865 0000   DW %8859,%885A,%8865,%0000
+838A  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+8392  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+839A  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+83A2  0000 0000 0000 0000   DW %0000,%0000,%0000,%0000
+83AA  0000 0000 0000 8876   DW %0000,%0000,%0000,%8876
+83B2  8882 6C64 0000 636C   DW %8882,%6C64,%0000,%636C
+83BA  7200 6370 0000 7465   DW %7200,%6370,%0000,%7465
+83C2  7374 0000 6164 6400   DW %7374,%0000,%6164,%6400
+83CA  7375 6200 696E 6300   DW %7375,%6200,%696E,%6300
+83D2  6465 6300 6D75 6C00   DW %6465,%6300,%6D75,%6C00
+83DA  6469 7600 7372 6100   DW %6469,%7600,%7372,%6100
+83E2  7364 6100 736C 6100   DW %7364,%6100,%736C,%6100
+83EA  7364 6C00 7372 6C00   DW %7364,%6C00,%7372,%6C00
+83F2  736C 6C00 2331 0000   DW %736C,%6C00,%2331,%0000
+83FA  616E 6400 6F72 0000   DW %616E,%6400,%6F72,%0000
+8402  7365 7400 7265 7300   DW %7365,%7400,%7265,%7300
+840A  786F 7200 6E65 6700   DW %786F,%7200,%6E65,%6700
+8412  636F 6D00 7364 616C   DW %636F,%6D00,%7364,%616C
+841A  0000 6A70 0965 7100   DW %0000,%6A70,%0965,%7100
+8422  6A70 096E 6500 6A70   DW %6A70,%096E,%6500,%6A70
+842A  096C 6500 6A70 0967   DW %096C,%6500,%6A70,%0967
+8432  7400 6A70 096C 7400   DW %7400,%6A70,%096C,%7400
+843A  6A70 0967 6500 6A70   DW %6A70,%0967,%6500,%6A70
+8442  0975 6C65 0000 6A70   DW %0975,%6C65,%0000,%6A70
+844A  0975 6774 0000 6A70   DW %0975,%6774,%0000,%6A70
+8452  0963 0000 6A70 0975   DW %0963,%0000,%6A70,%0975
+845A  6765 0000 6A70 0970   DW %6765,%0000,%6A70,%0970
+8462  6C00 6A70 096D 6900   DW %6C00,%6A70,%096D,%6900
+846A  216E 6F70 0000 6A70   DW %216E,%6F70,%0000,%6A70
+8472  0000 006A 83B4 83C0   DW %0000,%006A,%83B4,%83C0
+847A  0050 83B4 83B8 003C   DW %0050,%83B4,%83B8,%003C
+8482  83BC 83C0 003D 83BC   DW %83BC,%83C0,%003D,%83BC
+848A  83C0 003E 83BC 83C0   DW %83C0,%003E,%83BC,%83C0
+8492  003F 83BC 83C0 0040   DW %003F,%83BC,%83C0,%0040
+849A  83BC 83C0 0041 83BC   DW %83BC,%83C0,%0041,%83BC
+84A2  83C0 0042 83BC 83C0   DW %83C0,%0042,%83BC,%83C0
+84AA  0043 83BC 83C0 0044   DW %0043,%83BC,%83C0,%0044
+84B2  83BC 83C0 0045 83BC   DW %83BC,%83C0,%0045,%83BC
+84BA  83C0 0028 83C6 83CE   DW %83C0,%0028,%83C6,%83CE
+84C2  0046 83C6 83CE 0029   DW %0046,%83C6,%83CE,%0029
+84CA  83CA 83D2 0047 83CA   DW %83CA,%83D2,%0047,%83CA
+84D2  83D2 001E 83C6 83CE   DW %83D2,%001E,%83C6,%83CE
+84DA  001F 83CA 83D2 0020   DW %001F,%83CA,%83D2,%0020
+84E2  83C6 83CE 0021 83CA   DW %83C6,%83CE,%0021,%83CA
+84EA  83D2 002A 83D6 83D6   DW %83D2,%002A,%83D6,%83D6
+84F2  0048 83D6 83D6 002B   DW %0048,%83D6,%83D6,%002B
+84FA  83DA 83DA 0049 83DA   DW %83DA,%83DA,%0049,%83DA
+8502  83DA 002C 83DA 83DA   DW %83DA,%002C,%83DA,%83DA
+850A  004A 83DA 83DA 000E   DW %004A,%83DA,%83DA,%000E
+8512  83DA 83DA 002D 83E2   DW %83DA,%83DA,%002D,%83E2
+851A  83DE 004B 83E2 83DE   DW %83DE,%004B,%83E2,%83DE
+8522  002E 83E2 83E6 004C   DW %002E,%83E2,%83E6,%004C
+852A  83E2 83E6 006B 83EA   DW %83E2,%83E6,%006B,%83EA
+8532  83EE 006C 83EA 83F2   DW %83EE,%006C,%83EA,%83F2
+853A  0089 83EA 83EE 008A   DW %0089,%83EA,%83EE,%008A
+8542  83EA 83F2 002F 83FA   DW %83EA,%83F2,%002F,%83FA
+854A  83F6 004D 83FA 83F6   DW %83F6,%004D,%83FA,%83F6
+8552  0030 83FE 83F6 004E   DW %0030,%83FE,%83F6,%004E
+855A  83FE 83F6 0051 8402   DW %83FE,%83F6,%0051,%8402
+8562  8402 0053 8402 8402   DW %8402,%0053,%8402,%8402
+856A  0052 8406 8406 0054   DW %0052,%8406,%8406,%0054
+8572  8406 8406 0031 840A   DW %8406,%8406,%0031,%840A
+857A  840A 004F 840A 840A   DW %840A,%004F,%840A,%840A
+8582  0025 840E 840E 0026   DW %0025,%840E,%840E,%0026
+858A  8412 8412 0000 0000   DW %8412,%8412,%0000,%0000
+8592  0000 003C 841C 8422   DW %0000,%003C,%841C,%8422
+859A  003D 8422 841C 003E   DW %003D,%8422,%841C,%003E
+85A2  8428 842E 003F 8434   DW %8428,%842E,%003F,%8434
+85AA  843A 0040 843A 8434   DW %843A,%0040,%843A,%8434
+85B2  0041 842E 8428 0042   DW %0041,%842E,%8428,%0042
+85BA  8440 8448 0043 8450   DW %8440,%8448,%0043,%8450
+85C2  8456 0044 8456 8450   DW %8456,%0044,%8456,%8450
+85CA  0045 8448 8440 0104   DW %0045,%8448,%8440,%0104
+85D2  841C 8422 0105 8422   DW %841C,%8422,%0105,%8422
+85DA  841C 0106 8428 842E   DW %841C,%0106,%8428,%842E
+85E2  0107 8434 843A 0108   DW %0107,%8434,%843A,%0108
+85EA  843A 8434 0109 842E   DW %843A,%8434,%0109,%842E
+85F2  8428 010A 841C 8422   DW %8428,%010A,%841C,%8422
+85FA  010B 846A 8470 010C   DW %010B,%846A,%8470,%010C
+8602  8470 846A 010D 8422   DW %8470,%846A,%010D,%8422
+860A  841C 0000 0000 0000   DW %841C,%0000,%0000,%0000
+8612  3A00 2C00 6669 656C   DW %3A00,%2C00,%6669,%656C
+861A  6420 7365 6C65 6374   DW %6420,%7365,%6C65,%6374
+8622  0069 6E74 2D3E 7074   DW %0069,%6E74,%2D3E,%7074
+862A  7200 7074 722D 3E69   DW %7200,%7074,%722D,%3E69
+8632  6E74 006C 6F6E 672D   DW %6E74,%006C,%6F6E,%672D
+863A  3E70 7472 0066 6965   DW %3E70,%7472,%0066,%6965
+8642  6C64 2061 7373 6967   DW %6C64,%2061,%7373,%6967
+864A  6E00 3E3E 2075 6E73   DW %6E00,%3E3E,%2075,%6E73
+8652  6967 6E65 6400 3C3C   DW %6967,%6E65,%6400,%3C3C
+865A  2075 6E73 6967 6E65   DW %2075,%6E73,%6967,%6E65
+8662  6400 6E61 6D65 0073   DW %6400,%6E61,%6D65,%0073
+866A  686F 7274 2063 6F6E   DW %686F,%7274,%2063,%6F6E
+8672  7374 616E 7400 7374   DW %7374,%616E,%7400,%7374
+867A  7269 6E67 0066 6C6F   DW %7269,%6E67,%0066,%6C6F
+8682  6174 0064 6F75 626C   DW %6174,%0064,%6F75,%626C
+868A  6500 6C6F 6E67 2063   DW %6500,%6C6F,%6E67,%2063
+8692  6F6E 7374 616E 7400   DW %6F6E,%7374,%616E,%7400
+869A  6C6F 6E67 2063 6F6E   DW %6C6F,%6E67,%2063,%6F6E
+86A2  7374 616E 7400 3E3E   DW %7374,%616E,%7400,%3E3E
+86AA  3D20 756E 7369 676E   DW %3D20,%756E,%7369,%676E
+86B2  6564 003C 3C3D 2075   DW %6564,%003C,%3C3D,%2075
+86BA  6E73 6967 6E65 6400   DW %6E73,%6967,%6E65,%6400
+86C2  696E 6469 7265 6374   DW %696E,%6469,%7265,%6374
+86CA  696F 6E00 2B2B 7072   DW %696F,%6E00,%2B2B,%7072
+86D2  6500 2D2D 7072 6500   DW %6500,%2D2D,%7072,%6500
+86DA  2B2B 706F 7374 002D   DW %2B2B,%706F,%7374,%002D
+86E2  2D70 6F73 7400 2175   DW %2D70,%6F73,%7400,%2175
+86EA  6E00 2600 2A00 2D00   DW %6E00,%2600,%2A00,%2D00
+86F2  7E00 2E00 2B00 2D00   DW %7E00,%2E00,%2B00,%2D00
+86FA  2A00 2F00 2500 3E3E   DW %2A00,%2F00,%2500,%3E3E
+8702  003C 3C00 2600 7C00   DW %003C,%3C00,%2600,%7C00
+870A  5E00 2D3E 0069 6E74   DW %5E00,%2D3E,%0069,%6E74
+8712  2D3E 646F 7562 6C65   DW %2D3E,%646F,%7562,%6C65
+871A  0064 6F75 626C 652D   DW %0064,%6F75,%626C,%652D
+8722  3E69 6E74 0026 2600   DW %3E69,%6E74,%0026,%2600
+872A  7C7C 0026 7E00 646F   DW %7C7C,%0026,%7E00,%646F
+8732  7562 6C65 2D3E 6C6F   DW %7562,%6C65,%2D3E,%6C6F
+873A  6E67 006C 6F6E 672D   DW %6E67,%006C,%6F6E,%672D
+8742  3E64 6F75 626C 6500   DW %3E64,%6F75,%626C,%6500
+874A  696E 7465 6765 722D   DW %696E,%7465,%6765,%722D
+8752  3E6C 6F6E 6700 6C6F   DW %3E6C,%6F6E,%6700,%6C6F
+875A  6E67 2D3E 696E 7465   DW %6E67,%2D3E,%696E,%7465
+8762  6765 7200 3D3D 0021   DW %6765,%7200,%3D3D,%0021
+876A  3D00 3C3D 003C 003E   DW %3D00,%3C3D,%003C,%003E
+8772  3D00 3E00 3C70 003C   DW %3D00,%3E00,%3C70,%003C
+877A  3D70 003E 7000 3E3D   DW %3D70,%003E,%7000,%3E3D
+8782  7000 2B3D 002D 3D00   DW %7000,%2B3D,%002D,%3D00
+878A  2A3D 002F 3D00 253D   DW %2A3D,%002F,%3D00,%253D
+8792  003E 3E3D 003C 3C3D   DW %003E,%3E3D,%003C,%3C3D
+879A  0026 3D00 7C3D 005E   DW %0026,%3D00,%7C3D,%005E
+87A2  3D00 3D00 6269 7473   DW %3D00,%3D00,%6269,%7473
+87AA  6574 0062 6974 636C   DW %6574,%0062,%6974,%636C
+87B2  7200 6269 7473 6574   DW %7200,%6269,%7473,%6574
+87BA  3D00 6269 7463 6C72   DW %3D00,%6269,%7463,%6C72
+87C2  3D00 6269 7474 6573   DW %3D00,%6269,%7474,%6573
+87CA  7400 6C6F 6164 2062   DW %7400,%6C6F,%6164,%2062
+87D2  7974 6520 7265 6769   DW %7974,%6520,%7265,%6769
+87DA  7374 6572 003F 005C   DW %7374,%6572,%003F,%005C
+87E2  2F00 5C2F 002F 5C00   DW %2F00,%5C2F,%002F,%5C00
+87EA  2F5C 0063 616C 6C00   DW %2F5C,%0063,%616C,%6C00
+87F2  6361 6C6C 0067 6F74   DW %6361,%6C6C,%0067,%6F74
+87FA  6F00 6A75 6D70 2063   DW %6F00,%6A75,%6D70,%2063
+8802  6F6E 6400 6272 616E   DW %6F6E,%6400,%6272,%616E
+880A  6368 2063 6F6E 6400   DW %6368,%2063,%6F6E,%6400
+8812  7365 7420 6E72 6567   DW %7365,%7420,%6E72,%6567
+881A  7300 6C6F 6164 2076   DW %7300,%6C6F,%6164,%2076
+8822  616C 7565 003E 3E75   DW %616C,%7565,%003E,%3E75
+882A  6E73 6967 6E65 6400   DW %6E73,%6967,%6E65,%6400
+8832  3C3C 756E 7369 676E   DW %3C3C,%756E,%7369,%676E
+883A  6564 0069 6E74 2D3E   DW %6564,%0069,%6E74,%2D3E
+8842  6368 6172 0066 6F72   DW %6368,%6172,%0066,%6F72
+884A  6365 2072 6567 6973   DW %6365,%2072,%6567,%6973
+8852  7465 7200 0000 0000   DW %7465,%7200,%0000,%0000
+885A  3D73 7472 7563 7475   DW %3D73,%7472,%7563,%7475
+8862  7265 003D 2028 7374   DW %7265,%003D,%2028,%7374
+886A  7275 6374 2073 6574   DW %7275,%6374,%2073,%6574
+8872  7570 2900 3E3E 3D75   DW %7570,%2900,%3E3E,%3D75
+887A  6E73 6967 6E65 6400   DW %6E73,%6967,%6E65,%6400
+8882  3C3C 3D75 6E73 6967   DW %3C3C,%3D75,%6E73,%6967
+888A  6E65 6400             DW %6E65,%6400
 L888E:
 888E  4340 0000 0000 0000   DW %4340,%0000,%0000,%0000
 L8896:

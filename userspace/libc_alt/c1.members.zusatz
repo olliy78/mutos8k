@@ -1,0 +1,6 @@
+# Hand-made correction for c1.members: doprnt jump-table entry points as in c0 (474 B variant; targets of the format-letter table at 8A3E: 6C2C 6C32 6C48 are +2 over members_auto)
+doprnt code=6C2C,6C32,6C48 data=8A3E:8A88
+# data of the members: the format-letter table + "null" of doprnt at 8A3E (as in c0), then __iob at 8A88 (printf/flsbuf reference iob+14 = 8A96), __lastbu 8B28
+data data=8A88:8B2A exp=__iob@8A88,__lastbu@8B28
+# _ctype_ (129 B + pad), the libc member that atof uses; no text
++ ctype 7264 7264 data=8B2A:8BAC exp=__ctype_@8B2A src=A
