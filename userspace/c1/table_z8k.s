@@ -997,10 +997,7 @@ WV L201
 end _table
 I
 G
-_cctab	L
-_efftab	L
 _regtab	L
-_sptab	L
 _regtab:
 BV %0;BV %6A
 WV cr106
@@ -1097,6 +1094,8 @@ WV cr16
 BV %0;BV %6D
 WV cr109
 BV %0;BV %0
+G
+_efftab	L
 _efftab:
 BV %0;BV %1E
 WV ef30
@@ -1139,6 +1138,8 @@ WV ef16
 BV %0;BV %74
 WV ef116
 BV %0;BV %0
+G
+_cctab	L
 _cctab:
 BV %0;BV %1E
 WV cc30
@@ -1195,6 +1196,8 @@ WV cc60
 BV %0;BV %55
 WV cc85
 BV %0;BV %0
+G
+_sptab	L
 _sptab:
 BV %0;BV %6A
 WV sp106

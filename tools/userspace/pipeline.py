@@ -81,7 +81,7 @@ PROGRAMME = {
     "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain: doc/userspace/wk_w4.md
-    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain: doc/userspace/wk_w6.md
     "c2": ("usr", "lib/c2", "userspace/c2", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
@@ -199,11 +199,17 @@ def quelle_lesen(p):
     if not os.path.isdir(p):
         return open(p, encoding="latin-1").read(), {}
     dat, koepfe = {}, {}
+    # `link.txt` (optional): the modules (.c or .s) in link order, one name per line; without it all *.c alphabetically.
+    # c1 needs it: atof.s (EPA code, not compilable by the guest cc) and the generated table module sit between c13 and libc.
+    lt = os.path.join(p, "link.txt")
+    reihe = [z.strip() for z in open(lt) if z.strip() and not z.startswith("#")] if os.path.isfile(lt) else None
     for f in sorted(os.listdir(p)):
-        if f.endswith(".c"):
+        if f.endswith(".c") and reihe is None:
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
         elif f.endswith(".h"):
             koepfe[f] = open(os.path.join(p, f), "rb").read()
+    for f in reihe or []:
+        dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
     # a .c file that another .c of the directory #includes (cpp: cpy.c includes yylex.c, as in V7) is not a module of its own
     for f in list(dat):
         if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):

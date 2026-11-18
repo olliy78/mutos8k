@@ -37,3 +37,14 @@ Abweichungen des Z8000-Formats von V7-`cvopt` (alle gemessen am Abbild; im Kopf 
 6. Datenzeilen der Tabelle: `wv op,gruppe` (PLZ/ASM) statt `106.;\tcr106`.
 Die Makrobuchstaben der Mustertexte entsprechen V7 (`A1 A2 B1 B2 BE BF C1 C2 F H R R1 S I`; Bytes `A B C D L P E F G H I J K M`; Bit 7 = vorangestelltes Tabulatorzeichen).  Der tote Zweig `M -> N` des V7-Kommentars ist falsch (V7 hat kein `case 'M'`).
 Verbleibend fuer den Gesamtbau: `table_z8k.s` als Quelle zwischen `c13` und den libc-Gliedern in `userspace/c1/` einbinden (Teil 3).
+
+## Teil 3: Gesamtbau (Stand: erster Durchlauf, **nicht abgeschlossen**)
+
+* `userspace/c1/`: `c10.c c11.c c12.c c13.c c1.h` sind **unveraenderter V7-Text** (Platzhalter fuer die Rekonstruktion), dazu `atof.s` (Kopie von `userspace/libc/atof.s`, EPA-Code, vom Gast-`cc` nicht uebersetzbar) und `table_z8k.s`;
+  `link.txt` legt die Linkreihenfolge fest (`c10 c11 c12 c13 atof table_z8k`, danach `libc_alt`); `pipeline.py quelle_lesen` liest `link.txt` (neu, auch `.s`).
+* `alles c1 --c2emu --libc alt --ist neu_c2` (13 min): V7-Text uebersetzt und bindet.  Gemessen: text 25036 (Original 30176), data 4250 (5582), bss 54 (1832); Befehle original 7970, gebaut 6747, davon 4022 uebereinstimmend,
+  853 Differenzbloecke (Bericht `userspace/c1/work/bau/neu_c2.bericht`).  Der Unterschied ist erwartungsgemaess gross: die V7-Codeausgabe schreibt PDP-11-Mnemonik, nicht Z8000.
+* **Offen (Bindefehler):** der Linker meldet `Undefined: _regtab _efftab _cctab _sptab _end` -- die Tabellensymbole aus `table_z8k.s` (`G` / `_regtab L` / `_regtab:` im `I`-Abschnitt nach `end _table`, wie `libc_alt/*/data.s`) werden nicht aufgeloest
+  (das Objekt enthaelt die Namen; *Annahme*: Symboltyp/Abschnitt der Marken).  Naechster Schritt: Symboltyp mit dem eines libc_alt-Datenglieds vergleichen (`objformat`), ggf. Abschnittsreihenfolge anpassen.
+* Danach je Funktion `c10.c..c13.c` an das Binary angleichen (Z8000-Codeausgabe, `opdope` 14 Eintraege, 12 Nicht-V7-Funktionen, Registervariablen wie in `wk_w4.md`, `c13.c`-Daten gegen 75E0..).
+  **Keine** Funktion ist bisher rekonstruiert; keine neuen c2-Regeln (R230-R259 unbenutzt).

@@ -381,7 +381,7 @@ def uebersetzen(text):
     rt = {off: nm(n) for off, n in refs}
     rd = {off: nm(n) for off, n in drefs}
 
-    def dump(buf, at, rf):
+    def dump(buf, at, rf, glob=False):
         out, off, run = [], 0, []
 
         def flush():
@@ -391,7 +391,10 @@ def uebersetzen(text):
         while off < len(buf):
             if off in at:
                 flush()
-                out += [n + ":" for n in at[off]]
+                for n in at[off]:
+                    if glob:
+                        out += ["G", n + "\tL"]      # as libc_alt data.s: declaration directly before the label
+                    out.append(n + ":")
             if off in rf:
                 flush()
                 out.append("WV " + rf[off])
@@ -405,9 +408,8 @@ def uebersetzen(text):
         return out
     t = ["table_ module", ASM_KOPF, "G\t_table\tPR", "E", "_table:"]
     t += dump(tb, atT, rt)
-    t += ["end _table", "I", "G"]
-    t += ["%s\tL" % n for n in sorted(atD_all(atD))]
-    t += dump(db, atD, rd)
+    t += ["end _table", "I"]
+    t += dump(db, atD, rd, True)
     t.append("end table_")
     return "\n".join(t) + "\n"
 
