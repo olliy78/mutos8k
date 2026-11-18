@@ -603,7 +603,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C1.9 | `doc/plus/cpa_analyse.md`, §8-§10, §12 | -- | 1-2 h | erledigt (Vorlage `a3789ba`; Entscheidung 2026-11-17: alle Empfehlungen; Punkt 4: §8 Ergebnis, §9 endgueltig, §10, §12) | 2026-11-18 | Betreff "Plan 48: C1.9 Punkt 4" |
 | C2.1 | `mutos_io/cpa/{src/mutoscpa.mac,build.py,mutoscpa.bin,README.md}`, `tests/test_plus_cpa_quelle.py` | -- | 1 h | erledigt | 2026-11-18 | 91fa315 |
 | C2.2 | `tools/plus/cpa_system.py`, `mutos_io/cpa/system/`, `tests/test_plus_cpa_system.py`, `doc/plus/cpa/c2_2_system.md` | Sekunden | 2 h | erledigt | 2026-11-18 | 2717fec |
-| C2.3 | `mutos_io/cpa/src/m8kboot.mac`, `m8kboot.com`, `versuche/plus_cpa/emfenst.mac`, `versuche/dbg/cpa_c2_3_*`, `tests/test_plus_cpa_lader.py`, `doc/plus/cpa/c2_3_lader.md` | Sekunden | 3-4 h | offen | | |
+| C2.3 | `mutos_io/cpa/src/m8kboot.mac`, `m8kboot.com`, `versuche/plus_cpa/emfenst.mac`, `versuche/dbg/cpa_c2_3_*`, `tests/test_plus_cpa_lader.py`, `doc/plus/cpa/c2_3_lader.md` | Sekunden | 3-4 h | erledigt | 2026-11-18 | ccd7eb5 |
 | C3.1 | `mutos_io/cpa/src/mutoscpa.mac`, `tests/test_plus_cpa_io.py`, `doc/plus/cpa/c3_1_namen.md` | -- | 1-2 h | erledigt | 2026-11-18 | cca1059 |
 | C2.4 | `tools/plus/cpa_disk.py`, `tests/test_plus_cpa_disk.py`, `doc/plus/cpa/c2_4_bootdiskette.md`, `doc/plus/abweichungen.md` | Sekunden | 2 h | offen | | |
 | C3.2 | `mutos_io/cpa/{src/mutoscpa.mac,mutoscpa.bin}`, `tests/test_plus_cpa_io.py`, `versuche/dbg/cpa_c3_2_*`, `doc/plus/cpa/c3_2_start.md` | Minuten | 4-6 h | offen | | |
