@@ -29,37 +29,45 @@ rmove()
 	int fl2;
 
 	for (p = first.forw; p != 0; p = p->forw) {
-	fl2 = flt = (p->subop & FLTF) ? FREG : 0;
+	if (p->subop & FLTF)
+		flt = FREG;
+	else
+		flt = 0;
+	fl2 = flt;
 	switch (p->op) {
 
 	case LDIL:
 		dualop(p);
-		if (rsz[RT2] != 'r')
+		if (rsz[RT2] == 'r')
+			fl2 = 0;
+		else
 			flt = 0;
-		goto mv;
+	mv:
+		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
+		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
+		 && rsz[r+flt] == rsz[RT1]) {
+		del:
+			delnode(p);
+			redunm++;
+			continue;
+		}
+		goto mv2;
 
 	case MOV:
 	case LDK:
 		dualop(p);
 		if (equstr(regs[RT1], regs[RT2]))
 			goto del;
-	mv:
-		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
-		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
-		 && rsz[r+flt] == rsz[RT1])
-			goto del;
+		goto mv;
+	mv2:
 		if ((r = findrand(regs[RT1], rsz[RT1], flt)) >= 0
 		 && rsz[r+flt] == rsz[RT1] && isreg(regs[RT2]) == r
-		 && rsz[r+fl2] == rsz[RT2]) {
-		del:
-			delnode(p);
-			redunm++;
-			continue;
-		}
+		 && rsz[r+fl2] == rsz[RT2])
+			goto del;
 		if (flt == fl2) {
 		l163a:
 			r = isreg(regs[RT1]);
-			if (r >= 0 && rnode[r+flt] && rsz[r+flt] == rsz[RT1]) {
+			if (r >= 0 && rnode[r+flt] != 0 && rsz[r+flt] == rsz[RT1]) {
 				delnode(rnode[r+flt]);
 				kill(r+flt, rsz[RT1]);
 				if (isreg(ccloc) == r+flt)
@@ -170,7 +178,7 @@ rmove()
 	case PUSH:
 	dble:
 		dualop(p);
-		if (p->op == POP && (r = isreg(regs[RT1])) >= 0 && rnode[r]
+		if (p->op == POP && (r = isreg(regs[RT1])) >= 0 && rnode[r] != 0
 		 && rsz[r] == rsz[RT1]) {
 			delnode(rnode[r]);
 			kill(r, rsz[RT1]);
@@ -215,8 +223,10 @@ rmove()
 				cregs[r][1] = '0';
 				cregs[r][2] = 0;
 				rnode[r] = p;
-			} else
+			} else {
 				savereg(r+flt, "#0", rsz[RT1], p);
+				goto setc;
+			}
 		setc:
 			setcc(regs[RT1], rsz[RT1]);
 			continue;
@@ -304,10 +314,10 @@ rmove()
 			repladdr(p, 1, flt);
 			dualop(p);
 		}
-		if (p->op == BIC)
-			setcc(regs[RT1], rsz[RT1]);
-		else
+		if (p->op != BIC)
 			clrcc();
+		else
+			setcc(regs[RT1], rsz[RT1]);
 		clrptr(regs[RT1], rsz[RT1], flt);
 		clrptr(regs[RT2], rsz[RT2], flt);
 		continue;
@@ -322,11 +332,12 @@ rmove()
 				dualop(p->back);
 			r = compare(p->subop, findcon(RT1), findcon(RT2));
 			if (r == 0) {
-				if (p->forw->op > CBR) {
+				if (p->forw->op <= CBR)
+					delnode(p);
+				else {
 					p->back->back->forw = p->forw;
 					p->forw->back = p->back->back;
-				} else
-					delnode(p);
+				}
 				clrcc();
 				decref(p->ref);
 				p = p->back->back;
@@ -351,7 +362,7 @@ rmove()
 	case CALL:
 	case END:
 		for (r = 0; r < 8; r++)
-			if (rnode[r] && regs[r][0] == 'r') {
+			if (rnode[r] != 0 && regs[r][0] == 'r') {
 				delnode(rnode[r]);
 				if (isreg(ccloc) == r)
 					clrcc();
