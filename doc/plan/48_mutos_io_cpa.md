@@ -609,7 +609,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C3.2 | `mutos_io/cpa/{src/mutoscpa.mac,mutoscpa.bin}`, `tests/test_plus_cpa_io.py`, `versuche/dbg/cpa_c3_2_*`, `doc/plus/cpa/c3_2_start.md` | Minuten | 4-6 h | erledigt | 2026-11-18 | d6acddf |
 | C3.3 | wie C3.2, `doc/plus/cpa/c3_3_platte.md` | Minuten | 4-6 h | erledigt | 2026-11-18 | b864f84 |
 | C3.4 | wie C3.2, `doc/plus/cpa/c3_4_tastatur.md`, `doc/plus/abweichungen.md` | Minuten | 3-5 h | erledigt | 2026-11-18 | 0a58e67 |
-| C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | offen | | |
+| C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | erledigt (E7 b) | 2026-11-18 | e514d0a |
 | C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | erledigt | 2026-11-18 | d23a7db |
 | C4.2 | `doc/plus/cpa/c4_2_arbeitstests.md` | 5-15 Min. je Lauf | 2-3 h | offen | | |
 | C5.2 | `tests/test_plus_cpa_lang.py`, `doc/plus/cpa.md`, `mutos_io/cpa/README.md`, `doc/plus/abweichungen.md`, `doc/plan/51_festplatte.md`, `doc/plus/cpa/c5_2_abschluss.md` | Langtest | 2-3 h | offen | | |
