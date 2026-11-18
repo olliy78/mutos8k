@@ -60,3 +60,38 @@ Verbleibend fuer den Gesamtbau: `table_z8k.s` als Quelle zwischen `c13` und den 
 * `sdelay` (1A22): nur `PLUS` wird verfolgt (kein `STAR`); 1 Block offen: Original `TEST R2` hinter `LD R12,R2`, gebaut `TEST R12` (R5-Modell; Quellvariante ungeklaert).
 * Neue Daten: `char modname[] "c_"` (7B3E, 3 Bytes + Fuellbyte; *Annahme*: steht in `c11.c` vor `max`, da die Daten dort beginnen), in `c1.h` deklariert.
 **Offen (gemessen am Listing, nicht rekonstruiert):** `match` (0186) ist im Original anders aufgebaut (Sonderfall `LONG` mit Operatorliste `+ * , I H J . L - K`, andere Bitmasken); 9 Null-initialisierte Int-Flags in den Daten (760C, 760E, 7610, 7614, 7616, 761A..7622) und 5 weitere ab 7B42; `rcexpr`, `cexpr`, `doinit`, die uebrigen Nicht-V7-Funktionen (1EFC, 1F66, 2028, 21FC, 2228); der V7-`movreg` existiert im Original anderswo (die Zuordnung 2104 -> `movreg` ist falsch: 2104 druckt Registernamen `r%d`/`rr%d`/`f%d`/`rl%d`).  Keine neuen c2-Regeln.
+
+## Teil 5: c10.c, Fortsetzung (W6c)
+
+Alles *gemessen* am Listing `userspace/c1/c1.lst` und am Bericht `userspace/c1/work/bau/neu_c2.bericht`; Namen mit *Annahme* sind erfunden.
+
+**Daten/BSS von c10 (Ziel 1).**  Das Original-Datenlayout 75E0..: Fuellwort, `maprel` (75E2), `notrel` (75EC), `czero` (75F6), `cone` (75FC), `sfuncr` (7602, 10 Byte, Feld `nloc` = 760A),
+danach Null-initialisierte Int-Flags **in den Daten** (`int x 0;`, nicht BSS): 760C 760E 7610, `nreg` (7612, Wert **5**, V7: 3), 7614 7616, `isn` (7618, 10000), 761A 761C 761E 7620 7622; erst danach die Schalttabellen (7624..).  In `c11.c` stehen hinter `modname` (7B3E) fuenf weitere Flags 7B42..7B4A (vor der Schalttabelle 7B4C).
+`cregtab` liegt im BSS bei 8BD6 (Vergleiche `CP R8,%8BD6` ohne `#`), direkt dahinter die Tabelle der Gleitkommakonstanten bei 8BD8 (50 Eintraege zu 14 Byte = `struct ftconst`, Zaehler 760C).
+Bedeutung der Flags (aus den Verwendern; Namen *Annahme*): 760C `nfpool` (naechster freier Eintrag der Tabelle bei 8BD8), 760E/7610 in `rcexpr`/CALL: Registerpaar-Ausrichtung (gerade/ungerade) der Funktionsergebnis-Register, 7614 `rlused` (`preg` hat einen Byteregisternamen `rl%d` gedruckt),
+7616 in `rcexpr`/cctab gesetzt, 761A `wregf` (naechster Registername als Wortregister `r%d`), 761C `bregf` (Byteregister `rl%d`), 761E `lregf` (Langregister `rr%d`), 7620 in `cexpr`/Namensausgabe, 7622 sperrt `delay` in `rcexpr` (von `cexpr` am Anfang auf 1 gesetzt).  Die Flags 760E, 7610, 7616, 7620, 7622 heissen bis zur Rekonstruktion von `cexpr` `zf1 zf2 zf4 zf8 zf9`, die 7B42..7B4A `yf0..yf4` (in `c11.c`/`c12.c` noch nicht benutzt).
+
+**`match` (0186).**  V7-Text, aber: kein `lsptab`-Zweig; `op`, `d1`, `p2`, `p1`, `tree`, `opt` sind Registervariablen (r13..r8 in dieser Reihenfolge; die Reihenfolge `p2` vor `p1` ist die einzige, die r11/r10 trifft), `d2` und `dope` Stack (`d2` bei FFF2, `dope` bei FFF0);
+vor der Wegnahme der Umwandlung: `tree->type==LONG` mit `op` in `/ * % /= *= %= << <<= >> >>=` (10 Operatoren, Reihenfolge `DIVIDE TIMES MOD ASDIV ASTIMES ASMOD LSHIFT ASLSH RSHIFT ASRSH`) oder `p2->op==ITOL && p2->tr1->type==UNSIGN` lassen die Umwandlung stehen (leere `if`-Anweisungen vor den beiden V7-`if`s);
+`notcompat` bekommt nur zwei Argumente (kein `op`).  Die in der Doku "Operatorliste `+ * , I H J . L - K`" sind die ASCII-Buchstaben der Werte 43 42 44 73 72 74 46 76 45 75.
+
+**Nicht-V7-Funktionen (gemessen entschluesselt; Namen *Annahme*).**
+* `1EFC` ist das **echte `movreg`** (nicht 2104): `movreg(r0,r1,tree)`, gibt `ldl rr%d,rr%d` / `ld r%d,r%d` / `fld f%d,f%d` aus (Ziel zuerst), Registernummern ueber `zreg`.
+* `1F66` `ltod(l,p)`: Langzahl nach 4-Wort-Double (Vorzeichen, 11 Bit Exponent mit Bias 1023); `2028` `ftol(p)`: Double nach Long (Vorzeichen wird nicht behandelt; Fehler "floating to large for long"); `21FC` `fcopy` (4 Worte kopieren);
+  `2228` `outfp(p,neg)`: Gleitkommakonstante ausgeben (`L%d:` und `WV %%%x;...`) und in der Tabelle bei 8BD8 merken (ruft zwei Hilfsfunktionen in c12, 3C58/3CAA: derzeit leere Platzhalter `fphead`/`fptail` am Ende von `c12.c`).
+* `2104` `preg(tree,reg)`: druckt den Registernamen: `FP` fuer 14, sonst je nach Flags/`isfloat`: `r%d`, `rr%d` (long), `f%d` (float, `nfloat++`), `rl%d` (Byteregister, nur bis 8, sonst Fehler "byte-operation on register greater 8").
+* `21D6` `zreg` (Registernummer 0..5 -> 2..7, 6..7 -> 0..1).
+* In c11/c12 (noch nicht rekonstruiert, als Funktionen am Dateiende der Quelle): `2DAE` `bitnum` (Bitnummer einer Einbitkonstanten, sonst -1), `2EE4` `bitop` (AND/OR/ASAND/ASOR mit Einbitkonstante -> neue Operatoren 82/81/84/83), `577A` `regnode(class,type,reg)` (NAME-Knoten fuer ein Register).
+
+**`rcexpr` (039E), Aufbau im Original (Rekonstruktion in `c10.c`).**  Kein `RELAT`-Kurzschluss und kein `ANDN`; Schalter ueber `tree->op` (Hash mit 4 Eimern `op%4`, Tabelle 7624): `STRASG INIT RFORCE SEQNC CALL`, die Langschiebungen (`ASLSH LSHIFT RSHIFT ASRSH`, ohne Operatoraenderung),
+`DIVIDE MOD ASDIV ASMOD` (nur bei `UNSIGN`) und `TIMES ASTIMES` (`pow2`; bei geaendertem `op` zurueck nach `again`), `OR ASOR` / `AND ASAND` (`bitnum`/`bitop`).  `RFORCE` gibt bei Typwechsel nach `float`/`double` `fclr f0` aus.
+`CALL` rettet die lebenden Register `0..reg-1` (`push @SP,r%d`, bei `nfloat` auch `dec SP,#8 / fldd`), uebergibt die Argumente, ruft sich mit `CALL2` und `tr2=0` rekursiv (Register 0), poppt, bewegt das Ergebnis nach `reg` (`movreg(0,reg,tree)`) und kehrt mit `reg` zurueck.
+Danach (neu): STAR-Operanden, die kein Registername sind, werden mit `rcexpr(tnode(LOAD,...))` in ein Register geladen und durch einen REG-Knoten ersetzt (`regnode`), `reg` rueckt weiter; `delay` nur, wenn Flag 7622 frei; Rueckgabe von `cexpr` gilt als Erfolg ab `>= -2`;
+`fixup` druckt fuer `sptab` `push%c @SP,<reg>` / `dec SP,#8; fldd`, fuer `cctab` `test%c <reg>` / `fcpzx f%d` (nicht bei den 9 `AS`-Operatoren mit Byte-/Nicht-Long-Operanden und nicht bei Long-Zuweisungsoperatoren ausser `%= = &= |= ^=`).
+
+**`cexpr` (0B9E, 2682 Byte) ist NICHT rekonstruiert.**  Befund: Der Rahmen hat 22 Byte Stack; es gibt `c`, `opd`, `reg`, `p1=tree->tr2` nur fuer `!(op&0400)`; relationale/logische Werte bauen Marken ueber die Hilfen 2F6C (`cbranch`), 31E8, 3310 (`label`), `isn` (7618) auf (kein `branch`-Aufruf in V7-Form);
+die Makroexpansion (`loop:`) ist eine **Z8000-Neufassung**: `putchar` ist eingebettet (`BITB 8A96`/`DEC 8A92`), Ausgabebuchstaben 9 `b` `d` `s` `l` `k` `+`, Schalter ueber Zeichen 0..0x5A mit Sprungtabelle 762C (0x5B Eintraege, `L15EC` = Standardziel), Zeichenketten fuer `FP`, `@SP`, `#%%`, `#%%%x`, `rr0 rh0 rh%d rq4 rq0`; die `.data/.text`-Ausgabe der Gleitkonstanten ruft `outfp`.
+Jede V7-Zeile von `cexpr` muss gegen diese Neufassung neu gelesen werden; das ist der groesste offene Block von c10.
+
+**Verbleibend (c10):** `cexpr`, `doinit` (Z8000-Ausgabe, 648 Byte), Reihenfolge der c10-Funktionen im Binary (Nicht-V7-Funktionen stehen schon an der richtigen Stelle).
+**Fuer c11-c13:** die obigen Funktionen `bitnum`, `bitop`, `regnode`, `fphead`, `fptail` stehen als Platzhalter am Ende von `c11.c`/`c12.c` (Binary: 2DAE, 2EE4, 577A, 3C58, 3CAA) und sind an die richtige Stelle zu verschieben; Flags `yf0..yf4` (7B42..7B4A) werden in 3C58..3CAA, 3A50.. (c12) benutzt; `isfloat` (28EE) liefert im Original `'f'`, `'l'` oder 0 (V7: nur `'f'`).
