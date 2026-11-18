@@ -159,3 +159,19 @@ Alles *gemessen* am Listing `userspace/c1/c1.lst` und am Bericht `userspace/c1/w
 **Stand nach dem Bau (`alles c1 --c2emu --libc alt --ist neu_c2`):** Text 30694 (Original 30176), Daten 5436 (5582), BSS 1836 (1832); Befehle 7345 gegen 7970, **6275 gleich** (vorher 5648), 474 Bloecke (vorher 641).
 
 **Offen (c11):** die meisten Restbloecke in `pname`, `cbranch`, `getree`, `strasg` sind Datenadressen (`D+14B0` gegen `D+1416` usw.: Daten noch 146 Byte kleiner, Ursache nicht gefunden; Kandidaten: nicht rekonstruierte c12/c13-Daten und die 1024 Byte BSS), dazu echte Formabweichungen: `oddreg` (Original legt den Zweig `(reg+1)&~1` vor den Rueckgaben 4/0 an), `branch` (Original berechnet `k = op>200?op-200:op` vor der Bedingung, Bedingungsfolge anders gemischt), `cbranch` (Spruenge im Original weiter: `JP` statt `JR`, also mehr Code dazwischen; Konstantentest), `pname` FCON (`NEG` im Original vor dem Push, hinter einem vorgezogenen Block).  `degree`, `pbase`, `xdcalc`, `dcalc`, `notcompat`, `prins`, `arlength`, `sort`, `ispow2`, `pow2`, `error`, `geti`, `outname`, `setype`, `decref`, `incref` unveraendert V7 (nur Datenadressen bzw. nicht untersucht); c12/c13 nicht angefasst.
+
+## Teil 8: c11, Rest (W6f)
+
+Alles *gemessen* am Listing `userspace/c1/c1.lst` und am Bericht `neu_c2.bericht`; Zuordnung der Adressen: `regerr` 264E, `pbase` 2660, `xdcalc` 269C, `dcalc` 26D8, `notcompat` 279C, `prins` 2826 (in `v7zuordnung.txt` nicht verlaesslich).
+
+**Neu geschrieben (c11.c):**
+* `dcalc` (26D8): dichter Schalter `NAME..STAR` (Tabelle 7B84, Standardziel `nrleft`-Rechnung); `NAME` ausser `REG` sowie `FCON`/`AMPER` -> 12, `LCON` -> 11 (kein `AUTOI/AUTOD/SFCON`); `CON`: 0 -> 4, positiv `<16` 5, `==16` 6, `<33` 7, sonst 8, nicht positiv 12; `STAR`: Operand `NAME`/`REG` -> 9, `NAME`/`OFFS` -> 12.
+* `notcompat` (279C): ohne die V7-Ausnahme `NAME/REG/ASSIGN/CHAR`; `op` bleibt ungenutzt.
+* `prins` (2826): vier Argumente `(op, fl, c, itable)` (bisher falsch mit dreien); Eintrag `{iop, str1, str2}`; Zeichenkette `"!"...` zaehlt nur `yf4` hoch; sonst `printf("%s")`, bei `'m'` und `!fl` danach `putchar('t')`; beginnt sie mit `t`, `x`, `o` oder `an`, wird `zf4 = 1` (Bedingungsfolgen in `branch`).  Namen/Deutung von `fl` *Annahme*.
+* `degree`, `pbase`, `xdcalc`, `regerr` sind im Binary V7-gleich (nur Datenadressen) und blieben unveraendert.
+
+**Formkorrekturen:** `oddreg` (`if (LONG) { if (reg>2) error else {...} } else return((reg+1)|1)` erzeugt die Blockreihenfolge des Originals), `branch` (`k` per `if/else` statt `?:`: das Original hat zwei getrennte Stores).  Beide sind jetzt befehlsgleich bis auf Datenadressen.
+
+**Stand nach dem Bau:** Text 30826 (Original 30176), Daten 5436 (5582), BSS 1836 (1832); Befehle 7386 gegen 7970, **6353 gleich** (vorher 6275), 459 Bloecke (vorher 474).  `--check c1` OK; pytest 213 bestanden, derselbe eine Fehler wie in Teil 5.
+
+**Offen:** `dcalc` hat einen Rest (`LDK R2,#11; JR` steht im Original an anderer Stelle, 1 Block); `cbranch` (`JP` statt `JR`, ein Block `LD @R8,#85...` im Original nach hinten verlegt) und `pname` FCON (`NEG`-Block) unveraendert; ausserdem noch die Datenadressen (146 Byte Daten fehlen).
