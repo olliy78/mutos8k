@@ -81,7 +81,7 @@ PROGRAMME = {
     "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain: doc/userspace/wk_w4.md
-    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain: doc/userspace/wk_w6.md
     "c2": ("usr", "lib/c2", "userspace/c2", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
@@ -199,11 +199,17 @@ def quelle_lesen(p):
     if not os.path.isdir(p):
         return open(p, encoding="latin-1").read(), {}
     dat, koepfe = {}, {}
+    # `link.txt` (optional): the modules (.c or .s) in link order, one name per line; without it all *.c alphabetically.
+    # c1 needs it: atof.s (EPA code, not compilable by the guest cc) and the generated table module sit between c13 and libc.
+    lt = os.path.join(p, "link.txt")
+    reihe = [z.strip() for z in open(lt) if z.strip() and not z.startswith("#")] if os.path.isfile(lt) else None
     for f in sorted(os.listdir(p)):
-        if f.endswith(".c"):
+        if f.endswith(".c") and reihe is None:
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
         elif f.endswith(".h"):
             koepfe[f] = open(os.path.join(p, f), "rb").read()
+    for f in reihe or []:
+        dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
     # a .c file that another .c of the directory #includes (cpp: cpy.c includes yylex.c, as in V7) is not a module of its own
     for f in list(dat):
         if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):
@@ -251,7 +257,18 @@ def cmd_bau(name, a):
         for n, r in erg.items():
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
-                for fn, t in sorted(r["s"].items()):
+                # Modules that are already assembler (.s in link.txt: c1's atof.s and table_z8k.s) are not rewritten and keep
+                # their place in the link order; without them the second link round lacks them (Undefined: _regtab ...).
+                fixe = {f[:-2] + ".s": t for f, t in v[n].items() if f.endswith(".s")} if isinstance(v.get(n), dict) else {}
+                if fixe:
+                    reihe = [f[:-2] + ".s" for f in v[n]]
+                    todo = [(f, fixe[f] if f in fixe else r["s"][f]) for f in reihe if f in fixe or f in r["s"]]
+                else:
+                    todo = sorted(r["s"].items())
+                for fn, t in todo:
+                    if fn in fixe:
+                        zwei[n + "_c2"][fn] = t
+                        continue
                     zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
                     if name == "ld":
                         zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
