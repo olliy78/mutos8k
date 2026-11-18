@@ -873,6 +873,7 @@ getree()
 	register struct xtname *np;
 	static char s[9], s1[9];
 	char numbuf[64];
+	int unused1;	/* never used; the original frame has this word (FEEA) between numbuf and fp (*Annahme*) */
 	struct ftconst *fp;
 	struct lconst *lp;
 	struct fasgn *sap;
@@ -902,13 +903,11 @@ getree()
 
 	case BDATA:
 		if (geti() == 1) {
-			printf("BV ");
-			for (;;)  {
-				printf("%%%x", geti());
-				if (geti() != 1)
-					break;
+			/* Differs from V7: one "BV" per value, so the ";" is
+			   printed before the next "BV " (loop inverted by cc:
+			   the test comes last in the original, at 34B0). */
+			while (printf("BV "), printf("%%%x", geti()), geti() == 1)
 				printf(";");
-			}
 			printf("\n");
 		}
 		break;
@@ -1169,7 +1168,8 @@ getree()
 				exit(1);
 			}
 			t = *--sp;
-			*sp++ = tnode(op, geti(), *--sp, t);
+			*sp = tnode(op, geti(), *--sp, t);
+			sp++;
 		} else
 			sp[-1] = tnode(op, geti(), sp[-1]);
 		break;

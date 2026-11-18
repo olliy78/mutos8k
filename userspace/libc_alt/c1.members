@@ -10,7 +10,7 @@ flsbuf 6E0C 7142 exp=__flsbuf@6E0C,_fflush@6F1C,__cleanu@6F72,_fclose@6F90,_fsee
 endopen 7142 7264 exp=__endope@7142 src=G
 data 7264 7264 data=8A88:8B2A exp=__iob@8A88,__lastbu@8B28 src=A
 cuexit 7264 7272 exp=_exit@7264 src=A
-ctype 7264 7264 data=8B2A:8BAC exp=__ctype_@8B2A src=A
+ctype_ 7264 7264 data=8B2A:8BAC exp=__ctype@8B2A src=S
 abort 7272 7284 exp=_abort@7272 src=S
 malloc 7284 7488 bss=92C8:C exp=_malloc@7284,_free@73CE,_realloc@73E8 src=G
 isatty 7488 74AE exp=_isatty@7488 src=A
