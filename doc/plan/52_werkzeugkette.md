@@ -92,7 +92,7 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 
 ## 7. Stand
 
-*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  W4 `c0` **G** (`wk_w4.md`).  W2 `cpp` **A** (`wk_w2.md`): 13 Restbloecke sind Codeanordnung des alten c2 -- G erst mit der c2-Quelle (W5).  Der Gast-yacc erzeugt die cpp-Tabellen wortgleich (gutes Zeichen fuer W7 `as`).  W8 `libc.a` (`wk_w8.md`): 111 von 140 Gliedern G, 24 E, 5 A; die ausgelieferte `libc.a` braucht **kein** c2-Modell (Stolperstein 1 betrifft nur `libc_alt`).  In Arbeit: W5 `c2` -- `c20.c` befehlsgleich, `c21.c` ohne `rmove` (Branches `us-wk-w5b`/`w5c`), `rmove` (W5d).
+*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  W4 `c0` **G** (`wk_w4.md`).  W2 `cpp` **A** (`wk_w2.md`): 13 Restbloecke sind Codeanordnung des alten c2 -- G erst mit der c2-Quelle (W5).  Der Gast-yacc erzeugt die cpp-Tabellen wortgleich (gutes Zeichen fuer W7 `as`).  W8 `libc.a` (`wk_w8.md`): 111 von 140 Gliedern G, 24 E, 5 A; die ausgelieferte `libc.a` braucht **kein** c2-Modell (Stolperstein 1 betrifft nur `libc_alt`).  W5 `c2` (`wk_w5.md`, auf `main`): `c20.c` und `rmove` befehlsgleich, 4609/4717 Befehle, 28 Bloecke Blockanordnung.  In Arbeit: W5e (Gegenprobe mit dem Original-`c2` im Gast, Restfunktionen), W6 `c1` (Regeln R230-R259).
 
 ## 8. Naechster Schritt (urspruenglich)
 
