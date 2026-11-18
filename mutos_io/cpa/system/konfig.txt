@@ -1,0 +1,5 @@
+# Deviations of the MUTOS CP/A variant from the default of the Workbench variant gide_a5120 (plan 48 C2.2, E5/E9).
+# One KEY=VALUE per line, '#' starts a comment.  Everything not listed keeps the value from setup.mac of the variant.
+CONFIG_SYSTEM_CRT_K7024=y
+CONFIG_SYSTEM_CRT_BWSHP=
+CONFIG_SYSTEM_ANZDISK=4
