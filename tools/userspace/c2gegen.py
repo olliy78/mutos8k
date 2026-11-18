@@ -61,18 +61,21 @@ def verfuegbar(namen):
     return erg
 
 
-def befehle(mods):
+def befehle(mods, c2x=None):
     """Guest commands for the modules (names without .c).  Every command ends in /mnt, none is longer than ca. 200 characters."""
     b = []
     for m in mods:
         e = m + ".err"
         b.append("cd /tmp;/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1;/usr/lib/c0 ci c1 c2 >>%s 2>&1;>ci;cd /mnt" % (m, e, e))
         b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
-        b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;>c5;cd /mnt" % (m, e))                      # shipped c2 on it
+        if c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;/mnt/c2x c5 %s.sm >>%s 2>&1;/usr/lib/c2 c5 %s.sb >>%s 2>&1;>c5;cd /mnt" % (m, e, m, e, m, e, m, e))
+        else:
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;>c5;cd /mnt" % (m, e))                  # shipped c2 on it
     return b
 
 
-def lauf(namen):
+def lauf(namen, c2x=None):
     sys.path.insert(0, os.path.join(U.TOOLS, "kernel"))
     import gast_as
     U.pruefe()
@@ -96,19 +99,22 @@ def lauf(namen):
             q[f] = jobs[n][0][f]
             q.update(jobs[n][1])
             mods_alle.append((n, f[:-2]))
-        bs = befehle([m for _n, m in mods_alle])
+        bs = befehle([m for _n, m in mods_alle], c2x)
+        if c2x:
+            q["c2x"] = open(c2x, "rb").read()
         rueck = []
         for n, m in mods_alle:
-            rueck += [m + ".s0", m + ".s", m + ".err"]
+            rueck += [m + ".s0", m + ".s", m + ".err"] + ([m + ".sn", m + ".sm", m + ".sb"] if c2x else [])
         ar = os.path.join(WORK, "sess_%d" % gi)
         print("session %d: %s" % (gi, " ".join(n + "/" + f for n, f in grp)), flush=True)
         aus = {}
-        r = gast_as.gast_befehle(ar, q, bs, rueck, frist=20_000_000_000, ausgabe=aus)
+        r = gast_as.gast_befehle(ar, q, bs, rueck, frist=20_000_000_000, ausgabe=aus,
+                              ausfuehrbar=("c2x",) if c2x else ())
         print("  %d s wall clock" % aus.get("dauer", 0), flush=True)
         for n, m in mods_alle:
             d = os.path.join(WORK, n)
             os.makedirs(d, exist_ok=True)
-            for fn in (m + ".s0", m + ".s"):
+            for fn in (m + ".s0", m + ".s") + ((m + ".sn", m + ".sm", m + ".sb") if c2x else ()):
                 if r.get(fn):
                     with open(os.path.join(d, fn), "wb") as f:
                         f.write(r[fn])
@@ -259,9 +265,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen"])
     ap.add_argument("namen", nargs="*")
+    ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     a = ap.parse_args()
     if a.cmd == "lauf":
-        lauf(verfuegbar(a.namen))
+        lauf(verfuegbar(a.namen), a.c2x)
     elif a.cmd == "bauen":
         bauen(a.namen)
     else:
