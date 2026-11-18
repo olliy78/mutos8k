@@ -215,3 +215,19 @@ Alles *gemessen* am Listing `c1.lst` und am Bericht `neu_c2.bericht`.  Die Schal
 **Stand nach dem zweiten Bau** (`alles c1 --c2emu --libc alt --ist neu_c2`): Text 30134 (Original 30176), Daten 5434 (5582, 148 Byte zu klein), BSS 1828 (1832); Befehle 7212 gegen 7970, **6798 gleich** (vorher 6578), 271 Bloecke (vorher 368).  Fuer `unoptim`, `lvfield`, `acommute`, `distrib` bleiben nur Datenadressen (`opdope` D+BA8 gegen D+B9E, `notrel`, Zeichenkette B42/B38, die Konstante 0x8000 wird vom Bericht als Datenadresse gedeutet) und in `acommute` bei 4FD0 ein Sprungunterschied in `--acl.nextl <= 0` (Original `JR Z; JP PL`, hier anders: nicht naeher untersucht) und in `unoptim` bei 49E2 (ein `JP`; *nicht* untersucht).
 
 **Offen (c12):** `const` (5278), `lconst` (536C), `insert` (54E6), `tnode` (5666) und der Rest sind noch V7-Text; im Bericht zeigt `const` bei 5308 einen Befehlsunterschied (`COM/AND` statt Original), `lconst` ebenso weitere.  Die 148 fehlenden Datenbytes sind weiter nicht gefunden.
+
+
+## Teil 11: c12-Rest und c13 (W6i)
+
+Alles *gemessen* an den Originaldaten (`c1.orig`) und am Bericht `neu_c2.bericht`.
+
+**Datenbereich von c13 (Fund der fehlenden Bytes):**
+* `opdope` und `opntab` haben im Original **139** Eintraege (Operator 0..138), nicht 117: `opdope` bei 8188, `opntab` bei 829E (je 278 Byte).  Eintraege 117..136 sind 0, 137/138 sind `ASZRSH`/`ASZLSH` (`012253`, ">>=unsigned", "<<=unsigned").  Das sind 2 x 44 Byte.
+* Gegenueber V7 weichen aus: 27/28 (`012253`, ">>= unsigned"/"<<= unsigned" statt `*r++`/`*--r`), 81..85 (`bitset` 016161, `bitclr` 020161, `bitset=` 012253, `bitclr=` 012253, `bittest` 020161; Namen aus `opntab`, Bedeutung *Annahme*), 86..88 und 91/92 gleich 0, 107/108 (`000001`, ">>unsigned"/"<<unsigned"), `opntab[17]/[18]` ">> unsigned"/"<< unsigned", `[29]` "indirection", `[89]` "load byte register", `[98]` 0.
+* `instab`/`branchtab` sind die **Z8000-Tabellen** (ld, clr, cp, test, ... `jp<TAB>eq`; Zeichenketten 83B4..8470, `instab` 8470..8594, `branchtab` bis 8612), nicht die PDP-11-Tabellen von V7.  Die Variablennamen sind verloren (*Annahme*: Praefix `z_`).  `sdal`, `jpl`, `jmi` stehen im Original in den Zeichenketten, werden aber von keiner Tabelle benutzt.  Eintraege fuer ZRSH/ZLSH/ASZRSH/ASZLSH und 81..84 (set/res).
+
+**c12-Funktionen** (Listing 5278..577A): `const` ohne `ANDN`; `lconst` ohne `ANDN`, `LTIMES`, `LDIV`, `LMOD` (Schalter nur ueber 40..49); `insert`: `d1`, `i`, `t` in Registern (R10, R9, R8) und `isfloat(tree) != 'f'`; `isconstant` ohne `SFCON`.  `tnode`, `tconst`, `getblk`, `islong` waren schon gleich.  c12 ist damit vollstaendig im Binary-Bereich (der Eintrag `hardlongs` bei 577A in `v7zuordnung.txt` ist in Wahrheit `regnode`).
+
+**Stand nach dem Bau** (`alles c1 --c2emu --libc alt --ist neu_c2`, ein Bau): Text 29968 (Original 30176), Daten **5590** (5582), BSS 1828 (1832); Befehle 7155 gegen 7970, **6901 gleich** (vorher 6798), 143 Bloecke (vorher 271).  Alle 200 Zeichenketten liegen im Datenbereich auf demselben Offset wie im Original; die eigenen Daten (bis "null" bei Offset 14A2) sind damit deckungsgleich, `opdope` liegt bei D+BA8 wie im Original.  Die verbleibenden +8 Byte Daten und -4 Byte BSS liegen *nach* den c1-eigenen Daten im libc-Teil (vor `_ctype`: Original `8B28`, hier `8A58 920A` und 8 Nullbytes mehr); das ist der `--libc alt`-Anteil, nicht c13.  Die 1024-Byte-BSS-Luecke zwischen `nfloat` und libc wurde nicht weiter verfolgt.
+
+**Offen:** `lconst` (bei 540E/5490 im Bericht "delete": Case-Reihenfolge/Zweigform noch anders), `unoptim` 494C (`AND R3,#100` statt `BIT`), 49E2; `acommute` 4FD0; `optim` 4130/43AA; `distrib` 50BE (Konstante 1000 als Datenadresse gedeutet); `getree` (3416, 50 Bloecke, c11).
