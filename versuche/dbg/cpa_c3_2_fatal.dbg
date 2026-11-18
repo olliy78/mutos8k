@@ -1,0 +1,11 @@
+# Plan 48 C3.2: fatal path.  Register I is changed to 00H at the start of mutoscpa (breakpoint 9000H):
+# CHECK_I must print "mutoscpa: fatal error I" through the BIOS console and halt with interrupts off.
+keys M8KBOOT\r
+b 0x9000
+g 300000000
+bd 0x9000
+set i 0x00
+g 20000000
+r
+screen
+q

@@ -1,6 +1,9 @@
-; mutoscpa.mac - CP/A version of mutos_io (plan 48 C2.1).
+; mutoscpa.mac - CP/A version of mutos_io (plan 48).
 ; Origin: byte-identical copy of mutos_io/src/mutosio.mac (branch main) at the commit of step C2.1;
-; `git diff <that commit> -- mutos_io/cpa/src/mutoscpa.mac` shows all CP/A changes.  Code below unchanged.
+; `git diff <that commit> -- mutos_io/cpa/src/mutoscpa.mac` shows all CP/A changes.
+; Since step C3.2 the binary is deliberately NOT identical to mutosio.bin any more:
+; start, stack, interrupt vectors, console output, operator mask and the disk/printer stubs
+; use the CP/A BIOS (doc/plus/cpa/c3_2_start.md).
 	.Z80
 ; ---- Variante (Entwurf 40 M5; ladediskette.py setzt den Wert beim Bau) ----------
 ; K8X512 = 0: 26 x 128 B je Spur (M8K-Satz, rekonstruierte Wurzel; Auslieferungszustand)
@@ -29,8 +32,11 @@ SEG1_BASE	EQU	9000H
 SEG2_BASE	EQU	9400H
 SEG3_BASE	EQU	0A400H
 SEG4_BASE	EQU	0C8B6H
-; Initial stack pointer (start of the stack area, value as in UDOS version)
-INITSP	EQU	0CB68H
+; Stack (plan 48 C3.2): grows down from INITSP through STKBOT..INITSP-1 (0F80H bytes, painted with E5H at the start)
+INITSP	EQU	SEG4_BASE
+STKBOT	EQU	0B936H
+; CP/A interrupt vector table (register I = F7H, checked at the start): vector slot address = INTVEC + vector byte
+INTVEC	EQU	0F700H
 ; Copy of the 14-byte request message in the data segment: +0 class, +1 unit
 V_NACHR	EQU	0A5A8H
 ; Z80 transfer buffers of the DCB/AUF tables (DCBn+2/+3, AUFn+2/+3)
@@ -72,10 +78,21 @@ SEG9000:
 ; Wartung: DIESE Datei ist der Master (von Hand aendern, dann build.py --check).
 ; Ausgangsstand: Abzug + karte.txt (z80_disasm2.py --format mac --karte); Karte nur noch Nachweis.
 ; 
+	DI
 	LD SP,INITSP
+; paint the stack area (below SP, no CALL until it is done): the depth probe of C3.2/C4.2 looks for the last E5H
+	LD HL,STKBOT
+	LD DE,STKBOT+1
+	LD BC,INITSP-STKBOT-1
+	LD (HL),0E5H
+	LDIR
+	CALL BIOS_LINK		; BIOS jump list from (0001H), read once
+	CALL CHECK_I		; I must be F7H (CP/A interrupt table)
+	CALL KBD_FLUSH
+	EI			; the BIOS interrupts (5 ms/1 s timers, clock) run from here on
 	CALL MASKE
 	CALL INIT
-	LD A,2CH
+	LD A,2CH		; releases RESET16: the kernel in the EM starts
 	OUT (0A9H),A
 	XOR A
 	LD (V_KLASSE),A
@@ -203,63 +220,15 @@ WARTESCHL0_INIT:
 	LD HL,QUEUE_TASTE
 	CALL QUEUE_INIT
 	RET
-; --- PLATTE: Klasse 0, Handler fuer Einheit 0..3 (Minor) ------------------
-; Baut den Nukleus-Auftrag (IY = AUF0): IY+0 Laufwerk = TAB_RK_LAUFWERK[Minor],
-; IY+1 Befehl 0BH lesen / 0FH schreiben, IY+2/3 Puffer, IY+11/12 Blocknummer,
-; Rueckrufe auf PLATTE_FERTIG; dann BLOCK_START.  V_BUSY schuetzt die Platte.
+; --- PLATTE: class 0, handler for unit 0..3 (STUB until C3.3) ------------------------
+; Reports an error at once: status C0H (bit 6 set like a nucleus error, as BR_ABBRUCH delivers it),
+; transferred count 0 (so MELDEN copies no data), then request done.
 PLATTE:
-	DI
-	LD A,(V_BUSY)
-	OR A
-	JR Z,PL_FREI
-	EI
-	JP HAUPT_B
-PL_FREI:
-	LD A,01H	; V_BUSY := 1 (Platte belegt)
-	LD (V_BUSY),A
-	EI
-	LD IY,AUF0
-	LD A,(IX+15)
-	AND 80H
-	LD (IY+4),A
-	LD A,(IX+14)
-	LD (IY+5),A
-	LD A,(IX+7)
-	LD HL,TAB_RK_LAUFWERK
-	LD C,A
-	LD B,00H
-	ADD HL,BC
-	LD A,(HL)
-	LD (IY+0),A
-	LD A,(IX+8)
-	AND 7FH
-	CP 01H
-	JR NZ,PL_LESEN
-	LD A,0FH
-	JR PL_BEFEHL
-PL_LESEN:
-	LD A,0BH
-PL_BEFEHL:
-	LD (IY+1),A
-	LD A,(IX+2)
-	LD (IY+2),A
-	LD A,(IX+3)
-	LD (IY+3),A
-	LD A,(IX+19)
-	LD (IY+11),A
-	LD A,(IX+18)
-	LD (IY+12),A
+	LD (IX+9),0C0H
 	XOR A
-	LD (IY+10),A
-	LD HL,PLATTE_FERTIG
-	LD (IY+6),L
-	LD (IY+7),H
-	LD (IY+8),L
-	LD (IY+9),H
-	PUSH IX
-	CALL BLOCK_START
-	POP IX
-	JP ENDE_LOESCHEN
+	LD (IX+14),A
+	LD (IX+15),A
+	JP ENDE_WIEDER
 ; --- PLATTE_FERTIG: Rueckruf des Nukleus nach dem Plattenauftrag ----------
 ; IX+14/15 = uebertragene Zahl, IX+9 = 1 (gut) oder Fehlercode, Fertigbit setzen.
 PLATTE_FERTIG:
@@ -287,43 +256,17 @@ PF_STATUS:
 	CALL REGS_HOLEN
 	EI
 	RET
-; UDOS-Nukleus auf 128-Byte-Sektoren: [0003H] bit 0 setzen; V_BUSY := 0
-; (8x512-Fassung: dort steht 4 statt OR 01H, siehe Entwurf 39 Abschnitt 11.2)
+; Init of the disk state: V_BUSY := 0 (the UDOS nucleus sector-length byte [0003H] is gone:
+; 0003H is the CP/A IOBYTE and must not be touched)
 NUKLEUS_INIT:
-	IF	K8X512
-	LD A,04H	; Sektorlaenge/128 = 4 (512 B); der Nukleus liest sie aus [0003H]
-	NOP
-	NOP
-	NOP
-	ELSE
-	LD A,(0003H)
-	OR 01H	; 128 B
-	ENDIF
-	LD (0003H),A
 	LD A,00H
 	LD (V_BUSY),A
 	RET
-; --- DRUCKER: Klasse 1: Ausgabe ueber den UDOS-Druckertreiber 0EB00H ------
+; --- DRUCKER: class 1 (STUB until C4.1): status FFH (error) at once, request done ------
 DRUCKER:
-	LD IY,AUF1
-	LD (IY+1),0FH
-	LD A,(IX+2)
-	LD (IY+2),A
-	LD A,(IX+3)
-	LD (IY+3),A
-	LD A,(IX+14)
-	LD (IY+5),A
-	LD A,(IX+15)
-	LD (IY+4),A
-	LD HL,DRUCKER_FERTIG
-	LD (IY+6),L
-	LD (IY+7),H
-	LD (IY+8),L
-	LD (IY+9),H
-	PUSH IX
-	CALL 0EB00H
-	POP IX
-	JP ENDE_LOESCHEN
+	LD (IX+9),0FFH
+	JP ENDE_WIEDER
+; DRUCKER_FERTIG: callback of the UDOS printer driver; unused until C4.1
 DRUCKER_FERTIG:
 	DI
 	CALL REGS_RETTEN
@@ -344,7 +287,7 @@ DF_STATUS:
 	CALL REGS_HOLEN
 	EI
 	RET
-; --- KONSOLE_AUS: Klasse 2 Einheit 0: je Zeichen UDOS-Ausgabe 0BEBH -------
+; --- KONSOLE_AUS: class 2 unit 0: each character through PUTC (BIOS CONOUT) ----
 KONSOLE_AUS:
 	LD L,(IX+2)
 	LD H,(IX+3)
@@ -355,7 +298,7 @@ KA_ZEICHEN:
 	PUSH HL
 	PUSH BC
 	LD A,(HL)
-	CALL 0BEBH
+	CALL PUTC
 	POP BC
 	POP HL
 	INC HL
@@ -379,7 +322,9 @@ SEG9400:
 ; Attributspeicher (AFH): alle 16 Seiten := 0FH (gesperrt; Attribute sind negiert).
 ; PIO A32: Port A Vektor EAH, Modus 3, Eingang, Interrupt bei INT-16 (Bit 4);
 ; Port B Vektor ECH, Interrupt bei /PE (Bit 7, Paritaetsfehler).  CTC 0DH Kanal 1:
-; A7H/C0H = Zeitgeber 50 Hz, Vektor 0FE2.  Dann Tastatur, Warteschlangen, SIO.
+; A7H/C0H = Zeitgeber 50 Hz.  Vector slots in the CP/A table (INTVEC = F700H, I = F7H):
+; PIO A -> +0EAH, PIO B -> +0ECH, CTC channel 1 -> +0FAH (the CTC base F8H stays the BIOS one), SIO -> +30H..+3EH.
+; Dann Tastatur, Warteschlangen, SIO.
 INIT:
 	LD E,10H
 	LD BC,00AFH
@@ -392,9 +337,9 @@ INIT_ATTR:
 	DEC E
 	JR NZ,INIT_ATTR
 	LD HL,ISR_ANFRAGE
-	LD (0FEAH),HL
+	LD (INTVEC+0EAH),HL
 	LD HL,ISR_PARITAET
-	LD (0FECH),HL
+	LD (INTVEC+0ECH),HL
 	LD C,0AAH
 	LD B,05H
 	LD HL,TAB_PIO_A
@@ -404,7 +349,7 @@ INIT_ATTR:
 	LD HL,TAB_PIO_B
 	OTIR
 	LD HL,ISR_TAKT
-	LD (0FE2H),HL
+	LD (INTVEC+0FAH),HL
 	LD A,0A7H
 	OUT (0DH),A
 	LD A,0C0H
@@ -438,19 +383,10 @@ TAB_PIO_A:
 TAB_PIO_B:
 	DB	0ECH,0CFH,80H,97H,7FH
 ; --- ISR_TAKT: Zeitgeber 50 Hz (CTC 0DH Kanal 1) --------------------------
-; Fragt die Tastatur ab (TASTE_LESEN) und legt Zeichen in QUEUE_TASTE; zaehlt V_TAKT
-; und meldet bei Ebene < 6 und /VI frei den Tickzaehler (ACH) mit Vektor 02H.
+; Counts V_TAKT and reports the tick counter (ACH) with vector 02H when the level is < 6
+; and /VI is free.  No keyboard polling since C3.2 (the BIOS owns 5CH/5DH; C3.4 reads keys via CONST/CONIN).
 ISR_TAKT:
 	CALL REGS_RETTEN
-	CALL TASTE_LESEN
-	JR Z,IT_ZAEHLER
-	LD HL,QUEUE_TASTE
-	CALL QUEUE_PUSH
-	LD A,08H
-	CALL KLASSE_ADR
-	XOR A
-	CALL BIT_SETZEN
-IT_ZAEHLER:
 	LD HL,V_TAKT
 	INC (HL)
 	IN A,(0A8H)
@@ -536,7 +472,8 @@ ISR_ANFRAGE:
 	BIT 7,(IX+2)
 	JR NZ,IA_OK
 IA_BELEGT:
-	RST 38H
+	LD A,'B'		; second request hits a busy DCB
+	JP FEHLERHALT
 IA_OK:
 	POP IX
 IA_KOPIE:
@@ -771,7 +708,8 @@ QUEUE_INIT:
 	INC HL
 	LD (HL),A
 	RET
-; --- TASTE_LESEN: Tastatur-SIO 5DH Bit 0 = Zeichen da, 5CH holen; FFH -> CR ---
+; --- TASTE_LESEN: UNUSED since C3.2 (to be removed in C3.4); polls the keyboard SIO 5DH/5CH ---
+; Tastatur-SIO 5DH Bit 0 = Zeichen da, 5CH holen; FFH -> CR
 ; Codes < 20H ueber TAB_TASTE, Praefix 9xH/BxH, Codes ab 80H verworfen.  Z = nichts.
 TASTE_LESEN:
 	IN A,(5DH)
@@ -855,8 +793,8 @@ BLOCK_START:
 	LD A,H
 	CP 11H
 	JR C,BS_GROSS
-	RST 38H
-	NOP
+	LD A,'L'		; disk request longer than 1000H bytes
+	JP FEHLERHALT
 BS_GROSS:
 	LD (V_REST),HL
 	XOR A
@@ -1097,234 +1035,16 @@ V_AUFTRAG_IY:
 V_IY_SICHER:
 	DB	00H,00H
 	FILLFF	126
-; --- ROH: Klasse 3, Roh-Floppy-Befehle (im Betrieb NIE benutzt) ------------------
-; Kommandoblock bei 01B5H (liegt am A5120 im UDOS-Nukleus!), Start ueber OUT (1CH) (am A5120
-; unbelegt).  Befehlstabelle TAB_KMD, Fehlertabelle TAB_FEHLER.  Vermutlich Rest einer
-; anderen Floppy-Hardware (WD179x-aehnliche Statusbits).  Nicht nachbilden, solange der Kernel
-; keinen Geraeteknoten dafuer hat (Analyse Abschnitt 8).
+; --- ROH: class 3, raw floppy commands (never used in operation; STUB since C3.2) ------
+; The original wrote the UDOS nucleus block at 01B5H and started the (unassigned) port 1CH;
+; both are gone.  Every request is answered at once with the error status C1H (as the original
+; reported an unknown command), count 0.
 ROH:
-	DI
-	LD A,(V_BUSY)
-	OR A
-	JR Z,ROH_NEU
-	CP 02H
-	JR Z,ROH_ZWEITE
-	EI
-	JP HAUPT_B
-ROH_NEU:
-	LD A,02H
-	LD (V_BUSY),A
-	EI
-	LD IY,AUF2
-	LD A,(IX+15)
-	LD (IY+4),A
-	LD A,(IX+14)
-	LD (IY+5),A
-	LD A,(IX+7)
-	LD (IY+0),A
-	LD A,(IX+8)
-	AND 7FH
-	CP 01H
-	JR NZ,ROH_CMD1
-	LD A,0FH
-	JR ROH_CMD2
-ROH_CMD1:
-	CP 00H
-	JR NZ,ROH_CMD2
-	LD A,0BH
-ROH_CMD2:
-	LD (IY+1),A
-	LD A,(IX+2)
-	LD (IY+2),A
-	LD A,(IX+3)
-	LD (IY+3),A
+	LD (IX+9),0C1H
 	XOR A
-	LD (IY+10),A
-	LD HL,0000H
-	LD (IY+6),L
-	LD (IY+7),H
-	LD (IY+8),L
-	LD (IY+9),H
-	PUSH IX
-	CALL KMD_START
-	POP IX
-	JP HAUPT_B
-ROH_ZWEITE:
-	PUSH IX
-	LD IY,AUF2
-	CALL KMD_WARTEN
-	POP IX
-	LD A,(IY+10)
-	OR A
-	JR NZ,ROH_ERGEBNIS
-	JP HAUPT_B
-ROH_ERGEBNIS:
-	DI
-	LD A,(IY+4)
-	LD (IX+15),A
-	LD A,(IY+5)
 	LD (IX+14),A
-	LD A,(IY+10)
-	BIT 6,A
-	JR NZ,ROH_STATUS
-	LD A,01H
-ROH_STATUS:
-	LD (IX+9),A
-	LD A,(V_BUSY)
-	SUB 02H
-	JR NZ,ROH_ENDE
-	LD (V_BUSY),A
-ROH_ENDE:
-	EI
+	LD (IX+15),A
 	JP ENDE_WIEDER
-	FILLFF	91
-KMD_START:
-	JR KMD_BEFEHL
-KMD_WARTEN:
-	LD IX,01B5H
-	BIT 1,(IX+8)
-	RET NZ
-	LD IY,(KMD_IY)
-	JP KMD_PRUEFEN
-KMD_IY:
-	DB	0FFH,0FFH
-KMD_BITS:
-	DB	00H
-KMD_FEHLERBITS:
-	DB	00H
-; Befehlstabelle: 8 x [Befehl, Maske lo, Maske hi, Controllerbefehl]
-TAB_KMD:
-	DB	0AH,03H,35H,07H,0EH,03H,27H,0BH,60H,10H,07H,13H,24H,02H,35H,23H
-	DB	26H,06H,39H,23H,44H,12H,25H,43H,46H,16H,29H,43H,50H,08H,01H,83H
-; Fehlertabelle: 8 x [Statusmaske, Fehlercode F1..F8]; die ersten 6: Bit gesetzt = Fehler,
-; die letzten 2: Bit geloescht = Fehler
-TAB_FEHLER:
-	DB	80H,0F1H,40H,0F2H,10H,0F3H,08H,0F4H,20H,0F5H,04H,0F6H,08H,0F7H,20H,0F8H
-KMD_BEFEHL:
-	CALL KMD_INIT
-	LD HL,TAB_KMD
-	LD DE,0004H
-	LD B,08H
-	LD A,(IY+1)
-	RES 0,A
-KMD_SUCHE:
-	CP (HL)
-	JR Z,KMD_GEFUNDEN
-	ADD HL,DE
-	DJNZ KMD_SUCHE
-	LD (IY+10),0C1H
-	JP KMD_ENDE
-KMD_GEFUNDEN:
-	INC HL
-	LD E,(HL)
-	INC HL
-	LD D,(HL)
-	LD (KMD_BITS),DE
-	INC HL
-	LD A,(HL)
-	LD IX,01B5H
-	LD (IX+0),A
-	LD HL,KMD_BITS
-	SRL (HL)
-	JR NC,KMD_ARG2
-	LD E,(IY+2)
-	LD D,(IY+3)
-	LD (01B6H),DE
-KMD_ARG2:
-	SRL (HL)
-	JR NC,KMD_FLAG
-	LD E,(IY+4)
-	LD D,(IY+5)
-	LD (01B8H),DE
-KMD_FLAG:
-	SRL (HL)
-	JR NC,KMD_AUSLOESEN
-	SET 7,(IX+4)
-KMD_AUSLOESEN:
-	CALL KMD_STARTEN
-	BIT 0,(IY+1)
-	RET NZ
-	CALL KMD_BUSY
-KMD_PRUEFEN:
-	LD DE,TAB_FEHLER
-	LD B,06H
-	LD HL,KMD_FEHLERBITS
-KMD_FB1:
-	SRL (HL)
-	JR NC,KMD_FB1_WEITER
-	LD A,(DE)
-	AND (IX+8)
-	JR NZ,KMD_FEHLER
-KMD_FB1_WEITER:
-	INC DE
-	INC DE
-	DJNZ KMD_FB1
-	DEC HL
-	LD B,02H
-KMD_FB2:
-	SRL (HL)
-	JR NC,KMD_FB2_WEITER
-	LD A,(DE)
-	AND (IX+8)
-	JR Z,KMD_FEHLER
-KMD_FB2_WEITER:
-	INC DE
-	INC DE
-	DJNZ KMD_FB2
-	LD (IY+10),80H
-KMD_OK:
-	LD L,(IY+6)
-	LD H,(IY+7)
-	LD A,H
-	OR L
-	RET Z
-	JP (HL)
-KMD_FEHLER:
-	INC DE
-	LD A,(DE)
-	LD (IY+10),A
-KMD_ENDE:
-	CALL KMD_ERG
-	LD L,(IY+8)
-	LD H,(IY+9)
-	LD A,H
-	OR L
-	JR Z,KMD_OK
-	JP (HL)
-KMD_STARTEN:
-	XOR A
-	DI
-	OUT (1CH),A
-	LD B,80H
-KMD_SCHL:
-	BIT 1,(IX+8)
-	JR Z,KMD_ZEIT
-	EI
-	RET
-KMD_ZEIT:
-	DJNZ KMD_SCHL
-	EI
-	POP BC
-	LD (IY+10),0C2H
-	JP KMD_ENDE
-KMD_BUSY:
-	BIT 1,(IX+8)
-	JR NZ,KMD_BUSY
-	RET
-KMD_ERG:
-	LD HL,(01BAH)
-	LD (IY+4),L
-	LD (IY+5),H
-	RET
-KMD_INIT:
-	LD (KMD_IY),IY
-	LD HL,01B5H
-	LD DE,01B6H
-	LD BC,0008H
-	LD (HL),00H
-	LDIR
-	RET
-	FILLFF	214
 ; --- Eingabe-Handler Klasse 4 Einheit 1..3: Zeichen der seriellen Leitungen ----------
 ; HL = Ring, B = Vektor an den Z8000 (26H/2AH/2EH), C = Einheit; im Betrieb nie gelaufen
 EING_TTY1:
@@ -1443,7 +1163,7 @@ TF_MELDEN:
 	EI
 	RET
 ; --- INIT_SIO: SIO 50H-53H: 7 Bit, ungerade Paritaet, 1 Stopp, x16; CTC 5AH Kanal 2 = 9600 Baud ---
-; IM-2-Tabelle 0F30H-0F3EH: Kanal B Tx 9F18/Rx 9E61, Kanal A Tx 9EFB/Rx 9E3E
+; IM-2 table INTVEC+30H..3EH: channel B Tx/Rx, channel A Tx/Rx
 INIT_SIO:
 	LD A,07H
 	OUT (5AH),A
@@ -1458,17 +1178,17 @@ INIT_SIO:
 	LD HL,TAB_SIO_B
 	OTIR
 	LD DE,ISR_SIO_B_TX
-	LD (0F30H),DE
+	LD (INTVEC+30H),DE
 	LD DE,ISR_SIO_B_RX
-	LD (0F32H),DE
-	LD (0F34H),DE
-	LD (0F36H),DE
+	LD (INTVEC+32H),DE
+	LD (INTVEC+34H),DE
+	LD (INTVEC+36H),DE
 	LD DE,ISR_SIO_A_TX
-	LD (0F38H),DE
+	LD (INTVEC+38H),DE
 	LD DE,ISR_SIO_A_RX
-	LD (0F3AH),DE
-	LD (0F3CH),DE
-	LD (0F3EH),DE
+	LD (INTVEC+3AH),DE
+	LD (INTVEC+3CH),DE
+	LD (INTVEC+3EH),DE
 	RET
 TAB_SIO_A:
 	DB	18H,04H,45H,05H,28H,03H,41H,01H,1EH
@@ -1599,10 +1319,172 @@ V_SIO_IY2:
 V_SIO_RUECK:
 	DB	00H,00H
 	FILLFF	208
+; ==========================================================================
+; CP/A support (plan 48 C3.2): BIOS jump list, console output/input, fatal halt
+; ==========================================================================
+; The BIOS entry points are never fixed addresses: BIOS_LINK reads WBOOT = (0001H) once at the
+; start and fills this jump list (offsets of CP/A bios.mac: CONST +3, CONIN +6, CONOUT +9, LIST +0CH,
+; HOME +15H, SELDSK +18H, SETTRK +1BH, SETSEC +1EH, SETDMA +21H, READ +24H, WRITE +27H).
+; (0001H) is never read again: the BIOS overwrites it during floppy transfers.
+; Before BIOS_LINK every slot points to STOP, so an early call just halts.
+B_CONST:
+	JP STOP
+B_CONIN:
+	JP STOP
+B_CONOUT:
+	JP STOP
+B_LIST:
+	JP STOP
+B_HOME:
+	JP STOP
+B_SELDSK:
+	JP STOP
+B_SETTRK:
+	JP STOP
+B_SETSEC:
+	JP STOP
+B_SETDMA:
+	JP STOP
+B_READ:
+	JP STOP
+B_WRITE:
+	JP STOP
+TAB_BIOS_OFF:
+	DB	03H,06H,09H,0CH,15H,18H,1BH,1EH,21H,24H,27H
+NBIOS	EQU	11
+V_WBOOT:
+	DW	0000H
+; BIOS_LINK: slot address field := WBOOT + offset; WBOOT must be BIOS start + 3 (BIOS starts on a page boundary)
+BIOS_LINK:
+	LD HL,(0001H)
+	LD (V_WBOOT),HL
+	LD A,L
+	CP 03H
+	JR Z,LK_OK
+	LD A,'W'
+	JP FEHLERHALT
+LK_OK:
+	LD IX,TAB_BIOS_OFF
+	LD DE,B_CONST+1
+	LD B,NBIOS
+LK_SCHL:
+	LD HL,(V_WBOOT)
+	LD C,(IX+0)
+	PUSH BC
+	LD B,00H
+	ADD HL,BC
+	POP BC
+	EX DE,HL		; DE = target, HL = slot address field
+	LD (HL),E
+	INC HL
+	LD (HL),D
+	INC HL
+	INC HL			; next slot address field
+	EX DE,HL
+	INC IX
+	DJNZ LK_SCHL
+	RET
+; CHECK_I: the interrupt vector table of CP/A is at F700H (I = F7H); anything else: fatal
+CHECK_I:
+	LD A,I
+	CP 0F7H
+	RET Z
+	LD A,'I'
+	JP FEHLERHALT
+; KBD_FLUSH: empty the BIOS keyboard buffer (the M8KBOOT command line may have left keys)
+KBD_FLUSH:
+	CALL B_CONST
+	OR A
+	RET Z
+	CALL B_CONIN
+	JR KBD_FLUSH
+; PUTC: character A to the BIOS console (CONOUT); keeps AF, BC, DE, HL, IX, IY
+PUTC:
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	PUSH IX
+	PUSH IY
+	LD C,A
+	CALL B_CONOUT
+	POP IY
+	POP IX
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	RET
+; NEWLINE: CR LF (the BIOS line feed alone may not return to column 0)
+NEWLINE:
+	LD A,0DH
+	CALL PUTC
+	LD A,0AH
+	JP PUTC
+; PUTS: length byte and text at HL through PUTC; keeps all registers
+PUTS:
+	PUSH AF
+	PUSH BC
+	PUSH HL
+	LD B,(HL)
+	INC HL
+	LD A,B
+	OR A
+	JR Z,PS_ENDE
+PS_ZEICHEN:
+	LD A,(HL)
+	CALL PUTC
+	INC HL
+	DJNZ PS_ZEICHEN
+PS_ENDE:
+	POP HL
+	POP BC
+	POP AF
+	RET
+; GETC: key poll like UDOS 0BE8H: Z = no key, else A = key (CP/A code, waits for nothing);
+; a key with code 00H counts as "no key".  Keeps BC, DE, HL, IX, IY.
+GETC:
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	PUSH IX
+	PUSH IY
+	CALL B_CONST
+	OR A
+	JR Z,GC_ENDE
+	CALL B_CONIN
+	OR A
+GC_ENDE:
+	POP IY
+	POP IX
+	POP HL
+	POP DE
+	POP BC
+	RET
+; FEHLERHALT: fatal error, A = code character: 'W' WBOOT not BIOS start + 3, 'I' register I not F7H,
+; 'B' busy DCB hit by a second request, 'L' disk request longer than 1000H.
+; Message, interrupts off, endless halt.  (Replaces RST 38H, which leads to a CP/A warm start.)
+FEHLERHALT:
+	DI
+	PUSH AF
+	CALL NEWLINE
+	LD HL,T_FATAL
+	CALL PUTS
+	POP AF
+	CALL PUTC
+; STOP: also the target of unlinked BIOS slots
+STOP:
+	DI
+	HALT
+	JR STOP
+T_FATAL:
+	DB	T_FATALE-T_FATAL-1
+	DB	'mutoscpa: fatal error '
+T_FATALE:
 ; --- MASKE: Bedienmaske beim Start: Laufwerk -> rk-Nummer (Entwurf 39 Abschnitt 11.4) --------
 ; Zeigt 'floppy - drive 0 1 2 3' / 'mutos - rk 0 1 2 3', Eingabe pro Spalte 0-3, 'r' = weiter.
-; Ergebnis: TAB_RK_LAUFWERK[rk] = Laufwerk.  Texte: laengenvorangestellte Zeichenketten
-; (Ausgabe mit UDOS 0BF1H), die drei Fehlertexte sind je 30 Byte lang.
+; Ergebnis: TAB_RK_LAUFWERK[rk] = Laufwerk.  Texts: length-prefixed strings (output with PUTS);
+; the three error texts are 30 bytes each (MELDUNG_AUSGEBEN: new line + text through PUTC).
 MASKE:
 	JP MASKE_START
 T_STRICH:
@@ -1631,7 +1513,7 @@ T_BOOT_ENTF:
 T_WURZEL_EINL:
 	DB	23H
 	DB	'insert mutos8000 root - disk on rk2'
-; Fehlertexte (je 30 Byte, werden mit MELDUNG_AUSGEBEN in die Meldezeile FF60H kopiert)
+; Error texts (30 bytes each, written by MELDUNG_AUSGEBEN)
 T_FEHL_NICHT_ZUGEORDNET:
 	DB	'* * error : not assign rk  * *'
 T_FEHL_ZAHL:
@@ -1663,21 +1545,20 @@ M_INIT_SCHL:
 	DJNZ M_INIT_SCHL
 MASKE_ZEILE:
 	CALL MASKE_KOPF2
-	LD A,0AH
-	CALL 0BEBH
+	CALL NEWLINE
 	LD HL,T_WECHSEL
-	CALL 0BF1H
+	CALL PUTS
 	XOR A
 	LD (V_LETZTE_TASTE),A
 	LD HL,V_EINGABE
 	LD BC,0478H
 M_SPALTE:
 	LD A,20H
-	CALL 0BEBH
-	CALL 0BEBH
-	CALL 0BEBH
+	CALL PUTC
+	CALL PUTC
+	CALL PUTC
 M_TASTE:
-	CALL 0BE8H
+	CALL GETC
 	JR Z,M_TASTE
 	CP 0DH
 	JR NZ,M_ECHO
@@ -1685,7 +1566,7 @@ M_TASTE:
 	AND 7FH
 	OR 30H
 M_ECHO:
-	CALL 0BEBH
+	CALL PUTC
 	CP 78H
 	JR NZ,M_PRUEF_R
 	LD HL,T_FEHL_NICHT_ZUGEORDNET
@@ -1774,73 +1655,57 @@ M_TAB_SCHL:
 	INC C
 	INC DE
 	DJNZ M_TAB_SCHL
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
+	CALL NEWLINE
+	CALL NEWLINE
 	CALL SIGNALTON
 	RET
 MASKE_KOPF1:
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
 	LD HL,T_STRICH
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
+	CALL NEWLINE
 	LD HL,T_BOOT_ENTF
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
 	LD HL,T_WURZEL_EINL
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
+	CALL NEWLINE
 	LD HL,T_STRICH
-	CALL 0BF1H
+	CALL PUTS
 	RET
 MASKE_KOPF2:
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
-	LD A,0AH
-	CALL 0BEBH
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
+	CALL NEWLINE
 	LD HL,T_STRICH
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
 	LD HL,T_FLOPPY
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
 	LD HL,T_RK
-	CALL 0BF1H
-	LD A,0AH
-	CALL 0BEBH
+	CALL PUTS
+	CALL NEWLINE
 	LD HL,T_STRICH
-	CALL 0BF1H
+	CALL PUTS
 	RET
-; Meldung (30 Byte ab HL) nach FF60H kopieren, Signalton an die Tastatur
+; Message (30 bytes at HL): new line, text through PUTC, then the beep on the keyboard
 MELDUNG_AUSGEBEN:
-	LD DE,0FF60H
-	LD BC,001EH
-	LDIR
+	CALL NEWLINE
+	LD B,1EH
+MA_ZEICHEN:
+	LD A,(HL)
+	CALL PUTC
+	INC HL
+	DJNZ MA_ZEICHEN
 SIGNALTON:
 	LD A,07H
 	OUT (5CH),A

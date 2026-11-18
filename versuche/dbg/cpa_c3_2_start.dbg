@@ -1,0 +1,27 @@
+# Plan 48 C3.2: M8KBOOT -> operator mask through BIOS CONOUT -> r -> kernel start; stops at the end of the run.
+# Placeholders (tests/test_plus_cpa_io.py fills them from the M80 listing of mutoscpa.mac):
+#   @ARBEIT@ work folder   @CALL_INIT@ address of "CALL INIT" (first instruction after the mask)
+#   @ISR_TAKT@ / @ISR_ANFR@ ISR entry points (logpoints)   @STKLEN@ length of the painted stack area (B936H..C8B5H)
+# The script runs after the boot to "A>".
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+screen
+# probe 1: the mask is on the screen, "r" is accepted, the run stops right after CALL MASKE
+b @CALL_INIT@
+keys r
+r
+bd @CALL_INIT@
+save @ARBEIT@/stack_mask.bin 0xB936 @STKLEN@
+d 0x0050 3
+# the rest: kernel start, ticks and requests counted by logpoints (output lines "[lp] ...")
+logpoint @ISR_TAKT@
+logpoint @ISR_ANFR@
+mark
+g 120000000
+r
+screen
+d 0xF7E8 0x18
+d 0x0050 3
+save @ARBEIT@/stack_end.bin 0xB936 @STKLEN@
+lpl
+q
