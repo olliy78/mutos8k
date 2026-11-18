@@ -59,6 +59,7 @@ Die Kette laeuft im Gast (K1, `doc/werkzeugkette/k1_cc_im_gast.md`); Quellen ab 
 | W7 | `as` (Z8000-Assembler, yacc) | W2 (yacc-Befund) | sehr gross; Ergebnis A ist zulaessig |
 | W8 | `libc.a` als Ganzes (alle Glieder, Reihenfolge, Archivkopf) und `crt0.o`/`mcrt0.o` | W0; nutzt `libc_alt` | mittel |
 | W9 | **Selbsthosting-Beweis**: Gastdiskette `usr` aus den neu gebauten Passen zusammenstellen, damit (a) den Kernel bauen (`tools/kernel/gesamtbau.py`, Ergebnis gleich) und (b) Stichprobe Userspace (`sh`, `ed`, `ls` G) | alle G-Programme | mittel |
+| W10 | **Herkunft/Verwandtschaft des Compilers** (eingeplant 2026-11-18, Abschnitt 6a) | W5, W6 (c1, c2 weitgehend rekonstruiert), W7 | mittel |
 
 Parallel moeglich nach W0: W1, W2, W3, W4, W5, W8 (je eigener Branch, je Agent).  W6 nach W4, W7 nach W2.  W9 zuletzt; fuer Programme ohne G nimmt W9 das Original
 und nennt das.
@@ -80,6 +81,29 @@ Zeitgrenze 600000 ms oder im Hintergrund mit Benachrichtigung, nie `sleep`, Rund
 
 Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Programme plus `sh` im Gast (sequentiell), Herkunftstabelle in `doc/userspace/README.md`
 (Abschnitt "Werkzeugkette"), Stand in Plan 44 Stufe 4 und Plan 42 H7 nachtragen.
+
+## 6a. W10: Herkunft der Z8000-Portierung (Auftrag des Projektinhabers 2026-11-18)
+
+**Frage:** Wer hat den V7-Compiler auf den Z8000 portiert -- der MUTOS-Hersteller selbst, oder stammt die Portierung (`c0`/`c1`/`c2`/`as`, Codetabellen,
+Abschnittsdirektiven) aus einer aelteren Z8000-UNIX-Linie?
+
+**Gemessen bisher (W0-W6):** MUTOS-`c1` ist V7-`c1` mit neuer Codeausgabe und neuen Tabellen im V7-Format (`cvopt`), `c2` ein V7-Geruest mit Z8000-Befehlstabelle,
+`c0` fast reines V7, `as` kein V7 (yacc-Parser).
+
+**Einordnung (Hinweis des Projektinhabers):** WEGA (P8000) bzw. Zilog ZEUS ist ein **juengeres** System auf Grundlage von UNIX System III; eine direkte Abstammung
+MUTOS <- WEGA ist deshalb unwahrscheinlich.  Moeglich ist eine **gemeinsame aeltere Quelle**: ein frueher V7-Compiler fuer den Z8000 (von Zilog oder einem anderen
+fruehen Z8000-UNIX-Anbieter), aus dem sowohl MUTOS als auch spaeter ZEUS/WEGA schoepften.  Welche fruehen Z8000-V7-Portierungen es gab, ist hier *nicht belegt* und erst zu recherchieren.
+
+**Vorgehen (Entwurf):**
+1. Recherche: fruehe Z8000-UNIX-Portierungen auf V7-Basis (Hersteller, Jahr, erhaltene Binaries/Quellen, Handbuecher); Ergebnis mit Quellenangabe, Vermutetes markiert.
+2. WEGA-Werkzeugkette (https://github.com/OlliL/P8000, lokale Kopie **ausserhalb** des Repositorys, nichts kopieren -- `original/wega/README.md`):
+   Zeichenketten, Fehlermeldungen, Funktionsreihenfolge, Codetabellen (Format, Musterbuchstaben, Eintragszahlen), Assembler-Dialekt (`as_dialekt.md`),
+   Abschnittsdirektiven (`$DATA`, `$SECTION`, `$CODE`), Registerkonvention, `c2`-Befehlstabelle -- je Pass gegen MUTOS vergleichen.
+3. Gemeinsamkeiten ueber V7 hinaus (gleiche Z8000-spezifische Funktionen, gleiche Tabellenzeilen, gleiche Meldungen) sprechen fuer eine gemeinsame Vorlage;
+   Unterschiede in den maschinenabhaengigen Teilen fuer unabhaengige Portierungen.  Ergebnis als Verwandtschaftstabelle je Pass, gemessen vs. *Annahme*.
+4. Falls ein frueher Z8000-V7-Compiler auftaucht: derselbe Vergleich; ggf. erklaert er den **aelteren c2-Stand**, mit dem die MUTOS-Originale gebaut wurden (`wk_w5e.md`).
+
+Nicht-Ziel: nichts aus WEGA/System III in die MUTOS-Quellen uebernehmen (Grundsatz "MUTOS bleibt V7"); WEGA ist nur Vergleichsmaterial.
 
 ## 6. Risiken und offene Fragen
 
