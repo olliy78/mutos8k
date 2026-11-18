@@ -59,8 +59,8 @@ Die Kette laeuft im Gast (K1, `doc/werkzeugkette/k1_cc_im_gast.md`); Quellen ab 
 | W7 | `as` (Z8000-Assembler, yacc) | W2 (yacc-Befund) | sehr gross; Ergebnis A ist zulaessig |
 | W8 | `libc.a` als Ganzes (alle Glieder, Reihenfolge, Archivkopf) und `crt0.o`/`mcrt0.o` | W0; nutzt `libc_alt` | mittel |
 | W9 | **Selbsthosting-Beweis**: Gastdiskette `usr` aus den neu gebauten Passen zusammenstellen, damit (a) den Kernel bauen (`tools/kernel/gesamtbau.py`, Ergebnis gleich) und (b) Stichprobe Userspace (`sh`, `ed`, `ls` G) | alle G-Programme | mittel |
-| W10 | **Herkunft/Verwandtschaft des Compilers** (eingeplant 2026-11-18, Abschnitt 6a) | W5, W6 (c1, c2 weitgehend rekonstruiert), W7 | mittel |
-| W11 | **Angepasste Werkzeugkette: `cc` mit waehlbarem `c2`, `c2` mit Schaltern fuer aeltere Staende** (eingeplant 2026-11-18, Abschnitt 6b) | W5 (c2-Quelle), W5e (Gegenprobe), W6 (c1) | gross, in kleinen Schritten |
+| W10 | **Angepasste Werkzeugkette: `cc` mit waehlbarem `c2`, `c2` mit Schaltern fuer aeltere Staende** (eingeplant 2026-11-18, Abschnitt 6a; Vorrang vor W11, Entscheidung Projektinhaber) | W5 (c2-Quelle), W5e (Gegenprobe), W6 (c1) | gross, in kleinen Schritten |
+| W11 | **Herkunft/Verwandtschaft des Compilers** (eingeplant 2026-11-18, Abschnitt 6b; technisch nicht noetig, nach W10) | W5, W6 (c1, c2 weitgehend rekonstruiert), W7 | mittel |
 
 Parallel moeglich nach W0: W1, W2, W3, W4, W5, W8 (je eigener Branch, je Agent).  W6 nach W4, W7 nach W2.  W9 zuletzt; fuer Programme ohne G nimmt W9 das Original
 und nennt das.
@@ -83,7 +83,38 @@ Zeitgrenze 600000 ms oder im Hintergrund mit Benachrichtigung, nie `sleep`, Rund
 Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Programme plus `sh` im Gast (sequentiell), Herkunftstabelle in `doc/userspace/README.md`
 (Abschnitt "Werkzeugkette"), Stand in Plan 44 Stufe 4 und Plan 42 H7 nachtragen.
 
-## 6a. W10: Herkunft der Z8000-Portierung (Auftrag des Projektinhabers 2026-11-18)
+## 6a. W10: Original- und angepasste Werkzeugkette (Auftrag des Projektinhabers 2026-11-18)
+
+**Ziel:** Alle Teile des Systems bytegleich **im MUTOS-Gast** bauen, ohne Zwischenergebnisse (`.s`) auf dem Linux-Host zu patchen.
+
+**Zwei Werkzeugketten nebeneinander:**
+1. **Original-Werkzeugkette** -- die rekonstruierten, bytegleichen `cc c0 c1 c2 as ld` (+ `libc.a`, `crt0.o`).  Bleibt unveraendert; sie ist das Rekonstruktionsziel.
+2. **Angepasste Werkzeugkette** -- daneben, unter eigenen Namen (die Originale werden nicht ersetzt):
+   * ein **modifizierter `cc`** (Name *Annahme*, z. B. `xcc`; 8-Zeichen-Grenze beachten) mit einem Parameter, der waehlt, ob der unveraenderte bytegleiche `c2`
+     oder ein **modifizierter `c2`** (z. B. `/usr/lib/c2x`) laeuft, und der dessen Schalter durchreicht;
+   * der **modifizierte `c2`** aus unserer `c2`-Quelle (W5) mit **Schaltern**, die das Verhalten aelterer c2-Staende nachbilden.  Ohne Schalter verhaelt er sich
+     wie der ausgelieferte `c2`.
+
+**Begruendung (gemessen, `wk_w5e.md`, `wk_w6.md` Teil 14):** die Originale wurden mit einem aelteren c2-Stand gebaut als dem ausgelieferten -- auch `c2` selbst, `cpp`
+und Teile von `c1`; ihre Restbloecke (Blockanordnung, `JR`/`JP`, fehlende `BIT`-Umformung) erklaert keine Quellform.  Bisher bildet das Regelmodell auf dem Host
+(`uspace.c2_emu_s`, R1-R133, programmgebundene Saetze) diesen Unterschied als Textersetzung nach.
+
+**Schritte (je klein, mit Gegenprobe):**
+1. Regeln nach gemeinsamem Auftreten ueber die Programme gruppieren (`userspace/c2/gegenprobe_regeln.tsv`) -> Hypothese, wie viele c2-Staende/Schaltergruppen es gibt;
+   programmgebundene 1-Stellen-Regeln auf Ueberanpassung pruefen (erklaert eine Quellform sie doch?).  Die Zahl der noetigen Schaltergruppen ist selbst ein Herkunftsbefund (W11).
+2. Erste Schaltergruppe in die `c2`-Quelle (allgemeine Regeln R1-R10 u. a.); Abnahme: fuer alle Module der Gegenprobe liefert `c2x` mit Schalter dasselbe `.s`
+   wie ausgelieferter `c2` + Regelmodell (`tools/userspace/c2gegen.py`).
+3. `xcc` aus unserer bytegleichen `cc`-Quelle ableiten (Parameter, Pfad zu `c2x`, Schalter durchreichen); die bytegleiche `cc`-Quelle bleibt unveraendert daneben.
+4. Gast-Bauweg in der Pipeline (Variante neben `neu_c2`/`neu_c2_s`): Bau mit `xcc` und den Schaltern des Programms, **kein** Host-Patch; an einem Programm vorfuehren,
+   dann alle G-Programme; Regelmodell bleibt als Pruefung (beide Wege muessen dieselben Bytes liefern).
+5. Weitere Schaltergruppen und programmgebundene Saetze; zuletzt `c2`, `cpp`, `c1` selbst bytegleich mit `xcc` bauen (Henne-Ei: `c2x` wird mit der Original-Kette
+   gebaut, muss dafuer nur richtig arbeiten, nicht bytegleich sein).  Kernelregeln K1-K6 einbeziehen.
+6. Abnahme W9 (Selbsthosting) mit beiden Ketten: Original-Kette fuer alles, was sie bytegleich baut; angepasste Kette fuer den Rest.
+
+**Ablage:** Quellen der angepassten Kette im Repository auf `main` (sie sind Werkzeug der Rekonstruktion, aendern kein Original); Abweichungen gegen die bytegleiche
+Quelle je Stelle kommentiert.  Installation im Gast unter eigenen Namen auf einer eigenen Platte oder neben den Originalen -- die Originaldateien bleiben unangetastet.
+
+## 6b. W11: Herkunft der Z8000-Portierung (Auftrag des Projektinhabers 2026-11-18)
 
 **Frage:** Wer hat den V7-Compiler auf den Z8000 portiert -- der MUTOS-Hersteller selbst, oder stammt die Portierung (`c0`/`c1`/`c2`/`as`, Codetabellen,
 Abschnittsdirektiven) aus einer aelteren Z8000-UNIX-Linie?
@@ -108,37 +139,6 @@ Die Quellenlage (Versionen, Jahre, erhaltene ZEUS-V7-Binaries oder -Handbuecher)
 4. Falls ein frueher Z8000-V7-Compiler auftaucht: derselbe Vergleich; ggf. erklaert er den **aelteren c2-Stand**, mit dem die MUTOS-Originale gebaut wurden (`wk_w5e.md`).
 
 Nicht-Ziel: nichts aus WEGA/System III in die MUTOS-Quellen uebernehmen (Grundsatz "MUTOS bleibt V7"); WEGA ist nur Vergleichsmaterial.
-
-## 6b. W11: Original- und angepasste Werkzeugkette (Auftrag des Projektinhabers 2026-11-18)
-
-**Ziel:** Alle Teile des Systems bytegleich **im MUTOS-Gast** bauen, ohne Zwischenergebnisse (`.s`) auf dem Linux-Host zu patchen.
-
-**Zwei Werkzeugketten nebeneinander:**
-1. **Original-Werkzeugkette** -- die rekonstruierten, bytegleichen `cc c0 c1 c2 as ld` (+ `libc.a`, `crt0.o`).  Bleibt unveraendert; sie ist das Rekonstruktionsziel.
-2. **Angepasste Werkzeugkette** -- daneben, unter eigenen Namen (die Originale werden nicht ersetzt):
-   * ein **modifizierter `cc`** (Name *Annahme*, z. B. `xcc`; 8-Zeichen-Grenze beachten) mit einem Parameter, der waehlt, ob der unveraenderte bytegleiche `c2`
-     oder ein **modifizierter `c2`** (z. B. `/usr/lib/c2x`) laeuft, und der dessen Schalter durchreicht;
-   * der **modifizierte `c2`** aus unserer `c2`-Quelle (W5) mit **Schaltern**, die das Verhalten aelterer c2-Staende nachbilden.  Ohne Schalter verhaelt er sich
-     wie der ausgelieferte `c2`.
-
-**Begruendung (gemessen, `wk_w5e.md`, `wk_w6.md` Teil 14):** die Originale wurden mit einem aelteren c2-Stand gebaut als dem ausgelieferten -- auch `c2` selbst, `cpp`
-und Teile von `c1`; ihre Restbloecke (Blockanordnung, `JR`/`JP`, fehlende `BIT`-Umformung) erklaert keine Quellform.  Bisher bildet das Regelmodell auf dem Host
-(`uspace.c2_emu_s`, R1-R133, programmgebundene Saetze) diesen Unterschied als Textersetzung nach.
-
-**Schritte (je klein, mit Gegenprobe):**
-1. Regeln nach gemeinsamem Auftreten ueber die Programme gruppieren (`userspace/c2/gegenprobe_regeln.tsv`) -> Hypothese, wie viele c2-Staende/Schaltergruppen es gibt;
-   programmgebundene 1-Stellen-Regeln auf Ueberanpassung pruefen (erklaert eine Quellform sie doch?).  Die Zahl der noetigen Schaltergruppen ist selbst ein Herkunftsbefund (W10).
-2. Erste Schaltergruppe in die `c2`-Quelle (allgemeine Regeln R1-R10 u. a.); Abnahme: fuer alle Module der Gegenprobe liefert `c2x` mit Schalter dasselbe `.s`
-   wie ausgelieferter `c2` + Regelmodell (`tools/userspace/c2gegen.py`).
-3. `xcc` aus unserer bytegleichen `cc`-Quelle ableiten (Parameter, Pfad zu `c2x`, Schalter durchreichen); die bytegleiche `cc`-Quelle bleibt unveraendert daneben.
-4. Gast-Bauweg in der Pipeline (Variante neben `neu_c2`/`neu_c2_s`): Bau mit `xcc` und den Schaltern des Programms, **kein** Host-Patch; an einem Programm vorfuehren,
-   dann alle G-Programme; Regelmodell bleibt als Pruefung (beide Wege muessen dieselben Bytes liefern).
-5. Weitere Schaltergruppen und programmgebundene Saetze; zuletzt `c2`, `cpp`, `c1` selbst bytegleich mit `xcc` bauen (Henne-Ei: `c2x` wird mit der Original-Kette
-   gebaut, muss dafuer nur richtig arbeiten, nicht bytegleich sein).  Kernelregeln K1-K6 einbeziehen.
-6. Abnahme W9 (Selbsthosting) mit beiden Ketten: Original-Kette fuer alles, was sie bytegleich baut; angepasste Kette fuer den Rest.
-
-**Ablage:** Quellen der angepassten Kette im Repository auf `main` (sie sind Werkzeug der Rekonstruktion, aendern kein Original); Abweichungen gegen die bytegleiche
-Quelle je Stelle kommentiert.  Installation im Gast unter eigenen Namen auf einer eigenen Platte oder neben den Originalen -- die Originaldateien bleiben unangetastet.
 
 ## 6. Risiken und offene Fragen
 
