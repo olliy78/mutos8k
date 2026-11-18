@@ -532,8 +532,11 @@ struct node *ap;
 	len = 0;
 	for (;;) {
 		p = p->forw;
-		if (p == 0 || p == p1)
-			return(len >= 254);
+		if (p == 0 || p == p1) {
+			if (len >= 254)
+				return(1);
+			return(0);
+		}
 		len += ilen(p);
 	}
 }
