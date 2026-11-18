@@ -185,6 +185,53 @@ def asm_varianten(namen):
     return erg
 
 
+def hochziehen(name, text):
+    """Declare the external symbols of the shipped member (in the shipped table order) before the first G/I line, so the
+    object's symbol table starts with them like the shipped one (`as -u` otherwise creates them at first use)."""
+    o = O.Objekt.lesen(schiff(name))
+    decl = []
+    for x in o.syms:
+        if x.basistyp == O.N_UNDF and x.ext:
+            nm = x.name.decode("latin-1")
+            decl.append("X\t%s\tA[%%%X B]" % (nm, x.wert) if x.wert else "X\t%s\tPR;" % nm)
+    z = text.decode("latin-1").split("\n")
+    i = next(k for k, l in enumerate(z) if re.match(r"[GI]\t", l))
+    return "\n".join(z[:i] + decl + z[i:]).encode("latin-1")
+
+
+def umbenennen(name, text, gebaut):
+    """Give the generated labels (L1592, B23B0, D2730) the names of the shipped member's local symbols with the same
+    section and value (V7 labels: $1, $2, nd, dvect ...); a generated label without a shipped counterpart is dropped."""
+    sh = O.Objekt.lesen(schiff(name))
+    ob = O.Objekt.lesen(gebaut)
+    soll = {(x.basistyp, x.wert): x.name.decode() for x in sh.syms if not x.ext and x.basistyp in (O.N_TEXT, O.N_DATA, O.N_BSS)
+            and not x.name.startswith(b"~") and not re.match(rb"L\d+$", x.name)}
+    ren = {}
+    for x in ob.syms:
+        if not x.ext and x.basistyp in (O.N_TEXT, O.N_DATA, O.N_BSS) and re.match(rb"[LBD][0-9A-F]{3,4}$", x.name):
+            r = soll.get((x.basistyp, x.wert))
+            if r is None:       # no shipped label here: references become `previous label + offset`
+                prev = [(w, nm) for (bt, w), nm in soll.items() if bt == x.basistyp and w < x.wert]
+                if prev and re.search(r"[^\w]" + x.name.decode() + r"\b(?!:)", text.decode("latin-1")):
+                    w, nm = max(prev)
+                    r = "%s+%%%X" % (nm, x.wert - w)
+                    ren["#" + x.name.decode()] = r
+            ren[x.name.decode()] = r if not r or "+" not in r else None
+    out = []
+    for l in text.decode("latin-1").split("\n"):
+        m = re.match(r"(\w+):\s*$", l)
+        if m and m[1] in ren:
+            if ren[m[1]] is None:
+                continue
+            l = ren[m[1]] + ":"
+        elif re.match(r"\s*[BD][0-9A-F]{3,4}:?\s*$", l) and l.strip().rstrip(":") in ren:
+            continue
+        else:
+            l = re.sub(r"\b([LBD][0-9A-F]{3,4})\b", lambda k: ren.get("#" + k[1]) or (ren[k[1]] if ren.get(k[1]) else k[1]), l)
+        out.append(l)
+    return "\n".join(out).encode("latin-1")
+
+
 def stapel(namen, art, grenze=110_000):
     """split the names into guest runs whose sources fit on the source disk"""
     gr, cur, size = [], [], 0
@@ -214,7 +261,7 @@ def bauen(namen, art):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau"):
+    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau", "hbau", "rbau"):
         print(__doc__)
         return 2
     try:
@@ -228,6 +275,25 @@ def main(argv):
                 open(os.path.join(WORK, "bau", n + ".m.s"), "w").write(t)
                 print(n, {k: v for k, v in c.items() if v})
             return bauen(argv[1:], "m")
+        elif argv[0] == "hbau":      # NAME=K: variant NAME__vK (from abau) with hoisted external declarations
+            vs = []
+            for a in argv[1:]:
+                n, k = a.split("=")
+                v = "%s__h%s" % (n, k)
+                t = open(os.path.join(WORK, "var", "%s__v%s.s" % (n, k)), "rb").read()
+                open(os.path.join(WORK, "var", v + ".s"), "wb").write(hochziehen(n, t))
+                vs.append(v)
+            return bauen(vs, "s")
+        elif argv[0] == "rbau":      # NAME=K: rename labels of NAME__hK like the shipped symbols (needs the object from hbau)
+            vs = []
+            for a in argv[1:]:
+                n, k = a.split("=")
+                v = "%s__r%s" % (n, k)
+                t = open(os.path.join(WORK, "var", "%s__h%s.s" % (n, k)), "rb").read()
+                g = open(os.path.join(WORK, "bau", "%s__h%s.o" % (n, k)), "rb").read()
+                open(os.path.join(WORK, "var", v + ".s"), "wb").write(umbenennen(n, t, g))
+                vs.append(v)
+            return bauen(vs, "s")
         elif argv[0] == "abau":      # libc_alt .s variants of the given members -> guest as -> compare
             return bauen(asm_varianten(argv[1:]), "s")
         elif argv[0] == "ssau":
