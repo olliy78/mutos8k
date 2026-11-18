@@ -107,3 +107,44 @@ Die Zuordnung der W0-Tabelle war an mehreren Stellen falsch: 21BE ist `addsob` (
 ## Offen fuer Teil d (`rmove`)
 * Stub ersetzen; Tabelle 4778 (55 Eintraege, `op-1`), Literale `#0 SP ,#%%%x #0 x6 #%ffff #-%1 #%0 #0`, danach die alloc-Zeichenkette.  Der Aufrufblock im Stub entfaellt.
 * Ungeklaerte Lagen (toofar/ilen/adrlen/equop/findrand/compare/log2n/addsob-Totsprung): vermutlich Quelltextform; keine neue c2-Regel eingefuehrt.
+
+# Teil d (Branch `us-wk-w5d`): `rmove`
+
+Stand 2026-11-18.  `rmove` (151E, 3232 B) in `userspace/c2/c21.c` ist geschrieben; der Stub samt Hilfsaufrufblock (`if (i == 0x7777)`) ist weg.
+Lauf: `python3 -I tools/userspace/pipeline.py alles c2 --c2emu --libc alt --ist neu_c2`.
+
+## Ergebnis (gemessen)
+* **`rmove` ist befehlsgleich**: im Bericht bleiben in 151E..20EC nur Darstellungsartefakte (`CALL L`/`CALL F` auf `clrptr` 2932, das im Gebauten noch verschoben liegt; ein vom Disassembler
+  falsch dekodiertes Wort bei 2090 und der Anfang von `jumpsw` bei 20EC, beides Folge der `ohne`-Marken des Originals).  Das Gebaute ist an 20EC gleich lang (der Text ist nur nach den
+  Lagefunktionen kuerzer).
+* c20: unveraendert gleich.  c21: die Funktionen ausser `addsob` (Totsprung), `ilen`, `adrlen`, `equop`, `findrand`, `compare` sind befehlsgleich (Stand Lauf 5: 4609 von 4717 Befehlen, 28 Bloecke).
+* `log2n`, `kill`, `clrptr30` sind jetzt gleich (Quellform von `log2n`: positive Bedingung, `return(-1)` am Ende).
+* Daten 1984 B, BSS 3296 B gleich Original; BSS-Adressen stimmen.  Der Text ist um 20 B kuerzer als das Original (nur noch in den Lagefunktionen).
+
+## Fall fuer Fall (Tabelle 4778, Index `op-1`; Namen der Variablen *Annahme*)
+Variablen: `p` R13, `cp` R12, `r r1 flt i` R11..R8, `fl2` (Stack FFF2, Bank des Quelloperanden; `flt` ist die Bank des Ziels).
+* LDIL (9), MOV (10) und LDK (55): gleich.  Gemeinsames `mv:` mit zwei `findrand`-Pruefungen (`rsz`-Vergleich, `isreg`), `goto del` auf `delnode(p); redunm++`;
+  `flt == fl2`: Entfernen eines toten Vorgaengers (`rnode[r+flt]`, `kill`), `ld r,#0`/`clr r` -> `xor r,r` (nicht bei LONG/FLTF), `repladdr`; dann `clrcc` je nach `ccloc` und
+  `dest`/`clrptr`/`savereg`/`setcon`.
+* INC DEC ASR ASL SET RES SRL SLL (13 14 17 18 41 42 50 51): gleich.  `inc SP,#n ; push` wird zu `inc SP,#n-2 ; ld @SP` (`sprintf(",#%%%x")`), sonst `dest`+`clrptr`+`setcc`/`clrcc`.
+* ADD SUB BIS SDL MUL DIV ASH XOR MULS POP PUSH (21..23 25..29 38 45 46): gleich.  `pop` entfernt den ladenden Knoten; `or r,#2^n` -> `set` (`log2n`, `mkshift`); `xor r,r` mit
+  Registerkenntnis (`cregs`: Halbregister).
+* NEG (15), CLR COM SXT (11 12 19), TST CPZX (16 39), CMP CPFX BIT (20 40 43), BIC (24): gleich.  `and r,#~2^n` -> `res`; `and r,#%ffff`/`#-%1` -> `test`, `and r,#%0` -> `clr`.
+* CBRS CBR (1 2), JBR JMP (3 4): gleich.  Bedingter Sprung nach `test`/`cmp` mit bekannten Konstanten (`findcon`, `compare`): entfernen oder zum unbedingten Sprung machen (`op += 2`);
+  fallt dann in `redunbr(p); clrptr30();` durch (kein `clearreg`).
+* EROU CALL END (8 47 48): Register 0..7, die nur ein `ld`-Knoten laedt (`regs[r][0] == 'r'`), werden entfernt; weiter in `default: clearreg()`.
+
+## Quellvarianten, die entschieden haben
+* Kopf: `if (p->subop & FLTF) flt = FREG; else flt = 0; fl2 = flt;` (die `?:`-Form ergibt `XOR R2,R2; LD R9,R2`).
+* LDIL: `if (rsz[RT2] == 'r') fl2 = 0; else flt = 0; goto mv;`; MOV: `if (!equstr(..)) goto mv; goto del;` **vor** dem Block `mv:`.  Der Block `mv:` rueckt durch `codemove`
+  hinter den `goto mv` von LDIL (V7-`codemove` verlangt, dass der Befehl vor dem Ziel ein unbedingter Sprung ist; mit `if (equstr) goto del;` und Durchfall passiert das nicht).
+* `del:` steht im Rumpf der ersten Pruefung (`if (c1) { del: delnode; redunm++; continue; }`), die zweite Pruefung macht `goto del`.
+* `equstr(regs[RT2], "#0")`: die Argumente stehen in der Reihenfolge von links nach rechts im Quelltext (Stapel rechts nach links).
+* `rnode[..] != 0` statt `rnode[..]` ergibt `TEST @R2` statt `LD R3,@R2; TEST R3` (`pop`, `ld`/`clr`-Zweig, `EROU`-Schleife; beim `xor` ist die kurze Form richtig).
+* XOR-Zweig `else { savereg(..); goto setc; }` (der `savereg`-Block wandert hinter `setcc`); `if (p->op != BIC) clrcc(); else setcc(..)`; CBR: `if (p->forw->op <= CBR) delnode(p); else { unlink }`.
+* `log2n`: `if (n != 0 && n <= 0x8000 && (n & (n-1)) == 0) { for (..); return(i); } return(-1);`.
+* `toofar`: Schleifenende mit `if (p == 0 || p == p1) { if (len >= 254) return(1); return(0); }` (Schleife ohne Rotation: `codemove`/`ivloop` des Originals greifen nur, wenn hinter dem
+  Rueckwaertssprung ein Label folgt).
+
+## Offen
+* Lagefunktionen `ilen`, `adrlen`, `equop`, `findrand`, `compare` und der tote `JR` in `addsob` (2324): siehe Bericht; die Ursache liegt in der Lage von `return`-Bloecken (`codemove`/`comjump`).
