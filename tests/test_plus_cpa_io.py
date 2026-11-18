@@ -7,6 +7,9 @@ UDOS vector slots) is left in the code; the stack lies in B936H..C8B5H.
 C3.2 (`gast`, ~2 min): boot disk -> M8KBOOT -> mask -> r -> first kernel message, ticks, vectors, stack depth.
 C3.3 (fast): no UDOS disk path (0BFDH, nucleus request block, callbacks) any more, the BIOS disk calls are used.
 C3.3 (`gast`, ~2 min): boot to `login:` with root_mfm and root_8x512 in C:, no disk error, ticks keep running.
+C3.4 (fast): the keyboard comes through BIOS CONST/CONIN in ISR_TAKT, nothing reads 5CH/5DH any more.
+C3.4 (`gast`, ~10 min each): operation run (login, ls -l /, writes, control keys, 200 keys under load), second run reads the files back,
+disk change in operation.
 """
 import os
 import re
@@ -264,3 +267,153 @@ def test_boot_bis_login_c3_3(tmp_path, root):
     assert max(luecken) < 1.5 * mittel, max(luecken)           # no tick lost (late ticks of the console/report DI sections allowed)
     ende = _tiefste_adresse(os.path.join(arbeit, "stack_end.bin"))
     assert ende is not None and ende > 0xC000, hex(ende or 0)   # stack used, and only slightly (measured C888H)
+
+
+# ---------------------------------------------------------------- C3.4: keyboard through the BIOS, operation, disk change
+
+def test_tastatur_ueber_bios_c3_4():
+    """No IN from 5CH/5DH (only SIGNALTON writes 5CH); ISR_TAKT takes keys through TASTE_BIOS = BIOS CONST/CONIN."""
+    code = "\n".join(c for _, c in _code_lines())
+    assert not re.search(r"\bIN\s+\w,\s*\((5CH|5DH|0?5CH|0?5DH)\)", code, re.I)
+    assert not re.search(r"\b(TASTE_LESEN|TAB_TASTE)\b", code)
+    assert re.search(r"CALL\s+TASTE_ZWISCHEN\b", code) and re.search(r"^V_VERLUST:", code, re.M)
+    m = re.search(r"^ISR_TAKT:(.*?)^IT_ENDE:", code, re.M | re.S)
+    assert m and re.search(r"CALL\s+TASTE_BIOS\b", m.group(1)) and "QUEUE_PUSH" in m.group(1)
+    m = re.search(r"^TASTE_BIOS:(.*?)\bRET\b", code, re.M | re.S)
+    assert m and "B_CONST" in m.group(1) and "B_CONIN" in m.group(1) and "PUSH IY" in m.group(1)
+
+
+def _folge():
+    """The 200-character key sequence (all characters of the guest scripts) as five pieces of 40; (keys-text, file text)."""
+    alpha = "abcdefghijklmnopqrstuvwxyz0123456789 /.-;><|&=:*$_'\""
+    s = "".join(alpha[(i * 7) % len(alpha)] for i in range(200))
+    assert set(s) == set(alpha)
+    stuecke = [s[i:i + 40] for i in range(0, 200, 40)]
+    return [x.replace(" ", "\\s") for x in stuecke], "".join(x + "\n" for x in stuecke)
+
+
+def _c34_platten(arbeit):
+    """tmp.hfe (empty /tmp), usr.hfe, root.hfe (root_mfm), d0.hfe = copy of the cmd disk (/mnt): all copies in `arbeit`."""
+    import shutil
+    import gast_as
+    os.makedirs(arbeit, exist_ok=True)
+    p = os.path.join(arbeit, "tmp.hfe")
+    if os.path.exists(p):
+        os.remove(p)
+    rc, o = gast_as._lauf([gast_as.disktool(), "create", p, "--fs", "mutos8k_26x128_mfm", "--inodes", "200"])
+    assert rc == 0, o
+    shutil.copyfile(gast_as.disk("a5120_mutos8000_usr_mfm.hfe"), os.path.join(arbeit, "usr.hfe"))
+    shutil.copyfile(gast_as.disk("a5120_mutos8000_root_mfm.hfe"), os.path.join(arbeit, "root.hfe"))
+    shutil.copyfile(gast_as.disk("a5120_mutos8000_cmd_mfm.hfe"), os.path.join(arbeit, "d0.hfe"))
+
+
+def _host_get(img, name, ziel):
+    import gast_as
+    os.makedirs(ziel, exist_ok=True)
+    rc, o = gast_as._lauf([gast_as.disktool(), "get", img, name, "--to", ziel])
+    assert rc == 0, o
+    for wurzel, _, dateien in os.walk(ziel):       # `get bin/ls` may recreate the directory
+        if os.path.basename(name) in dateien:
+            with open(os.path.join(wurzel, os.path.basename(name)), "rb") as f:
+                return f.read()
+    raise AssertionError("get %s: nothing in %s" % (name, ziel))
+
+
+def _logpunkte(log, adr):
+    return [int(m.group(1)) for m in re.finditer(r"\[lp\] [+c](\d+)\s+%04X:" % adr, log)]
+
+
+@pytest.mark.gast
+def test_betrieb_c3_4(tmp_path):
+    """Acceptance C3: boot to `#`, ls -l /, files on /tmp and the root, sync, second run reads them, control keys, 200/200 keys under load."""
+    import cpa
+    import cpa_disk
+    import gast_as
+    if cpa.fehlt(werkzeug=True):
+        pytest.skip("emulator or CP/M tool chain missing")
+    basis = os.environ.get("MPLUS_ARBEIT")
+    arbeit = os.path.join(basis, "betrieb") if basis else str(tmp_path)
+    _c34_platten(arbeit)
+    sym, _ = _symbole()
+    stuecke, soll_k = _folge()
+    ers = dict(ARBEIT=arbeit, ISR_ANFR="0x%04X" % sym["ISR_ANFRAGE"], B_READ="0x%04X" % sym["B_READ"], PL_ERG="0x%04X" % sym["PL_ERG"],
+               PL_FEHLER="0x%04X" % sym["PL_FEHLER"], STKLEN=0xC8B6 - 0xB936, VERLUST="0x%04X" % sym["V_VERLUST"])
+    for i, s in enumerate(stuecke, 1):
+        ers["F%d" % i] = s
+    platte = cpa_disk.bootdiskette(arbeit)
+    log = cpa.lauf_dbg(arbeit, _skript("cpa_c3_4_betrieb.dbg", **ers), platte, laufwerke=cpa_disk.LAUFWERKE, rw=True, frist=7200, name="betrieb")
+    scr = cpa._alles(log)
+    schirme = cpa.schirme(log)
+    # boot to the `#` prompt after "root" at login:, nothing about disk errors
+    assert "mem = 196608" in scr and "err on dev" not in scr and "panic" not in scr
+    assert any(re.search(r"^#", z) for z in schirme[0]), "no # prompt"
+    assert not _logpunkte(log, sym["PL_FEHLER"]), "disk error branch hit"
+    for k in range(1, 10):
+        assert "MARK%d" % k in scr, "marker MARK%d missing" % k
+    # ls -l / complete
+    wurzel = "\n".join("\n".join(s) for s in schirme)
+    for n in ("bin", "dev", "etc", "mnt", "tmp", "usr"):
+        assert re.search(r"^[d-][rwx-]{9}.*\s%s$" % n, wurzel, re.M), "ls -l / without " + n
+    # requests that arrive while BIOS READ runs are served afterwards, nothing fatal
+    rd, erg, anf = _logpunkte(log, sym["B_READ"]), _logpunkte(log, sym["PL_ERG"]), _logpunkte(log, sym["ISR_ANFRAGE"])
+    assert "fatal error" not in scr
+    in_fenster = sum(1 for a in anf if any(r <= a <= e for r, e in zip(rd, erg)))
+    print("READ windows %d, ISR_ANFRAGE %d, thereof inside READ %d" % (len(rd), len(anf), in_fenster))
+    # host: files written to /tmp and the root equal the originals; long key sequence 200/200
+    d = os.path.join(arbeit, "host")
+    assert _host_get(os.path.join(arbeit, "tmp.hfe"), "t1", d) == _host_get(gast_as.disk("a5120_mutos8000_cmd_mfm.hfe"), "bin/ls", d + "/o1")
+    assert _host_get(os.path.join(arbeit, "tmp.hfe"), "t2", d) == _host_get(gast_as.disk("a5120_mutos8000_usr_mfm.hfe"), "lib/libc.a", d + "/o2")
+    assert _host_get(os.path.join(arbeit, "root.hfe"), "r1", d) == _host_get(gast_as.disk("a5120_mutos8000_cmd_mfm.hfe"), "bin/cat", d + "/o3")
+    assert _host_get(os.path.join(arbeit, "tmp.hfe"), "e1", d) == b"abcd\ngh\n"     # BS (stty erase ^h) erases, ^U kills, ^Z ends cat (kernel/h/tty.h)
+    k = _host_get(os.path.join(arbeit, "tmp.hfe"), "k", d)
+    assert k.decode("latin-1") == soll_k, k
+    assert _bytes_hinter(log, "d 0x%04X 1" % sym["V_VERLUST"], 1) == [0], "key ring overflowed (V_VERLUST)"
+    # second run with the same copies: files readable and equal in the guest
+    log2 = cpa.lauf_dbg(arbeit, _skript("cpa_c3_4_zweitlauf.dbg", ARBEIT=arbeit, PL_FEHLER="0x%04X" % sym["PL_FEHLER"]), platte,
+                        laufwerke=cpa_disk.LAUFWERKE, rw=False, frist=3600, name="zweitlauf")
+    scr2 = cpa._alles(log2)
+    assert "MARK3" in scr2 and re.search(r"^SAME$", scr2, re.M), "files differ in the second run"
+    assert not _logpunkte(log2, sym["PL_FEHLER"])
+    assert soll_k.split("\n")[4] in scr2
+
+
+@pytest.mark.gast
+def test_wechsel_c3_4(tmp_path):
+    """Disk change in operation: umount rk3, other disk of the same format in the debugger, mount, ls shows the new content."""
+    import cpa
+    import cpa_disk
+    import gast_as
+    if cpa.fehlt(werkzeug=True):
+        pytest.skip("emulator or CP/M tool chain missing")
+    basis = os.environ.get("MPLUS_ARBEIT")
+    arbeit = os.path.join(basis, "wechsel") if basis else str(tmp_path)
+    _c34_platten(arbeit)
+    os.makedirs(os.path.join(arbeit, "q"), exist_ok=True)
+    for n in range(1, 7):
+        with open(os.path.join(arbeit, "q", "m%d" % n), "w") as f:
+            f.write("MARK%d\n" % n)
+    rc, o = gast_as._lauf([gast_as.disktool(), "put", os.path.join(arbeit, "tmp.hfe")] + [os.path.join(arbeit, "q", "m%d" % n) for n in range(1, 7)])
+    assert rc == 0, o
+    for i, (name, text) in enumerate((("first", "FIRST-DISK"), ("second", "SECOND-DISK"))):
+        img = os.path.join(arbeit, "d%d.hfe" % i)
+        if os.path.exists(img):
+            os.remove(img)
+        rc, o = gast_as._lauf([gast_as.disktool(), "create", img, "--fs", "mutos8k_26x128_mfm", "--inodes", "50"])
+        assert rc == 0, o
+        with open(os.path.join(arbeit, "q", name), "w") as f:
+            f.write(text + "\n")
+        rc, o = gast_as._lauf([gast_as.disktool(), "put", img, os.path.join(arbeit, "q", name)])
+        assert rc == 0, o
+    sym, _ = _symbole()
+    platte = cpa_disk.bootdiskette(arbeit)
+    log = cpa.lauf_dbg(arbeit, _skript("cpa_c3_4_wechsel.dbg", ARBEIT=arbeit, PL_FEHLER="0x%04X" % sym["PL_FEHLER"], B_SELDSK="0x%04X" % sym["B_SELDSK"]),
+                       platte, laufwerke=cpa_disk.LAUFWERKE, rw=True, frist=3600, name="wechsel")
+    scr = cpa.schirme(log)
+    txt = ["\n".join(s) for s in scr]
+    alle = "\n".join(txt)
+    assert "MARK6" in txt[-1] and not _logpunkte(log, sym["PL_FEHLER"])
+    # explicit screen blocks: after MARK1 (first disk), MARK3 (second disk), MARK5 (first again), at the end
+    assert len(txt) >= 4, len(txt)
+    assert "FIRST-DISK" in txt[0] and "SECOND-DISK" not in txt[0]
+    assert "SECOND-DISK" in txt[1], "disk change: still the old content\n" + txt[1]
+    assert txt[2].rfind("FIRST-DISK") > txt[2].find("SECOND-DISK") > 0, txt[2]

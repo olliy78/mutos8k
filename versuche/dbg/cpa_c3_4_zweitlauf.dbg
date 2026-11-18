@@ -1,0 +1,36 @@
+# Plan 48 C3.4: second run with the same disk copies (after cpa_c3_4_betrieb.dbg): the files written there are read back and compared in the guest.
+# Placeholders: @ARBEIT@, @PL_FEHLER@ (logpoint of the error branch).  `cmp` prints nothing for equal files: && echo.
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+eject A
+mount A @ARBEIT@/tmp.hfe
+eject B
+mount B @ARBEIT@/usr.hfe
+eject C
+mount C @ARBEIT@/root.hfe
+eject D
+mount D @ARBEIT@/d0.hfe
+logpoint @PL_FEHLER@
+keys r
+gscreen "login:" 600000000
+g 3000000
+keys root\r
+gscreen "#" 200000000
+g 3000000
+keys /etc/mount\s/dev/rk1\s/usr;/etc/mount\s/dev/rk0\s/tmp;/etc/mount\s/dev/rk3\s/mnt;cd\s/tmp;echo\sMA""RK1\r
+gscreen "MARK1" 400000000
+g 3000000
+keys ls\s-l\s/\s/tmp;echo\sMA""RK2\r
+gscreen "MARK2" 400000000
+g 3000000
+screen
+keys cmp\s/tmp/t1\s/mnt/bin/ls\s&&\scmp\s/tmp/t2\s/usr/lib/libc.a\s&&\scmp\s/r1\s/mnt/bin/cat\s&&\secho\sSA""ME;echo\sMA""RK3\r
+gscreen "MARK3" 800000000
+g 3000000
+screen
+keys cat\s/tmp/k;echo\sMA""RK4\r
+gscreen "MARK4" 400000000
+g 3000000
+screen
+lpl
+q

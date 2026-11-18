@@ -330,9 +330,20 @@ TAB_PIO_B:
 	DB	0ECH,0CFH,80H,97H,7FH
 ; --- ISR_TAKT: Zeitgeber 50 Hz (CTC 0DH Kanal 1) --------------------------
 ; Counts V_TAKT and reports the tick counter (ACH) with vector 02H when the level is < 6
-; and /VI is free.  No keyboard polling since C3.2 (the BIOS owns 5CH/5DH; C3.4 reads keys via CONST/CONIN).
+; and /VI is free.  Keyboard (plan 48 C3.4, E6d): the BIOS owns 5CH/5DH; every tick asks BIOS CONST and, when a key is
+; there, takes it with CONIN (BIOS codes as they are, 00H = no key) into QUEUE_TASTE and raises class 4 unit 0.
 ISR_TAKT:
 	CALL REGS_RETTEN
+	CALL TASTE_BIOS
+	JR Z,IT_ZAEHLER
+	LD HL,QUEUE_TASTE
+	CALL QUEUE_PUSH
+	LD A,08H
+	CALL KLASSE_ADR
+	XOR A
+	CALL BIT_SETZEN
+IT_ZAEHLER:
+	CALL TASTE_UEBERGABE	; backlog of keys: hand one over now (the main loop may sit in a BIOS READ)
 	LD HL,V_TAKT
 	INC (HL)
 	IN A,(0A8H)
@@ -613,7 +624,21 @@ EB_WARTEN:
 ; QUEUE_PUSH: Zeichen A in den Ring HL
 QUEUE_PUSH:
 	LD B,A
-	LD C,(HL)
+	LD C,(HL)		; C = write index
+	LD A,C
+	INC A
+	CP 2CH
+	JR C,QP_NEXT
+	LD A,04H		; wrap like QUEUE_WEITER
+QP_NEXT:
+	INC HL
+	CP (HL)			; next write index == read index: ring full
+	DEC HL
+	JR NZ,QP_FREE
+	LD HL,V_VERLUST		; plan 48 C3.4: ring full, the NEW character is dropped (never let a full ring look empty)
+	INC (HL)
+	RET
+QP_FREE:
 	CALL QUEUE_WEITER
 	LD A,B
 	LD B,00H
@@ -654,50 +679,45 @@ QUEUE_INIT:
 	INC HL
 	LD (HL),A
 	RET
-; --- TASTE_LESEN: UNUSED since C3.2 (to be removed in C3.4); polls the keyboard SIO 5DH/5CH ---
-; Tastatur-SIO 5DH Bit 0 = Zeichen da, 5CH holen; FFH -> CR
-; Codes < 20H ueber TAB_TASTE, Praefix 9xH/BxH, Codes ab 80H verworfen.  Z = nichts.
-TASTE_LESEN:
-	IN A,(5DH)
-	AND 01H
-	JR Z,TL_NICHTS
-	IN A,(5CH)
-	CP 0FFH
-	JR NZ,TL_ZEICHEN
-	LD A,0DH
-	JR TL_FERTIG
-TL_ZEICHEN:
-	LD B,A
-	AND 0F0H
-	CP 90H
-	JR Z,TL_9X
-	CP 0B0H
-	JR Z,TL_BX
-	LD A,B
-	CP 80H
-	JR NC,TL_NICHTS
-TL_UMSETZEN:
-	CP 20H
-	JR NC,TL_FERTIG
-	LD HL,TAB_TASTE
-	LD B,00H
-	LD C,A
-	ADD HL,BC
-	LD A,(HL)
-TL_FERTIG:
+; --- TASTE_ZWISCHEN: hand one key to the Z8000 between disk jobs (plan 48 C3.4) ---
+; Under UDOS the main loop kept running while the nucleus transferred a block, so class 4 was served in between.  The
+; synchronous BIOS READ/WRITE blocks the loop, and while the Z8000 asks for block after block the vector line is taken by the
+; disk completions at the visit of class 4: keys starved (measured: ring overflow).  Called when a disk job is done and
+; the Z8000 is still waiting (vector line free): same conditions and hand-over as EING_TASTE, class bit left alone
+; (EING_TASTE clears it when it finds the ring empty).  Keeps IX; changes AF BC HL.
+TASTE_ZWISCHEN:
+	DI
+	CALL TASTE_UEBERGABE
+	EI
+	RET
+; TASTE_UEBERGABE: the hand-over itself, interrupts already off (also called from ISR_TAKT, every tick)
+TASTE_UEBERGABE:
+	IN A,(0A8H)
+	BIT 3,A
+	RET Z
+	AND 07H
+	CP 04H
+	RET NC
+	LD HL,QUEUE_TASTE
+	CALL QUEUE_POP
+	RET Z
+	OUT (0ACH),A
+	LD A,22H
+	OUT (0ADH),A
+	RET
+; --- TASTE_BIOS: key from the BIOS keyboard buffer; Z = none, else A = code (plan 48 C3.4) ---
+; CONST/CONIN may change AF, BC, DE, HL (IX stays, c1_5 section 1); IY is saved here.  The ISR already saved AF BC DE HL IX.
+; Code 00H counts as no key (as GETC).  The BIOS keeps collecting keys in its own 5 ms ISR (c1_7 section 2).
+TASTE_BIOS:
+	PUSH IY
+	CALL B_CONST
 	OR A
+	JR Z,TB_NICHTS
+	CALL B_CONIN
+	OR A
+TB_NICHTS:
+	POP IY
 	RET
-TL_NICHTS:
-	XOR A
-	RET
-TL_9X:
-	LD A,B
-	AND 0FH
-	JR TL_UMSETZEN
-TL_BX:
-	LD A,B
-	AND 1FH
-	JR TL_UMSETZEN
 ; REGS_RETTEN / REGS_HOLEN: AF, BC, DE, IX (und HL) fuer ISRs und Rueckrufe sichern
 REGS_RETTEN:
 	EX (SP),HL
@@ -714,10 +734,6 @@ REGS_HOLEN:
 	POP AF
 	EX (SP),HL
 	RET
-; Tastencode-Tabelle fuer Codes 00H-1FH (Steuerzeichen -> ASCII)
-TAB_TASTE:
-	DB	00H,09H,02H,03H,04H,05H,7FH,07H,7FH,09H,0AH,0BH,0CH,0DH,0EH,0FH
-	DB	10H,11H,12H,15H,14H,15H,16H,17H,18H,19H,1AH,7FH,1CH,1DH,1EH,0FFH
 	FILLFF	139
 ; --- DISK (class 0): synchronous through the CP/A BIOS (plan 48 C3.3, doc/plus/cpa/c3_3_platte.md) ------
 ; The Z8000 asks for `count` bytes (IX+14 = high byte, IX+15 = low byte, a multiple of 128) of kernel
@@ -732,6 +748,7 @@ TAB_TASTE:
 ; Unit -> CP/A drive: TAB_RK_LAUFWERK (mask: unit -> floppy 0..3) then TAB_RK_CPA[floppy]; units 4..7 index
 ; TAB_RK_CPA directly (FFH = no drive; plans 49/51 enter their drives there).
 PLATTE:
+	CALL TASTE_ZWISCHEN	; also before the transfer (the Z8000 has just posted the request and waits)
 	LD A,(IX+14)
 	CP 11H
 	JR C,PL_GROSS
@@ -935,6 +952,7 @@ PL_GUT:
 	AND 80H
 	LD (IX+15),A		; transferred count = requested count in whole records
 	LD (IX+9),01H
+	CALL TASTE_ZWISCHEN
 	JP ENDE_WIEDER
 PL_FEHLER:
 	LD IX,DCB0
@@ -1914,11 +1932,12 @@ QUEUE_TTY2:
 QUEUE_TTY3:
 	DB	04H,04H,00H,00H,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 	FILLFF	28
-; V_TAKT: counter of the timer ticks; the byte after it (UDOS V_BUSY, unused since C3.3) is kept as filler so that
-; segment 4 and the image length (C967H) stay as before
+; V_TAKT: counter of the timer ticks; V_VERLUST (the byte of the UDOS V_BUSY, unused since C3.3, so that segment 4 and
+; the image length C967H stay as before): count of characters dropped by a full ring (QUEUE_PUSH), 0 in normal operation
 V_TAKT:
 	DB	01H
-	DB	0FFH
+V_VERLUST:
+	DB	00H
 SEGC8B6E:
 	REPT	(100H-(($-SEGC8B6) AND 0FFH)) AND 0FFH
 	DB	0FFH

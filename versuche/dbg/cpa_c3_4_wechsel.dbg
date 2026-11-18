@@ -1,0 +1,48 @@
+# Plan 48 C3.4: disk change in operation (rk3 = D: = /mnt).  d0.hfe holds the file `first`, d1.hfe the file `second` (same format).
+# Markers: A (/tmp) holds the files m1..m6 (content MARKn).  Placeholders: @ARBEIT@, @PL_FEHLER@, @B_SELDSK@ (logpoint: SELDSK calls).  Run with --rw on copies.
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+eject A
+mount A @ARBEIT@/tmp.hfe
+eject B
+mount B @ARBEIT@/usr.hfe
+eject C
+mount C @ARBEIT@/root.hfe
+eject D
+mount D @ARBEIT@/d0.hfe
+logpoint @PL_FEHLER@
+logpoint @B_SELDSK@
+keys r
+gscreen "login:" 600000000
+g 3000000
+keys root\r
+gscreen "#" 200000000
+g 3000000
+keys /etc/mount\s/dev/rk0\s/tmp;/etc/mount\s/dev/rk3\s/mnt;ls\s/mnt;cat\s/mnt/first;cat\s/tmp/m1\r
+gscreen "MARK1" 400000000
+g 3000000
+screen
+keys /etc/umount\s/dev/rk3;cat\s/tmp/m2\r
+gscreen "MARK2" 400000000
+g 3000000
+eject D
+mount D @ARBEIT@/d1.hfe
+keys /etc/mount\s/dev/rk3\s/mnt;ls\s/mnt;cat\s/mnt/second;cat\s/tmp/m3\r
+gscreen "MARK3" 400000000
+g 3000000
+screen
+keys /etc/umount\s/dev/rk3;cat\s/tmp/m4\r
+gscreen "MARK4" 400000000
+g 3000000
+eject D
+mount D @ARBEIT@/d0.hfe
+keys /etc/mount\s/dev/rk3\s/mnt;ls\s/mnt;cat\s/mnt/first;cat\s/tmp/m5\r
+gscreen "MARK5" 400000000
+g 3000000
+screen
+keys sync;cat\s/tmp/m6\r
+gscreen "MARK6" 400000000
+g 3000000
+screen
+lpl
+q

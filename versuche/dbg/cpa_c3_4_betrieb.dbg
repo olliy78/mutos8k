@@ -1,0 +1,98 @@
+# Plan 48 C3.4: operation run.  M8KBOOT -> mask (A = empty /tmp, B = /usr, C = root, D = cmd disk) -> r -> login -> "#",
+# ls -l /, files written to /tmp and to the root, control keys, long key sequence under load, sync.
+# The caller (tests/test_plus_cpa_io.py) runs it with --rw on COPIES.  Placeholders:
+#   @ARBEIT@ work folder (tmp.hfe usr.hfe root.hfe d0.hfe = copies; d0 = cmd disk)   @ISR_ANFR@ @B_READ@ @PL_ERG@ @PL_FEHLER@ logpoint addresses
+#   @VERLUST@ address of V_VERLUST (ring overflow counter, must stay 0)
+#   @F1@..@F5@ the five pieces of the 200-character sequence (\s = space)   @STKLEN@ painted stack length
+# After every command a marker (echo MA""RKn: typed text and output differ) is awaited, then the machine runs on a little (prompt).
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+eject A
+mount A @ARBEIT@/tmp.hfe
+eject B
+mount B @ARBEIT@/usr.hfe
+eject C
+mount C @ARBEIT@/root.hfe
+eject D
+mount D @ARBEIT@/d0.hfe
+logpoint @ISR_ANFR@
+logpoint @B_READ@
+logpoint @PL_ERG@
+logpoint @PL_FEHLER@
+mark
+keys r
+gscreen "login:" 600000000
+g 3000000
+keys root\r
+gscreen "#" 200000000
+g 3000000
+screen
+keys /etc/mount\s/dev/rk1\s/usr;/etc/mount\s/dev/rk0\s/tmp;/etc/mount\s/dev/rk3\s/mnt;cd\s/tmp;echo\sMA""RK1\r
+gscreen "MARK1" 400000000
+g 3000000
+keys ls\s-l\s/;echo\sMA""RK2\r
+gscreen "MARK2" 400000000
+g 3000000
+screen
+keys cp\s/mnt/bin/ls\s/tmp/t1;cp\s/usr/lib/libc.a\s/tmp/t2;cp\s/mnt/bin/cat\s/r1;sync;echo\sMA""RK3\r
+gscreen "MARK3" 800000000
+g 3000000
+keys stty;echo\sMA""RK4\r
+gscreen "MARK4" 400000000
+g 3000000
+screen
+# control keys: DEL (7FH) cannot be injected by `keys` (the emulator drops it), so the erase character is set to ^H (BS) first;
+# BS and ^U (kill) inside a line, ^Z (the kernel EOT, kernel/h/tty.h CEOT) ends cat; the files are compared on the host
+keys stty\serase\s'^h';echo\sMA""RK4b\r
+gscreen "MARK4b" 400000000
+g 3000000
+keys cat\s>/tmp/e1\r
+g 6000000
+keys abXY\x08\x08cd\r
+g 6000000
+keys ef12\x15gh\r
+g 6000000
+keys \x1a
+g 6000000
+keys echo\sMA""RK5\r
+gscreen "MARK5" 400000000
+g 3000000
+# ^C and ^\ end a foreground cat; the shell prompt must come back (marker)
+keys cat\r
+g 6000000
+keys \x03
+g 6000000
+keys echo\sMA""RK6\r
+gscreen "MARK6" 400000000
+g 3000000
+keys cat\r
+g 6000000
+keys \x1c
+g 6000000
+keys echo\sMA""RK7\r
+gscreen "MARK7" 400000000
+g 3000000
+screen
+# long key sequence (5 x 40 characters, one line each) while the disk is busy
+keys (ls\s-lR\s/usr\s>/dev/null;for\si\sin\s1\s2\s3\s4\s5\s6\s7\s8\s9\s10\s11\s12\s13\s14\s15\s16;do\scat\s/usr/lib/libc.a\s>/dev/null;done)\s&\r
+g 3000000
+keys cat\s>/tmp/k\r
+g 6000000
+keys @F1@\r
+keys @F2@\r
+keys @F3@\r
+keys @F4@\r
+keys @F5@\r
+keys \x1a
+g 6000000
+keys wait;echo\sMA""RK8\r
+gscreen "MARK8" 1500000000
+g 3000000
+keys sync;echo\sMA""RK9\r
+gscreen "MARK9" 400000000
+g 3000000
+screen
+d @VERLUST@ 1
+save @ARBEIT@/stack_end.bin 0xB936 @STKLEN@
+lpl
+q
