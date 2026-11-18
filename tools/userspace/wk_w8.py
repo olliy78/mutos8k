@@ -86,6 +86,10 @@ def vergleich(a, b):
                 x.name == y.name and x.typ == y.typ and (x.wert == y.wert or x.name.startswith(b"~") or x.basistyp == 0x1E)
                 for x, y in zip(oa.syms, ob.syms)):
             return "E1"     # only the value of `~f` symbols / section symbols differs (see doc)
+        def gest(q):    # relocation kinds with the names of externals (symbol numbering is irrelevant)
+            return [[(off, r.art, q.syms[r.sym].name if r.art == O.R_EXT else None) for off, r in q.relocs(k)] for k in ("text", "data")]
+        if gest(oa) == gest(ob):
+            return "A1"     # text, data, bss and relocation words equal; the symbol table (order, local labels) differs
         t.append("relocations/symbols differ")
     return "; ".join(t)
 
@@ -249,6 +253,89 @@ def umbenennen(name, text, gebaut):
     return "\n".join(out).encode("latin-1")
 
 
+def wv_quelle(name):
+    """as source of a shipped member whose text is written as data words (`WV`) -- for members with instructions the guest tool
+    chain cannot produce (EPA/floating point codegen) or no decoder knows.  Externals, exported/local text labels, data and bss
+    labels come from the shipped symbol table; relocated words become symbol expressions."""
+    o = O.Objekt.lesen(schiff(name))
+    w = open(os.path.join(LIBC, "write.s"), encoding="latin-1").read()
+    hdr = w[:w.index("G\t_write")].replace("X\tcerror\tPR;\n", "").replace("write_ module", name + "_ module")
+    hdr = hdr.split("\n", 1)[1] if hdr.startswith("!") else hdr
+    note = "! RECONSTRUCTED (W8): text and data of the shipped libc.a member as data words (no source with these instructions), labels from its symbol table !\n"
+    nt, nd = len(o.text), len(o.data)
+    ext = [x for x in o.syms if x.basistyp == O.N_UNDF]
+    names = {}      # (kind, address) -> [names]
+    for x in o.syms:
+        k = {O.N_TEXT: "t", O.N_DATA: "d", O.N_BSS: "b"}.get(x.basistyp)
+        if k and not x.name.startswith(b"~") and not re.match(rb"L\d+$", x.name):
+            names.setdefault((k, x.wert - (nt if k == "d" else nt + nd if k == "b" else 0)), []).append((x.name.decode(), x.ext))
+    rt, rd = dict(o.relocs("text")), dict(o.relocs("data"))
+    gen = set()
+
+    def ref(kind, addr):
+        if (kind, addr) not in names:
+            names[(kind, addr)] = [("%s%X" % (kind.upper(), addr), False)]
+            gen.add((kind, addr))
+        return names[(kind, addr)][0][0]
+
+    def word(w, r, base):
+        if r is None:
+            return "WV\t%%%X" % w
+        if r.art == O.R_EXT:
+            return "WV\t" + o.syms[r.sym].name.decode() + ("+%%%X" % w if w else "")
+        k, a = ("t", w) if r.art == O.R_TEXT else ("d", w) if r.art == O.R_DATA else ("b", w)
+        if k == "d":
+            a -= nt
+        elif k == "b":
+            a -= nt + nd
+        return "WV\t" + ref(k, a)
+
+    code = []
+    for i in range(0, nt, 2):
+        r = rt.get(i)
+        code.append((i, word(int.from_bytes(o.text[i:i + 2], "big"), r, 0)))
+    data = []
+    for i in range(0, nd, 2):
+        data.append((i, word(int.from_bytes(o.data[i:i + 2], "big"), rd.get(i), 0)))
+    exports = [(a, n) for (k, a), L in sorted(names.items()) if k == "t" for n, e in L if e]
+    first = min(exports)[1] if exports else name
+    out = [note + hdr.replace(name + "_ module", name + "_ module")]
+    out = [out[0].replace("\n$NONSEGMENTED", "\n$NONSEGMENTED", 1)]
+    t = "".join("X\t%s\t%s\n" % (x.name.decode(), "A[%%%X B]" % x.wert if x.wert else "PR;") for x in ext)
+    t += "".join("G\t%s\tL\n" % n for a, n in sorted(exports) if n != first)
+    t += "G\t%s\tPR\nE\n" % first
+    for a, wv in code:
+        for n, e in names.get(("t", a), []):
+            t += n + ":\n"
+        t += "\t" + wv + "\n"
+    for n, e in names.get(("t", nt), []):
+        t += n + ":\n"
+    t += "end %s\n" % first
+    dsec = ""
+    if nd:
+        dsec += "I\n"
+        for a, wv in data:
+            for n, e in names.get(("d", a), []):
+                dsec += ("G\n%s\tL\n" % n if e else "") + n + ":\n" + ("I\n" if e else "")
+            dsec += wv + "\n"
+    bsec = ""
+    if o.bss:
+        bsec += "$SECTION BSS_B\nI\n"
+        pos = 0
+        for (k, a), L in sorted(names.items()):
+            if k != "b":
+                continue
+            if a > pos:
+                bsec += "$REL\t$+%%%X\n" % (a - pos)
+                pos = a
+            for n, e in L:
+                bsec += ("G\n%s\tL\n" % n if e else "") + n + ":\n" + ("I\n" if e else "")
+        if o.bss > pos:
+            bsec += "$REL\t$+%%%X\n" % (o.bss - pos)
+        bsec += "$SDEFAULT\n"
+    return (out[0] + t + dsec + bsec + "end %s_\n" % name).encode("latin-1")
+
+
 def stapel(namen, art, grenze=110_000):
     """split the names into guest runs whose sources fit on the source disk"""
     gr, cur, size = [], [], 0
@@ -273,12 +360,12 @@ def bauen(namen, art):
         if ob:
             open(os.path.join(WORK, "bau", n + ".o"), "wb").write(ob)
         res = "NO OBJECT" if not ob else vergleich(ob, schiff(n.split("__")[0]))
-        print("%-9s %-4s %s%s" % (n, res if res in ("G", "E1") else "-", res if res not in ("G", "E1") else "", ("  cc: " + err[:150].replace("\n", " | ")) if err else ""))
+        print("%-9s %-4s %s%s" % (n, res if res in ("G", "E1", "A1") else "-", res if res not in ("G", "E1", "A1") else "", ("  cc: " + err[:150].replace("\n", " | ")) if err else ""))
     return 0
 
 
 def main(argv):
-    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau", "hbau", "rbau"):
+    if not argv or argv[0] not in ("holen", "cbau", "sbau", "archiv", "diff", "ssau", "mbau", "abau", "hbau", "rbau", "wbau"):
         print(__doc__)
         return 2
     try:
@@ -311,6 +398,10 @@ def main(argv):
                 open(os.path.join(WORK, "var", v + ".s"), "wb").write(umbenennen(n, t, g))
                 vs.append(v)
             return bauen(vs, "s")
+        elif argv[0] == "wbau":      # members as data-word sources -> userspace/libc/NAME.s -> guest as -> compare
+            for n in argv[1:]:
+                open(os.path.join(LIBC, n + ".s"), "wb").write(wv_quelle(n))
+            return bauen(argv[1:], "s")
         elif argv[0] == "abau":      # libc_alt .s variants of the given members -> guest as -> compare
             return bauen(asm_varianten(argv[1:]), "s")
         elif argv[0] == "ssau":
