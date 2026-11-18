@@ -83,8 +83,9 @@ def vergleich(a, b):
         t.append("bss %d/%d" % (oa.bss, ob.bss))
     if not t:
         if oa.rtext == ob.rtext and oa.rdata == ob.rdata and len(oa.syms) == len(ob.syms) and all(
-                x.name == y.name and x.typ == y.typ and (x.wert == y.wert or x.name.startswith(b"~")) for x, y in zip(oa.syms, ob.syms)):
-            return "E1"     # only the value of `~f` symbols differs (see doc)
+                x.name == y.name and x.typ == y.typ and (x.wert == y.wert or x.name.startswith(b"~") or x.basistyp == 0x1E)
+                for x, y in zip(oa.syms, ob.syms)):
+            return "E1"     # only the value of `~f` symbols / section symbols differs (see doc)
         t.append("relocations/symbols differ")
     return "; ".join(t)
 
@@ -229,6 +230,22 @@ def umbenennen(name, text, gebaut):
         else:
             l = re.sub(r"\b([LBD][0-9A-F]{3,4})\b", lambda k: ren.get("#" + k[1]) or (ren[k[1]] if ren.get(k[1]) else k[1]), l)
         out.append(l)
+    # shipped text labels the source does not define yet (the generated source only labels jump targets; the shipped one also
+    # carries named entry points that open a new scope for the generic labels $n): insert them in front of the instruction
+    defd = {l.split(":")[0].strip() for l in out if re.match(r"\s*[^\s;]+:\s*$", l)}
+    fehl = {w: nm for (bt, w), nm in soll.items() if bt == O.N_TEXT and nm not in defd}
+    if fehl:
+        import tempfile
+        adr = [a for a, _m in befehle(ob, tempfile.mkdtemp())]
+        k0 = next(i for i, l in enumerate(out) if l == "E") + 1
+        ins = [i for i in range(k0, len(out)) if re.match(r"\t[a-z]", out[i])]
+        if len(ins) != len(adr):
+            print("%s: %d instruction lines, %d listed instructions: labels %s not inserted" % (name, len(ins), len(adr), sorted(fehl.values())))
+        else:
+            ad2line = dict(zip(adr, ins))
+            for w in sorted(fehl, key=lambda w: -ad2line.get(w, -1)):
+                if w in ad2line:
+                    out.insert(ad2line[w], fehl[w] + ":")
     return "\n".join(out).encode("latin-1")
 
 
