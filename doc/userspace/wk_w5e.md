@@ -144,3 +144,20 @@ Befehlszaehler ueber alle Module, c1-Ausgabe (s0) -> echter c2 (s) -> Modell:
 `xor` 360 -> 457, `xorb` 1168 -> 1041 (Modell 1003), `djnz` 0 -> 9 (Modell 8), `exts` 214 -> 208.  Was das Modell nicht anfasst, steht im Original genauso (bytegleiche
 Programme): dort tun der echte c2 und der c2 der Platte dasselbe.  Einen Befund, den keine Regel modelliert und der dem Original widerspraeche, gibt es nicht: waere
 er vorhanden, waere das Modell-Bau nicht bytegleich.  Dass R1/R4/R5/R7 Spuren eines aelteren `rmove` sind, ist *Annahme*.
+
+## Ziel 2: Blocklage von toofar/ilen/adrlen/equop/findrand/compare/addsob (Stand: nicht geloest)
+Werkzeug `tools/userspace/c2layout.py`: einzelne Funktion (plus `c2.h`) im Gast durch `cpp c0 c1` und den c2 (ca. 1 min fuer 3 Kandidaten statt 6 min Gesamtbau) und Vergleich
+mit dem Original-Listing als Skelett (Mnemonik, Bedingung, Sprungziel als Befehlsindex; Operanden nicht).  Es reproduziert den bekannten Stand: adrlen Original 35 Befehle,
+unsere Quelle 36, 30 Abweichungen.
+Gemessen (c1-Ausgabe `c21.s0` gegen echte c2-Ausgabe `c21.s` gegen Original):
+* **adrlen**: Original hat den ersten `xor r2,r2 ; jr ende`-Block (`return(0)`) **oben**, direkt hinter dem ersten `testb`; alle weiteren `return(0)` springen dorthin.  Der echte c2
+  erzeugt aus unserer Quelle den umgekehrten Fall: der **letzte** Block bleibt, der erste Test springt zu ihm.  Die c1-Ausgabe hat fuer alle `return(0)` je `xor r2,r2 ; jp L256`
+  mit `L256: jp cret` direkt dahinter; im Ergebnis des echten c2 ist `jp cret` per `codemove` hinter den letzten `xor` gewandert (`L256` steht dort, `ldk r2,#2 ; jr L256` danach).
+  Im Original steht `jp cret` am Ende, `ldk r2,#2` faellt hinein: dort hat `codemove` diesen Block nicht verschoben.
+* **toofar**: Original behaelt den `ldk r2,#1 ; jr ende`-Block der `flag`-Rueckgabe vorn (spaeterer Block `jge` dorthin), der echte c2 behaelt den hinteren.
+  Gleiche Art: bei zwei gleichen Rueckgabeblaecken bleibt im Original der **erste**, im c2 aus unserer Quelle der **zweite**.
+* ilen: Skelett gleich (nur der Zielname `@r1` des Tabellensprungs unterscheidet sich im Werkzeug); die Differenz liegt in Operanden/Tabellen, nicht in der Blocklage.
+Quellvarianten fuer adrlen (3, alle im Gast gemessen): `if`-Kette wie jetzt; Einzelvariable `n` mit `else if` (33 Befehle); verschachteltes `if` -- **keine** nahm die Lage des Originals an.
+Folgerung (*Annahme*, nicht bewiesen): das Muster "erster gleicher Block bleibt, `jp cret` wird nicht verschoben" ist keine Quelltextform, sondern ein Verhalten von
+`backjmp`/`codemove` des c2-Standes, der den c2 gebaut hat (derselbe aeltere Stand, den R1/R2/R4/R30 fuer `c2` zeigen; der ausgelieferte c2 mit seinem V7-`codemove` kehrt die Reihenfolge
+um).  Ein Gastbau mit geaendertem `codemove` im c2-Quelltext waere der Beleg; nicht ausgefuehrt.  Keine neue Regel (R170-R199 unbenutzt), die tote `JR` bei 2324 ungeklaert.
