@@ -111,6 +111,11 @@ und Teile von `c1`; ihre Restbloecke (Blockanordnung, `JR`/`JP`, fehlende `BIT`-
    gebaut, muss dafuer nur richtig arbeiten, nicht bytegleich sein).  Kernelregeln K1-K6 einbeziehen.
 6. Abnahme W9 (Selbsthosting) mit beiden Ketten: Original-Kette fuer alles, was sie bytegleich baut; angepasste Kette fuer den Rest.
 
+*Stand 2026-11-18:* Schritt 1 erledigt (`wk_w10a.md`, `tools/userspace/c2gruppen.py`): **keine** einzelne Kette aelterer Staende (24 widerspruechliche Regelpaare), sondern
+weitgehend unabhaengige Schalter; Vorschlag 9 Gruppen (`-xpush` R1, `-xcmpmem` R4 -- zusammen rund 400 der 774 Stellen --, `-xhzero`, `-xcopyprop`, `-xtestmem`, `-xexts`,
+`-xjrange` mit Blockanordnung, `-xsh`, `-xdjnz`) plus Rest; 80 von 94 Regeln greifen in genau einem Programm, Ueberanpassungskandidaten benannt.
+Vor Schritt 2: pruefen, dass unsere `c2`-Quelle (W5, 98 % befehlsgleich) als Optimierer **funktional** gleich dem ausgelieferten arbeitet (gleiche `.s` fuer alle Module).
+
 **Ablage:** Quellen der angepassten Kette im Repository auf `main` (sie sind Werkzeug der Rekonstruktion, aendern kein Original); Abweichungen gegen die bytegleiche
 Quelle je Stelle kommentiert.  Installation im Gast unter eigenen Namen auf einer eigenen Platte oder neben den Originalen -- die Originaldateien bleiben unangetastet.
 
