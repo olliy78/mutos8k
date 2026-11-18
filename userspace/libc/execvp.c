@@ -20,10 +20,10 @@ char *name, **argv;
 {
 	/* Differs from V7: pathstr and i are register variables (R10, R9), declaration order cp etxtbsy eacces pathstr i */
 	register char *cp;
+	char fname[128];
 	register unsigned etxtbsy = 1;
 	register eacces = 0;
 	register char *pathstr;
-	char fname[128];
 	char *newargs[256];
 	register int i;
 

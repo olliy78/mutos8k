@@ -336,6 +336,31 @@ def wv_quelle(name):
     return (out[0] + t + dsec + bsec + "end %s_\n" % name).encode("latin-1")
 
 
+def archiv(blau=None):
+    """Archive in the shipped member order with the shipped headers (date, uid, gid, mode), member data = our objects from work/bau
+    (NAME.o) -- the guard `shipped members -> archive == libc.a` shows that order, headers and padding are reproduced."""
+    soll = open(os.path.join(WORK, "libc.a"), "rb").read()
+    ar = O.Archiv.lesen(soll)
+    probe = O.Archiv([O.Mitglied(m.name, m.datum, m.uid, m.gid, m.mode, m.daten, m.pad) for m in ar.mitglieder]).schreiben()
+    print("structure guard (shipped members): %s" % ("identical" if probe == soll else "DIFFERENT"))
+    neu, stat = [], {}
+    for m in ar.mitglieder:
+        n = m.name.decode()[:-2]
+        p = os.path.join(WORK, "bau", n + ".o")
+        d = open(p, "rb").read() if os.path.isfile(p) else None
+        stat[n] = "missing" if d is None else "G" if d == m.daten else "diff"
+        neu.append(O.Mitglied(m.name, m.datum, m.uid, m.gid, m.mode, d if d is not None else m.daten, m.pad if d is None or len(d) == len(m.daten) else (b"\0" if len(d) & 1 else b"")))
+    b = O.Archiv(neu).schreiben()
+    open(os.path.join(WORK, "libc_w8.a"), "wb").write(b)
+    n = sum(1 for v in stat.values() if v == "G")
+    print("archive from our objects: %d B (shipped %d B), %d of %d members identical, archive %s" % (
+        len(b), len(soll), n, len(stat), "IDENTICAL" if b == soll else "differs"))
+    for k, v in stat.items():
+        if v != "G":
+            print("  not identical: %s (%s)" % (k, v))
+    return 0 if b == soll else 1
+
+
 def stapel(namen, art, grenze=110_000):
     """split the names into guest runs whose sources fit on the source disk"""
     gr, cur, size = [], [], 0
@@ -409,6 +434,8 @@ def main(argv):
             for n in argv[1:]:
                 open(os.path.join(WORK, "bau", n + ".s"), "w").write((erg[n][1] or b"").decode("latin-1")) if os.makedirs(os.path.join(WORK, "bau"), exist_ok=True) is None else None
             print({n: erg[n][0] for n in argv[1:]})
+        elif argv[0] == "archiv":
+            return archiv()
         elif argv[0] == "diff":
             diffen(argv[1])
         elif argv[0] in ("cbau", "sbau"):

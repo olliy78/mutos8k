@@ -11,8 +11,8 @@ char *prompt;
 	register char *p;
 	register c;
 	register FILE *fi;
-	register flags;
 	static char pbuf[9];
+	register flags;
 	int (*signal())();
 	register int (*sig)();
 

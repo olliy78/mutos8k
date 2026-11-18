@@ -3,9 +3,9 @@
 system(s)
 char *s;
 {
-	int status;
+	/* Differs from V7: pid and w are register variables too (R11, R10); declaration order as in the shipped debug symbols */
 	register int (*istat)(), (*qstat)();
-	/* Differs from V7: pid and w are register variables too (R11, R10) */
+	int status;
 	register int pid, w;
 
 	if ((pid = fork()) == 0) {
