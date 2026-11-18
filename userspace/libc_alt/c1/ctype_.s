@@ -1,4 +1,4 @@
-ctype_ module
+ctype__ module
 $NONSEGMENTED
 constant
 	FP	:= r14
@@ -17,8 +17,8 @@ constant
 	L	:= label
 I
 G
-__ctype_	L
-__ctype_:
+__ctype	L
+__ctype:
 BV %0;BV %20;BV %20;BV %20;BV %20;BV %20;BV %20;BV %20
 BV %20;BV %20;BV %8;BV %8;BV %8;BV %8;BV %8;BV %20
 BV %20;BV %20;BV %20;BV %20;BV %20;BV %20;BV %20;BV %20
@@ -36,4 +36,4 @@ BV %2;BV %2;BV %2;BV %2;BV %2;BV %2;BV %2;BV %2
 BV %2;BV %2;BV %2;BV %2;BV %2;BV %2;BV %2;BV %2
 BV %2;BV %2;BV %2;BV %2;BV %10;BV %10;BV %10;BV %10
 BV %20;BV %0
-end ctype_
+end ctype__
