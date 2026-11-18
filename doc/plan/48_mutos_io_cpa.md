@@ -607,7 +607,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C3.1 | `mutos_io/cpa/src/mutoscpa.mac`, `tests/test_plus_cpa_io.py`, `doc/plus/cpa/c3_1_namen.md` | -- | 1-2 h | erledigt | 2026-11-18 | cca1059 |
 | C2.4 | `tools/plus/cpa_disk.py`, `tests/test_plus_cpa_disk.py`, `doc/plus/cpa/c2_4_bootdiskette.md`, `doc/plus/abweichungen.md` | Sekunden | 2 h | erledigt | 2026-11-18 | 1101041 |
 | C3.2 | `mutos_io/cpa/{src/mutoscpa.mac,mutoscpa.bin}`, `tests/test_plus_cpa_io.py`, `versuche/dbg/cpa_c3_2_*`, `doc/plus/cpa/c3_2_start.md` | Minuten | 4-6 h | erledigt | 2026-11-18 | d6acddf |
-| C3.3 | wie C3.2, `doc/plus/cpa/c3_3_platte.md` | Minuten | 4-6 h | offen | | |
+| C3.3 | wie C3.2, `doc/plus/cpa/c3_3_platte.md` | Minuten | 4-6 h | erledigt | 2026-11-18 | b864f84 |
 | C3.4 | wie C3.2, `doc/plus/cpa/c3_4_tastatur.md`, `doc/plus/abweichungen.md` | Minuten | 3-5 h | offen | | |
 | C4.1 | wie C3.2, `versuche/plus_cpa/lsttest.mac`, `doc/plus/cpa/c4_1_drucker.md`, `doc/plus/abweichungen.md` | Minuten | 3 h | offen | | |
 | C5.1 | `tools/plus/cpa_lauf.py`, `tests/test_plus_cpa_lauf.py`, `doc/plus/cpa/c5_1_gastlauf.md` | ~10 Min. | 3 h | offen | | |
