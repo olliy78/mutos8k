@@ -1,0 +1,374 @@
+; ==========================================================================
+; m8kboot - CP/A loader for MUTOS 8000 (plan 48 C2.3, branch mutos-plus)
+; ==========================================================================
+; Replaces the UDOS chain ACTIVATE / LOAD16 / mutos_io start by one CP/A command:
+;   M8KBOOT      load MUTOS.SYS into the EM (segment 0, from 0000H), load MUTOSIO.IMG to
+;                9000H and jump there.  The U8001 stays in reset; mutoscpa starts it.
+;   M8KBOOT K    kernel only: load MUTOS.SYS, then do what mutos_io INIT does (A22, PIO),
+;                count INT-16 interrupts at ICOUNT and release the U8001 (OUT (0A9H),2CH).
+; Files (CP/M 8.3, current drive):  MUTOS.SYS = kernel image without UDOS header (36352 B),
+;   MUTOSIO.IMG = memory image 9000H.. of mutoscpa (mutos_io/cpa/build.py abbild).
+; Memory (plan 48 section 9.0): code and stack 0100H..0FFFH, kernel read buffer 1000H..1FFFH,
+;   image buffer from 8000H (at most up to BBFFH), EM window = Z80 4000H..7FFFH (A22 pages
+;   4..7, as SEITE_ABBILDEN of mutos_io; one 4 KB page is used per piece).
+; Order as LOAD16 (doc/mutos_io/udos_lader.md 1.3/1.4): A22 pages disabled (0FH), PIO A32
+;   programmed, per 4 KB piece: A22 page, DI, OUT (0A9H),38H (EM RAM on, U8001 in reset),
+;   wait for PIO A bit 6 (8-bit mode), LDIR, OUT (0A9H),3CH, EI.  The copy loop and the
+;   stack lie outside the window (the TPA is not touched by the window mapping).
+; All BDOS calls come first; only after the last one the BDOS is overwritten (LDDR).
+; Errors before that print a text through BDOS 9 and end with a warm boot.
+	.Z80
+	CSEG
+BDOS	EQU	5
+FCB	EQU	5CH		; (not used: own FCBs below, the command tail must stay intact)
+TAIL	EQU	80H		; command line: length byte, then the text
+BUF	EQU	1000H		; kernel read buffer (4 KB)
+IMGBUF	EQU	8000H		; image buffer
+IMGMAX	EQU	120		; records (128 B) of the image buffer: 8000H..BBFFH
+RECSIZ	EQU	128
+KRECS	EQU	512		; kernel limit 64 KB = 512 records
+STACK	EQU	0FF0H
+ICOUNT	EQU	0FFEH		; K mode: INT-16 counter (word), listed in doc/plus/cpa/c2_3_lader.md
+INTVEC	EQU	0F700H		; CP/A interrupt table page (I = F7H)
+PIOADA	EQU	0A8H
+PIOBDA	EQU	0A9H
+PIOACT	EQU	0AAH
+PIOBCT	EQU	0ABH
+A22PRT	EQU	0AFH
+
+START:	LD	A,(0001H)	; BIOS start = WBOOT - 3, read before any BDOS call
+	LD	L,A		; (the BIOS overwrites 0001H/0002H during floppy transfers)
+	LD	A,(0002H)
+	LD	H,A
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	LD	(BIOSLO),HL
+	XOR	A
+	LD	(MODEK),A
+	LD	A,(TAIL)	; command tail: any 'K' selects kernel-only mode
+	LD	B,A
+	LD	HL,TAIL+1
+TAILLP:	LD	A,B
+	OR	A
+	JR	Z,TAILEN
+	LD	A,(HL)
+	AND	5FH		; upper case
+	CP	'K'
+	JR	NZ,TAILNX
+	LD	(MODEK),A	; nonzero = kernel only
+TAILNX:	INC	HL
+	DEC	B
+	JR	TAILLP
+TAILEN:	LD	SP,STACK
+	CALL	EMINIT
+	JP	C,NOEM
+; --- kernel: MUTOS.SYS in 4 KB pieces into EM segment 0 from 0000H ---------------------
+	LD	DE,N_SYS
+	CALL	OPENF
+	JP	Z,NOSYS
+	LD	HL,0
+	LD	(EMADR),HL
+	LD	(KRTOT),HL
+KPIECE:	LD	HL,BUF
+	LD	B,32		; up to 32 records (4 KB) per piece
+	CALL	RDRECS		; B = records read, carry = error
+	JP	C,RERR
+	LD	A,B
+	OR	A
+	JR	Z,KDONE		; end of file, nothing left
+	LD	C,A		; C = records of this piece
+	LD	HL,(KRTOT)
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	LD	(KRTOT),HL
+	LD	DE,KRECS+1	; more than 512 records = more than 64 KB
+	OR	A
+	SBC	HL,DE
+	JP	NC,BIGSYS
+	PUSH	BC
+	CALL	COPYEM		; C records at BUF -> EM address EMADR
+	POP	BC
+	JP	C,NOEM
+	LD	HL,(EMADR)
+	LD	DE,1000H
+	ADD	HL,DE
+	LD	(EMADR),HL
+	LD	A,C
+	CP	32
+	JR	Z,KPIECE	; full piece: more may follow
+KDONE:	LD	HL,(KRTOT)
+	LD	A,H
+	OR	L
+	JP	Z,BIGSYS	; empty file
+	CALL	EMOFF		; A22 pages 0FH again (the window 4000H-7FFFH is plain RAM)
+	LD	A,(MODEK)
+	OR	A
+	JP	NZ,KMODE
+; --- full operation: MUTOSIO.IMG to 8000H, check position, move to 9000H, start --------
+	LD	DE,N_IMG
+	CALL	OPENF
+	JP	Z,NOIMG
+	LD	HL,IMGBUF
+	LD	B,IMGMAX
+	CALL	RDRECS
+	JP	C,RERR
+	LD	A,B
+	OR	A
+	JP	Z,NOIMG		; empty
+	CP	IMGMAX
+	JR	NZ,IMGEOF
+	PUSH	BC		; buffer full: the file must end here
+	LD	HL,IMGBUF+IMGMAX*RECSIZ
+	LD	B,1
+	CALL	RDRECS
+	LD	A,B
+	POP	BC
+	JP	C,RERR
+	OR	A
+	JP	NZ,BIGIMG
+IMGEOF:	LD	H,B		; length = B * 128 (B <= 120): HL = B * 256 / 2
+	LD	L,0
+	SRL	H
+	RR	L
+	PUSH	HL
+	LD	DE,9000H
+	ADD	HL,DE		; end = 9000H + length (exclusive)
+	LD	DE,(BIOSLO)
+	OR	A
+	SBC	HL,DE		; end - BIOS start
+	JR	C,POSOK
+	JR	Z,POSOK		; end == BIOS start still fits
+	POP	HL
+	JP	OVERBI
+POSOK:	POP	BC		; BC = length
+	LD	HL,IMGBUF-1
+	ADD	HL,BC		; HL = source end - 1
+	LD	DE,9000H-1
+	EX	DE,HL
+	ADD	HL,BC		; HL = destination end - 1
+	EX	DE,HL
+	DI			; last BDOS call is done: from here on the BDOS may be overwritten
+	LDDR			; overlapping move, descending
+	JP	9000H
+; --- K mode: INT-16 counter ISR, release the U8001 --------------------------------------
+KMODE:	LD	A,I
+	CP	INTVEC/256
+	JP	NZ,BADI
+	LD	HL,0
+	LD	(ICOUNT),HL
+	LD	HL,ISRCNT
+	LD	(INTVEC+0EAH),HL	; PIO A32 port A vector EAH (INT-16)
+	LD	DE,T_KRUN
+	LD	C,9
+	CALL	BDOS
+	DI
+	LD	A,2CH		; RESET16 := 0: the U8001 starts (FCW/PC from EM 0002H..0007H)
+	OUT	(PIOBDA),A
+	EI
+HALTLP:	JR	HALTLP
+; --- ISRCNT: count INT-16 (first mailbox request of the kernel) ---------------------------
+ISRCNT:	PUSH	AF
+	PUSH	HL
+	LD	HL,(ICOUNT)
+	INC	HL
+	LD	(ICOUNT),HL
+	POP	HL
+	POP	AF
+	EI
+	RETI
+; --- errors (BDOS still intact: warm boot) --------------------------------------------------
+NOEM:	LD	DE,T_NOEM
+	JR	FAIL
+NOSYS:	LD	DE,T_NOSY
+	JR	FAIL
+BIGSYS:	LD	DE,T_BIGS
+	JR	FAIL
+NOIMG:	LD	DE,T_NOIM
+	JR	FAIL
+BIGIMG:	LD	DE,T_BIGI
+	JR	FAIL
+OVERBI:	LD	DE,T_OVER
+	JR	FAIL
+RERR:	LD	DE,T_RERR
+	JR	FAIL
+BADI:	LD	DE,T_BADI
+FAIL:	LD	C,9
+	CALL	BDOS
+	CALL	EMOFF
+	JP	0
+; --- OPENF: DE = file name (11 bytes); open through a fresh FCB; Z = not found ----------------
+OPENF:	LD	HL,FCBBUF
+	LD	(HL),0		; current drive
+	INC	HL
+	EX	DE,HL
+	LD	BC,11
+	LDIR			; name; DE = FCBBUF+12
+	LD	H,D
+	LD	L,E
+	LD	B,24		; extent .. current record := 0
+OPCLR:	LD	(HL),0
+	INC	HL
+	DJNZ	OPCLR
+	LD	DE,FCBBUF
+	LD	C,15		; open file
+	CALL	BDOS
+	INC	A		; FFH (not found) -> 0 -> Z
+	RET
+; --- RDRECS: read up to B records (BDOS 20) to HL.. ; B = records read, carry = error ---------
+RDRECS:	LD	D,B
+	LD	B,0
+RDLP:	LD	A,B
+	CP	D
+	JR	Z,RDOK
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	EX	DE,HL		; DE = DMA address
+	LD	C,26		; set DMA
+	CALL	BDOS
+	LD	DE,FCBBUF
+	LD	C,20		; read sequential
+	CALL	BDOS
+	POP	HL
+	POP	DE
+	POP	BC
+	OR	A
+	JR	Z,RDGOT
+	CP	1		; 1 = end of file
+	JR	Z,RDOK
+	SCF			; anything else: error
+	RET
+RDGOT:	PUSH	DE		; D = record limit
+	LD	DE,RECSIZ
+	ADD	HL,DE
+	POP	DE
+	INC	B
+	JR	RDLP
+RDOK:	OR	A
+	RET
+; --- COPYEM: C records at BUF -> EM address (EMADR) through the window; carry = timeout --------
+COPYEM:	LD	H,C		; BC = C * 128 (C <= 32)
+	LD	L,0
+	SRL	H
+	RR	L
+	PUSH	HL
+	LD	HL,(EMADR)
+	LD	A,H		; A22 page (Z80 address bits 15..12 = 4..7) from EM address bits 13/12
+	AND	30H
+	OR	40H
+	LD	B,A
+	LD	C,A22PRT
+	LD	A,H		; attribute: EM address bits 15/14, negated, into bits 3/2
+	CPL
+	AND	0C0H
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	OUT	(C),A		; PEN/WE bits 1/0 = 0 (active)
+	LD	A,H
+	AND	3FH
+	OR	40H
+	LD	D,A		; DE = window address (EM address low 14 bits + 4000H)
+	LD	E,L
+	POP	BC		; BC = byte count
+	LD	HL,BUF
+	DI
+	LD	A,38H		; EM RAM on, U8001 in reset
+	OUT	(PIOBDA),A
+	CALL	WAIT8
+	JR	C,CPFAIL
+	LDIR
+	LD	A,3CH		; EM RAM off again
+	OUT	(PIOBDA),A
+	EI
+	OR	A
+	RET
+CPFAIL:	LD	A,3CH
+	OUT	(PIOBDA),A
+	EI
+	SCF
+	RET
+; --- WAIT8: wait for PIO A bit 6 (8-bit mode); carry = timeout (no EM card) -----------------------
+WAIT8:	PUSH	BC
+	LD	BC,0		; 65536 rounds
+W8LP:	IN	A,(PIOADA)
+	BIT	6,A
+	JR	NZ,W8OK
+	DEC	BC
+	LD	A,B
+	OR	C
+	JR	NZ,W8LP
+	POP	BC
+	SCF
+	RET
+W8OK:	POP	BC
+	OR	A
+	RET
+; --- EMOFF / EMINIT: A22 pages 0FH (disabled); EMINIT also PIO A32 and the EM presence test -----
+EMOFF:	LD	E,10H
+	LD	BC,00AFH
+EMOFL:	LD	A,0FH
+	OUT	(C),A
+	LD	A,10H
+	ADD	A,B
+	LD	B,A
+	DEC	E
+	JR	NZ,EMOFL
+	RET
+EMINIT:	CALL	EMOFF
+	LD	C,PIOACT
+	LD	B,05H
+	LD	HL,TABPIA
+	OTIR
+	LD	C,PIOBCT
+	LD	B,05H
+	LD	HL,TABPIB
+	OTIR
+	LD	A,38H		; mode change: without an EM card bit 6 never shows up
+	OUT	(PIOBDA),A
+	IN	A,(PIOBDA)	; read-back of the output bits 0..6 (bit 7 = /PE input): an empty bus gives FFH
+	AND	7FH
+	CP	38H
+	JR	Z,EMPRES
+	LD	A,3CH
+	OUT	(PIOBDA),A
+	SCF
+	RET
+EMPRES:	CALL	WAIT8
+	PUSH	AF
+	LD	A,3CH
+	OUT	(PIOBDA),A
+	POP	AF
+	RET
+TABPIA:	DEFB	0EAH,0CFH,0FFH,0B7H,0EFH	; as TAB_PIO_A of mutos_io
+TABPIB:	DEFB	0ECH,0CFH,80H,97H,7FH		; as TAB_PIO_B
+; --- data ----------------------------------------------------------------------------------------
+N_SYS:	DEFM	'MUTOS   SYS'
+N_IMG:	DEFM	'MUTOSIO IMG'
+T_NOEM:	DEFM	'M8KBOOT: NO EM'
+	DEFB	13,10,'$'
+T_NOSY:	DEFM	'M8KBOOT: MUTOS.SYS NOT FOUND'
+	DEFB	13,10,'$'
+T_BIGS:	DEFM	'M8KBOOT: MUTOS.SYS EMPTY OR OVER 64 KB'
+	DEFB	13,10,'$'
+T_NOIM:	DEFM	'M8KBOOT: MUTOSIO.IMG MISSING OR EMPTY'
+	DEFB	13,10,'$'
+T_BIGI:	DEFM	'M8KBOOT: MUTOSIO.IMG TOO BIG'
+	DEFB	13,10,'$'
+T_OVER:	DEFM	'M8KBOOT: MUTOSIO.IMG REACHES INTO THE BIOS'
+	DEFB	13,10,'$'
+T_RERR:	DEFM	'M8KBOOT: READ ERROR'
+	DEFB	13,10,'$'
+T_BADI:	DEFM	'M8KBOOT: I REGISTER IS NOT F7H'
+	DEFB	13,10,'$'
+T_KRUN:	DEFM	'M8KBOOT: KERNEL LOADED, U8001 STARTED'
+	DEFB	13,10,'$'
+BIOSLO:	DEFW	0		; BIOS start (WBOOT - 3)
+EMADR:	DEFW	0		; EM address of the next kernel piece
+KRTOT:	DEFW	0		; kernel records read so far
+MODEK:	DEFB	0		; nonzero = M8KBOOT K
+FCBBUF:	DEFS	36
+	END	START

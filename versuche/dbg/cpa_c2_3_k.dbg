@@ -1,0 +1,24 @@
+# Plan 48 C2.3: "M8KBOOT K" under CP/A (kernel only, U8001 started by the loader).
+# Run after the boot to "A>" (tests/test_plus_cpa_lader.py generates the real script from this file):
+#   @ARBEIT@  = work folder          @RELEASE@ = address of "LD A,2CH" in m8kboot.com (release of RESET16)
+# ICOUNT (INT-16 counter, word) is at 0FFEH, see doc/plus/cpa/c2_3_lader.md.
+emlog @ARBEIT@/em.log
+keys M8KBOOT\sK\r
+b @RELEASE@
+g 80000000
+# U8001 still in reset: EM segment 0 must equal the kernel image byte for byte
+save @ARBEIT@/em0.bin em:0 36352
+bd @RELEASE@
+cpu u8000
+b <<0>>%027E
+g 40000000
+r
+bd <<0>>%027E
+cpu zve1
+g 30000000
+d 0xffe 2
+d em:6 2
+dev em
+screen
+emlog off
+q

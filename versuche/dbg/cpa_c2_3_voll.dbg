@@ -1,0 +1,13 @@
+# Plan 48 C2.3: full operation "M8KBOOT": kernel into the EM, MUTOSIO.IMG moved to 9000H, jump.
+# @ARBEIT@ = work folder, @IMGLEN@ = length of MUTOSIO.IMG in bytes (hex digits are not needed: decimal)
+d 0x0001 2
+emlog @ARBEIT@/em.log
+keys M8KBOOT\r
+b 0x9000
+g 80000000
+save @ARBEIT@/em0.bin em:0 36352
+save @ARBEIT@/io9000.bin 0x9000 @IMGLEN@
+dev em
+screen
+emlog off
+q

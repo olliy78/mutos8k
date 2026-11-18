@@ -1,0 +1,71 @@
+; emfenst.mac -- first probe of plan 48 C2.3: EM window 4000H-7FFFH under CP/A
+; Does the window used by mutos_io (A22 pages 4..7) reach EM segment 0 address 0000H
+; while the CP/A TPA is in use?  (LOAD16 under UDOS used 0000H-3FFFH.)
+;   1. A22 pages 0..15 := 0FH (disabled), PIO A32 programmed like TAB_PIO_A/TAB_PIO_B of mutos_io.
+;   2. A22 pages 4,5,6,7 := EM address 0000H..3FFFH (attribute 0CH = A15/A14 = 0, PEN/WE active).
+;   3. OUT (A9H),38H (EM RAM on, U8001 in reset), wait for PIO A bit 6 (8-bit mode), copy a
+;      4 KB pattern (byte i = (i + i/256) XOR 5AH) to 4000H, OUT (A9H),3CH, then stop in a loop.
+; Check with the debugger:  d em:0 32   (or cpu u8000 + d <<0>>%0000 32).
+	.Z80
+	CSEG
+PIOADA	EQU	0A8H
+PIOBDA	EQU	0A9H
+PIOACT	EQU	0AAH
+PIOBCT	EQU	0ABH
+A22PRT	EQU	0AFH
+
+START:	DI
+	LD	E,10H
+	LD	BC,00AFH
+ATTR0:	LD	A,0FH
+	OUT	(C),A
+	LD	A,10H
+	ADD	A,B
+	LD	B,A
+	DEC	E
+	JR	NZ,ATTR0
+	LD	C,PIOACT
+	LD	B,05H
+	LD	HL,TABA
+	OTIR
+	LD	C,PIOBCT
+	LD	B,05H
+	LD	HL,TABB
+	OTIR
+	LD	B,40H		; pages 4..7 := 0CH (EM 0000H..3FFFH)
+	LD	C,A22PRT
+	LD	E,4
+ATTR4:	LD	A,0CH
+	OUT	(C),A
+	LD	A,10H
+	ADD	A,B
+	LD	B,A
+	DEC	E
+	JR	NZ,ATTR4
+; pattern into the buffer 1000H
+	LD	HL,1000H
+	LD	DE,0
+FILL:	LD	A,E
+	ADD	A,D
+	XOR	5AH
+	LD	(HL),A
+	INC	HL
+	INC	DE
+	LD	A,D
+	CP	10H
+	JR	NZ,FILL
+	LD	A,38H
+	OUT	(PIOBDA),A
+WAIT8:	IN	A,(PIOADA)
+	BIT	6,A
+	JR	Z,WAIT8
+	LD	HL,1000H
+	LD	DE,4000H
+	LD	BC,1000H
+	LDIR
+	LD	A,3CH
+	OUT	(PIOBDA),A
+HALT1:	JR	HALT1
+TABA:	DEFB	0EAH,0CFH,0FFH,0B7H,0EFH
+TABB:	DEFB	0ECH,0CFH,80H,97H,7FH
+	END	START
