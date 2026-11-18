@@ -85,7 +85,7 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 
 ## 5a. Reihenfolge ab 2026-11-18 (Entscheidung Projektinhaber)
 
-1. W10b (laeuft): unsere `c2`-Quelle funktional gegen den ausgelieferten `c2` pruefen.
+1. W10b (erledigt, `wk_w10b.md`): unser gebauter `c2` (98 % befehlsgleich) ist **funktional noch nicht** gleich -- seine Ausgabedatei ist stueckweise verfaelscht (Teile an falscher Stelle, wie Schreiben an falsche Dateipositionen; Ursache offen: `freopen`, Feldgroessen in `c2.h`, Daten-/BSS-Anordnung oder `libc_alt`).  Erster Punkt von W10, bevor Schalter eingebaut werden.
 2. **W7 `as`** in kleinen Schritten (Triage, yacc-Grammatik, Scanner `plzlex`, Codeerzeugung) -- groesste echte Luecke, Voraussetzung fuer W9 und die E-Glieder von `libc.a`.
 3. W10 weiter (Schalter im `c2`), dann gemeinsam fuer die Restbloecke von `c1`, `c2`, `cpp` und `as`.
 4. W9 Selbsthosting mit beiden Ketten; zuletzt W11 (Herkunft ZEUS/WEGA).
