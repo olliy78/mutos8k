@@ -1,0 +1,13 @@
+# Plan 48 C4.1 first probe: BIOS LIST without MUTOS.  These are the lines that run after the CP/A boot to "A>"
+# (generated into <work>/lst.dbg by tools/plus/cpa.py lauf_dbg, see doc/plus/cpa/c4_1_drucker.md); LSTTEST.COM from
+# versuche/plus_cpa/lsttest.mac is on the boot diskette.  Result: doc/plus/cpa/c4_1_drucker.md section 2.
+iow 0x5E
+iow 0x5F
+logpoint 0x0110
+logpoint 0x0111
+keys LSTTEST\r
+gscreen "LSTDONE" 300000000
+g 3000000
+screen
+dev sio
+dev ctc

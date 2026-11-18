@@ -1,0 +1,50 @@
+; lsttest.mac -- plan 48 C4.1, first probe: BIOS LIST without MUTOS.
+; Sets IOBYTE = 80H (LST: = LPT, 5EH/5FH) and sends through the BIOS LIST entry
+;   'AB' TAB 'C' CR LF, then 50 characters ('0'..'9' five times), then DONE.
+; The byte stream is read from the debugger (iow 5EH / iow 5FH, machine cycles per OUT).
+; Logpoints: 0110H = before the first LIST, 0111H = after the last LIST (DONE).
+	.Z80
+	CSEG
+START:	JP	T2
+	DEFS	13		; border routines start at 0110H
+	DEFB	0C9H,0C9H	; 0110H, 0111H: RET (logpoints of the host)
+T2:	LD	A,80H
+	LD	(0003H),A	; IOBYTE: LST = LPT
+	CALL	0110H		; border: before the first LIST
+	LD	HL,TXT1
+L1:	LD	A,(HL)
+	CP	0FFH
+	JR	Z,L1E
+	PUSH	HL
+	LD	C,A
+	CALL	LIST
+	POP	HL
+	INC	HL
+	JR	L1
+L1E:	LD	B,5
+L2:	PUSH	BC
+	LD	C,'0'
+	LD	B,10
+L3:	PUSH	BC
+	CALL	LIST
+	POP	BC
+	INC	C
+	DJNZ	L3
+	POP	BC
+	DJNZ	L2
+	CALL	0111H		; border: after the last LIST
+	LD	DE,MSG
+	LD	C,9
+	CALL	5
+	JP	0
+
+; BIOS LIST = warm start entry + 12 (CB03H -> CB0FH), C = character
+LIST:	LD	HL,(0001H)
+	LD	DE,12
+	ADD	HL,DE
+	JP	(HL)
+
+TXT1:	DEFB	'A','B',09H,'C',0DH,0AH,0FFH
+MSG:	DEFM	'LSTDONE'
+	DEFB	13,10,'$'
+	END	START
