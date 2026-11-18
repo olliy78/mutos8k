@@ -26,10 +26,27 @@ struct tconst cone  { CON, INT, 1};
 
 struct tname sfuncr { NAME, STRUCT, STATIC, 0, 0, 0 };
 
+/*
+ * Not V7: zero-initialised int flags/counters in the DATA segment of the
+ * original (760C..7622).  Names are *Annahme* (see doc wk_w6.md, Teil 5);
+ * only count and order are measured.
+ */
 struct	table	*cregtab;
+struct	ftconst	fptab[50];	/* Not V7: 8BD8, 50 * 14 bytes */
 
-int	nreg	3;
+int	nfpool	0;	/* 760C: next free fptab entry */
+int	zf1	0;	/* 760E */
+int	zf2	0;	/* 7610 */
+/* Differs from V7: nreg is 5 (Z8000 register set), V7 has 3 */
+int	nreg	5;
+int	rlused	0;	/* 7614 */
+int	zf4	0;	/* 7616 */
 int	isn	10000;
+int	wregf	0;	/* 761A */
+int	bregf	0;	/* 761C */
+int	lregf	0;	/* 761E */
+int	zf8	0;	/* 7620 */
+int	zf9	0;	/* 7622 */
 
 main(argc, argv)
 char *argv[];
@@ -87,15 +104,18 @@ struct table *table;
 {
 #define	NOCVL	1
 #define	NOCVR	2
-	int op, d1, d2, dope;
-	struct tnode *p2;
-	register struct tnode *p1, *tree;
+	int d2, dope;
+	register op, d1;
+	register struct tnode *p2, *p1, *tree;
 	register struct optab *opt;
 
+	/*
+	 * Differs from V7: no lsptab test; 'op' and 'd1' are register
+	 * variables (order of the register variables is Annahme: it is
+	 * the only one that reproduces r13..r8).
+	 */
 	if ((tree=atree)==0)
 		return(0);
-	if (table==lsptab)
-		table = sptab;
 	if ((op = tree->op)==0)
 		return(0);
 	dope = opdope[op];
@@ -107,13 +127,24 @@ struct table *table;
 	if ((dope&BINARY)!=0) {
 		p2 = tree->tr2;
 		/*
+		 * Differs from V7 (Z8000): long operands of the library
+		 * operators and (unsigned)->long conversions keep their
+		 * conversion (no match with the conversion eliminated).
+		 */
+		if (tree->type==LONG && (op==DIVIDE || op==TIMES || op==MOD
+		 || op==ASDIV || op==ASTIMES || op==ASMOD || op==LSHIFT
+		 || op==ASLSH || op==RSHIFT || op==ASRSH))
+			;
+		else if (p2->op==ITOL && p2->tr1->type==UNSIGN)
+			;
+		/*
 		 * If a subtree starts off with a conversion operator,
 		 * try for a match with the conversion eliminated.
 		 * E.g. int = double can be done without generating
 		 * the converted int in a register by
 		 * movf double,fr0; movfi fr0,int .
 		 */
-		if (opdope[p2->op]&CNVRT && (nocvt&NOCVR)==0
+		else if (opdope[p2->op]&CNVRT && (nocvt&NOCVR)==0
 			 && (opdope[p2->tr1->op]&CNVRT)==0) {
 			tree->tr2 = p2->tr1;
 			if (opt = match(tree, table, nrleft, NOCVL))
@@ -135,14 +166,15 @@ struct table *table;
 		if (d1 > (opt->tabdeg1&077)
 		 || (opt->tabdeg1 >= 0100 && (p1->op != STAR)))
 			continue;
-		if (notcompat(p1, opt->tabtyp1, op)) {
+		/* Differs from V7: notcompat has two arguments here */
+		if (notcompat(p1, opt->tabtyp1)) {
 			continue;
 		}
 		if ((opdope[op]&BINARY)!=0 && p2!=0) {
 			if (d2 > (opt->tabdeg2&077)
 			 || (opt->tabdeg2 >= 0100) && (p2->op != STAR) )
 				continue;
-			if (notcompat(p2,opt->tabtyp2, 0))
+			if (notcompat(p2,opt->tabtyp2))
 				continue;
 		}
 		return(opt);
@@ -156,30 +188,25 @@ struct table *table;
  * Registers reg and upcan be used.
  * If there is a value, it is desired that it appear in reg.
  * The routine returns the register in which the value actually appears.
- * This routine must work or there is an error.
- * If the table called for is cctab, sptab, or efftab,
- * and tree can't be done using the called-for table,
- * another try is made.
- * If the tree can't be compiled using cctab, regtab is
- * used and a "tst" instruction is produced.
- * If the tree can't be compiled using sptab,
- * regtab is used and the register is pushed on the stack.
- * If the tree can't be compiled using efftab,
- * just use regtab.
- * Regtab must succeed or an "op not found" error results.
  *
- * A number of special cases are recognized, and
- * there is an interaction with the optimizer routines.
+ * Differs from V7 (Z8000 original at 039E, reconstructed from the binary):
+ * no RELAT/cctab shortcut, no ANDN, no lsptab; CALL saves and restores the
+ * live registers around the call and moves the result to reg; long shifts
+ * keep their op; unsigned / and % and the bit operations OR/AND with a
+ * single-bit constant are rewritten; STAR operands are loaded into a register
+ * first; the cctab and sptab output is Z8000 test/push.  nsav, p, q, rr, bit
+ * are names of the reconstruction (*Annahme*).
  */
 rcexpr(atree, atable, reg)
 struct tnode *atree;
 struct table *atable;
 {
-	register r;
-	int modf, nargs, recurf;
-	register struct tnode *tree;
+	register r, nsav;
+	register struct tnode *tree, *p, *q;
 	register struct table *table;
+	int modf, nargs, recurf, bit, rr, dope;
 
+	nsav = 0;
 	table = atable;
 	recurf = 0;
 	if (reg<0) {
@@ -193,9 +220,6 @@ struct table *atable;
 again:
 	if((tree=atree)==0)
 		return(0);
-	if (opdope[tree->op]&RELAT && tree->tr2->op==CON && tree->tr2->value==0
-	 && table==cctab)
-		tree = atree = tree->tr1;
 	/*
 	 * fieldselect(...) : in efftab mode,
 	 * ignore the select, otherwise
@@ -231,6 +255,11 @@ again:
 	 * for a switch or a return
 	 */
 	case RFORCE:
+		r = tree->type;
+		if (r != tree->tr1->type && (r==FLOAT || r==DOUBLE)) {
+			printf("fclr\tf0\n");
+			return(0);
+		}
 		tree = tree->tr1;
 		if((r=rcexpr(tree, regtab, reg)) != 0)
 			movreg(r, 0, tree);
@@ -240,41 +269,33 @@ again:
 	 * sequential execution
 	 */
 	case SEQNC:
-		r = nstack;
 		rcexpr(tree->tr1, efftab, reg);
-		nstack = r;
 		atree = tree = tree->tr2;
 		goto again;
-
-	/*
-	 * In the generated &~ operator,
-	 * fiddle things so a PDP-11 "bit"
-	 * instruction will be produced when cctab is used.
-	 */
-	case ANDN:
-		if (table==cctab) {
-			tree->op = TAND;
-			tree->tr2 = optim(tnode(COMPL, tree->type, tree->tr2));
-		}
-		break;
 
 	/*
 	 * Handle a subroutine call. It has to be done
 	 * here because if cexpr got called twice, the
 	 * arguments might be compiled twice.
-	 * There is also some fiddling so the
-	 * first argument, in favorable circumstances,
-	 * goes to (sp) instead of -(sp), reducing
-	 * the amount of stack-popping.
+	 * Differs from V7: the live registers 0..reg-1 are pushed first
+	 * (and floating registers, if any) and popped after the call.
 	 */
 	case CALL:
 		r = 0;
+		if (tree->type==LONG && reg>1 || reg>0) {
+			for (; r<reg; r++) {
+				printf("push\t@SP,r%d\n", zreg(r));
+				if (nfloat) {
+					printf("dec\tSP,#8\nfldd\t@SP,f%d\n", r);
+					nsav++;
+				}
+			}
+			r = 0;
+		}
 		nargs = 0;
 		modf = 0;
-		if (tree->tr1->op!=NAME || tree->tr1->class!=EXTERN) {
+		if (tree->tr1->op!=NAME || tree->tr1->class!=EXTERN)
 			nargs++;
-			nstack++;
-		}
 		tree = tree->tr2;
 		if(tree->op) {
 			while (tree->op==COMMA) {
@@ -287,46 +308,123 @@ again:
 		}
 		tree = atree;
 		tree->op = CALL2;
-		if (modf && tree->tr1->op==NAME && tree->tr1->class==EXTERN)
-			tree->op = CALL1;
-		if (cexpr(tree, regtab, reg)<0)
+		tree->tr2 = 0;
+		if (rcexpr(tree, regtab, 0)<0)
 			error("compiler botch: call");
 		popstk(r);
-		nstack =- nargs;
+		if (tree->type==LONG && reg>1 || reg>0) {
+			r = reg-1;
+			if (tree->type==LONG || zf1) {
+				reg = (reg+1) & ~1;
+				zf1 = 0;
+			} else if (zf2) {
+				reg = (reg+1) | 1;
+				zf2 = 0;
+			}
+			movreg(0, reg, tree);
+			for (; r>=0; r--) {
+				if (nsav)
+					printf("fldd\tf%d,@SP\ninc\tSP,#8\n", r);
+				printf("pop\tr%d,@SP\n", zreg(r));
+			}
+			nsav = 0;
+		}
 		if (table==efftab || table==regtab)
-			return(0);
-		r = 0;
+			return(reg);
+		r = reg;
 		goto fixup;
 
 	/*
 	 * Longs need special treatment.
+	 * Differs from V7: also RSHIFT/ASRSH; the op stays.
 	 */
 	case ASLSH:
 	case LSHIFT:
+	case RSHIFT:
+	case ASRSH:
 		if (tree->type==LONG) {
 			if (tree->tr2->op==ITOL)
 				tree->tr2 = tree->tr2->tr1;
 			else
 				tree->tr2 = optim(tnode(LTOI,INT,tree->tr2));
-			if (tree->op==ASLSH)
-				tree->op = ASLSHL;
-			else
-				tree->op = LLSHIFT;
 		}
 		break;
 
 	/*
-	 * Try to change * to shift.
+	 * Differs from V7: unsigned division and modulus are done like
+	 * the multiplication: try to change to shift/and.
 	 */
+	case DIVIDE:
+	case MOD:
+	case ASDIV:
+	case ASMOD:
+		if (tree->type!=UNSIGN)
+			break;
 	case TIMES:
 	case ASTIMES:
+		dope = tree->op;
 		tree = pow2(tree);
+		if (tree->op!=dope)
+			goto again;
+		break;
+
+	/*
+	 * Not V7: x | single-bit constant (x &~ bit) is turned into a
+	 * bit set / reset operation.
+	 */
+	case OR:
+	case ASOR:
+		if (tree->tr2->op==CON && tree->type!=LONG) {
+			bit = bitnum(tree->tr2->value);
+			if (bit>=0) {
+	setbit:
+				tree = bitop(tree, bit);
+			}
+		}
+		break;
+
+	case AND:
+	case ASAND:
+		if (tree->tr2->op==CON && tree->type!=LONG) {
+			bit = bitnum(~tree->tr2->value);
+			if (bit>=0)
+				goto setbit;
+		}
+		break;
 	}
+	/*
+	 * Not V7: STAR operands that are not register names are
+	 * evaluated into a register first, and replaced by a STAR of
+	 * that register.
+	 */
+	p = tree;
+	dope = opdope[tree->op];
+	if ((dope&LEAF)==0) {
+		if (p->tr1->op==STAR) {
+			if (!(opdope[p->tr1->tr1->op]&LEAF) || p->tr1->tr1->class!=REG) {
+				rr = rcexpr(tnode(LOAD, p->tr1->tr1->type, p->tr1->tr1), regtab, reg);
+				p->tr1->tr1 = regnode(REG, p->tr1->type+PTR, rr);
+				reg = rr+1;
+			}
+		}
+		if (dope&BINARY) {
+			q = tree->tr2;
+			if (q->op==STAR) {
+				if (!(opdope[q->tr1->op]&LEAF) || q->tr1->class!=REG) {
+					rr = rcexpr(tnode(LOAD, q->tr1->type, q->tr1), regtab, reg);
+					q->tr1 = regnode(REG, q->type+PTR, rr);
+					reg = rr+1;
+				}
+			}
+		}
+	}
+	atree = tree = p;
 	/*
 	 * Try to find postfix ++ and -- operators that can be
 	 * pulled out and done after the rest of the expression
+	 * (not when zf9 is set, a Z8000 addition).
 	 */
-	if (table!=cctab && table!=cregtab && recurf<2
+	if (table!=cctab && table!=cregtab && recurf<2 && !zf9
 	 && (opdope[tree->op]&LEAF)==0) {
 		if (r=delay(&atree, table, reg)) {
 			tree = atree;
@@ -345,24 +443,52 @@ again:
 	tree = atree;
 	if (table==efftab && tree->op==NAME)
 		return(reg);
-	if ((r=cexpr(tree, table, reg))>=0)
+	if ((r=cexpr(tree, table, reg))>=-2)
 		return(r);
 	if (table!=regtab && (table!=cctab||(opdope[tree->op]&RELAT)==0)) {
-		if((r=cexpr(tree, regtab, reg))>=0) {
+		if((r=cexpr(tree, regtab, reg))>=-2) {
 	fixup:
 			modf = isfloat(tree);
-			dbprint(tree->op);
-			if (table==sptab || table==lsptab) {
-				if (tree->type==LONG) {
-					printf("mov\tr%d,-(sp)\n",r+1);
-					nstack++;
+			if (table==sptab) {
+				if (modf=='f') {
+					printf("dec\tSP,#8\nfldd\t@SP,f%d\n", r);
+					nfloat++;
+				} else {
+					printf("push%c\t@SP,", modf);
+					preg(tree, r);
+					printf("\n");
 				}
-				printf("mov%c	r%d,%c(sp)\n", modf, r,
-					table==sptab? '-':0);
-				nstack++;
 			}
-			if (table==cctab)
-				printf("tst%c	r%d\n", modf, r);
+			if (table==cctab) {
+				if (rlused) {
+					modf = 'b';
+					bregf = 1;
+				}
+				if ((tree->op==ASPLUS || tree->op==ASMINUS
+				 || tree->op==ASRSH || tree->op==ASLSH
+				 || tree->op==ASAND || tree->op==ASOR
+				 || tree->op==ASXOR || tree->op==ASDIV
+				 || tree->op==ASTIMES)
+				 && tree->type!=LONG && tree->tr1->type!=CHAR)
+					;
+				else if ((opdope[tree->op]&ASSGOP)
+				 && tree->op!=ASMOD && tree->op!=ASSIGN
+				 && tree->op!=ASAND && tree->op!=ASOR
+				 && tree->op!=ASXOR && tree->type==LONG)
+					;
+				else {
+					if (modf=='f') {
+						printf("fcpzx\tf%d\n", r);
+						nfloat++;
+					} else {
+						printf("test%c\t", modf);
+						preg(tree, r);
+						printf("\n");
+					}
+					zf4 = 1;
+				}
+				bregf = 0;
+			}
 			return(r);
 		}
 	}
@@ -1168,26 +1294,142 @@ illinit:
 	error("Illegal initialization");
 }
 
+/*
+ * Not V7 changes: this is V7 movreg for the Z8000 (original at 1EFC).  Register
+ * numbers are mapped by zreg(); the output is "ld dst,src" (destination
+ * first).  Reconstructed from the binary.
+ */
 movreg(r0, r1, tree)
 struct tnode *tree;
 {
-	register char *s;
+	register d, s;
 
 	if (r0==r1)
 		return;
+	d = zreg(r1);
+	s = zreg(r0);
 	if (tree->type==LONG) {
-		s = "mov	r%d,r%d\nmov	r%d,r%d\n";
-		if (r0 < r1)
-			printf(s, r0+1,r1+1,r0,r1);
-		else
-			printf(s, r0,r1,r0+1,r1+1);
+		printf("ldl\trr%d,rr%d\n", d, s);
 		return;
 	}
-	printf("mov%c	r%d,r%d\n", isfloat(tree), r0, r1);
+	if (isfloat(tree)!='f')
+		printf("ld\tr%d,r%d\n", d, s);
+	else
+		printf("fld\tf%d,f%d\n", r1, r0);
 }
 
 /*
- * Not V7 (original at 21D6, 38 bytes; name invented, *Annahme*): map a code
+ * Not V7 (original at 1F66; name invented, *Annahme*): convert the long l
+ * to the 4-word double format p[0..3] (sign, 11 bit exponent, bias 1023,
+ * mantissa), used for LTOF of constants.
+ */
+ltod(l, p)
+long l;
+unsigned *p;
+{
+	register unsigned *lp;
+	register e, sgn;
+
+	lp = &l;
+	p[3] = 0;
+	if (l==0) {
+		p[0] = p[1] = p[2] = 0;
+		return;
+	}
+	e = 31;
+	if (l<0) {
+		l = -l;
+		sgn = 1;
+	} else
+		sgn = 0;
+	while ((*lp & 0100000) != 0100000) {
+		l <<= 1;
+		e--;
+	}
+	e += 1023;
+	e <<= 4;
+	p[2] = (lp[1] & 07767) << 5;
+	l >>= 11;
+	p[0] = (*lp & 017) | e;
+	p[1] = lp[1];
+	if (sgn)
+		p[0] |= 0100000;
+}
+
+/*
+ * Not V7 (original at 2028; name invented, *Annahme*): convert the 4-word
+ * double p[0..3] to a long (inverse of ltod); the sign is not handled.
+ */
+long
+ftol(p)
+unsigned *p;
+{
+	register *mp, i, e, sgn;
+	long m;
+
+	mp = &m;
+	if (p[3]==0 && p[2]==0 && p[1]==0 && (*p & 077777)==0)
+		return(0);
+	sgn = 0;
+	e = ((*p & 077760) >> 4) - 1023;
+	if (e > 31)
+		error("floating to large for long");
+	*p = (*p & 017) | 020;
+	for (i=0; i<2; i++)
+		mp[i] = (p[i+1] << 11) | (p[i+2] >> 5);
+	m >>= 1;
+	*mp &= 077777;
+	m >>= 30 - e;
+	return(m);
+}
+
+/*
+ * Not V7 (original at 2104; name invented, *Annahme*): print the name of
+ * register reg for the type of tree: FP, r%d, rr%d (long), f%d (float),
+ * rl%d (byte).  The flags force a name format.
+ */
+preg(tree, reg)
+struct tnode *tree;
+{
+	register struct tnode *t;
+	register n;
+	char c;
+
+	rlused = 0;
+	t = tree;
+	if (reg==14) {
+		printf("FP");
+		return;
+	}
+	n = zreg(reg);
+	if (wregf) {
+		printf("r%d", n);
+		wregf = 0;
+		return;
+	}
+	if (lregf) {
+		printf("rr%d", n);
+		lregf = 0;
+		return;
+	}
+	c = isfloat(t);
+	if (c=='l')
+		printf("rr%d", n);
+	else if (c=='f') {
+		printf("f%d", reg);
+		nfloat++;
+	} else if (bregf) {
+		if (n < 9) {
+			printf("rl%d", n);
+			rlused = 1;
+		} else
+			error("byte-operation on register greater 8");
+	} else
+		printf("r%d", n);
+}
+
+/*
+ * Not V7 (original at 21D6; name invented, *Annahme*): map a code
  * generator register number to the Z8000 register number used in the output.
  * 0..5 -> 2..7, 6..7 -> 0..1, others unchanged.
  */
@@ -1199,4 +1441,33 @@ register r;
 	if (r > 7)
 		return(r);
 	return(r-6);
+}
+
+/* Not V7 (original at 21FC; name invented): copy 4 words (a double) */
+fcopy(d, s)
+int *d, *s;
+{
+	register i;
+
+	for (i=0; i<4; i++)
+		d[i] = s[i];
+}
+
+/*
+ * Not V7 (original at 2228; name invented): output a floating constant:
+ * label and four WV words (negated if neg), and remember it in fptab.
+ */
+outfp(p, neg)
+register struct ftconst *p;
+{
+	if (neg)
+		fphead();
+	printf("L%d:\n", p->value);
+	printf("WV %%%x;WV %%%x;WV %%%x;WV %%%x\n", p->fvalue);
+	if (neg) {
+		fptail();
+		p->value = -p->value;
+	}
+	if (nfpool < 50)
+		fptab[nfpool++] = *p;
 }
