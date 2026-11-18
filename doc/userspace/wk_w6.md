@@ -189,3 +189,29 @@ Alles *gemessen* am Listing `c1.lst` und am Bericht `neu_c2.bericht`.  Der c12-B
 **Stand nach dem Bau (`alles c1 --c2emu --libc alt --ist neu_c2`, zweiter Bau mit `op = ASSIGN; tree->op = op;`):** Text 30494 (Original 30176), Daten 5442 (5582), BSS 1836 (1832); Befehle 7301 gegen 7970, **6578 gleich** (vorher 6353), 368 Bloecke (vorher 459).  Fuer `optim` bleiben nur Datenadressen (`opdope` D+BA8 gegen D+BA6, `maprel`/`notrel`, Zeichenkette B2A gegen B28; Daten weiter 140 Byte zu klein) und die `&czero`/`&cone`-Rueckgaben (442A: Original legt `LD R2,#D+1C; JP` / `#D+16` dahinter an, hier fehlen sie: vermutlich nur die Datenadressen-Bloecke) sowie ein c2-Unterschied am Funktionsende (4568/4576: `DEC R15,#2`, gemeinsamer `return(tree->tr1)`-Schwanz).  Der Block `LD R13,#80; LD @R8,R13` der `ASSIGN`-Zuweisung ist nach der Umstellung auf `op = ASSIGN; tree->op = op;` gleich.
 
 **Offen (c12):** `unoptim` (4584): Struktur weicht laut Bericht stark vom V7-Text ab (andere Schaltwerte, fehlende/zusaetzliche Zweige, z.B. Block 463A ff., 47BC ff., 4944 ff.; *nicht* naeher untersucht); alle weiteren c12-Funktionen unveraendert V7-Text.  Die 140 fehlenden Datenbytes sind weiter nicht gefunden (`maprel`/`notrel`-Tabellen und c12-Zeichenketten pruefen).
+
+
+## Teil 10: c12, `unoptim`, `lvfield`, `acommute`, `distrib` (W6h)
+
+Alles *gemessen* am Listing `c1.lst` und am Bericht `neu_c2.bericht`.  Die Schalter von `unoptim` und `lvfield` sind Hash-Schalter (`op%3` bzw. `op%2` waehlt die Tabelle L80E8/L80E4/L80EE, verglichen wird mit `op/3` bzw. `op/2`); die Operatoren sind aus Quotient und Rest zurueckgerechnet.
+
+**`unoptim` (4584) nach dem Binary** (nicht V7; Abweichungen im Kopfkommentar von c12.c):
+* Vor `again:`: ein `CHAR`-Operand mit `class==REG` wird zu `INT`.
+* `ITOF`/`LTOF` (51/57) statt `FTOI`/`LTOF`/`ITOF` von V7: Konstante 0 (`CON`/`LCON`) liefert `optim(subtre)`; sonst `CON`/`LCON` -> `FCON` (14 Byte, `isn++`, Wert per `ltod(l, &tree->fvalue)`, bei `CON` mit `(long)`-Umwandlung); alles andere `break`.  Kein `FTOI`, kein `SFCON`.
+* `ITOC`: `CON` wird mit `0377` maskiert (V7: Vorzeichenerweiterung); `NAME`: `type = CHAR`, `offset =+ 1` (Byte steht im Big-Endian-Wort hinten).
+* `LTOI`: Reihenfolge `LCON`, `NAME`, `STAR`, `ITOL`, dann `PLUS/MINUS/AND/OR/EXOR` (ohne `ANDN`), `NEG/COMPL`; bei `NAME` wird ein `CHAR`-Zieltyp zu `INT`.
+* `STAR`: kein `INCAFT/DECBEF` -> `AUTOI/AUTOD`; stattdessen `if (opdope[subtre->op]&LEAF) return(tree)` (ohne Gradberechnung) nach dem `NAME`/`REG`-Fall.
+* `NEG`: kein `SFCON`-Fall (nur `FCON`, Vorzeichenbit in `fvalue.intx[0]`).  `fv`/`fp`/`ITOF`-`SFCON`-Zweig entfallen (`static double fv` weg: Daten 5442 -> 5434).
+* `FSEL`, `FSELR`, `AMPER`, `EXCLA`, `COMPL`, Schwanz (`degree`): wie V7 (`p`/`subtre` wie dort).
+
+**`lvfield` (4BFC):** `ASAND` (nicht `ASANDN`) im Fallbereich; vor dem Schalter und nochmals vor `optim(tnode(FSELT...))` wird bei `ASAND` `tr2 = tnode(COMPL, tr2->type, tr2, NULL)` gebildet (*gemessen*: zwei gleiche Bloecke 4C04 und 4CE6; die Absicht, warum zweimal, ist *nicht* geklaert).
+
+**`acommute` (4D76):** Register `t1 R13, t2 R12, tree R11, t R10, flt R9, op R8`; `d`, `i`, `d1` auf dem Stapel hinter `acl`.  `flt` wird mit `'f'` verglichen (`isfloat` liefert einen Buchstaben, c10.c nutzt dasselbe).  "+0"-Entfernung nur bei `nextl>0` (Klammerung `a && (b || c)`).  Der `TIMES`-/`hardlongs`-Aufruf am Ende fehlt im Binary.
+
+**`distrib` (50BE):** nur Deklarationen: `p1 R13, p2 R12, t R11, ndmaj R10, ndmin R9, dividend R8` sind `register`, `divisor`/`maxnod`/`mindiv` liegen auf dem Stapel.  Der Rumpf ist V7.  `squash` (525C) war schon befehlsgleich.
+
+**`hardlongs`** ist aus c12.c entfernt (im Binary nicht vorhanden, keine Aufrufer mehr).
+
+**Stand nach dem zweiten Bau** (`alles c1 --c2emu --libc alt --ist neu_c2`): Text 30134 (Original 30176), Daten 5434 (5582, 148 Byte zu klein), BSS 1828 (1832); Befehle 7212 gegen 7970, **6798 gleich** (vorher 6578), 271 Bloecke (vorher 368).  Fuer `unoptim`, `lvfield`, `acommute`, `distrib` bleiben nur Datenadressen (`opdope` D+BA8 gegen D+B9E, `notrel`, Zeichenkette B42/B38, die Konstante 0x8000 wird vom Bericht als Datenadresse gedeutet) und in `acommute` bei 4FD0 ein Sprungunterschied in `--acl.nextl <= 0` (Original `JR Z; JP PL`, hier anders: nicht naeher untersucht) und in `unoptim` bei 49E2 (ein `JP`; *nicht* untersucht).
+
+**Offen (c12):** `const` (5278), `lconst` (536C), `insert` (54E6), `tnode` (5666) und der Rest sind noch V7-Text; im Bericht zeigt `const` bei 5308 einen Befehlsunterschied (`COM/AND` statt Original), `lconst` ebenso weitere.  Die 148 fehlenden Datenbytes sind weiter nicht gefunden.
