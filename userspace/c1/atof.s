@@ -19,7 +19,6 @@ constant
 X	csv	PR;
 X	cret	PR;
 X	__ctype_	PR;
-X	_ldexp	PR;
 G	_atof	PR
 E
 _atof:
@@ -295,6 +294,11 @@ _atof:
 	WV	%5E08
 	WV	cret
 end _atof
+! zero-length alias: the original has no shipped ldexp.o (48 B text, 8 B data) behind csv; defining the name keeps ld from pulling it !
+G	_ldexp	PR
+E
+_ldexp:
+end _ldexp
 I
 D0:
 WV	%4340

@@ -512,9 +512,8 @@ again:
 	return(reg);
 }
 
-/* Differs from V7: lsptab is not in c1.h (it would take BSS in front of nstack); it is no longer used by any
-   reconstructed function but its BSS slot (original: before cexpr) is kept */
-struct	table	lsptab[1];
+/* Differs from V7: no lsptab.  A 4-byte common here sat between nfloat and __sibuf and moved environ, s and s1 by 4 B;
+   the original BSS has no lsptab slot (measured, doc wk_w6.md part 13). */
 
 /*
  * Try to compile the tree with the code table using
