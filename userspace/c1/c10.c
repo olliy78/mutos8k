@@ -33,6 +33,7 @@ struct tname sfuncr { NAME, STRUCT, STATIC, 0, 0, 0 };
  */
 struct	table	*cregtab;
 struct	ftconst	fptab[50];	/* Not V7: 8BD8, 50 * 14 bytes */
+int	nfloat;			/* 8E94: BSS order cregtab, fptab, nfloat */
 
 int	nfpool	0;	/* 760C: next free fptab entry */
 int	zf1	0;	/* 760E */
@@ -233,7 +234,7 @@ again:
 			atree = tree = optim(tree);
 		}
 	}
-	switch (tree->op)  {
+	switch ((unsigned)tree->op)  {
 
 	/*
 	 * Structure assignments
@@ -255,8 +256,7 @@ again:
 	 * for a switch or a return
 	 */
 	case RFORCE:
-		r = tree->type;
-		if (r != tree->tr1->type && (r==FLOAT || r==DOUBLE)) {
+		if ((r = tree->type) != tree->tr1->type && (r==FLOAT || r==DOUBLE)) {
 			printf("fclr\tf0\n");
 			return(0);
 		}
@@ -387,8 +387,9 @@ again:
 	case ASAND:
 		if (tree->tr2->op==CON && tree->type!=LONG) {
 			bit = bitnum(~tree->tr2->value);
-			if (bit>=0)
-				goto setbit;
+			if (bit<0)
+				break;
+			goto setbit;
 		}
 		break;
 	}

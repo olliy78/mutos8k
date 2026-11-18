@@ -7,6 +7,7 @@
 
 /* Not V7: original data at 7B3E (3 bytes + pad) */
 char	modname[]	"c_";
+int	nfloat;
 
 /* Not V7: zero-initialised flags at 7B42..7B4A (names *Annahme*) */
 int	yf0	0;	/* 7B42 */

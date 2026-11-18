@@ -117,7 +117,7 @@ struct	instab	branchtab[];
 int	opdope[];
 char	*opntab[];
 int	nstack;
-int	nfloat;
+/* nfloat is defined in c10.c (after fptab); declared in c11.c */
 struct	tname	sfuncr;
 char	*funcbase;
 char	*curbase;
