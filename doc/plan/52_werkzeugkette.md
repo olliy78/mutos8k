@@ -90,12 +90,15 @@ Abschnittsdirektiven) aus einer aelteren Z8000-UNIX-Linie?
 **Gemessen bisher (W0-W6):** MUTOS-`c1` ist V7-`c1` mit neuer Codeausgabe und neuen Tabellen im V7-Format (`cvopt`), `c2` ein V7-Geruest mit Z8000-Befehlstabelle,
 `c0` fast reines V7, `as` kein V7 (yacc-Parser).
 
-**Einordnung (Hinweis des Projektinhabers):** WEGA (P8000) bzw. Zilog ZEUS ist ein **juengeres** System auf Grundlage von UNIX System III; eine direkte Abstammung
-MUTOS <- WEGA ist deshalb unwahrscheinlich.  Moeglich ist eine **gemeinsame aeltere Quelle**: ein frueher V7-Compiler fuer den Z8000 (von Zilog oder einem anderen
-fruehen Z8000-UNIX-Anbieter), aus dem sowohl MUTOS als auch spaeter ZEUS/WEGA schoepften.  Welche fruehen Z8000-V7-Portierungen es gab, ist hier *nicht belegt* und erst zu recherchieren.
+**Einordnung (Recherche des Projektinhabers, 2026-11-18):** Zilog **ZEUS war urspruenglich ein V7-System**; erst spaeter wurde daraus ein System-III-System,
+und davon ist WEGA (P8000) abgeleitet.  Eine direkte Abstammung MUTOS <- WEGA ist damit unwahrscheinlich, eine **gemeinsame Vorlage** aber naheliegend:
+der Z8000-Compiler der **fruehen V7-Fassung von ZEUS** (ein Vorgaenger von WEGA), aus dem sowohl MUTOS als auch die spaetere ZEUS/WEGA-Werkzeugkette stammen koennten.
+Arbeitshypothese (*Annahme*, zu pruefen): MUTOS-`c0`/`c1`/`c2`/`as` = ZEUS-V7-Werkzeugkette (ggf. angepasst); WEGA traegt deren weiterentwickelte Fassung.
+Die Quellenlage (Versionen, Jahre, erhaltene ZEUS-V7-Binaries oder -Handbuecher) ist noch mit Belegen festzuhalten.
 
 **Vorgehen (Entwurf):**
-1. Recherche: fruehe Z8000-UNIX-Portierungen auf V7-Basis (Hersteller, Jahr, erhaltene Binaries/Quellen, Handbuecher); Ergebnis mit Quellenangabe, Vermutetes markiert.
+1. Recherche: ZEUS-Versionsgeschichte (V7-Fassung, Uebergang zu System III), erhaltene Binaries/Handbuecher der V7-Fassung, andere fruehe Z8000-V7-Portierungen;
+   Ergebnis mit Quellenangabe, Vermutetes markiert.  Findet sich eine ZEUS-V7-Werkzeugkette, ist sie der wichtigste Vergleichspartner (vor WEGA).
 2. WEGA-Werkzeugkette (https://github.com/OlliL/P8000, lokale Kopie **ausserhalb** des Repositorys, nichts kopieren -- `original/wega/README.md`):
    Zeichenketten, Fehlermeldungen, Funktionsreihenfolge, Codetabellen (Format, Musterbuchstaben, Eintragszahlen), Assembler-Dialekt (`as_dialekt.md`),
    Abschnittsdirektiven (`$DATA`, `$SECTION`, `$CODE`), Registerkonvention, `c2`-Befehlstabelle -- je Pass gegen MUTOS vergleichen.
