@@ -5,7 +5,7 @@ Branch `mutos-plus`; `mutos_io/src/`, `mutos_io/build.py`, `mutos_io/mutosio.bin
 
 * `src/mutoscpa.mac` -- CP/A-Fassung, hervorgegangen aus `mutos_io/src/mutosio.mac` (C2.1 bytegleiche Kopie, C3.1 Namen statt Zahlen,
   ab C3.2 umgebaut: Start, Stapel C8B6H, BIOS-Sprungleiste, Vektoren in der CP/A-Tabelle F700H, Ausgabe ueber CONOUT; ab C3.3 Plattenweg synchron ueber die
-  BIOS-Einspruenge SELDSK/SETTRK/SETSEC/SETDMA/READ/WRITE, Boot bis `login:`; ab C3.4 Tastatur ueber BIOS CONST/CONIN im 50-Hz-ISR, Betrieb bis `#`; Befunde `doc/plus/cpa/c3_*.md`).
+  BIOS-Einspruenge SELDSK/SETTRK/SETSEC/SETDMA/READ/WRITE, Boot bis `login:`; ab C3.4 Tastatur ueber BIOS CONST/CONIN im 50-Hz-ISR, Betrieb bis `#`; ab C4.1 Drucker als interruptgetriebener Treiberkern aus IFSSPR (`PRN_*`, Vektoren F7F0H..F7F6H); Befunde `doc/plus/cpa/c3_*.md`, `c4_1_drucker.md`).
 * `mutoscpa.bin` -- Bauergebnis des aktuellen Stands, eingecheckt; `--check` vergleicht dagegen.  Bytegleich zu `mutos_io/mutosio.bin` war es bis C3.1.
 * `src/m8kboot.mac`, `m8kboot.com` -- CP/A-Lader (C2.3).
 * `build.py` -- Bau aller `src/*.mac` (M80 + LINKMT ueber `tools/emu.py` -> `cpm_bau`); `m8kboot` ergibt `.com`, sonst `.bin`.

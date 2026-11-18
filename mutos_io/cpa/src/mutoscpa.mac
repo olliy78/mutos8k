@@ -4,7 +4,7 @@
 ; Since step C3.2 the binary is deliberately NOT identical to mutosio.bin any more:
 ; start, stack, interrupt vectors, console output and operator mask use the CP/A BIOS (doc/plus/cpa/c3_2_start.md).
 ; Since step C3.3 the disk path is synchronous through the BIOS entries SELDSK/SETTRK/SETSEC/SETDMA/READ/WRITE
-; (doc/plus/cpa/c3_3_platte.md); the printer is still a stub (until C4.1).
+; (doc/plus/cpa/c3_3_platte.md); since C4.1 the printer is an interrupt driven driver taken from IFSSPR (PRN_*, doc/plus/cpa/c4_1_drucker.md).
 	.Z80
 	CSEG
 
@@ -209,11 +209,30 @@ WARTESCHL0_INIT:
 	LD HL,QUEUE_TASTE
 	CALL QUEUE_INIT
 	RET
-; --- DRUCKER: class 1 (STUB until C4.1): status FFH (error) at once, request done ------
+; --- DRUCKER: class 1: asynchronous job for the interrupt driven printer driver PRN_* (plan 48 C4.1, E7 (b)) ----
+; Parameter block AUF1 as for the UDOS driver IFSSPR: command 0FH (write text, asynchronous), buffer, count,
+; callback DRUCKER_FERTIG for "done" and "error".  Was a call of the UDOS driver at EB00H (UDOS driver); now PRN_START.
 DRUCKER:
-	LD (IX+9),0FFH
-	JP ENDE_WIEDER
-; DRUCKER_FERTIG: callback of the UDOS printer driver; unused until C4.1
+	LD IY,AUF1
+	LD (IY+1),0FH
+	LD A,(IX+2)
+	LD (IY+2),A
+	LD A,(IX+3)
+	LD (IY+3),A
+	LD A,(IX+14)
+	LD (IY+5),A
+	LD A,(IX+15)
+	LD (IY+4),A
+	LD HL,DRUCKER_FERTIG
+	LD (IY+6),L
+	LD (IY+7),H
+	LD (IY+8),L
+	LD (IY+9),H
+	PUSH IX
+	CALL PRN_START
+	POP IX
+	JP ENDE_LOESCHEN
+; DRUCKER_FERTIG: callback of the printer driver (end of job: status 80H, or error with bit 6)
 DRUCKER_FERTIG:
 	DI
 	CALL REGS_RETTEN
@@ -306,6 +325,7 @@ INIT_ATTR:
 	CALL INIT_TTY1
 	CALL INIT_TTY2
 	CALL INIT_TTY3
+	CALL PRN_INIT
 	RET
 ; Tastatur: CTC 58H Kanal 0 Zeitkonstante 1 (9600 Baud), SIO 5CH/5DH polled, 8 Bit
 INIT_TASTATUR:
@@ -359,6 +379,7 @@ IT_ZAEHLER:
 	XOR A
 	LD (HL),A
 IT_ENDE:
+	CALL PRN_TICK		; printer job time-out (replaces the UDOS CTC 0EH channel 2 timer)
 	CALL REGS_HOLEN
 	EI
 	RETI
@@ -1713,6 +1734,285 @@ SIGNALTON:
 	XOR A
 	OUT (5CH),A
 	RET
+; ==========================================================================
+; Printer driver PRN_* (plan 48 C4.1, E7 (b); doc/plus/cpa/c4_1_drucker.md)
+; ==========================================================================
+; Origin: the driver core of the UDOS printer driver IFSSPR (mutos_io/udos/src/ifsspr.mac, original file IFSSPR of the MUTOS 8000
+; boot disk, byte-identically reconstructed there), taken over here with the same hardware layer: SIO A32 channel B 5EH/5FH,
+; 9600 Bd x16 from CTC 58H channel 0, WR4 = 4DH (2 stop bits, odd parity), 7 bits, interrupt driven, XON/XOFF handshake.
+; Coroutine structure as in IFSSPR (see there): PRN_PUTCH does not return to its caller, it sends the byte and returns to the caller
+; of the driver; the next transmit interrupt (PRN_TXISR) resumes the job code behind its CALL PRN_PUTCH.
+; Differences to IFSSPR (all listed in doc/plus/abweichungen.md):
+;  - lives in this image (no fixed address EB00H, no call through the UDOS nucleus); only the command "write text, asynchronous" (0FH)
+;    is kept, the install/open/close/remove/binary/line commands and the owner check are gone (mutos_io uses only 0FH);
+;  - IM 2 slots in the CP/A table F700H: F7F0H transmit, F7F2H/F7F6H ignored, F7F4H receive (UDOS: slots 0FF0H/0FF4H/0FF6H);
+;  - time-out: the UDOS CTC 0EH channel 2 belongs to the BIOS; the 744 ticks (same duration) are counted by PRN_TICK from ISR_TAKT
+;    (50 Hz = same tick length 49152 cycles); at 0 the job ends with status C2H and the error callback is called;
+;  - after a CR exactly one NUL (UDOS: NULs until bit 0 of its flag byte 0FDBH is set, which was measured to be one NUL;
+;    the one-time status 49H never triggers: bit 1 is set at install);
+;  - TAB: blanks up to the next multiple of 8 (the UDOS tab table at 24C4H holds 01H at columns 8, 16, 24 ..., measured);
+;  - a transmit interrupt without a running job is ignored (IFSSPR would write through IY = 0).
+PRN_SIOD	EQU	5EH		; SIO A32 channel B data
+PRN_SIOC	EQU	5FH		; SIO A32 channel B control
+PRN_TMOTK	EQU	744		; job time-out in 50 Hz ticks (UDOS: 232 + 2 * 256 ticks of 49152 cycles)
+
+; PRN_INIT: hook the IM 2 slots, program CTC 58H channel 0 and the SIO channel B (WR1 = 0 until a job starts)
+PRN_INIT:
+	LD HL,0000H
+	LD (PRN_JOBPTR),HL
+	XOR A
+	LD (PRN_COLUMN),A
+	LD HL,PRN_TXISR
+	LD (INTVEC+0F0H),HL
+	LD HL,PRN_RXISR
+	LD (INTVEC+0F4H),HL
+	LD HL,PRN_EIRETI
+	LD (INTVEC+0F2H),HL
+	LD (INTVEC+0F6H),HL
+	LD HL,PRN_INITBL
+	LD BC,0C58H		; B = 12 bytes, C = port 58H (CTC 0)
+	OUTI			; 07H: timer, time constant follows
+	OUTI			; 01H: time constant 1 (9600 Bd x16)
+	LD C,PRN_SIOC
+	OTIR			; 10 bytes to SIO B control (see PRN_INITBL)
+	RET
+; WR1 = 1EH: receive interrupt on all characters, status affects vector, transmit interrupt on
+PRN_TXON:
+	LD A,01H
+	OUT (PRN_SIOC),A
+	LD A,1EH
+	OUT (PRN_SIOC),A
+	RET
+; WR1 = 0: no interrupts
+PRN_TXOFF:
+	LD A,01H
+	OUT (PRN_SIOC),A
+	LD A,00H
+	OUT (PRN_SIOC),A
+	RET
+; send A to the printer (does not return to the caller, see the coroutine note above)
+PRN_PUTCH:
+	POP IX
+	LD (PRN_CONTIN),IX
+	OUT (PRN_SIOD),A
+	RET
+
+; PRN_START: start the job described by AUF1 (IY), return at once; waits for a previous job
+PRN_START:
+	LD HL,(PRN_JOBPTR)
+	LD A,H
+	OR L
+	JR NZ,PRN_START
+	LD L,(IY+2)
+	LD H,(IY+3)
+	LD (PRN_SAVEHL),HL
+	LD L,(IY+4)
+	LD H,(IY+5)
+	LD A,H
+	OR L
+	JR Z,PRN_SETOK		; count 0: ready at once (as in IFSSPR: no callback)
+	LD (PRN_SAVEBC),HL
+	LD HL,0000H
+	LD (PRN_SAVEDE),HL
+	LD HL,PRN_TMOTK
+	LD (PRN_TMO),HL
+	LD (PRN_JOBPTR),IY
+	LD (IY+10),00H		; running
+	CALL PRN_TXON
+	XOR A
+	CALL PRN_PUTCH		; send a NUL to start the chain; the job code continues here after the first transmit interrupt
+PRN_CHARLP:
+	LD A,(HL)		; next byte
+	CP 0FFH
+	JR NZ,PRN_DOCHR
+PRN_ENDINC:
+	INC DE			; the terminator counts
+PRN_ENDOK:
+	LD A,80H
+PRN_ENDSTA:
+	LD (IY+10),A		; end of the job: status, bytes done, no job active
+	LD (IY+5),D
+	LD (IY+4),E
+	LD HL,0000H
+	LD (PRN_JOBPTR),HL
+	CALL PRN_TXOFF
+	RET			; leaves the coroutine: returns to the ISR frame
+PRN_SETOK:
+	LD (IY+10),80H
+	RET
+PRN_DOCHR:
+	CP 09H
+	JR Z,PRN_TAB
+	CALL PRN_PUTCH
+	PUSH HL
+	LD HL,PRN_COLUMN
+	INC (HL)
+	POP HL
+	CP 0DH
+	JR NZ,PRN_NXT
+	XOR A			; one NUL after a CR (carriage return time of the printer)
+	CALL PRN_PUTCH
+	XOR A
+	LD (PRN_COLUMN),A
+PRN_NXT:
+	INC HL
+	DEC BC
+	INC DE
+	LD A,C
+	OR B
+	JR NZ,PRN_CHARLP
+	JR PRN_ENDOK
+; TAB: blanks up to the next multiple of 8
+PRN_TAB:
+	LD A,20H
+	CALL PRN_PUTCH
+	PUSH HL
+	LD HL,PRN_COLUMN
+	INC (HL)
+	LD A,(HL)
+	POP HL
+	AND 07H
+	JR NZ,PRN_TAB
+	JR PRN_NXT
+
+; PRN_TICK: called from ISR_TAKT (interrupts off, registers saved except IY): job time-out
+PRN_TICK:
+	LD HL,(PRN_JOBPTR)
+	LD A,H
+	OR L
+	RET Z
+	LD HL,(PRN_TMO)
+	DEC HL
+	LD (PRN_TMO),HL
+	LD A,H
+	OR L
+	RET NZ
+	PUSH IY
+	LD IY,(PRN_JOBPTR)
+	LD (IY+10),0C2H		; time-out (bit 6 set: error callback)
+	LD HL,(PRN_SAVEDE)
+	LD (IY+4),L
+	LD (IY+5),H
+	LD HL,0000H
+	LD (PRN_JOBPTR),HL
+	CALL PRN_TXOFF
+	LD L,(IY+8)
+	LD H,(IY+9)
+	LD A,H
+	OR L
+	JR NZ,PRN_TCALL
+	LD L,(IY+6)
+	LD H,(IY+7)
+PRN_TCALL:
+	CALL PRN_JPHL
+	POP IY
+	RET
+PRN_JPHL:
+	JP (HL)
+
+; ---- interrupt: SIO B transmit empty = next character ----
+PRN_TXISR:
+	EI
+	PUSH HL
+	PUSH AF
+	LD HL,(PRN_JOBPTR)
+	LD A,H
+	OR L
+	JR NZ,PRN_TXGO
+	POP AF			; no job running: ignore
+	POP HL
+	RETI
+PRN_TXGO:
+	PUSH IY
+	PUSH IX
+	PUSH DE
+	PUSH BC
+	LD HL,PRN_ISRRET
+	PUSH HL
+	LD HL,(PRN_CONTIN)
+	PUSH HL
+	LD IY,(PRN_JOBPTR)
+	LD (IY+10),00H
+	LD HL,(PRN_SAVEHL)
+	LD BC,(PRN_SAVEBC)
+	LD DE,(PRN_SAVEDE)
+	LD A,(PRN_SAVEA)
+	RET			; resume the job code behind its last CALL PRN_PUTCH
+PRN_ISRRET:
+	LD (PRN_SAVEA),A	; the job code reaches here at its next PRN_PUTCH or at its end
+	LD (PRN_SAVEDE),DE
+	LD (PRN_SAVEBC),BC
+	LD (PRN_SAVEHL),HL
+	POP BC
+	POP DE
+	POP IX
+	LD A,(IY+10)
+	OR A
+	JR NZ,PRN_ISRERR	; status set: the job is over
+PRN_ISREXI:
+	POP IY
+	POP AF
+	POP HL
+	RETI
+PRN_ISRERR:
+	BIT 6,(IY+10)
+	JR Z,PRN_ISRCB
+	LD H,(IY+9)		; error: callback IY+8/9 if given
+	LD L,(IY+8)
+	LD A,H
+	OR L
+	JR NZ,PRN_ISRJMP
+PRN_ISRCB:
+	LD L,(IY+6)
+	LD H,(IY+7)
+PRN_ISRJMP:
+	POP IY
+	POP AF
+	EX (SP),HL		; HL = old HL again, callback address on the stack
+	RETI			; RETI "returns" into the callback
+
+; ---- interrupt: SIO B receive = XON/XOFF: XOFF (13H) stops the transmitter interrupt, any other character
+; (XON) restarts it and sends a NUL to get the chain going ----
+PRN_RXISR:
+	PUSH AF
+	IN A,(PRN_SIOD)
+	CP 13H
+	JR Z,PRN_RXOFF
+	CALL PRN_TXON
+	LD A,00H
+	OUT (PRN_SIOD),A
+	JR PRN_RXEND
+PRN_RXOFF:
+	LD A,01H
+	OUT (PRN_SIOC),A
+	LD A,1CH		; WR1 = 1CH: transmitter interrupt off, receive stays on
+	OUT (PRN_SIOC),A
+PRN_RXEND:
+	POP AF
+PRN_EIRETI:
+	EI
+	RETI
+; init table: 07H,01H -> CTC 58H; then to SIO B control: 18H, 18H reset, WR4 = 4DH (x16, 2 stop bits, odd parity),
+; WR3 = 41H (receive 7 bit, enable), WR5 = 28H (transmit 7 bit, enable), WR2 = F0H (interrupt vector base)
+PRN_INITBL:
+	DB	07H,01H,18H,18H,04H,4DH,03H,41H,05H,28H,02H,0F0H
+; variables (initialised by PRN_INIT / PRN_START)
+PRN_TMO:
+	DW	0FFFFH
+PRN_COLUMN:
+	DB	0FFH
+PRN_SAVEA:
+	DB	0FFH
+PRN_SAVEHL:
+	DW	0FFFFH
+PRN_SAVEBC:
+	DW	0FFFFH
+PRN_SAVEDE:
+	DW	0FFFFH
+PRN_JOBPTR:
+	DW	0FFFFH
+PRN_CONTIN:
+	DW	0FFFFH
 SEG9400E:
 	REPT	(100H-(($-SEG9400) AND 0FFH)) AND 0FFH
 	DB	0FFH

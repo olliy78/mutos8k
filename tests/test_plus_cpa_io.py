@@ -417,3 +417,74 @@ def test_wechsel_c3_4(tmp_path):
     assert "FIRST-DISK" in txt[0] and "SECOND-DISK" not in txt[0]
     assert "SECOND-DISK" in txt[1], "disk change: still the old content\n" + txt[1]
     assert txt[2].rfind("FIRST-DISK") > txt[2].find("SECOND-DISK") > 0, txt[2]
+
+
+# ---------------------------------------------------------------- C4.1: printer driver PRN_* (E7 b), tty1
+
+def test_drucker_ohne_udos_c4_1():
+    """No call of the UDOS printer driver (EB00H), no BIOS LIST and no IOBYTE write; DRUCKER starts PRN_START; the driver is hooked in
+    the CP/A table (slots F7F0H..F7F6H) and its time-out counts in ISR_TAKT (CTC 0EH belongs to the BIOS)."""
+    code = "\n".join(c for _, c in _code_lines())
+    assert not re.search(r"\b0?EB00H\b", code, re.I)
+    assert not re.search(r"CALL\s+B_LIST\b", code) and not re.search(r"\(0003H\)", code, re.I)
+    m = re.search(r"^DRUCKER:(.*?)^DRUCKER_FERTIG:", code, re.M | re.S)
+    assert m and re.search(r"CALL\s+PRN_START\b", m.group(1))
+    m = re.search(r"^PRN_INIT:(.*?)\bRET\b", code, re.M | re.S)
+    assert m
+    for slot, isr in (("0F0H", "PRN_TXISR"), ("0F4H", "PRN_RXISR")):
+        assert re.search(r"LD HL,%s\s+LD \(INTVEC\+%s\),HL" % (isr, slot), m.group(1)), slot
+    assert "4DH" in re.search(r"^PRN_INITBL:\s*DB\s+([0-9A-FH,]+)", code, re.M).group(1)       # 2 stop bits like IFSSPR
+    m = re.search(r"^ISR_TAKT:(.*?)^ISR_PARITAET:", code, re.M | re.S)
+    assert m and re.search(r"CALL\s+PRN_TICK\b", m.group(1))
+    assert not re.search(r"OUT\s+\(0EH\)", code, re.I)           # the BIOS owns CTC 0EH
+
+# bytes at port 5EH for `cat /etc/motd > /dev/lp` under UDOS with IFSSPR: 63 x OUT (5EH),A = NUL, CR, NUL, LF, CR, NUL ... in two jobs (53 B, 2 B),
+# measured with versuche/dbg/ifsspr_lp.dbg (logpoint at the OUT, doc/mutos_io/udos_lader.md section 2.4); the PRN_* driver must send the same
+UDOS_LP_MOTD = (b"\x00\r\x00\n\r\x00    MUTOS 8000 V.1.0\n\r\x00\n\r\x00    actual system date :\n\r\x00" + b"\x00\x0c\r\x00")
+
+
+def _ports(seg, port):
+    return bytes(int(m.group(1), 16) for m in re.finditer(r"OUT \(%s\)=([0-9A-F]+)" % port, seg))
+
+
+@pytest.mark.gast
+def test_drucker_tty1_c4_1(tmp_path):
+    """`cat /etc/motd > /dev/lp`: same 63 bytes at 5EH as under UDOS, two jobs ended normally (no time-out), TAB text expanded, tty1: 44
+    characters at 50H, console keeps working (markers), ticks keep running."""
+    import cpa
+    import cpa_disk
+    import gast_as
+    if cpa.fehlt(werkzeug=True):
+        pytest.skip("emulator or CP/M tool chain missing")
+    basis = os.environ.get("MPLUS_ARBEIT")
+    arbeit = os.path.join(basis, "drucker") if basis else str(tmp_path)
+    _c34_platten(arbeit)
+    with open(os.path.join(arbeit, "tab"), "wb") as f:
+        f.write(b"AB\tC\nXYZ\tW\n")
+    rc, o = gast_as._lauf([gast_as.disktool(), "put", os.path.join(arbeit, "tmp.hfe"), os.path.join(arbeit, "tab")])
+    assert rc == 0, o
+    sym, _ = _symbole()
+    platte = cpa_disk.bootdiskette(arbeit)
+    ers = dict(ARBEIT=arbeit, PRN_TXISR="0x%04X" % sym["PRN_TXISR"], PRN_ENDOK="0x%04X" % sym["PRN_ENDOK"], PRN_TCALL="0x%04X" % sym["PRN_TCALL"])
+    log = cpa.lauf_dbg(arbeit, _skript("cpa_c4_1_lp.dbg", **ers), platte, laufwerke=cpa_disk.LAUFWERKE, rw=True, frist=3600, name="lp")
+    scr = cpa._alles(log)
+    for k in range(1, 5):
+        assert "MARK%d" % k in scr, "marker MARK%d missing" % k
+    assert "fatal error" not in scr and "panic" not in scr
+    # the debugger echoes a command before it runs it: the output of part n lies between the echoes of MARKn and MARKn+1
+    pos = [log.find('(dbg) gscreen "MARK%d"' % k) for k in (2, 3, 4)]
+    assert all(p > 0 for p in pos)
+    lp, tab, tty = log[pos[0]:pos[1]], log[pos[1]:pos[2]], log[pos[2]:]
+    assert _ports(lp, "5EH") == UDOS_LP_MOTD, _ports(lp, "5EH")
+    # per job WR1 = 1EH at the start and 0 at the end (IFSSPR: 01 1E ... 01 00), two jobs
+    assert re.findall(r"OUT \(5FH\)=([0-9A-F]+)", lp) == ["01", "1E", "01", "00"] * 2
+    assert len(_logpunkte(lp, sym["PRN_TXISR"])) == 63, "one transmit interrupt per character"
+    assert len(_logpunkte(log, sym["PRN_ENDOK"])) == 4 and not _logpunkte(log, sym["PRN_TCALL"]), "jobs must end with status 80H, no time-out"
+    # TAB: blanks up to the next multiple of 8 (IFSSPR table 24C4H), NUL after every CR, the rest as sent by the kernel
+    assert _ports(tab, "5EH") == b"\x00\r\x00    AB      C\n\r\x00    XYZ     W\n\r\x00\x00\x0c\r\x00", _ports(tab, "5EH")
+    assert len(_ports(tty, "50H")) == 44, _ports(tty, "50H")
+    assert _ports(tty, "50H").startswith(b"\r\nMUTOS 8000 V.1.0\r\n")
+    ts = [int(m.group(1)) for m in re.finditer(r"\[io\] c(\d+) OUT \(50H\)", tty)]
+    mittel = sum(b - a for a, b in zip(ts, ts[1:])) / (len(ts) - 1)
+    print("tty1 cycles per character: %.0f" % mittel)
+    assert 2000 < mittel < 3200, mittel

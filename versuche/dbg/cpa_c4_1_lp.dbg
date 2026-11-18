@@ -1,0 +1,44 @@
+# Plan 48 C4.1: printer and tty1 through the PRN_* driver.  M8KBOOT -> mask -> r -> login -> "#", then
+#   cat /etc/motd > /dev/lp   (port log iow 5EH/5FH: PRN1)     cat /tmp/tab > /dev/lp  (text with TAB: PRN2)
+#   cat /etc/motd > /dev/tty1 (port log iow 50H/51H: TTY1)
+# Each part ends with a marker (echo MA""RKn); the host test cuts the log at the lines "(dbg) gscreen "MARKn"".
+# Placeholders: @ARBEIT@ (tmp.hfe usr.hfe root.hfe d0.hfe = copies; tmp.hfe holds /tab), @PRN_TXISR@ @PRN_ENDOK@ @PRN_TCALL@ logpoint addresses (TX interrupts, normal job ends, time-outs).
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+eject A
+mount A @ARBEIT@/tmp.hfe
+eject B
+mount B @ARBEIT@/usr.hfe
+eject C
+mount C @ARBEIT@/root.hfe
+eject D
+mount D @ARBEIT@/d0.hfe
+keys r
+gscreen "login:" 600000000
+g 3000000
+keys root\r
+gscreen "#" 200000000
+g 3000000
+keys /etc/mount\s/dev/rk1\s/usr;/etc/mount\s/dev/rk0\s/tmp;/etc/mount\s/dev/rk3\s/mnt;echo\sMA""RK1\r
+gscreen "MARK1" 400000000
+g 3000000
+iow 0x5E
+iow 0x5F
+logpoint @PRN_TXISR@
+logpoint @PRN_ENDOK@
+logpoint @PRN_TCALL@
+keys cat\s/etc/motd\s>\s/dev/lp;echo\sMA""RK2\r
+gscreen "MARK2" 800000000
+g 6000000
+keys cat\s/tmp/tab\s>\s/dev/lp;echo\sMA""RK3\r
+gscreen "MARK3" 800000000
+g 6000000
+dev sio
+iow 0x50
+iow 0x51
+keys cat\s/etc/motd\s>\s/dev/tty1;echo\sMA""RK4\r
+gscreen "MARK4" 800000000
+g 6000000
+screen
+dev sio
+dev ctc
