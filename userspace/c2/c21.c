@@ -427,29 +427,31 @@ register struct node *np;
 
 /* V7 dest with size (sz) bookkeeping; '@' instead of '*', '#' instead of '$' */
 dest(as, sz, flt)
+char *as;
 char sz;
 register flt;
-register char *as;
 {
+	register char *s;
 	register i, r;
 
-	if ((r = isreg(as)) >= 0) {
+	s = as;
+	if ((r = isreg(s)) >= 0) {
 		kill(r+flt, sz);
 		if (flt == 0)
 			kill(r+14, sz);
 	}
 	for (i = 0; i < NREG; i++)
 		if ((r >= 0 && isreg(regs[i]) == r)
-		 || (regs[i][0] == '@' && equstr(regs[i]+1, as)))
+		 || (regs[i][0] == '@' && equstr(regs[i]+1, s)))
 			kill(i, sz);
-	while ((i = findrand(as, sz, flt)) >= 0) {
+	while ((i = findrand(s, sz, flt)) >= 0) {
 		if (rsz[i] == sz)
 			kill(i, sz);
 		else if (i+flt <= NREG && rsz[i+flt] == sz)
 			kill(i+flt, sz);
 	}
-	while (*as) {
-		if ((*as == '(' && (as[1] != 'F' || as[2] != 'P')) || *as++ == '@') {
+	while (*s) {
+		if ((*s == '(' && (s[1] != 'F' || s[2] != 'P')) || *s++ == '@') {
 			for (i = 0; i < FREG; i++) {
 				if (regs[i][0] != '#' && regs[i][0] != 'r' && regs[i][0] != 'f')
 					kill(i, sz);
@@ -466,13 +468,15 @@ register char *as;
  * walk as dest.  Name Annahme.
  */
 clrptr(as, sz, flt)
+char *as;
 char sz;
 register flt;
-register char *as;
 {
+	register char *s;
 	register i;
 
-	if ((i = isreg(as)) >= 0) {
+	s = as;
+	if ((i = isreg(s)) >= 0) {
 		rnode[i+flt] = 0;
 		if (flt == 0)
 			rnode[i+14] = 0;
@@ -487,17 +491,17 @@ register char *as;
 			rnode[i+17] = 0;
 		}
 	} else {
-		if (*as == '@') {
-			as++;
-			if ((i = isreg(as)) >= 0)
+		if (*s == '@') {
+			s++;
+			if ((i = isreg(s)) >= 0)
 				goto clr;
 		}
-		for (; *as; as++)
-			if (*as == '(')
+		for (; *s; s++)
+			if (*s == '(')
 				break;
-		if (*as && *as == '(') {
-			as++;
-			if ((i = regno(as)) < 0)
+		if (*s && *s == '(') {
+			s++;
+			if ((i = regno(s)) < 0)
 				return;
 		clr:
 			rnode[i] = 0;
