@@ -9,3 +9,6 @@ __pycache__/
 userspace/*/work/
 userspace/ergaenzung/*/work/
 userspace/ergaenzung_abnahme/*/work/
+
+# Plan 48: M80/LINKMT-Bauordner (cpm_bau)
+mutos_io/cpa/build/

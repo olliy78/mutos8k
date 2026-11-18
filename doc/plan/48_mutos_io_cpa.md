@@ -601,7 +601,7 @@ Kette auf `mutoscpa.mac` (strikt nacheinander): C2.1 -> C3.1 -> C3.2 -> C3.3 -> 
 | C1.7 | `versuche/plus_cpa/itest.mac`, `itest.py`, `doc/plus/cpa/c1_7_interrupts.md` | Sekunden | 2 h | erledigt (keine Tickverluste, groesste Verspaetung 0,68 ms; BIOS liest/schreibt mit Fremd-ISR richtig; E2 (a), E6 Tastatur ueber BIOS `CONST`) | 2026-11-17 | s. git log |
 | C1.8 | `doc/plus/cpa/c1_8_vier_floppy.md` | Sekunden | 2-4 h | erledigt | 2026-11-17 | 7f41132 |
 | C1.9 | `doc/plus/cpa_analyse.md`, §8-§10, §12 | -- | 1-2 h | erledigt (Vorlage `a3789ba`; Entscheidung 2026-11-17: alle Empfehlungen; Punkt 4: §8 Ergebnis, §9 endgueltig, §10, §12) | 2026-11-18 | Betreff "Plan 48: C1.9 Punkt 4" |
-| C2.1 | `mutos_io/cpa/{src/mutoscpa.mac,build.py,mutoscpa.bin,README.md}`, `tests/test_plus_cpa_quelle.py` | -- | 1 h | offen | | |
+| C2.1 | `mutos_io/cpa/{src/mutoscpa.mac,build.py,mutoscpa.bin,README.md}`, `tests/test_plus_cpa_quelle.py` | -- | 1 h | erledigt | 2026-11-18 | 91fa315 |
 | C2.2 | `tools/plus/cpa_system.py`, `mutos_io/cpa/system/`, `tests/test_plus_cpa_system.py`, `doc/plus/cpa/c2_2_system.md` | Sekunden | 2 h | offen | | |
 | C2.3 | `mutos_io/cpa/src/m8kboot.mac`, `m8kboot.com`, `versuche/plus_cpa/emfenst.mac`, `versuche/dbg/cpa_c2_3_*`, `tests/test_plus_cpa_lader.py`, `doc/plus/cpa/c2_3_lader.md` | Sekunden | 3-4 h | offen | | |
 | C3.1 | `mutos_io/cpa/src/mutoscpa.mac`, `tests/test_plus_cpa_io.py`, `doc/plus/cpa/c3_1_namen.md` | -- | 1-2 h | offen | | |
