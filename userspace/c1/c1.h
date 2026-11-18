@@ -149,6 +149,10 @@ int	xlab1, xlab2, xop, xzero;
 #define	FSELA	16
 #define	ULSH	17
 #define	ASULSH	18
+#define	ZRSH	107	/* Not V7: Z8000 unsigned shifts (names *Annahme*) */
+#define	ZLSH	108
+#define	ASZRSH	137
+#define	ASZLSH	138
 
 #define	KEYW	19
 #define	NAME	20

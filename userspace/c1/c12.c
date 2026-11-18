@@ -9,14 +9,19 @@
 extern int nreg;
 extern int isn;
 
+/*
+ * Reconstructed from the binary at 3FD6 (W6g).  Differs from V7: no FCON/SFCON
+ * conversion, no ASAND->ASANDN and no AND->ANDN rewriting, no DOUBLE in MINUS,
+ * frame pointer R14 for auto variables, no hardlongs (long multiply/divide are
+ * returned as they are), Z8000 shift handling with the unsigned shift operators
+ * ZRSH/ZLSH/ASZRSH/ASZLSH, ASAND with constant 0 becomes ASSIGN, and OR/ASOR
+ * with constant 0 is dropped.
+ */
 optim(atree)
 struct tnode *atree;
 {
-	struct { int intx[4]; };
-	register op, dope;
-	int d1, d2;
-	struct tnode *t;
-	register struct tnode *tree;
+	register op, dope, d1, d2;
+	register struct tnode *t, *tree;
 
 	if ((tree=atree)==0)
 		return(0);
@@ -24,20 +29,12 @@ struct tnode *atree;
 		return(tree);
 	if (op==NAME && tree->class==AUTO) {
 		tree->class = OFFS;
-		tree->regno = 5;
+		tree->regno = 14;		/* Differs from V7: R14 is the frame pointer */
 		tree->offset = tree->nloc;
 	}
 	dope = opdope[op];
-	if ((dope&LEAF) != 0) {
-		if (op==FCON
-		 && tree->fvalue.intx[1]==0
-		 && tree->fvalue.intx[2]==0
-		 && tree->fvalue.intx[3]==0) {
-			tree->op = SFCON;
-			tree->value = tree->fvalue.intx[0];
-		}
+	if ((dope&LEAF) != 0)
 		return(tree);
-	}
 	if ((dope&BINARY) == 0)
 		return(unoptim(tree));
 	/* is known to be binary */
@@ -45,17 +42,7 @@ struct tnode *atree;
 		tree->type = INT;
 	switch(op) {
 	/*
-	 * PDP-11 special:
-	 * generate new =&~ operator out of =&
-	 * by complementing the RHS.
-	 */
-	case ASAND:
-		tree->op = ASANDN;
-		tree->tr2 = tnode(COMPL, tree->tr2->type, tree->tr2);
-		break;
-
-	/*
-	 * On the PDP-11, int->ptr via multiplication
+	 * int->ptr via multiplication
 	 * Longs are just truncated.
 	 */
 	case LTOP:
@@ -68,11 +55,7 @@ struct tnode *atree;
 	case MINUS:
 		if ((t = isconstant(tree->tr2)) && (t->type!=UNSIGN || tree->type!=LONG)) {
 			tree->op = PLUS;
-			if (t->type==DOUBLE)
-				/* PDP-11 FP representation */
-				t->value =^ 0100000;
-			else
-				t->value = -t->value;
+			t->value = -t->value;
 		}
 		break;
 	}
@@ -85,39 +68,7 @@ struct tnode *atree;
 		tree = acommute(tree);
 		if (tree->op == op)
 			tree->type = d1;
-		/*
-		 * PDP-11 special:
-		 * replace a&b by a ANDN ~ b.
-		 * This will be undone when in
-		 * truth-value context.
-		 */
-		if (tree->op!=AND)
-			return(tree);
-		/*
-		 * long & pos-int is simpler
-		 */
-		if (tree->type==LONG && tree->tr2->op==ITOL
-		 && (tree->tr2->tr1->op==CON && tree->tr2->tr1->value>=0
-		   || tree->tr2->tr1->type==UNSIGN)) {
-			tree->type = UNSIGN;
-			t = tree->tr2;
-			tree->tr2 = tree->tr2->tr1;
-			t->tr1 = tree;
-			tree->tr1 = tnode(LTOI, UNSIGN, tree->tr1);
-			return(optim(t));
-		}
-		/*
-		 * Keep constants to the right
-		 */
-		if ((tree->tr1->op==ITOL && tree->tr1->tr1->op==CON)
-		  || tree->tr1->op==LCON) {
-			t = tree->tr1;
-			tree->tr1 = tree->tr2;
-			tree->tr2 = t;
-		}
-		tree->op = ANDN;
-		op = ANDN;
-		tree->tr2 = tnode(COMPL, tree->tr2->type, tree->tr2);
+		return(tree);
 	}
     again:
 	tree->tr1 = optim(tree->tr1);
@@ -158,24 +109,23 @@ struct tnode *atree;
 			return(optim(tree));
 		}
 
-	case LTIMES:
-	case LDIV:
-	case LMOD:
-	case LASTIMES:
-	case LASDIV:
-	case LASMOD:
-		tree->degree = 10;
-		break;
-
-	case ANDN:
-		if (isconstant(tree->tr2) && tree->tr2->value==0) {
-			return(tree->tr1);
-		}
-		goto def;
-
 	case CALL:
 		tree->degree = 10;
 		break;
+
+	case ASAND:
+		if (isconstant(tree->tr2) && tree->tr2->value==0) {
+			op = ASSIGN;
+			tree->op = op;
+			goto again;
+		}
+		goto def;
+
+	case OR:
+	case ASOR:
+		if (isconstant(tree->tr2) && tree->tr2->value==0)
+			return(tree->tr1);
+		goto def;
 
 	case QUEST:
 	case COLON:
@@ -190,20 +140,22 @@ struct tnode *atree;
 			return(tree->tr1);
 	case MOD:
 	case ASMOD:
-		if (tree->tr1->type==UNSIGN && ispow2(tree))
-			return(pow2(tree));
 		if ((op==MOD||op==ASMOD) && tree->type==DOUBLE) {
 			error("Floating %% not defined");
 			tree->type = INT;
 		}
-	case ULSH:
-	case ASULSH:
 		d1 =+ 2;
 		d2 =+ 2;
 		if (tree->type==LONG)
-			return(hardlongs(tree));
+			return(tree);
 		goto constant;
 
+	case ZRSH:
+	case ZLSH:
+	case ASZRSH:
+	case ASZLSH:
+		d1 =+ 2;
+		d2 =+ 2;
 	case LSHIFT:
 	case RSHIFT:
 	case ASRSH:
@@ -211,28 +163,35 @@ struct tnode *atree;
 		if (tree->tr2->op==CON && tree->tr2->value==0) {
 			return(tree->tr1);
 		}
-		/*
-		 * PDP-11 special: turn right shifts into negative
-		 * left shifts
-		 */
 		if (tree->type == LONG) {
 			d1++;
 			d2++;
 		}
-		if (op==LSHIFT||op==ASLSH)
-			goto constant;
-		if (tree->tr2->op==CON && tree->tr2->value==1
-		 && tree->tr1->type!=UNSIGN)
-			goto constant;
-		op =+ (LSHIFT-RSHIFT);
-		tree->op = op;
-		tree->tr2 = tnode(NEG, tree->type, tree->tr2);
+		/* Not V7: shift counts are clamped (a long count <= 32 is still cut at 16) */
+		if (tree->tr2->op==CON) {
+			if (tree->type==LONG && tree->tr2->value>32)
+				tree->tr2->value = 32;
+			else if (tree->tr2->value>16)
+				tree->tr2->value = 16;
+		}
 		if (tree->tr1->type==UNSIGN) {
 			if (tree->op==LSHIFT)
-				tree->op = ULSH;
+				tree->op = ZLSH;
 			else if (tree->op==ASLSH)
-				tree->op = ASULSH;
+				tree->op = ASZLSH;
+			else if (tree->op==RSHIFT)
+				tree->op = ZRSH;
+			else if (tree->op==ASRSH)
+				tree->op = ASZRSH;
 		}
+		if (tree->tr2->op==CON && tree->tr2->value>0)
+			goto constant;
+		if (op==LSHIFT || op==ASLSH || op==ZLSH || op==ASZLSH)
+			goto constant;
+		/* right shifts become negative left shifts (opcode + 1) */
+		op++;
+		tree->op = op;
+		tree->tr2 = tnode(NEG, tree->type, tree->tr2);
 		goto again;
 
 	constant:
