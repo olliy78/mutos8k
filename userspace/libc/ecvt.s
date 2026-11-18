@@ -1,0 +1,354 @@
+! RECONSTRUCTED (W8): text and data of the shipped libc.a member as data words (no source with these instructions), labels from its symbol table !
+ecvt_ module
+$NONSEGMENTED
+constant
+	FP	:= r14
+	SP	:= r15
+	X	:= external
+	G	:= global
+	I	:= internal
+	A	:= array
+	PR	:= procedure
+	E	:= entry
+	B	:= byte
+	W	:= word
+	BV	:= bval
+	WV	:= wval
+	LV	:= lval
+	L	:= label
+X	csv	PR;
+X	cret	PR;
+X	_modf	PR;
+G	_fcvt	L
+G	_ecvt	PR
+E
+_ecvt:
+	WV	%5F00
+	WV	csv
+	WV	%DF9
+	WV	%1
+	WV	%53FE
+	WV	%10
+	WV	%53FE
+	WV	%E
+	WV	%53FE
+	WV	%C
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%ABF7
+	WV	%FFC
+	WV	%8003
+	WV	%5F00
+	WV	_cvt
+	WV	%A9FF
+	WV	%5E08
+	WV	cret
+_fcvt:
+	WV	%5F00
+	WV	csv
+	WV	%DF9
+	WV	%0
+	WV	%53FE
+	WV	%10
+	WV	%53FE
+	WV	%E
+	WV	%53FE
+	WV	%C
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%ABF7
+	WV	%FFC
+	WV	%8003
+	WV	%5F00
+	WV	_cvt
+	WV	%A9FF
+	WV	%5E08
+	WV	cret
+_cvt:
+	WV	%5F00
+	WV	csv
+	WV	%ABFF
+	WV	%4DE4
+	WV	%C
+	WV	%ED02
+	WV	%4DE8
+	WV	%C
+	WV	%4DE1
+	WV	%C
+	WV	%4F
+	WV	%E103
+	WV	%4DE5
+	WV	%C
+	WV	%4E
+	WV	%89DD
+	WV	%61E2
+	WV	%10
+	WV	%D28
+	WV	%210C
+	WV	buf
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%8E00
+	WV	%20
+	WV	%E909
+	WV	%61E2
+	WV	%10
+	WV	%D25
+	WV	%1
+	WV	%8E04
+	WV	%8090
+	WV	%4FEC
+	WV	%8003
+	WV	%4
+	WV	%A1E2
+	WV	%102
+	WV	%FFEC
+	WV	%93F2
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%ABF7
+	WV	%FFC
+	WV	%8003
+	WV	%5F00
+	WV	_modf
+	WV	%A9F9
+	WV	%4FEC
+	WV	%8003
+	WV	%4
+	WV	%210B
+	WV	B50
+	WV	%4FE4
+	WV	%8003
+	WV	%FFEC
+	WV	%8E00
+	WV	%20
+	WV	%E63E
+	WV	%E82C
+	WV	%A1E2
+	WV	%102
+	WV	%FFEC
+	WV	%93F2
+	WV	%4FE4
+	WV	%8003
+	WV	%FFEC
+	WV	%4F04
+	WV	%40A3
+	WV	D0
+	WV	%ABF7
+	WV	%FFC
+	WV	%8003
+	WV	%5F00
+	WV	_modf
+	WV	%A9F9
+	WV	%4FEC
+	WV	%8003
+	WV	%FFE4
+	WV	%ABB0
+	WV	%A1B2
+	WV	%4FE4
+	WV	%8203
+	WV	%FFE4
+	WV	%4F04
+	WV	%4283
+	WV	D8
+	WV	%4F04
+	WV	%42B3
+	WV	D0
+	WV	%8F50
+	WV	%C001
+	WV	%8E04
+	WV	%C642
+	WV	%8F20
+	WV	%8421
+	WV	%8F58
+	WV	%C001
+	WV	%A154
+	WV	%A153
+	WV	%103
+	WV	%30
+	WV	%2E2B
+	WV	%A9D0
+	WV	%4FE4
+	WV	%8003
+	WV	%FFEC
+	WV	%8E00
+	WV	%20
+	WV	%EECE
+	WV	%B0B
+	WV	B50
+	WV	%EF25
+	WV	%A1C2
+	WV	%A9C0
+	WV	%A1B3
+	WV	%A9B0
+	WV	%203C
+	WV	%8844
+	WV	%2E2C
+	WV	%E8F5
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%8E00
+	WV	%20
+	WV	%E217
+	WV	%E807
+	WV	%4FE4
+	WV	%8003
+	WV	%FFE4
+	WV	%4FEC
+	WV	%8003
+	WV	%4
+	WV	%ABD0
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%4F04
+	WV	%40B3
+	WV	D0
+	WV	%4FEC
+	WV	%8003
+	WV	%FFE4
+	WV	%4F04
+	WV	%8103
+	WV	D10
+	WV	%8E00
+	WV	%4120
+	WV	%E1EA
+	WV	%61EB
+	WV	%C
+	WV	%10B
+	WV	buf
+	WV	%4DE4
+	WV	%12
+	WV	%EE01
+	WV	%81DB
+	WV	%61E2
+	WV	%E
+	WV	%2F2D
+	WV	%B0B
+	WV	buf
+	WV	%EF06
+	WV	%4C08
+	WV	buf
+	WV	%2102
+	WV	buf
+	WV	%5E08
+	WV	cret
+	WV	%8BBC
+	WV	%EB2C
+	WV	%B0C
+	WV	B50
+	WV	%EF29
+	WV	%4FE4
+	WV	%8003
+	WV	%4
+	WV	%4F04
+	WV	%40B3
+	WV	D0
+	WV	%4FEC
+	WV	%8003
+	WV	%4
+	WV	%A1E2
+	WV	%102
+	WV	%FFE4
+	WV	%93F2
+	WV	%ABF7
+	WV	%FFC
+	WV	%8003
+	WV	%5F00
+	WV	_modf
+	WV	%A9F9
+	WV	%4FEC
+	WV	%8003
+	WV	%4
+	WV	%A1C2
+	WV	%A9C0
+	WV	%4FE4
+	WV	%8203
+	WV	%FFE4
+	WV	%8F50
+	WV	%C001
+	WV	%8E04
+	WV	%C642
+	WV	%8F20
+	WV	%8421
+	WV	%8F58
+	WV	%C001
+	WV	%A154
+	WV	%A153
+	WV	%103
+	WV	%30
+	WV	%2E2B
+	WV	%E8D2
+	WV	%B0B
+	WV	B50
+	WV	%E703
+	WV	%4C08
+	WV	B4F
+	WV	%E8C8
+	WV	%A1BC
+	WV	%20BA
+	WV	%8822
+	WV	%A924
+	WV	%2EBA
+	WV	%E817
+	WV	%ABB0
+	WV	%A1B2
+	WV	%2820
+	WV	%E813
+	WV	%CB5
+	WV	%3030
+	WV	%B0B
+	WV	buf
+	WV	%EBF7
+	WV	%CB5
+	WV	%3131
+	WV	%61E2
+	WV	%E
+	WV	%2920
+	WV	%4DE4
+	WV	%12
+	WV	%EE06
+	WV	%B0C
+	WV	buf
+	WV	%E302
+	WV	%CC5
+	WV	%3030
+	WV	%A9C0
+	WV	%20BA
+	WV	%8822
+	WV	%B02
+	WV	%39
+	WV	%EBE8
+	WV	%CC8
+	WV	%E8A4
+end _ecvt
+I
+D0:
+WV	%4024
+WV	%0
+WV	%0
+WV	%0
+D8:
+WV	%3F9E
+WV	%B851
+WV	%EB85
+WV	%1EB8
+D10:
+WV	%3FF0
+WV	%0
+WV	%0
+WV	%0
+$SECTION BSS_B
+I
+buf:
+$REL	$+%4F
+B4F:
+$REL	$+%1
+B50:
+$SDEFAULT
+end ecvt_
