@@ -277,3 +277,15 @@ Reine Analyse, **keine Quelländerung**; Bau unveraendert gegenueber Teil 13 (*g
 * `getree` 3416 (6): 348A (`PUSH #D+8B0` gegen `LDCTL`), 3544 (`PUSH #D+8C5/8C8/8CB; JR` gegen nichts), 355E, 35E8: wie `cexpr` verschobene Fehlerzweige (Block-Platzierung); 390A `CALL L` gegen `CALL _atof`: Fremd-`atof` (Teil 13, `atof.s` ist ein ausgeliefertes Glied, das Original-`atof` liegt woanders).  34C8 (`JP NZ` gegen `JR Z; CALL; JR`) ist eine Verzweigungs-Umkehr derselben Verschiebung.
 
 **Ergebnis:** 0 Bloecke behoben; 5 Funktionen klassifiziert.  Einzige echte Quellaufgabe: `ispow2`/`pow2` (long).
+
+## Teil 15: `ispow2` (long) und `pow2` umgeschrieben (W6m)
+
+Quelle: `userspace/c1/c11.c`.  Erste Form traf; die zweite Probe war nicht noetig (*gemessen*: ein Bau).
+
+**`ispow2`** (2D12): `long ispow2(atree)`, `register struct tnode *p; long d;`.  `p = tr2` bei `op` CON/LCON, `p = tr2->tr1` bei ITOL mit CON darunter, sonst `return(0L)`; `d = p->lvalue` bei LCON, sonst `d = p->value`; `if (d>1 && (d&(d-1))==0) return(d); return(0L);`.  Wichtig: der Test ist `d>1` (Original `CPL RR2,RR0` mit RR0=1), nicht `d>0` wie in der ersten Analyse (Teil 14) angenommen.  Andere Aufrufer (c10.c, c12.c) bleiben ohne Deklaration (int), wie im Original (`TEST R2` nach dem Aufruf).  Bis auf die BSS-Adresse bei 2DA4 (Folge der 8 fehlenden BSS-Bytes) deckungsgleich.
+
+**`pow2`** (2DEA): `register int i; register struct tnode *tree; long d;`.  Das Original setzt den Wert nicht je Fall, sondern einmal nach dem `switch`: je Fall nur `tree->op` und ggf. `i = -i` bzw. `i = (1<<i)-1`; DIVIDE/ASDIV waehlen bei `tree->type==UNSIGN` ZLSH(108)/ASZLSH(138), sonst LSHIFT/ASLSH (nicht ULSH).  Danach `if (tr2->op==ITOL) tr2->tr1->value = i; else if (tr2->op==LCON) tr2->lvalue = i; else tr2->value = i;`.  Vollstaendig deckungsgleich.
+
+Alternativform (nicht gebaut): `p`/`d` anders verteilen oder `d>0`; unnoetig.
+
+**Stand nach dem Bau:** Text 30108 (Original 30176), Daten 5582 (gleich), BSS 1824 (1832); Befehle 7211 gegen 7970, **7057 gleich** (vorher 6954), 90 Bloecke (vorher 96).  `ispow2`/`pow2` nur noch die Adressfolge bei 2DA4.  `--check c1` OK; pytest 213 bestanden, derselbe eine Fehler wie in Teil 5.
