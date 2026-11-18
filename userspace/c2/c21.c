@@ -47,8 +47,9 @@ rmove()
 	case MOV:
 	case LDK:
 		dualop(p);
-		if (equstr(regs[RT1], regs[RT2]))
-			goto del;
+		if (!equstr(regs[RT1], regs[RT2]))
+			goto mv;
+		goto del;
 	mv:
 		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
 		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
