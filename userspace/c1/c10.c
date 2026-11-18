@@ -47,19 +47,16 @@ char *argv[];
 		error("Can't create %s", argv[3]);
 		exit(1);
 	}
+	/* Differs from V7: Z8000 as module header instead of the PDP-11 ".globl" lines; no fltused reference.
+	   modname is a 3-byte array in the original (address 7B3E, "c_"); every call passes it again (the c2 merges the pushes). */
+	printf("%s module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n", modname);
+	printf("\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n", modname);
+	printf("\tI\t:= internal\n\tA\t:= array\n\tPR\t:= procedure\n", modname);
+	printf("\tE\t:= entry\n\tB\t:= byte\n\tW\t:= word\n", modname);
+	printf("\tBV\t:= bval\n\tWV\t:= wval\n\tLV\t:= lval\n", modname);
+	printf("\tL\t:= label\nX\tcsv\tPR\nX\tcret\tPR;\n", modname);
 	funcbase = curbase = coremax = sbrk(0);
 	getree();
-	/*
-	 * If any floating-point instructions
-	 * were used, generate a reference that
-	 * pulls in the floating-point part of printf.
-	 */
-	if (nfloat)
-		printf(".globl	fltused\n");
-	/*
-	 * tack on the string file.
-	 */
-	printf(".globl\n.data\n");
 	if (*argv[2] != '-') {
 		if (freopen(argv[2], "r", stdin)==NULL) {
 			error("Missing temp file");
@@ -71,6 +68,7 @@ char *argv[];
 		error("Warning: possibly too much data");
 		nerror--;
 	}
+	printf("end %s\n", modname);
 	exit(nerror!=0);
 }
 
@@ -961,11 +959,12 @@ struct tnode **ap;
 		*ap = ncopy(p->tr1);
 		return(p);
 	}
-	if (p->op==STAR || p->op==PLUS)
+	/* Differs from V7: only PLUS is followed (listing 1A82: one comparison with 0x28), STAR is not. */
+	if (p->op==PLUS) {
 		if (p1=sdelay(&p->tr1))
 			return(p1);
-	if (p->op==PLUS)
 		return(sdelay(&p->tr2));
+	}
 	return(0);
 }
 
@@ -1025,9 +1024,11 @@ int *flagp;
 {
 	register struct tnode *tree;
 	register retval;
-	int i;
-	int size;
+	register i;	/* unused: the original keeps r10 for size, i.e. one register variable before it (listing 1B4C) */
+	register size;
 
+	/* Differs from V7: the structure copy is Z8000 code (ld r0,#n / dec SP / dec rK / lddr), no
+	   nstack bookkeeping, no lsptab path (flagp unused): every other argument goes through sptab. */
 	tree = atree;
 	if (tree->op==STRASG) {
 		size = tree->mask;
@@ -1050,28 +1051,14 @@ int *flagp;
 		tree = optim(tree);
 		retval = rcexpr(tree, regtab, 0);
 		size =>> 1;
-		if (size <= 5) {
-			for (i=0; i<size; i++)
-				printf("mov	-(r%d),-(sp)\n", retval);
-		} else {
-			if (retval!=0)
-				printf("mov	r%d,r0\n", retval);
-			printf("mov	$%o,r1\n", size);
-			printf("L%d:mov	-(r0),-(sp)\ndec\tr1\njne\tL%d\n", isn, isn);
-			isn++;
-		}
-		nstack++;
+		printf("ld\tr0,#%%%x\n", size);
+		printf("dec\tSP\ndec\tr%d\n", zreg(retval));
+		printf("lddr\t@SP,@r%d,r0\n", zreg(retval));
 		return(size*2);
 	}
 normal:
-	if (nstack || isfloat(tree) || tree->type==LONG) {
-		rcexpr(tree, sptab, 0);
-		retval = arlength(tree->type);
-	} else {
-		(*flagp)++;
-		rcexpr(tree, lsptab, 0);
-		retval = 0;
-	}
+	rcexpr(tree, sptab, 0);
+	retval = arlength(tree->type);
 	return(retval);
 }
 
@@ -1197,4 +1184,19 @@ struct tnode *tree;
 		return;
 	}
 	printf("mov%c	r%d,r%d\n", isfloat(tree), r0, r1);
+}
+
+/*
+ * Not V7 (original at 21D6, 38 bytes; name invented, *Annahme*): map a code
+ * generator register number to the Z8000 register number used in the output.
+ * 0..5 -> 2..7, 6..7 -> 0..1, others unchanged.
+ */
+zreg(r)
+register r;
+{
+	if (r < 6)
+		return(r+2);
+	if (r > 7)
+		return(r);
+	return(r-6);
 }
