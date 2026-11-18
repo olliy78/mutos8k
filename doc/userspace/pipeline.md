@@ -63,3 +63,23 @@ Originals.  So bleibt der Bericht lesbar, auch wenn ein Groessenunterschied alle
 * `--asm` bei Mehrdatei-Programmen: `.s` je Modul in Sitzungen zu <= 40 KB, ausgegeben als `work/bau/NAME_s/*.s`; `--c2emu` schreibt jedes Modul um und baut `NAME_c2`.
 * `C2_AUS` (pipeline.py): je Programm abgeschaltete c2-Regeln (`sh`: R1-R10, R30, R31).  `karte_extra.txt`: `ohne ADDR` / `code ADDR` (siehe `sh.md`).
 * `vergleich --karte-extra-beide`: `karte_extra.txt` auch fuer das gebaute Abbild.
+
+## Erweiterungen seit Stufe 3 (Stand 2026-11-18)
+
+Gemessen eingefuehrt in den genannten Arbeitspaketen; Einzelheiten dort.
+
+* **`--libc alt`** -- bindet gegen das aus den Originalabbildern zurueckgewonnene Archiv `userspace/libc_alt` statt gegen die mitgelieferte `libc.a`
+  (Stolperstein 1).  Je Programm `userspace/libc_alt/NAME.members`, Hand-Nachtraege in `NAME.members.zusatz` (z. B. `doprnt code=...`, Exportadressen,
+  `common`-Adressen).  Ohne libc-Glieder (`getty`, `sync`) bleibt `--libc disk`.  Werkzeug: `libc_alt.py bau NAME` (Rundlauf: 0 Glieder abweichend).
+* **Varianten:** `--ist neu` (ohne c2-Modell), `neu_c2` (c2-Modell je Modul, Mehrdatei-Programme: `c0`, `c1`, `c2`, `cpp`), `neu_c2_s` (c2-Modell auf das ganze `.s`).
+* **c2-Modell:** `uspace.c2_emu_s` mit allgemeinen Regeln, `C2_AUS` je Programm (pipeline.py), programmgebundene Regelsaetze (`mkfs ed tar cc c0` als Parameter,
+  `c2_ld_s`, `c2_cpp_s`, `c2_convert_s` danach).  Regelbereiche: R1-R91 (Plan 44), R92 tar, R93-R100 cc/ld, R101-R112 cpp, R130-R133 c0; frei R170-R199 (c2), R200-R229 (libc), R230-R259 (c1).
+  Was die Regeln gegenueber dem ausgelieferten c2 bedeuten: `README.md`, Abschnitt c2-Gegenprobe.
+* **`karte_extra.txt`:** `ohne ADDR` (Vorschlag verwerfen), `code ADDR` (zusaetzlicher Einstieg, z. B. Sprungtabellenziel, toter Code), `db/dw/dwc/txt` (Tabellen und Zeichenketten,
+  `dwc` = Sprungtabelle mit Codezeigern).  `--check NAME` liest sie mit (seit Stufe 5).
+* **Mehrdatei-Programme:** ohne `link.txt` werden alle `*.c` alphabetisch gebunden; `userspace/NAME/link.txt` legt die Reihenfolge fest und darf `.s`-Module enthalten
+  (c1: `atof.s`, `table_z8k.s`), die unveraendert in die c2-Runde gehen.  Eine `.c`, die von einer anderen `#include`d wird (cpp: `yylex.c`), zaehlt als Header.
+* **Stufenbau** fuer Quellen ab 20000 B (`STUFEN_AB`): `cpp`, `c0`, `c1`, `c2`, `as`, `ld` einzeln (`/tmp`-Platz); seit W3 in drei kurzen Gastbefehlen statt einem 440-Zeichen-Befehl
+  (im Gast-tty ging ein Zeichen verloren, die Kette lief dann still nicht).
+* **yacc-Quellen:** `tools/userspace/erg_yacc.py [DIR/]NAME` erzeugt `NAME.c` aus `NAME.y` mit dem Gast-yacc (Plan 45; cpp `cpy.y` W2).  Die erzeugte `.c` wird eingecheckt.
+
