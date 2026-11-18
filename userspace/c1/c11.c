@@ -7,6 +7,7 @@
 
 extern int nreg;
 extern int isn;
+extern int zf4, wregf, bregf, zf8, zf9;	/* defined in c10.c */
 
 /* Not V7: original data at 7B3E (3 bytes + pad) */
 char	modname[]	"c_";
@@ -76,6 +77,12 @@ struct tnode *at;
 	return(t->degree);
 }
 
+/*
+ * Differs from V7 (original at 23AE): Z8000 operand syntax, no AUTOI/AUTOD/
+ * SFCON cases, putchar('#') for AMPER, '@' for indirection (STAR) unless
+ * zf8/OFFS, register-pair second half via flag.  yf3 (7B48): an offset was
+ * printed (name *Annahme*).
+ */
 pname(ap, flag)
 struct tnode *ap;
 {
@@ -88,12 +95,20 @@ loop:
 	switch(p->op) {
 
 	case LCON:
-		printf("$%o", flag>10? p->lvalue.intx[1]:p->lvalue.intx[0]);
+		if (flag==0 && wregf==0) {
+			printf("#%%%lx", p->lvalue);
+			return;
+		}
+		if (flag==0 && wregf)
+			printf("#%%%x", p->lvalue.intx[0]);
+		else
+			printf("#%%%x", p->lvalue.intx[1]);
 		return;
 
-	case SFCON:
 	case CON:
-		printf("$");
+		printf("#");
+		if (bregf)
+			p->value =& 0377;
 		psoct(p->value);
 		return;
 
@@ -102,10 +117,16 @@ loop:
 		return;
 
 	case NAME:
+		yf3 = 0;
+		if (flag && p->class==REG) {
+			flag = 0;
+			p->nloc++;
+		}
 		i = p->offset;
-		if (flag>10)
+		if (flag)
 			i =+ 2;
 		if (i) {
+			yf3 = 1;
 			psoct(i);
 			if (p->class!=OFFS)
 				putchar('+');
@@ -116,10 +137,21 @@ loop:
 
 		case SOFFS:
 		case XOFFS:
+			yf3 = 1;
 			pbase(p);
 
 		case OFFS:
-			printf("(r%d)", p->regno);
+			if (p->regno==14) {
+				if (yf3)
+					printf("(FP)");
+				else
+					printf("@FP");
+				return;
+			}
+			if (yf3)
+				printf("(r%d)", zreg(p->regno));
+			else
+				printf("@r%d", zreg(p->regno));
 			return;
 
 		case EXTERN:
@@ -128,7 +160,7 @@ loop:
 			return;
 
 		case REG:
-			printf("r%d", p->nloc);
+			preg(p, p->nloc);
 			return;
 
 		}
@@ -136,23 +168,24 @@ loop:
 		return;
 
 	case AMPER:
-		putchar('$');
+		putchar('#');
 		p = p->tr1;
 		if (p->op==NAME && p->class==REG)
 			regerr();
 		goto loop;
 
-	case AUTOI:
-		printf("(r%d)%c", p->nloc, flag==1?0:'+');
-		return;
-
-	case AUTOD:
-		printf("%c(r%d)", flag==2?0:'-', p->nloc);
-		return;
-
 	case STAR:
 		p = p->tr1;
-		putchar('*');
+		if (!zf8 && p->class!=OFFS) {
+			putchar('@');
+			wregf = 1;
+		} else
+			zf8 = 0;
+		if (p->class==REG)
+			goto loop;
+		if (p->class==OFFS)
+			goto loop;
+		error("illegal indirection");
 		goto loop;
 
 	}
@@ -279,26 +312,9 @@ struct instab *itable;
 	error("No match' for op %d", op);
 }
 
-collcon(ap)
-struct tnode *ap;
-{
-	register op;
-	register struct tnode *p;
-
-	p = ap;
-	if (p->op==STAR) {
-		if (p->type==LONG+PTR) /* avoid *x(r); *x+2(r) */
-			return(0);
-		p = p->tr1;
-	}
-	if (p->op==PLUS) {
-		op = p->tr2->op;
-		if (op==CON || op==AMPER)
-			return(1);
-	}
-	return(0);
-}
-
+/*
+ * Differs from V7: also returns 'l' for LONG (original at 28EE).
+ */
 isfloat(at)
 struct tnode *at;
 {
@@ -308,43 +324,45 @@ struct tnode *at;
 	if ((opdope[t->op]&RELAT)!=0)
 		t = t->tr1;
 	if (t->type==FLOAT || t->type==DOUBLE) {
-		nfloat = 1;
+		nstack = 1;
 		return('f');
 	}
+	if (t->type==LONG)
+		return('l');
 	return(0);
 }
 
+/*
+ * Differs from V7 (original at 293C): different operator lists, Z8000
+ * register pairs; the DIVIDE.. case returns (reg+1)|1 for non-longs.
+ */
 oddreg(t, areg)
 struct tnode *t;
 {
-	register reg;
+	register reg, c;
 
 	reg = areg;
-	if (!isfloat(t)) {
-		if (opdope[t->op]&RELAT) {
-			if (t->tr1->type==LONG)
-				return((reg+1) & ~01);
-			return(reg);
-		}
+	if ((c = isfloat(t))!='f') {
 		switch(t->op) {
-		case LLSHIFT:
-		case ASLSHL:
-			return((reg+1)&~01);
-
+		case PTOI:
+		case TIMES:
 		case DIVIDE:
 		case MOD:
+		case ASTIMES:
 		case ASDIV:
 		case ASMOD:
-		case PTOI:
-		case ULSH:
-		case ASULSH:
-			reg++;
-
-		case TIMES:
-		case ASTIMES:
-			return(reg|1);
+			if (t->type!=LONG)
+				return((reg+1)|1);
+			if (reg<=2) {
+				if (reg || t->op==MOD || t->op==ASMOD)
+					return(4);
+				return(0);
+			}
+			error("Register overflow for longs: simplify expression");
 		}
 	}
+	if (c=='l' || t->op==ITOF || t->op==FTOI)
+		return((reg+1) & ~01);
 	return(reg);
 }
 
@@ -370,44 +388,55 @@ arlength(t)
 }
 
 /*
- * Strings for switch code.
+ * Strings for switch code (Z8000 form, original at 7BB6/7C08: the table
+ * goes to a data section named after modname).
  */
 
 char	dirsw[] {"\
-cmp	r0,$%o\n\
-jhi	L%d\n\
-asl	r0\n\
-jmp	*L%d(r0)\n\
-.data\n\
-L%d:\
+cp	r2,#%%%x\n\
+jp	ugt,L%d\n\
+add	r2,r2\n\
+ld	r1,L%d(r2)\n\
+jp	@r1\n\
+$DATA\n\
+$SECTION %s_d\n\
+I\n\
+L%d:\n\
 " };
 
 char	hashsw[] {"\
-mov	r0,r1\n\
-clr	r0\n\
-div	$%o,r0\n\
-asl	r1\n\
-jmp	*L%d(r1)\n\
-.data\n\
-L%d:\
+ld	r3,r2\n\
+xor	r2,r2\n\
+div	rr2,#%%%x\n\
+ex	r2,r3\n\
+add	r3,r3\n\
+ld	r1,L%d(r3)\n\
+jp	@r1\n\
+$DATA\n\
+$SECTION %s_d\n\
+I\n\
+L%d:\n\
 "};
 
 /*
  * If the unsigned casts below won't compile,
  * try using the calls to lrem and ldiv.
+ * Differs from V7 (original at 2A1E): Z8000 output; the data section of the
+ * tables is closed with fptail() (3CAA) instead of ".text".
  */
 
 pswitch(afp, alp, deflab)
 struct swtab *afp, *alp;
 {
-	int ncase, i, j, tabs, worst, best, range;
+	int ncase, tabs, worst, best, range;
 	register struct swtab *swp, *fp, *lp;
-	int *poctab;
+	register i, j;
+	register int *poctab;
 
 	fp = afp;
 	lp = alp;
 	if (fp==lp) {
-		printf("jbr	L%d\n", deflab);
+		printf("jp	L%d\n", deflab);
 		return;
 	}
 	isn++;
@@ -419,26 +448,26 @@ struct swtab *afp, *alp;
 	/* direct switch */
 	if (range>0 && range <= 3*ncase) {
 		if (fp->swval)
-			printf("sub	$%o,r0\n", fp->swval);
-		printf(dirsw, range, deflab, isn, isn);
+			printf("sub	r2,#%%%x\n", fp->swval);
+		printf(dirsw, range, deflab, isn, modname, isn);
 		isn++;
 		for (i=fp->swval; ; i++) {
 			if (i==fp->swval) {
-				printf("L%d\n", fp->swlab);
+				printf("WV L%d\n", fp->swlab);
 				if (fp==lp)
 					break;
 				fp++;
 			} else
-				printf("L%d\n", deflab);
+				printf("WV L%d\n", deflab);
 		}
-		printf(".text\n");
+		fptail();
 		return;
 	}
 	/* simple switch */
 	if (ncase<10) {
 		for (fp = afp; fp<=lp; fp++)
 			breq(fp->swval, fp->swlab);
-		printf("jbr	L%d\n", deflab);
+		printf("jp	L%d\n", deflab);
 		return;
 	}
 	/* hash switch */
@@ -460,13 +489,13 @@ struct swtab *afp, *alp;
 		}
 	}
 	i = isn++;
-	printf(hashsw, tabs, i, i);
+	printf(hashsw, tabs, i, modname, i);
 	isn++;
 	for (i=0; i<tabs; i++)
-		printf("L%d\n", isn+i);
-	printf(".text\n");
+		printf("WV L%d\n", isn+i);
+	fptail();
 	for (i=0; i<tabs; i++) {
-		printf("L%d:", isn++);
+		printf("L%d:\n", isn++);
 		for (swp=fp; swp<=lp; swp++) {
 			/* lrem(0, swp->swval, tabs) */
 			if ((unsigned)swp->swval%tabs == i) {
@@ -474,17 +503,17 @@ struct swtab *afp, *alp;
 				breq((unsigned)swp->swval/tabs, swp->swlab);
 			}
 		}
-		printf("jbr	L%d\n", deflab);
+		printf("jp	L%d\n", deflab);
 	}
 }
 
 breq(v, l)
 {
 	if (v==0)
-		printf("tst	r0\n");
+		printf("test	r2\n");
 	else
-		printf("cmp	r0,$%o\n", v);
-	printf("jeq	L%d\n", l);
+		printf("cp	r2,#%%%x\n", v);
+	printf("jp	eq	L%d\n", l);
 }
 
 sort(afp, alp)
@@ -628,18 +657,34 @@ struct tnode *tree;
 	return(p);
 }
 
+/*
+ * Differs from V7 (original at 2F6C): constant conditions, a bit-test form
+ * for AND with a single-bit constant (op 85, bit number as constant), leaf
+ * operands are compared with 0, no long compare (no longrel), unsigned
+ * compare for char operands, no cfcc.
+ */
 cbranch(atree, albl, cond, areg)
 struct tnode *atree;
 {
-	int l1, op;
-	register lbl, reg;
+	register l1, op, k, lbl, reg;
 	register struct tnode *tree;
 
+	zf4 = 0;
 	lbl = albl;
 	reg = areg;
 again:
 	if ((tree=atree)==0)
 		return;
+	if (tree->op==CON && tree->value==0 || tree->op==LCON && tree->lvalue==0) {
+		if (!cond)
+			branch(lbl, 0, 0);
+		return;
+	}
+	if (tree->op==CON || tree->op==LCON) {
+		if (cond)
+			branch(lbl, 0, 0);
+		return;
+	}
 	switch(tree->op) {
 
 	case LOGAND:
@@ -676,156 +721,86 @@ again:
 	case ITOL:
 		tree = tree->tr1;
 		break;
+
 	}
-	op = tree->op;
-	if (opdope[op]&RELAT
-	 && tree->tr1->op==ITOL && tree->tr2->op==ITOL) {
-		tree->tr1 = tree->tr1->tr1;
-		tree->tr2 = tree->tr2->tr1;
-		if (op>=LESSEQ && op<=GREAT
-		 && (tree->tr1->type==UNSIGN || tree->tr2->type==UNSIGN))
-			tree->op = op = op+LESSEQP-LESSEQ;
+	if (tree->op==AND && tree->type!=LONG && tree->tr2->op==CON
+	 && (k = bitnum(tree->tr2->value)) >= 0
+	 && !(tree->type==CHAR && k>7)) {
+		tree->op = 85;
+		tree->tr2->value = k;
 	}
-	if (tree->type==LONG
-	  || opdope[op]&RELAT&&tree->tr1->type==LONG) {
-		longrel(tree, lbl, cond, reg);
-		return;
+	if (opdope[tree->op]&LEAF) {
+		k = tree->type;
+		if (k==FLOAT || k==DOUBLE)
+			k = 0;
+		tree = tnode(NEQUAL, tree->type, tree, tconst(0, k));
 	}
 	rcexpr(tree, cctab, reg);
 	op = tree->op;
 	if ((opdope[op]&RELAT)==0)
 		op = NEQUAL;
 	else {
+		if (tree->tr1->type==CHAR && tree->tr2->type==CHAR && op>=LESSEQ)
+			op =+ LESSEQP-LESSEQ;
 		l1 = tree->tr2->op;
-	 	if ((l1==CON || l1==SFCON) && tree->tr2->value==0)
+		if (l1==CON && tree->tr2->value==0)
 			op =+ 200;		/* special for ptr tests */
-		else
-			op = maprel[op-EQUAL];
 	}
-	if (isfloat(tree))
-		printf("cfcc\n");
 	branch(lbl, op, !cond);
 }
 
+/*
+ * Differs from V7 (original at 31E8): zf4 (set by the cctab output, 7616)
+ * selects the signed-compare fixups (jp pl / jp mi after the compare);
+ * yf4 (7B4A) suppresses the label operand (name *Annahme*).
+ */
 branch(lbl, aop, c)
 {
 	register op;
+	int k;
 
-	if(op=aop)
-		prins(op, c, branchtab);
-	else
-		printf("jbr");
-	printf("\tL%d\n", lbl);
-}
-
-longrel(atree, lbl, cond, reg)
-struct tnode *atree;
-{
-	int xl1, xl2, xo, xz;
-	register int op, isrel;
-	register struct tnode *tree;
-
-	if (reg&01)
-		reg++;
-	reorder(&atree, cctab, reg);
-	tree = atree;
-	isrel = 0;
-	if (opdope[tree->op]&RELAT) {
-		isrel++;
-		op = tree->op;
+	if (op=aop) {
+		if (zf4) {
+			zf4 = 0;
+			k = op>200? op-200: op;
+			if (k==GREAT && !c || k==LESSEQ && c) {
+				printf("jp	eq	L%d\n", isn);
+				printf("jp	pl	L%d\n", lbl);
+				printf("L%d:\n", isn++);
+				return;
+			}
+			if (k==LESSEQ && !c || k==GREAT && c) {
+				printf("jp	mi	L%d\n", lbl);
+				printf("jp	eq");
+			} else if (k==GREATEQ && !c || k==LESS && c)
+				printf("jp	pl");
+			else if (k==LESS && !c || k==GREATEQ && c)
+				printf("jp	mi");
+			else
+				prins(op, 0, c, branchtab);
+		} else
+			prins(op, 0, c, branchtab);
 	} else
-		op = NEQUAL;
-	if (!cond)
-		op = notrel[op-EQUAL];
-	xl1 = xlab1;
-	xl2 = xlab2;
-	xo = xop;
-	xlab1 = lbl;
-	xlab2 = 0;
-	xop = op;
-	xz = xzero;
-	xzero = !isrel || tree->tr2->op==ITOL && tree->tr2->tr1->op==CON
-		&& tree->tr2->tr1->value==0;
-	if (tree->op==ANDN) {
-		tree->op = TAND;
-		tree->tr2 = optim(tnode(COMPL, LONG, tree->tr2));
-	}
-	if (cexpr(tree, cctab, reg) < 0) {
-		reg = rcexpr(tree, regtab, reg);
-		printf("ashc	$0,r%d\n", reg);
-		branch(xlab1, op, 0);
-	}
-	xlab1 = xl1;
-	xlab2 = xl2;
-	xop = xo;
-	xzero = xz;
-}
-
-/*
- * Tables for finding out how best to do long comparisons.
- * First dimen is whether or not the comparison is with 0.
- * Second is which test: e.g. a>b->
- *	cmp	a,b
- *	bgt	YES		(first)
- *	blt	NO		(second)
- *	cmp	a+2,b+2
- *	bhi	YES		(third)
- *  NO:	...
- * Note some tests may not be needed.
- */
-char	lrtab[2][3][6] {
-	0,	NEQUAL,	LESS,	LESS,	GREAT,	GREAT,
-	NEQUAL,	0,	GREAT,	GREAT,	LESS,	LESS,
-	EQUAL,	NEQUAL,	LESSEQP,LESSP,	GREATQP,GREATP,
-
-	0,	NEQUAL,	LESS,	LESS,	GREATEQ,GREAT,
-	NEQUAL,	0,	GREAT,	0,	0,	LESS,
-	EQUAL,	NEQUAL,	EQUAL,	0,	0,	NEQUAL,
-};
-
-xlongrel(f)
-{
-	register int op, bno;
-
-	op = xop;
-	if (f==0) {
-		if (bno = lrtab[xzero][0][op-EQUAL])
-			branch(xlab1, bno, 0);
-		if (bno = lrtab[xzero][1][op-EQUAL]) {
-			xlab2 = isn++;
-			branch(xlab2, bno, 0);
-		}
-		if (lrtab[xzero][2][op-EQUAL]==0)
-			return(1);
-	} else {
-		branch(xlab1, lrtab[xzero][2][op-EQUAL], 0);
-		if (xlab2)
-			label(xlab2);
-	}
-	return(0);
+		printf("jp");
+	if (yf4)
+		yf4 = 0;
+	else
+		printf("\tL%d\n", lbl);
 }
 
 label(l)
 {
-	printf("L%d:", l);
+	printf("L%d:\n", l);
 }
 
 popstk(a)
 {
-	switch(a) {
-
-	case 0:
-		return;
-
-	case 2:
-		printf("tst	(sp)+\n");
-		return;
-
-	case 4:
-		printf("cmp	(sp)+,(sp)+\n");
-		return;
+	if (a) {
+		if (a<=16)
+			printf("inc	SP,#%%%x\n", a);
+		else
+			printf("add	SP,#%%%x\n", a);
 	}
-	printf("add	$%o,sp\n", a);
 }
 
 error(s, p1, p2, p3, p4, p5, p6)
@@ -839,36 +814,41 @@ error(s, p1, p2, p3, p4, p5, p6)
 
 psoct(an)
 {
-	register int n, sign;
+	register n;
 
-	sign = 0;
 	if ((n = an) < 0) {
 		n = -n;
-		sign = '-';
+		putchar('-');
 	}
-	printf("%c%o", sign, n);
+	printf("%%%x", n);
 }
 
 /*
  * Read in an intermediate file.
+ * Differs from V7 (original at 3416): Z8000 output (as dialect with
+ * $-sections, BV/WV), no SETREG case, FCON always DOUBLE and atof(s, &d),
+ * NAME other than EXTERN via regnode(), a second static name buffer (s1)
+ * for RLABEL, long compare of the CBRANCH-less 3-way branch uses testl /
+ * fcpzx.  globf: a global symbol name is pending in s (printed by NLABEL);
+ * endf: print "end <name>" after the next BRANCH (names *Annahme*).
  */
 #define	STKS	100
 getree()
 {
 	struct tnode *expstack[STKS];
 	register struct tnode **sp;
-	register t, op;
-	static char s[9];
-	struct swtab *swp;
-	double atof();
+	register t, x, op;
+	register struct swtab *swp;
+	register struct xtname *np;
+	static char s[9], s1[9];
 	char numbuf[64];
-	struct tname *np;
-	struct xtname *xnp;
 	struct ftconst *fp;
 	struct lconst *lp;
 	struct fasgn *sap;
-	int lbl, cond, lbl2, lbl3;
+	int lbl, cond, lbl2, lbl3, endf, globf;
 
+	endf = 0;
+	globf = 0;
 	curbase = funcbase;
 	sp = expstack;
 	for (;;) {
@@ -883,7 +863,7 @@ getree()
 		switch(op =& 0377) {
 
 	case SINIT:
-		printf("%o\n", geti());
+		printf("WV %%%x\n", geti());
 		break;
 
 	case EOFC:
@@ -891,84 +871,115 @@ getree()
 
 	case BDATA:
 		if (geti() == 1) {
-			printf(".byte ");
+			printf("BV ");
 			for (;;)  {
-				printf("%o", geti());
+				printf("%%%x", geti());
 				if (geti() != 1)
 					break;
-				printf(",");
+				printf(";");
 			}
 			printf("\n");
 		}
 		break;
 
 	case PROG:
-		printf(".text\n");
+		if (yf0) {
+			fptail();
+			break;
+		}
+		globf = 0;
+		yf0 = 1;
 		break;
 
 	case DATA:
-		printf(".data\n");
+		fphead();
 		break;
 
 	case BSS:
-		printf(".bss\n");
+		secbss();
 		break;
 
 	case SYMDEF:
+		fptail();
 		outname(s);
-		printf(".globl%s%.8s\n", s[0]?"	":"", s);
+		yf1 = 1;
+		if (s[0])
+			globf = 1;
 		sfuncr.nloc = 0;
 		break;
 
 	case RETRN:
-		printf("jmp	cret\n");
+		printf("jp	cret\n");
 		break;
 
 	case CSPACE:
 		t = outname(s);
-		printf(".comm	%.8s,%o\n", t, geti());
+		printf("X	%.8s	", t);
+		t = geti();
+		switch (t) {
+
+		case 1:
+			printf("B\n");
+			break;
+
+		case 2:
+			printf("W\n");
+			break;
+
+		case 4:
+			printf("long\n");
+			break;
+
+		default:
+			printf("A[%%%x B]\n", t);
+		}
 		break;
 
 	case SSPACE:
-		printf(".=.+%o\n", (t=geti()));
-		totspace += (unsigned)t;
+		t = geti();
+		printf("$REL	$+%%%x\n", t);
+		totspace =+ (unsigned)t;
 		break;
 
 	case EVEN:
-		printf(".even\n");
+		printf("$EVEN\n");
 		break;
 
 	case SAVE:
-		printf("jsr	r5,csv\n");
+		printf("call	csv\n");
 		break;
 
 	case SETSTK:
-		t = geti()-6;
-		if (t==2)
-			printf("tst	-(sp)\n");
+		t = geti()-12;
+		if (t!=0 && t<17)
+			printf("dec	SP,#%%%x\n", t);
 		else if (t != 0)
-			printf("sub	$%o,sp\n", t);
+			printf("sub	SP,#%%%x\n", t);
+		endf = 1;
+		yf0 = 0;
 		break;
 
 	case PROFIL:
 		t = geti();
-		printf("mov	$L%d,r0\njsr	pc,mcount\n", t);
-		printf(".bss\nL%d:.=.+2\n.text\n", t);
+		printf("ld	r2,#L%d\n,call	mcount\n", t);
+		secbss();
+		printf("L%d:\n$REL	$+2\n", t);
+		fptail();
 		break;
 
 	case SNAME:
 		t = outname(s);
-		printf("~%s=L%d\n", t+1, geti());
+		printf("~%s:=L%d\n", t+1, geti());
 		break;
 
 	case ANAME:
 		t = outname(s);
-		printf("~%s=%o\n", t+1, geti());
+		printf("~%s:=%%%x\n", t+1, geti());
 		break;
 
 	case RNAME:
 		t = outname(s);
-		printf("~%s=r%d\n", t+1, geti());
+		printf("~%s:=r%d\n", t+1, geti());
 		break;
 
 	case SWIT:
@@ -992,12 +1003,13 @@ getree()
 
 	case EXPR:
 	xpr:
+		nfloat = 0;
+		zf9 = 0;
 		line = geti();
 		if (sp != &expstack[1]) {
 			error("Expression input botch");
 			exit(1);
 		}
-		nstack = 0;
 		*sp = optim(*--sp);
 		if (op==CBRANCH)
 			cbranch(*sp, lbl, cond, 0);
@@ -1006,34 +1018,32 @@ getree()
 		else {
 			if ((*sp)->type==LONG) {
 				rcexpr(tnode(RFORCE, (*sp)->type, *sp), efftab, 0);
-				printf("ashc	$0,r0\n");
+				printf("testl	rr2\n");
 			} else {
 				rcexpr(*sp, cctab, 0);
-				if (isfloat(*sp))
-					printf("cfcc\n");
+				if (isfloat(*sp)=='f')
+					printf("fcpzx	f0\n");
 			}
-			printf("jgt	L%d\n", lbl3);
-			printf("jlt	L%d\njbr	L%d\n", lbl, lbl2);
+			printf("jp	gt	L%d\n", lbl3);
+			printf("jp	lt	L%d\njp	L%d\n", lbl, lbl2);
 		}
 		curbase = funcbase;
 		break;
 
 	case NAME:
 		t = geti();
+		x = geti();
 		if (t==EXTERN) {
-			np = getblk(sizeof(*xnp));
-			np->type = geti();
-			outname(np->name);
-		} else {
 			np = getblk(sizeof(*np));
-			np->type = geti();
-			np->nloc = geti();
-		}
-		np->op = NAME;
-		np->class = t;
-		np->regno = 0;
-		np->offset = 0;
-		*sp++ = np;
+			np->type = x;
+			outname(np->name);
+			np->op = NAME;
+			np->class = t;
+			np->regno = 0;
+			np->offset = 0;
+			*sp++ = np;
+		} else
+			*sp++ = regnode(t, x, geti());
 		break;
 
 	case CON:
@@ -1061,9 +1071,9 @@ getree()
 		outname(numbuf);
 		fp = getblk(sizeof(*fp));
 		fp->op = FCON;
-		fp->type = t;
+		fp->type = DOUBLE;
 		fp->value = isn++;
-		fp->fvalue = atof(numbuf);
+		atof(numbuf, &fp->fvalue);
 		*sp++ = fp;
 		break;
 
@@ -1093,20 +1103,32 @@ getree()
 
 	case NLABEL:
 		t = outname(s);
-		printf("%.8s:\n", t, t);
+		if (globf) {
+			printf("%.8s	L\n", s);
+			globf = 0;
+		}
+		printf("%.8s:\n", t);
 		break;
 
 	case RLABEL:
-		t = outname(s);
-		printf("%.8s:\n~~%s:\n", t, t+1);
+		t = outname(s1);
+		if (s[0]) {
+			if (yf1) {
+				printf("G");
+				yf1 = 0;
+			}
+			printf("	%.8s	PR\n", s);
+		} else
+			printf("I	%s	PR\n", t);
+		printf("~~%s:\nE\n", t+1);
 		break;
 
 	case BRANCH:
 		branch(geti(), 0);
-		break;
-
-	case SETREG:
-		nreg = geti()-1;
+		if (endf) {
+			endf = 0;
+			printf("end %.8s\nI\n", s1);
+		}
 		break;
 
 	default:
@@ -1193,11 +1215,16 @@ outname(s)
 	return(s);
 }
 
+/*
+ * Differs from V7 (original at 3DAE): Z8000 output; the function-result
+ * buffer goes to a BSS section (secbss/fptail), the block copy is one
+ * ldir, a structure result address is loaded into r2.
+ */
 strasg(atp)
 struct fasgn *atp;
 {
 	register struct tnode *tp;
-	register nwords, i;
+	register nwords;
 
 	nwords = atp->mask/sizeof(int);
 	tp = atp->tr1;
@@ -1205,11 +1232,13 @@ struct fasgn *atp;
 		if (tp->op==RFORCE) {	/* function return */
 			if (sfuncr.nloc==0) {
 				sfuncr.nloc = isn++;
-				printf(".bss\nL%d:.=.+%o\n.text\n", sfuncr.nloc, nwords*sizeof(int));
+				secbss();
+				printf("L%d:\n$REL	$+%%%x\n", sfuncr.nloc, nwords*sizeof(int));
+				fptail();
 			}
 			atp->tr1 = tnode(ASSIGN, STRUCT, &sfuncr, tp->tr1);
 			strasg(atp);
-			printf("mov	$L%d,r0\n", sfuncr.nloc);
+			printf("ld	r2,#L%d\n", sfuncr.nloc);
 			return;
 		}
 		if (tp->op==CALL) {
@@ -1236,18 +1265,8 @@ struct fasgn *atp;
 		tp->type = STRUCT+PTR;
 		tp = optim(tp);
 		rcexpr(tp, efftab, 0);
-		if (nwords < 7) {
-			for (i=0; i<nwords; i++)
-				printf("mov	(r1)+,(r0)+\n");
-			return;
-		}
-		if (nreg<=1)
-			printf("mov	r2,-(sp)\n");
-		printf("mov	$%o,r2\n", nwords);
-		printf("L%d:mov	(r1)+,(r0)+\ndec\tr2\njne\tL%d\n", isn, isn);
-		isn++;
-		if (nreg<=1)
-			printf("mov	(sp)+,r2\n");
+		printf("ld	r0,#%%%x\n", nwords);
+		printf("ldir	@r2,@r3,r0\n");
 		return;
 	}
 	rcexpr(tp, efftab, 0);
