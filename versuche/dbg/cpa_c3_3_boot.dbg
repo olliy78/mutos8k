@@ -1,0 +1,30 @@
+# Plan 48 C3.3: M8KBOOT -> mask -> disk change (A = empty /tmp, B = /usr, C = root, D = empty /mnt) -> r -> boot to "login:".
+# Placeholders (tests/test_plus_cpa_io.py fills them from the M80 listing of mutoscpa.mac):
+#   @ARBEIT@ work folder (tmp.hfe usr.hfe root.hfe d0.hfe = copies)   @ISR_TAKT@ @ISR_ANFR@ ISR entry points
+#   @B_READ@ BIOS READ slot (own jump list)   @B_WRITE@ BIOS WRITE slot   @PL_ERG@ first instruction after CALL B_READ
+#   @PL_FEHLER@ error branch of PLATTE   @STKLEN@ length of the painted stack area (B936H..C8B5H)   @FRIST@ cycle limit
+# The script runs after the boot to "A>".
+keys M8KBOOT\r
+gscreen "ready (r)" 300000000
+eject A
+mount A @ARBEIT@/tmp.hfe
+eject B
+mount B @ARBEIT@/usr.hfe
+eject C
+mount C @ARBEIT@/root.hfe
+eject D
+mount D @ARBEIT@/d0.hfe
+logpoint @ISR_TAKT@
+logpoint @ISR_ANFR@
+logpoint @B_READ@
+logpoint @B_WRITE@
+logpoint @PL_ERG@
+logpoint @PL_FEHLER@
+mark
+keys r
+gscreen "login:" @FRIST@
+r
+screen
+save @ARBEIT@/stack_end.bin 0xB936 @STKLEN@
+lpl
+q

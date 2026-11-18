@@ -1,0 +1,19 @@
+# Plan 48 C3.3: reference measurement of the UDOS boot (original boot disk): cycles from "r" in the mask to "login:".
+# Same disks as cpa_c3_3_boot.dbg (copies in @ARBEIT@).  Run: k1520dbg --em em256 --laufwerke K5601,K5601,K5601,K5601 <boot.hfe> -x <this>
+g 80000000
+keys BOOT\sMUTOS\r
+gscreen "ready (r)" 600000000
+eject A
+mount A @ARBEIT@/tmp.hfe udos_ss77
+eject B
+mount B @ARBEIT@/usr.hfe udos_ss77
+eject C
+mount C @ARBEIT@/root.hfe udos_ss77
+eject D
+mount D @ARBEIT@/d0.hfe udos_ss77
+mark
+keys r
+gscreen "login:" 1500000000
+r
+screen
+q

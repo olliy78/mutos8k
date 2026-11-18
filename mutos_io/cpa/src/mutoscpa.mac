@@ -2,21 +2,10 @@
 ; Origin: byte-identical copy of mutos_io/src/mutosio.mac (branch main) at the commit of step C2.1;
 ; `git diff <that commit> -- mutos_io/cpa/src/mutoscpa.mac` shows all CP/A changes.
 ; Since step C3.2 the binary is deliberately NOT identical to mutosio.bin any more:
-; start, stack, interrupt vectors, console output, operator mask and the disk/printer stubs
-; use the CP/A BIOS (doc/plus/cpa/c3_2_start.md).
+; start, stack, interrupt vectors, console output and operator mask use the CP/A BIOS (doc/plus/cpa/c3_2_start.md).
+; Since step C3.3 the disk path is synchronous through the BIOS entries SELDSK/SETTRK/SETSEC/SETDMA/READ/WRITE
+; (doc/plus/cpa/c3_3_platte.md); the printer is still a stub (until C4.1).
 	.Z80
-; ---- Variante (Entwurf 40 M5; ladediskette.py setzt den Wert beim Bau) ----------
-; K8X512 = 0: 26 x 128 B je Spur (M8K-Satz, rekonstruierte Wurzel; Auslieferungszustand)
-; K8X512 = 1:  8 x 512 B je Spur (DISK-Satz, Entwurf 39 Abschnitt 11.2); entspricht
-;              mutos_patch.py io-8x512, bytegleich (Waechter cli_mutosio_variante_8x512)
-K8X512	EQU	0
-	IF	K8X512
-SEKLEN	EQU	0200H		; Bytes je Nukleus-Aufruf = ein Sektor
-SPT	EQU	8		; Sektoren je Spur
-	ELSE
-SEKLEN	EQU	0080H
-SPT	EQU	26
-	ENDIF
 	CSEG
 
 ; N Fuellbytes FFH (UDOS-Segmente haben unbenutzte Luecken)
@@ -220,48 +209,6 @@ WARTESCHL0_INIT:
 	LD HL,QUEUE_TASTE
 	CALL QUEUE_INIT
 	RET
-; --- PLATTE: class 0, handler for unit 0..3 (STUB until C3.3) ------------------------
-; Reports an error at once: status C0H (bit 6 set like a nucleus error, as BR_ABBRUCH delivers it),
-; transferred count 0 (so MELDEN copies no data), then request done.
-PLATTE:
-	LD (IX+9),0C0H
-	XOR A
-	LD (IX+14),A
-	LD (IX+15),A
-	JP ENDE_WIEDER
-; --- PLATTE_FERTIG: Rueckruf des Nukleus nach dem Plattenauftrag ----------
-; IX+14/15 = uebertragene Zahl, IX+9 = 1 (gut) oder Fehlercode, Fertigbit setzen.
-PLATTE_FERTIG:
-	DI
-	CALL REGS_RETTEN
-	LD IX,DCB0
-	LD A,(AUF0_STATUS2)
-	CP (IX+14)
-	JR C,PF_ZAEHLER
-	LD (IX+14),A
-PF_ZAEHLER:
-	LD A,(AUF0_STATUS1)
-	LD (IX+15),A
-	LD A,(AUF0_STATUS3)
-	BIT 6,A
-	JR NZ,PF_STATUS
-	LD A,01H
-PF_STATUS:
-	LD (IX+9),A
-	LD HL,KLASSE0_MELDUNG
-	LD A,(IX+7)
-	CALL BIT_SETZEN
-	XOR A
-	LD (V_BUSY),A
-	CALL REGS_HOLEN
-	EI
-	RET
-; Init of the disk state: V_BUSY := 0 (the UDOS nucleus sector-length byte [0003H] is gone:
-; 0003H is the CP/A IOBYTE and must not be touched)
-NUKLEUS_INIT:
-	LD A,00H
-	LD (V_BUSY),A
-	RET
 ; --- DRUCKER: class 1 (STUB until C4.1): status FFH (error) at once, request done ------
 DRUCKER:
 	LD (IX+9),0FFH
@@ -359,7 +306,6 @@ INIT_ATTR:
 	CALL INIT_TTY1
 	CALL INIT_TTY2
 	CALL INIT_TTY3
-	CALL NUKLEUS_INIT
 	RET
 ; Tastatur: CTC 58H Kanal 0 Zeitkonstante 1 (9600 Baud), SIO 5CH/5DH polled, 8 Bit
 INIT_TASTATUR:
@@ -773,268 +719,300 @@ TAB_TASTE:
 	DB	00H,09H,02H,03H,04H,05H,7FH,07H,7FH,09H,0AH,0BH,0CH,0DH,0EH,0FH
 	DB	10H,11H,12H,15H,14H,15H,16H,17H,18H,19H,1AH,7FH,1CH,1DH,1EH,0FFH
 	FILLFF	139
-; --- PLATTEN-BLOCKABBILDUNG (Entwurf 39 Abschnitt 4.6.3 / 11.2) ------------------
-; BLOCK_START: Kernelblock (512 B = 4 Sektoren zu 128 B) -> Zylinder/Sektor; je 128 Byte ein
-; Nukleus-Aufruf (CALL 0BFDH -> JP 0700H) mit Rueckruf BLOCK_RUECKRUF.
-; Block b: l = 4*b logischer Sektor, Zyl. = l div 26 + 1, pos = l mod 26;
-; Verschraenkung 2 (erst 13 ungerade, dann 13 gerade), Spurversatz 6 je Zylinder.
-; NUK_AUFTRAG (996EH) ist der Auftragsblock des Nukleus: +0 Laufwerk/Befehl, +2/3 Puffer,
-; +4/5 Laenge, +6/7 Rueckruf fertig, +8/9 Rueckruf Fehler, +10 Status, +11 Laufwerk<<5 | ID-1,
-; +12 Zylinder.
-BLOCK_START:
-	LD (V_AUFTRAG_IY),IY
-	LD L,(IY+2)
-	LD H,(IY+3)
-	LD (V_PUFFER),HL
-	LD A,(IY+4)
-	AND 80H
-	LD L,A
-	LD H,(IY+5)
-	LD A,H
+; --- DISK (class 0): synchronous through the CP/A BIOS (plan 48 C3.3, doc/plus/cpa/c3_3_platte.md) ------
+; The Z8000 asks for `count` bytes (IX+14 = high byte, IX+15 = low byte, a multiple of 128) of kernel
+; block `bn` (IX+18 = high, IX+19 = low) of unit IX+7 (0..7), command IX+8 and 7FH = 1 write, else read;
+; data in the Z80 buffer IX+2/3.  A request spans consecutive 128-byte records l = 4*bn + j.
+; Per record SETTRK / SETSEC / SETDMA / READ or WRITE (BIOS jump list, never SECTRAN).  The record number of
+; SETSEC is the MUTOS sector ID (26 x 128: interleave 2, track skew 6) turned into the BIOS record number
+; (doc/plus/cpa_analyse.md section 4): on tracks >= OFF (DPB+13) INV[ID], below OFF the ID itself;
+; 8 x 512 (SPT 32 or 36 in the DPB): record = (l mod 32) + 1 on track l div 32 + 1.
+; Result as in the UDOS version: IX+9 = 1 (good) or C0H (error, bit 6 set), IX+14/15 = transferred count.
+; The BIOS may change IX: all message fields are copied to V_* first, IX := DCB0 again at the end.
+; Unit -> CP/A drive: TAB_RK_LAUFWERK (mask: unit -> floppy 0..3) then TAB_RK_CPA[floppy]; units 4..7 index
+; TAB_RK_CPA directly (FFH = no drive; plans 49/51 enter their drives there).
+PLATTE:
+	LD A,(IX+14)
 	CP 11H
-	JR C,BS_GROSS
-	LD A,'L'		; disk request longer than 1000H bytes
+	JR C,PL_GROSS
+	LD A,'L'		; disk request longer than 1000H bytes (as the UDOS version)
 	JP FEHLERHALT
-BS_GROSS:
-	LD (V_REST),HL
-	XOR A
-	LD (IY+4),A
-	LD (IY+5),A
-	LD HL,SEKLEN
-	LD (V_LAENGE),HL
-	LD HL,BLOCK_RUECKRUF
-	LD (V_RUECKRUF_OK),HL
-	LD (V_RUECKRUF_ERR),HL
-	LD L,(IY+0)
-	LD H,(IY+1)
-	LD A,H
-	OR 01H
-	LD H,A
-	LD (NUK_AUFTRAG),HL
-	LD A,L
-	RRCA
-	RRCA
-	RRCA
-	LD (V_SEKTOR),A
-	LD L,(IY+11)
-	LD H,(IY+12)
-	IF	K8X512
-	; 8 x 512: logischer Sektor = Blocknummer; pos = bn and 7, rel = bn / 8, kein Versatz
-	LD A,L
-	AND 07H
-	LD (V_POS),A
-	SRL H
-	RR L
-	SRL H
-	RR L
-	SRL H
-	RR L
-	LD A,L
-	LD (V_ZYL),A
-	XOR A
-	LD (V_VERSATZ),A
-	REPT	23		; Fuellung: gleiche Laenge wie die 26 x 128-Fassung (Patchvorlage)
-	NOP
-	ENDM
-	ELSE
-	; 26 x 128: l = 4*bn (logischer 128-B-Sektor); l div 26 = Zylinder-relativ, l mod 26 = pos
-	ADD HL,HL
-	ADD HL,HL
-	LD B,08H
-	LD DE,0D00H
-BS_TEILEN:
-	XOR A
-	SBC HL,DE
-	JR NC,BS_REST
-	ADD HL,DE
-	SCF
-BS_REST:
-	CCF
-	RL L
-	RL H
-	DJNZ BS_TEILEN
-	LD A,L
-	LD (V_ZYL),A
-	LD A,H
-	LD (V_POS),A
-	LD E,L
-	XOR A
-	LD H,A
-	LD D,A
-	ADD HL,DE
-	ADD HL,DE
-	ADD HL,HL
-	LD DE,001AH
-BS_MOD26:
-	XOR A
-	SBC HL,DE
-	JR NC,BS_MOD26
-	ADD HL,DE
-	LD A,L
-	LD (V_VERSATZ),A
-	ENDIF
-	CALL SEKTOR_BERECHNEN
-	CALL SEKTOR_WEITER
-	PUSH IY
-	LD IY,NUK_AUFTRAG
-	CALL 0BFDH
-	POP IY
-	RET
-; BLOCK_RUECKRUF: je fertigem 128-Byte-Sektor; Rest abziehen; 0 -> BR_FERTIG, sonst weiter
-BLOCK_RUECKRUF:
-	DI
-	CALL REGS_RETTEN
-	LD (V_IY_SICHER),IY
-	LD IY,(V_AUFTRAG_IY)
-	LD A,(V_STATUS)
-	BIT 6,A
-	JR NZ,BR_ABBRUCH
-	LD HL,(V_LAENGE)
-	LD A,H
-	OR L
-	JR Z,BR_ABBRUCH
-	LD L,(IY+4)
-	LD H,(IY+5)
-	LD DE,SEKLEN
-	ADD HL,DE
-	LD (IY+4),L
-	LD (IY+5),H
-	LD HL,(V_REST)
-	IF	K8X512
-	OR A		; Rest - 0200H; Uebertrag = halber Schluss-Sektor eines Swap-Auftrags (Entwurf 39 A5c)
-	SBC HL,DE
-	JR C,BR_FERTIG
-	JR Z,BR_FERTIG
-	ELSE
-	XOR A
-	SBC HL,DE
-	LD A,H
-	OR L
-	JR Z,BR_FERTIG
-	ENDIF
-	LD (V_REST),HL
-	LD HL,(V_PUFFER)
-	ADD HL,DE
-	LD (V_PUFFER),HL
-	XOR A
-	LD (V_STATUS),A
-	CALL SEKTOR_BERECHNEN
-	CALL SEKTOR_WEITER
-	LD IY,NUK_AUFTRAG
-	EI
-	CALL 0BFDH
-	DI
-	CALL REGS_HOLEN
-	LD IY,(V_IY_SICHER)
-	EI
-	RET
-BR_FERTIG:
-	LD A,(V_STATUS)
-	LD (IY+10),A
-	CALL REGS_HOLEN
-	PUSH HL
-	LD L,(IY+6)
-	LD H,(IY+7)
-	EX (SP),HL
-	LD IY,(V_IY_SICHER)
-	EI
-	RET
-; Fehlerrueckruf: Status des Nukleus an den Auftraggeber (im Betrieb nie gelaufen)
-BR_ABBRUCH:
-	LD A,(V_STATUS)
-	LD (IY+10),A
-	CALL REGS_HOLEN
-	PUSH HL
-	LD L,(IY+8)
-	LD H,(IY+9)
-	EX (SP),HL
-	LD IY,(V_IY_SICHER)
-	EI
-	RET
-; SEKTOR_WEITER: naechster logischer Sektor (pos+1; bei 26: Zylinder+1, Versatz+6 mod 26)
-SEKTOR_WEITER:
-	LD A,(V_POS)
-	INC A
-	CP SPT
-	JR C,SW_ENDE
-	SUB SPT
-	LD (V_POS),A
-	LD HL,V_ZYL
-	INC (HL)
-	LD A,(V_VERSATZ)
-	ADD A,06H
-	CP 1AH
-	JR C,SW_VERSATZ
-	SUB 1AH
-SW_VERSATZ:
-	LD (V_VERSATZ),A
-	RET
-SW_ENDE:
-	LD (V_POS),A
-	RET
-; SEKTOR_BERECHNEN: physische Sektor-ID aus pos/Versatz (Verschraenkung 2), Zylinder = rel+1
-SEKTOR_BERECHNEN:
-	IF	K8X512
-	LD A,(V_POS)	; 8 x 512: Sektor-ID-1 = pos, keine Verschraenkung
-	JP SB_FERTIG
-	DB	99H		; Rest der ersetzten 7 Byte (Hochbyte von V_POS); der Rest bis SB_VERSCHR ist tot
-	ELSE
-	LD A,(V_VERSATZ)
-	LD D,A
-	LD A,(V_POS)
-	ENDIF
-	ADD A,A
-	CP 1AH
-	JR C,SB_VERSCHR
-	INC A
-SB_VERSCHR:
-	ADD A,D
-SB_MOD26:
-	CP 1AH
-	JR C,SB_FERTIG
-	SUB 1AH
-	JR SB_MOD26
-SB_FERTIG:
-	LD C,A
-	LD A,(V_SEKTOR)
-	AND 0E0H
-	OR C
-	LD C,A
-	LD A,(V_ZYL)
+PL_GROSS:
+	ADD A,A			; record count = 2*high + bit 7 of low
 	LD B,A
-	INC B
-	LD (V_SEKTOR),BC
+	LD A,(IX+15)
+	RLCA
+	AND 01H
+	ADD A,B
+	LD (V_NREC),A
+	LD A,(IX+8)
+	AND 7FH
+	LD (V_CMD),A
+	LD A,(IX+18)
+	LD (V_BN+1),A
+	LD A,(IX+19)
+	LD (V_BN),A
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD (V_DMA),HL
+	LD A,(IX+7)
+	LD (V_UNIT),A
+	CP 04H
+	JR NC,PL_INDEX		; units 4..7: TAB_RK_CPA index = unit
+	LD E,A
+	LD D,00H
+	LD HL,TAB_RK_LAUFWERK
+	ADD HL,DE
+	LD A,(HL)		; floppy drive 0..3 chosen in the mask
+PL_INDEX:
+	AND 07H
+	LD E,A
+	LD D,00H
+	LD HL,TAB_RK_CPA
+	ADD HL,DE
+	LD A,(HL)
+	CP 0FFH
+	JP Z,PL_FEHLER		; no CP/A drive behind this unit
+	LD (V_CPA),A
+; log in: first access after the mask E bit 0 = 0 (format detection), then E = 1
+	LD A,(V_UNIT)
+	LD E,A
+	LD D,00H
+	LD HL,V_ANGEM
+	ADD HL,DE
+	LD E,00H
+	LD A,(HL)
+	OR A
+	JR Z,PL_SELDSK
+	LD E,01H
+PL_SELDSK:
+	LD A,(V_CPA)
+	LD C,A
+	CALL B_SELDSK
+	LD A,H
+	OR L
+	JP Z,PL_FEHLER		; HL = 0: drive not usable
+	PUSH HL
+	LD A,(V_UNIT)
+	LD E,A
+	LD D,00H
+	LD HL,V_ANGEM
+	ADD HL,DE
+	LD (HL),01H		; logged in
+	POP HL
+; DPH+10 -> DPB: SPT (word at +0) and OFF (byte at +13), read after every SELDSK
+	LD DE,000AH
+	ADD HL,DE
+	LD E,(HL)
+	INC HL
+	LD D,(HL)
+	EX DE,HL
+	LD E,(HL)
+	INC HL
+	LD D,(HL)		; DE = SPT
+	LD BC,000CH
+	ADD HL,BC		; DPB+13
+	LD A,(HL)
+	LD (V_OFF),A
+	LD A,D
+	OR A
+	JP NZ,PL_FEHLER
+	LD A,E
+	LD B,26
+	CP 26
+	JR Z,PL_FORMAT		; 26 x 128
+	LD B,32
+	CP 32
+	JR Z,PL_FORMAT		; 8 x 512
+	CP 36
+	JP NZ,PL_FEHLER		; 8 x 512 as detected by the BIOS (9 x 512)
+PL_FORMAT:
+	LD A,B
+	LD (V_PERTRK),A		; records per track as MUTOS counts them
+; start position: l = 4*bn, track q = l div PERTRK, pos = l mod PERTRK, skew = 6*q mod 26
+	LD HL,(V_BN)
+	LD A,H
+	CP 40H
+	JP NC,PL_FEHLER		; bn >= 4000H: l would not fit in 16 bits
+	ADD HL,HL
+	ADD HL,HL
+	LD E,B
+	LD D,00H
 	XOR A
-	LD (V_STATUS),A
+	LD (V_TRK),A
+	LD (V_SKEW),A
+PL_DIV:
+	OR A
+	SBC HL,DE
+	JR C,PL_DIVEND
+	LD A,(V_TRK)
+	INC A
+	JP Z,PL_FEHLER		; cylinder > 255
+	LD (V_TRK),A
+	LD A,(V_SKEW)
+	ADD A,06H
+	CP 26
+	JR C,PL_SKEW
+	SUB 26
+PL_SKEW:
+	LD (V_SKEW),A
+	JR PL_DIV
+PL_DIVEND:
+	ADD HL,DE
+	LD A,L
+	LD (V_POS),A
+	XOR A
+	LD (V_K),A
+; ---- record loop
+PL_LOOP:
+	LD A,(V_NREC)
+	OR A
+	JR Z,PL_GUT
+	LD A,(V_TRK)
+	INC A
+	LD C,A			; cylinder = q + 1
+	LD B,00H
+	CALL B_SETTRK
+	CALL PL_RECORD		; C = BIOS record number
+	LD B,00H
+	CALL B_SETSEC
+	LD BC,(V_DMA)
+	CALL B_SETDMA
+	LD A,(V_CMD)
+	CP 01H
+	JR Z,PL_WRITE
+	CALL B_READ
+	JR PL_ERG
+PL_WRITE:
+	LD C,01H		; WRITE type: 1 = write through now, 0 = may be deferred by the BIOS blocking
+	LD A,(V_K)
+	CP 03H
+	JR Z,PL_WRC		; last record of a block
+	LD A,(V_NREC)
+	CP 01H
+	JR Z,PL_WRC		; last record of the request
+	LD C,00H
+PL_WRC:
+	CALL B_WRITE
+PL_ERG:
+	OR A
+	JP NZ,PL_FEHLER
+; next record: DMA + 128, pos + 1 (at PERTRK: next track, skew + 6 mod 26), k + 1, count - 1
+	LD HL,(V_DMA)
+	LD DE,0080H
+	ADD HL,DE
+	LD (V_DMA),HL
+	LD A,(V_K)
+	INC A
+	AND 03H
+	LD (V_K),A
+	LD HL,V_NREC
+	DEC (HL)
+	LD A,(V_POS)
+	INC A
+	LD HL,V_PERTRK
+	CP (HL)
+	JR C,PL_POS
+	XOR A
+	LD HL,V_TRK
+	INC (HL)
+	LD HL,V_SKEW
+	LD B,A
+	LD A,(HL)
+	ADD A,06H
+	CP 26
+	JR C,PL_SKEW2
+	SUB 26
+PL_SKEW2:
+	LD (HL),A
+	LD A,B
+PL_POS:
+	LD (V_POS),A
+	JR PL_LOOP
+PL_GUT:
+	LD IX,DCB0
+	LD A,(IX+15)
+	AND 80H
+	LD (IX+15),A		; transferred count = requested count in whole records
+	LD (IX+9),01H
+	JP ENDE_WIEDER
+PL_FEHLER:
+	LD IX,DCB0
+	LD (IX+9),0C0H		; error status (bit 6 set like a nucleus error)
+	XOR A
+	LD (IX+14),A
+	LD (IX+15),A		; MELDEN then copies no data
+	JP ENDE_WIEDER
+; PL_RECORD: C = BIOS record number (SETSEC) of the current position
+PL_RECORD:
+	LD A,(V_PERTRK)
+	CP 32
+	JR Z,PR_512
+	LD A,(V_POS)		; 26 x 128: ID = ((x + skew) mod 26) + 1, x = 2*pos (+1 when >= 26)
+	ADD A,A
+	CP 26
+	JR C,PR_1
+	INC A
+PR_1:
+	LD B,A
+	LD A,(V_SKEW)
+	ADD A,B
+PR_2:
+	CP 26
+	JR C,PR_3
+	SUB 26
+	JR PR_2
+PR_3:
+	INC A			; MUTOS sector ID 1..26
+	LD C,A
+	LD A,(V_TRK)
+	INC A			; cylinder
+	LD HL,V_OFF
+	CP (HL)
+	RET C			; below OFF: the BIOS does not skew, record = ID
+	LD B,00H
+	LD HL,INVT-1
+	ADD HL,BC
+	LD C,(HL)		; record = INV[ID]
 	RET
-; Arbeitsvariablen der Blockabbildung; ab 996EH Auftragsblock fuer den Nukleus (13 Byte)
-V_VERSATZ:
+PR_512:
+	LD A,(V_POS)
+	INC A
+	LD C,A
+	RET
+; INV[ID] = record r with SKEW[r-1] = ID (CP/A skew table of biosdpb.mac:374 inverted), ID = 1..26
+INVT:
+	DB	1,14,10,23,6,19,2,15,11,24,7,20,3,16,12,25,8,21,4,17,13,26,9,22,5,18
+; CP/A drive of floppy 0..3 (mask result) / unit 4..7; FFH = none
+TAB_RK_CPA:
+	DB	00H,01H,02H,03H,0FFH,0FFH,0FFH,0FFH
+; work variables of PLATTE
+V_ANGEM:
+	DB	00H,00H,00H,00H,00H,00H,00H,00H	; per unit: logged in since the mask
+V_UNIT:
 	DB	00H
-V_ZYL:
+V_CPA:
+	DB	00H
+V_CMD:
+	DB	00H
+V_NREC:
+	DB	00H
+V_BN:
+	DW	0000H
+V_DMA:
+	DW	0000H
+V_OFF:
+	DB	00H
+V_PERTRK:
+	DB	00H
+V_TRK:
 	DB	00H
 V_POS:
 	DB	00H
-NUK_AUFTRAG:
-	DB	0FFH,0FFH
-V_PUFFER:
-	DB	0FFH,0FFH
-V_LAENGE:
-	DB	0FFH,0FFH
-V_RUECKRUF_OK:
-	DB	0FFH,0FFH
-V_RUECKRUF_ERR:
-	DB	0FFH,0FFH
-V_STATUS:
-	DB	0FFH
-V_SEKTOR:
-	DB	0FFH,0FFH,0FFH
-V_REST:
-	DB	00H,02H
-V_AUFTRAG_IY:
-	DB	00H,00H
-V_IY_SICHER:
-	DB	00H,00H
-	FILLFF	126
+V_SKEW:
+	DB	00H
+V_K:
+	DB	00H
 ; --- ROH: class 3, raw floppy commands (never used in operation; STUB since C3.2) ------
 ; The original wrote the UDOS nucleus block at 01B5H and started the (unassigned) port 1CH;
 ; both are gone.  Every request is answered at once with the error status C1H (as the original
@@ -1641,6 +1619,11 @@ M_UEBERNEHMEN:
 	DJNZ M_UEBERNEHMEN
 	JP MASKE_ZEILE
 M_FERTIG:
+	LD HL,V_ANGEM
+	LD DE,V_ANGEM+1
+	LD BC,0007H
+	LD (HL),00H
+	LDIR			; drives are logged in again at the first access
 	LD DE,V_EINGABE
 	LD BC,0400H
 M_TAB_SCHL:
@@ -1758,13 +1741,13 @@ TAB_KL0:
 	DW	DCB0
 	DW	PLATTE
 	DW	DCB0
-	DW	IGNORIEREN
+	DW	PLATTE
 	DW	DCB0
-	DW	IGNORIEREN
+	DW	PLATTE
 	DW	DCB0
-	DW	IGNORIEREN
+	DW	PLATTE
 	DW	DCB0
-	DW	IGNORIEREN
+	DW	PLATTE
 TAB_KL1:
 	DW	DCB1
 	DW	DRUCKER
@@ -1931,11 +1914,11 @@ QUEUE_TTY2:
 QUEUE_TTY3:
 	DB	04H,04H,00H,00H,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 	FILLFF	28
-; V_TAKT: Zaehler der Zeitgeber-Ticks; V_BUSY: Platte belegt (Roh-Floppy: Zustand 0/2)
+; V_TAKT: counter of the timer ticks; the byte after it (UDOS V_BUSY, unused since C3.3) is kept as filler so that
+; segment 4 and the image length (C967H) stay as before
 V_TAKT:
 	DB	01H
-V_BUSY:
-	DB	01H
+	DB	0FFH
 SEGC8B6E:
 	REPT	(100H-(($-SEGC8B6) AND 0FFH)) AND 0FFH
 	DB	0FFH
