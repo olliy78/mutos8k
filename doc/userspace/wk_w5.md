@@ -23,3 +23,87 @@ Gegenueber V7 `c20.c/c21.c` (Funktionszuordnung von W0 war an mehreren Stellen f
 ## 3. Offene Punkte
 * `c20.c`/`c21.c` schreiben (die oben gelesenen Funktionen sind bis auf `rmove`-Zweige 1A00-1F6E/21BE im Detail ausgewertet; Registerzuordnung der Locals, `register`-Parameter in umgekehrter Deklarationsreihenfolge) und im Gast iterieren; BSS-Luecke 5096-5098 (`ccloc` 22 statt 20?) klaeren.
 * Danach Gegenprobe R1-R112 / K1-K6 und Regression (`sh ed tar cc ld`): nicht ausgefuehrt.
+
+# Teil b (Branch `us-wk-w5b`): `c2.h` + `c20.c`
+
+Stand 2026-11-17.  Quellen: `userspace/c2/c2.h`, `userspace/c2/c20.c` (Funktionen 0030..151E, 17 Stueck), `userspace/c2/c21.c` (**vorlaeufiger Stub**, nur damit das Programm bindet; Teil zwei ersetzt ihn).
+Aufruf (Gast, ca. 6 min je Lauf): `python3 -I tools/userspace/pipeline.py alles c2 --c2emu --libc alt --ist neu_c2`; Bericht `userspace/c2/work/bau/neu_c2.bericht`.
+
+## Funktionen (Adresse im Original, V7-Gegenstueck, Befund)
+| Adresse | Funktion | V7 | Befund (gemessen) |
+|---------|----------|----|-------------------|
+| 0030 | `main` | c20.c main | V7-Rahmen, aber: erste Eingabezeile bis `;` unveraendert durchgereicht, kein `movedat`/`jumpsw`, `retopt()`-Abbruch, `do shortjmp() while (nchange)`; Register `niter maxiter isend c nflag` = R13..R9 |
+| 039A | `input` | c20.c input | `case`-Reihenfolge im Quelltext `default, LABEL, CMT, JBR/JMP/JSW` (die Rumpfreihenfolge im Binary; der Compiler sortiert die Vergleichskette selbst); `JBR/JMP/JSW` zerlegen die Bedingung (`jp eq,L5`) ueber die Tabelle `conds` (Schritt 2 Zeichen: `cc += 2`); `CMT` (`!`) -> Knoten mit `op` 0; Registervariablen R13..R8 (`p lastp oper cp s np`), `cc` Stapel |
+| 0568 | `getline` | c20.c getline | `f`-Praefix (`fflag`), Kommentarzeilen `!`/`~`, `:` liest noch ein Zeichen (Zeilenende) |
+| 0704 | `getnum` | c20.c getnum | V7 |
+| 0748 | `output` | c20.c output | Hash-Schalter (`op/3`); `LABEL`/`DLABEL` mit `\n`; Suffixe `b l s d`; `WV L%d`, `djnz`; kein `reducelit` (das V7-`reducelit` gibt es nicht; die Zuordnung von W0 war falsch) |
+| 09C6 | `copy` | c20.c copy | V7, aber `onp` Registervariable (R11) |
+| 0A4A | `opsetup` | c20.c opsetup | V7 (`OPHS` 79) |
+| 0AAE | `oplook` | c20.c oplook | Suffix-Behandlung `ld cp or ex` + `b l s d`; `WV Ln` statt `Ln`-Sprungschalter |
+| 0CDA | `refcount` | c20.c refcount | V7 + Entfernen von `I`/`G`-Deklarationszeilen (`delnode`); Schleifenkopf `p->op<=JSW` |
+| 0E54 | `iterate` | c20.c iterate | stark erweitert (JBR/JMP, CBRS/CBR, `delnode`, Sprung auf Folgebefehl) |
+| 10C8 | `xjump` | c20.c xjump | V7 + Pseudobefehlsbereich `CODE..CMT` bricht ab; `JMP` statt `JBR` |
+| 1152 | `insertl` | c20.c insertl | V7 |
+| 11CC | `codemove` | c20.c codemove | V7 mit `JMP`/`JBR`, Schleifenbedingung `p3->op && p3->op>CBR`; `t tl n` Registervariablen |
+| 1382 | `comjump` | c20.c comjump | V7 mit `JBR`/`JMP` |
+| 13EA | `shortjmp` | nicht V7 | `jp` -> `jr`, wenn `!toofar(p,0)` (`p->op--`); Name *Annahme* |
+| 1430 | `backjmp` | c20.c backjmp | V7, `delnode(p2)` statt Auskettung |
+| 149C | `retopt` | nicht V7 | `call csv ; ... ; jp cret` -> `ret`; Name *Annahme* |
+
+Konstanten/Tabellen: `optab` (76 Eintraege, `0x4286`), `conds` (12 Paare + Ende, `0x4252`), `revbr`, `isn = 9000`, `lastseg = 32` (alle gemessen).
+`lastseg` wird nur in `output` gesetzt (`CODE` 31 / `DATA` 36 / `BSS` 34) und nirgends gelesen (`movedat` fehlt).  `DATA` (36) hat keinen `optab`-Eintrag; die tote V7-Pruefung
+`p->forw->op!=DATA` in `iterate` ist erhalten (Wert 0x24 im Binary gemessen).  Namen `DSEC` (32), `CODE`, `SDEF` usw. sind *Annahme*.
+
+## Ergebnis Teil b (gemessen, Gast, `alles c2 --c2emu --libc alt --ist neu_c2`)
+**Alle 17 Funktionen von `c20.c` befehlsgleich (E auf Funktionsebene)**: im Bericht bleiben in 0030..149C keine Befehlsbloecke ausser vier Artefakten, die mit Teil zwei verschwinden:
+* `PUSH @R15,#D+..`/`ADD ..,#B+..` mit konstantem Versatz 0x1AA (Daten) bzw. Adressen in `libc`: das gebaute Abbild hat 426 B weniger Daten (Tabellen von c21) und 106 B weniger BSS, weil `c21.c` noch Stub ist.
+* `0748` `CP R2,#4 ; JR UGT` und `0AAE` `ADD R2,#%2000`: Darstellungsartefakte des Berichts (der Disassembler des Gebauten kennt die `ohne`-Marke 0902 des Originals nicht bzw. deutet 0x2000 als Funktionsadresse); die Bytes sind gleich.
+* `149C`/ab `151E`: Stub-Code statt `rmove` usw.
+Daten von `c20` (Zeichenketten, `conds`, `optab`, `revbr`, `isn`, `lastseg`) gleich dem Original (Bytevergleich mit Zeigerversatz, `diff` leer).  BSS-Adressen aller Globalen aus `c2.h` stimmen (`fflag` 509A usw.).
+
+Quellvarianten, die probiert wurden (je ein Gastlauf), und was sie entschied:
+* `input`: `case`-Rumpfreihenfolge muss `default, LABEL, CMT, JBR..` sein (Rumpf folgt der Quelle, Vergleichskette sortiert der Compiler); die Zerlegung der Bedingung ist eine `if`-Kette (`'\t' ' ' ',' '\n'`), kein `switch` (der sortiert die Vergleiche); `conds` ist ein `int`-Feld mit Schritt 2 (`int *cc; *cc != 0; cc += 2`; mit `*cc` allein oder `char **` ergibt der Compiler `ld r3,@r2 ; test r3`, das Original `test @r2`); `(p->subop & FLTF) == 0` statt `!(..)` (sonst `bitb`).
+* `oplook`: erste Stelle `(c = tmpop[2]) == 'b' || ...` als Ausdruck, zweite Stelle `c = *lp++;` als Anweisung davor (sonst fehlt `xorb`).
+* `codemove`: `t tl n` sind Registervariablen R10 R9 R8.
+* `main`: `putchar(c = getchar())` ist `c = getchar(); putchar(c);` (zwei Anweisungen).
+
+c2-Modell: **keine neue Regel.**  `C2_AUS["c2"] = {R5, R7, R32, R45}` in `tools/userspace/pipeline.py` (nur fuer das Programm `c2`, wie bei `sh`/`ed`): der gelieferte c2 selbst zeigt die Formen des aelteren Standes (`ld rA,rB ; test rB`, `ld DST,rB` nach `getchar`, kein `xorb` zwischen `ldb` und `cp` bei `tmpop[1]`, `xor r2,r2` vor dem Hash-Schalter in `output`).  R1 (3), R2 (6), R4 (7), R30 (2) feuern und stimmen.  Andere Programme sind nicht beruehrt (Schluessel ist der Name).
+
+## Offene Punkte fuer Teil zwei (`c21.c`, 0x151E..0x3590)
+* Funktionen laut Karte: `rmove` (3232 B, Sprungtabelle 4778), `jumpsw` (20EC, ungenutzt, V7-Rest), `addsob`, `toofar`, `ilen`, `adrlen`, `abs`, `equop`, `decref`, `nonlab`, `alloc`, `clearreg`, `savereg`, `dest`, `clrptr`, `singop`, `dualop`, `findrand`, `isreg`, `check` (ungenutzt), `repladdr`, `redunbr`, `findcon`, `compare`, `setcon`, `equstr`, `setcc`, `clrcc`, `natural`, `atoh`, `delnode`, `regno`, `setrsz`, `kill`, `clrptr30`, `log2n`, `mkshift` (Namen *Annahme*, Zuordnung der W0-Tabelle ist an mehreren Stellen falsch).
+* BSS-/Daten-Adressen der Globalen und der Statics (`labhash` 5566, `tmpop` 5546, `cbuf` 553C in `c20`) stimmen schon; die Daten von c21 (Tabellen 4808, 484C, 4778 ..) und c21-Statics fehlen noch (426 B Daten, 106 B BSS).
+* Aufrufschnittstellen aus `c20` (aus den Aufrufen gemessen): `toofar(p, 0)`, `equop(p1,p2)`, `decref(p)`, `nonlab(p)`, `alloc(n)`, `equstr(s1,s2)`, `delnode(p)` (ruft `nchange++`), `clearreg()`, `rmove()`, `addsob()`; Rueckgabe `retopt()` 1/0.
+
+# Teil c (Branch `us-wk-w5c`): `c21.c` ohne `rmove`
+
+Stand 2026-11-18.  `userspace/c2/c21.c` ersetzt den Stub: alle c21-Funktionen ausser `rmove` sind gelesen und gebaut; `rmove` bleibt ein **markierter Stub** (Teil d), der
+nur die Zeichenketten (13 Literale in Originalreihenfolge) und eine 55-Eintraege-Sprungtabelle erzeugt, damit die Daten stimmen, und der alle anderen Funktionen aufruft
+(`if (i == 0x7777)`, nur damit die Karte des gebauten Abbilds sie dekodiert).  Aufruf wie in Teil b.
+
+## Ergebnis (gemessen)
+* **Daten: 1984 B = Original** (die +0x1AA-Verschiebung der c20-Datenverweise ist weg; `c20` im Bericht ohne Differenzbloecke).  c21-Daten: Tabellen 4778 (rmove, Stub), 47E6/47EC/47FE (addsob), 4808/484C (ilen), 48BA (compare), Zeichenketten ab 48D2 (rmove-Literale, alloc, `"#0"` in redunbr).
+* **BSS: 3296 B = Original**; Statics `rt1[50] rt2[50]` (5664, repladdr) und `buf[5]` (56C8, mkshift) = 106 B.  Die BSS-Adressen im gebauten Abbild liegen noch tiefer als im Original, weil der Text ohne `rmove` kuerzer ist (Teil d).
+* "own code": 3623 von 4717 Befehlen gleich (rmove, 3232 B, fehlt); 42 Differenzbloecke, keiner in `c20`.
+
+## Funktionen (Adresse, Stand; V7-Gegenstueck wo vorhanden)
+* 151E rmove: Stub (Teil d).  20EC jumpsw (V7, tot): gleich.  21BE addsob (nicht V7, nur der `djnz`-Teil): gleich bis auf tote `JR L22FC` bei 2324.
+* 23E4 toofar(p,flag): **Differenz** (Original hat den Ausgangsblock vor der Schleife).  244E ilen (nicht V7): Differenz in der Lage der Rueckgabebloecke 0/2/4.  2510 adrlen: Differenz (Lage des `s[1]=='P'`-Blocks).  2572 abs: gleich.
+* 258C equop (V7): Differenz (Original wiederholt den op/subop-Vergleich bei 25C2; Quelle unklar).  25FE decref, 2622 nonlab, 2644 alloc (`fprintf(stderr,"C Optimizer: out of space\n")`), 26A2 clearreg, 2702 savereg(ai,as,sz,np): gleich.
+* 278C dest(as,sz,flt) (V7 + Groesse): gleich (im letzten Lauf).  2932 clrptr (nicht V7): gleich.  2A36 singop, 2A72 dualop: gleich (+ `setrsz`).
+* 2AF2 findrand(as,sz,flt): Differenz (das `JP cret` sitzt bei `return(i)` statt beim ersten `return(-1)`).  2BC0 isreg (`return regno(as)`), 2BD4 check (V7, tot), 2BFC repladdr(p,f,flt), 2E5A redunbr, 2F26 findcon: gleich.
+* 2F94 compare: Differenz (Tabelle 48BA stimmt, Vergleichsketten anders zusammengefuehrt; `JPL/JMI` neu).  3060 setcon(ar1,ar2,sz), 30C0 equstr (`#%x` = `#x`), 311E setcc, 315C clrcc, 316C natural, 31BA atoh (nicht V7, `register unsigned n`), 322E delnode, 3256 regno, 3322 setrsz: gleich.
+* 33AE kill: fast gleich (eine `JR NZ`-Differenz bei 34D0).  34E4 clrptr30, 3536 mkshift: gleich.  3504 log2n: Differenz (Lage von `return(-1)`).
+
+Die Zuordnung der W0-Tabelle war an mehreren Stellen falsch: 21BE ist `addsob` (550 B), `jumpsw` liegt bei 20EC; 278C `dest`, 2932 `clrptr`, 2A36 `singop`, 2A72 `dualop`, 2BC0 `isreg`, 2E5A `redunbr`, 2F26 `findcon`, 2F94 `compare`, 3060 `setcon`, 30C0 `equstr`, 311E `setcc`, 316C `natural`.  Namen ausser V7 sind *Annahme*.
+
+## Quellvarianten, die entschieden haben
+* `if (!(p1 = p->forw)) return;` ergibt `LD R2,..;LD R12,R2;TEST R2` wie das Original; `(p1 = ..) == 0` nicht.
+* `dest`/`clrptr`: `register char *s; s = as;` (R12) mit `register flt` (R13); ein Registerparameter `as` vertauscht die Register.
+* `kill`: `rnode[i] = 0; i++;` getrennt (`rnode[i++]` setzt das `INC` zu frueh).
+* `addsob`-Hash-Schalter: Faelle MOV CLR TST CMP BIS BIC CPZX CPFX SET RES BIT LDK (aus den Eimerketten zurueckgerechnet: Eimer = op%3, Kettenwert = op/3); `EX` gehoert nicht dazu.
+* `addsob` vergleicht `p1->forw` (Wort bei +2) mit der Konstanten 2 (`CP 2(R12),#2`); als `p1->forw > 2` uebernommen (*Annahme*: Fehler der Original-Quelle).
+* `ilen`: letzter Fall `LDK` (55), nicht `RESM` (sonst Tabelle 57 statt 55 Eintraege); `adrlen(regs[RT1]) + adrlen(regs[RT2])`.
+
+## Offen fuer Teil d (`rmove`)
+* Stub ersetzen; Tabelle 4778 (55 Eintraege, `op-1`), Literale `#0 SP ,#%%%x #0 x6 #%ffff #-%1 #%0 #0`, danach die alloc-Zeichenkette.  Der Aufrufblock im Stub entfaellt.
+* Ungeklaerte Lagen (toofar/ilen/adrlen/equop/findrand/compare/log2n/addsob-Totsprung): vermutlich Quelltextform; keine neue c2-Regel eingefuehrt.

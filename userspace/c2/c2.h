@@ -4,7 +4,8 @@
  * Differs from V7: the opcode numbers are the ones of the MUTOS optab (measured at
  * 0x4286 in the binary), registers are tracked in 38 slots, the jump
  * ops come in a short (jr) and a long (jp) form.  All names are Annahme except
- * those taken over from V7 c2.h.
+ * those taken over from V7 c2.h.  Built with c20.c: every global below has the address of
+ * the original (BSS from 0x4A10, checked), `ccpad` fills a 2-byte gap (Annahme).
  */
 
 #include <stdio.h>
@@ -40,10 +41,11 @@
 #define	XOR	29
 #define	TEXT	30
 #define	CODE	31
-#define	DATA	32
+#define	DSEC	32	/* $SECTION c_d */
 #define	SDEF	33
 #define	BSS	34
 #define	EVEN	35
+#define	DATA	36	/* no optab entry: pseudo segment id (lastseg, dead test in iterate) */
 #define	CMT	37		/* ! */
 #define	MULS	38		/* mul */
 #define	CPZX	39
@@ -147,6 +149,7 @@ char	conlsz;
 char	conval[20];
 char	convsz;
 char	ccloc[20];
+char	ccpad;		/* Annahme: unreferenced; fills the BSS gap 5096..5098 */
 char	ccsz;
 int	fflag;
 struct optab *ophash[OPHS];
