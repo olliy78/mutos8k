@@ -249,3 +249,18 @@ Alles *gemessen* an `c1.lst` und `neu_c2.bericht`.
 **Offen:**
 * Daten +8: am Abbildende (nach dem `sbrk`-Wort) stehen 8 Nullbytes, die das Original nicht hat; Herkunft nicht gefunden (kein Glied von `libc_alt.a` hat Daten dahinter; vermutet ein weiteres aus der ausgelieferten libc gezogenes Glied oder Linker-Auffuellung -- ohne Linkkarte nicht entscheidbar).  Zusammen mit BSS -4 (und `s`/`s1` +4 vor dem Puffer) spricht das fuer ein BSS-/Datenobjekt, das im Bau an anderer Stelle liegt; ein Linker-Lauf mit Karte ist der naechste Schritt.
 * Restbloecke je Funktion (Bericht): 0000:1 0186:3 039E:4 0B9E:10 1C74:2 1F66:2 2028:3 2104:3 2228:1 23AE:3 264E:1 26D8:1 2826:1 29EC:1 2A1E:1 2C70:2 2CA6:5 2D12:5 2DAE:4 2DEA:6 2EE4:3 2F6C:9 3416:18 3CD2:1 3FD6:5 4584:7 4D76:1 50BE:1 536C:2 56DE:2 577A:1.
+
+## Teil 13: Daten +8 und BSS (W6k)
+
+Alles *gemessen* an `neu_c2.bericht` und am Vergleich des Daten-Abschnitts von `c1.orig` und `neu_c2.bin`.
+
+**Daten +8: Ursache `ldexp.o`.**  Der Daten-Abschnitt ist bis zum `sbrk`-Wort Byte fuer Byte ausgerichtet (Verschiebung 0, nur Adress-Worte unterscheiden sich); danach folgten die 8 Nullbytes.  Das sind Daten von `ldexp.o` (shipped libc: Text 48, Daten 8 Nullbytes): `atof.s` (Kopie des ausgelieferten `atof.o`) hat `X _ldexp`, kein Glied von `libc_alt` definiert es, `ld` zog es am Ende aus der libc (Text ab 74EC am Abbildende, im Original gibt es weder diesen Text noch diese Daten).  Das Original-`atof` (ab 57CE) weicht vom ausgelieferten ab (ab Offset 17E um 4 Byte versetzt) und ruft das `ldexp.o` nicht.  Abhilfe (nur c1): `atof.s` definiert `_ldexp` als nulllaengige Prozedur (wie `pfloat`/`pgen` in `ffltpr.s`); der `CALL _ldexp` im Fremd-`atof` zeigt damit auf das Ende von `atof` (der Aufruf kommt im Original nicht vor, solange `atof.s` nicht aus den Original-Bytes statt aus dem ausgelieferten Glied gebaut wird; offen).  Daten jetzt **5582 = Original**, Text 29932 (Original 30176; vorher 29980).
+
+**BSS: `lsptab`.**  `struct table lsptab[1];` in `c10.c` (W6c als "BSS-Platzhalter" gedacht) ist ein 4-Byte-Common hinter `nfloat`, also zwischen `nfloat` und `__sibuf`; im Original liegt `__sibuf` direkt bei `nfloat+2` (8E96).  Dadurch standen `environ` (`B+6E8` im Original), `s`, `s1` um 4 Byte zu weit hinten.  `lsptab` wird nirgends benutzt und ist entfernt; die `B+6E8/6EA/6F4`-Abweichungen sind weg (13 Befehle, 13 Bloecke weniger).
+
+**Stand nach dem Bau** (`alles c1 --c2emu --libc alt --ist neu_c2`): Text 29932 (30176), Daten **5582** (5582), BSS 1824 (1832); Befehle 7156 gegen 7970, **6954 gleich** (vorher 6941), 96 Bloecke (vorher 109).  Restbloecke je Funktion: 0186:3 039E:4 0B9E:10 1C74:2 1F66:2 2028:3 2104:3 2228:1 23AE:3 264E:1 26D8:1 2826:1 29EC:1 2A1E:1 2C70:2 2CA6:5 2D12:5 2DAE:4 2DEA:6 2EE4:3 2F6C:9 3416:6 3CD2:1 3FD6:5 4584:7 4D76:1 50BE:1 536C:2 56DE:2 577A:1.
+
+**Offen:**
+* BSS -8: im Original liegen zwischen `s1` (92A2, belegt bis 92AC) und dem BSS von `filbuf` (92B4) 8 Byte, auf die kein Befehl im Original zugreift; Herkunft nicht gefunden (c12/c13-Statik oder ein Glied der libc; *Annahme*, nicht gemessen).
+* `cexpr` (0B9E, 10 Bloecke) und `cbranch` (2F6C, 9 Bloecke) in dieser Runde nicht angefasst.
+* `pytest -m "not gast"`: `test_bau_alle_kennt_genau_die_fertigen_disketten` schlaegt fehl, weil im Worktree `disks/gebaut` fehlt (nicht von dieser Aenderung).

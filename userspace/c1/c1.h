@@ -111,7 +111,7 @@ struct	table	cctab[];
 struct	table	efftab[];
 struct	table	regtab[];
 struct	table	sptab[];
-/* lsptab: not declared here; see c10.c (BSS order) */
+/* lsptab: not declared (the original BSS has no slot for it) */
 struct	instab	instab[];
 struct	instab	branchtab[];
 int	opdope[];
