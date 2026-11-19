@@ -222,7 +222,9 @@ yylex()
 		l0eb0:
 			sp = (struct sym *)symget(30);
 			yylval = (int)sp;
-			if (sp && brk == 0 && sp->s_w == -1)
+			/* W7r: the original tests the word at +4 (s_x), not the number at +6 (s_w, -1 for every cell of pass 0):
+			   a local name found again binds to the SAME cell (forward `jr $1` and the later `$1:`) */
+			if (sp && brk == 0 && sp->s_x == -1)
 				sp = 0;
 			if (sp)
 				goto l0f20;

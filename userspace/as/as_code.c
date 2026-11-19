@@ -89,25 +89,18 @@ len1:
 					g9046 += 2;
 				g9046 += 2;
 			}
-			if (n == 1) {
-				/* W7q: class 21 (LD, PUSH, XOR ...): the first operand (a store to a direct address or an
-				   indexed cell) takes its words too */
-				n = 2;
-				g90e2 = g90b0[0];
-				goto len1;
-			}
 			if (cls == 51 || cls == 97) {
 				g9046 += 2;
 				if (g9278)
 					g9046 += 2;
 			}
 			break;
-		case 11:
-			/* W7q: CALL, CLR: the only operand (call csv = 4 bytes) was not counted in pass 0 */
+		case 11: case 12: case 22: case 23: case 51: case 97: case 98:
+			/* W7r: original switch 2 (69B4) group 1D8E: the operand g90b0[g90c4] takes its words (CALL, CLR, LD to
+			   a direct address, ...); W7q had only 11 and an invented second pass for class 21 */
 			goto len1;
 		case 21:
 			g90e2 = g90b0[1];
-			n = 1;
 			goto len1;
 		case 41: case 42: case 43: case 44:
 		case 63: case 64: case 65: case 66: case 67:
@@ -118,7 +111,7 @@ len1:
 			g90e2 = g90b0[1];
 		case 62:
 		case 101: case 102: case 105: case 106: case 109:
-		case 115: case 116: case 119:
+		case 115: case 116:
 			g9046 += 2;
 			goto len1;
 		}
