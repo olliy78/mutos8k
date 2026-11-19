@@ -27,6 +27,13 @@ int fd_o, fd_p, fd_q, fd_r, fd_s, cp_o, cp_q, cp_p, cp_r;
 char *bufp1, *bufp2, *bufp3, *bufp4;
 char area3[100], area4[150], lname[64];
 char symtab[13584];
+char yytext[200];
+int yyleng;
+int cls[128];
+int g8d06, g8d08, g8d0c, g8d0e, g8d10, g8d22;
+unsigned g9046;
+int g9042, g9044, g9048, g904a;
+struct obj objtab[10];
 
 /* TEMPORARY STUB for the function at 43C6 (original 43C6) */
 f43c6()
