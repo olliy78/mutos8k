@@ -262,9 +262,10 @@ def auswerten(namen):
             print("%s\t%d\t%d\t%d" % (op, h["s0"], h["s"], h["model"]))
 
 
-def xpush(namen):
+def xpush(namen, regeln=("R1",)):
     """W10f: acceptance of c2x -xpush.  For every module under WORK/NAME with MOD.sn (output of c2x built with -DXPUSH, from `lauf --c2x
-    c2x_c2.bin --s0`) check  MOD.sn == host rule R1 applied to MOD.s (shipped c2 output); R1 = uspace.c2_emu_s with every other rule off."""
+    c2x_c2.bin --s0`) check  MOD.sn == host rule R1 applied to MOD.s (shipped c2 output); R1 = uspace.c2_emu_s with every other rule off.
+    W10g: `regeln` names the active rules (--regeln R4 for -DXCMPMEM, R1,R4 for both switches)."""
     _t, cnt = U.c2_emu_s("", (), False)
     alle = set(cnt)
     ok = bad = 0
@@ -275,17 +276,17 @@ def xpush(namen):
                 continue
             s = open(os.path.join(d, f[:-1]), encoding="latin-1").read()
             sn = open(os.path.join(d, f), encoding="latin-1").read()
-            y, c = U.c2_emu_s(s, alle - {"R1"}, False)
+            y, c = U.c2_emu_s(s, alle - set(regeln), False)
             if y == sn:
                 ok += 1
-                print("%-10s %-10s R1 sites %3d  c2x == shipped + R1" % (n, f[:-3], c["R1"]))
+                print("%-10s %-10s %s sites %3s  c2x == shipped + %s" % (n, f[:-3], "+".join(regeln), "+".join(str(c[r]) for r in regeln), "+".join(regeln)))
             else:
                 bad += 1
                 a, b = y.split("\n"), sn.split("\n")
                 k = next((i for i in range(min(len(a), len(b))) if a[i] != b[i]), min(len(a), len(b)))
-                print("%-10s %-10s R1 sites %3d  DIFFERS at line %d: model %r  c2x %r" % (n, f[:-3], c["R1"], k + 1,
+                print("%-10s %-10s %s sites %3s  DIFFERS at line %d: model %r  c2x %r" % (n, f[:-3], "+".join(regeln), "+".join(str(c[r]) for r in regeln), k + 1,
                       a[k] if k < len(a) else None, b[k] if k < len(b) else None))
-    print("xpush: %d equal, %d differ" % (ok, bad))
+    print("xpush %s: %d equal, %d differ" % ("+".join(regeln), ok, bad))
     return bad
 
 
@@ -337,6 +338,7 @@ def main():
     ap.add_argument("namen", nargs="*")
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
+    ap.add_argument("--regeln", default="R1", help="xpush: host rules the c2x output must equal (comma list, W10g)")
     ap.add_argument("--kurz", action="store_true", help="lauf with --c2x: only the shipped c2 and c2x once each (MOD.s, MOD.sn)")
     ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
     a = ap.parse_args()
@@ -345,7 +347,7 @@ def main():
     elif a.cmd == "bauen":
         bauen(a.namen)
     elif a.cmd == "xpush":
-        sys.exit(1 if xpush(a.namen) else 0)
+        sys.exit(1 if xpush(a.namen, tuple(a.regeln.split(","))) else 0)
     else:
         auswerten(a.namen)
 
