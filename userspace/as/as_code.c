@@ -486,22 +486,98 @@ L29DA:
 	g90de = 0;
 }
 
-/* TEMPORARY STUB for the function at 2DAC (original 2DAC) */
-f2dac()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
+/* setcon (original 2DAC): the cell A becomes a constant (type 0x128); in pass 1 the high word of its value is B.  Returns 0 */
+setcon(a, b)
+register int *a;
+register int b;
 {
+	if (pass == 0)
+		a[1] = b;
+	*a = 296;
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 2DCC (original 2DCC) */
-f2dcc()
+/* symdef (original 2DCC): definition of the cell A (size B) by the directive class g8d06: 5 = type 0x12B; 32 = bit 5;
+   6, 7 = (6: bit 5 and) the type bits g90d0 and the value g9046, which advances by B (pass 1 only); else message */
+symdef(a, b)
+register int *a;
+register int b;
 {
-	return (0);
+	if (pass == 0) {
+		a[2] = b;
+		switch (g8d06) {
+		case 5:
+			*a = 299;
+			break;
+		case 6:
+			*a |= 32;
+		case 7:
+			*a |= g90d0;
+			a[1] = g9046;
+			g9046 += b;
+			break;
+		case 32:
+			*a |= 32;
+			break;
+		default:
+			error("error in typdf");
+		}
+	}
+	return ((int)a);
 }
 
-/* TEMPORARY STUB for the function at 2E38 (original 2E38) */
-f2e38()
+/* passini (original 2E38): start of a module with the header record P.  Common: local area stack empty, symbol limits =
+   gc79e, scanner cells free.  Pass 1: constant pool at gc79e + 16, module name = the 8 bytes at P + 8 copied to curname
+   (area D0F0), *P = 0x40.  Pass 2: section sizes rounded up to even and summed into the section bases (se_d),
+   the output files are positioned at the section starts and the header words gca70..gca76 set (magic 0xE807, sizes).
+   Finally the section counters 1..4 are cleared. */
+passini(p)
+int *p;
 {
-	return (0);
+	long a, b, c, e, d;	/* e: unused, the original frame has 5 longs */
+	register int i;
+	register char *r;
+	register char *q;
+
+	g90c6 = 0;
+	symend = symlim = gc79e;
+	iniobj();
+	if (pass == 0) {
+		gca06 = gc79e + 16;
+		curname = r = (char *)0xD0F0;
+		q = (char *)p + 8;
+		*p = 64;
+		for (i = 0; i < 8; i++)
+			*r++ = *q++;
+	} else {
+		for (i = 1; i < 8; i++) {
+			sectab[i].se_pc++;
+			sectab[i].se_pc &= ~1;
+		}
+		for (i = 3; i < 8; i++)
+			sectab[i].se_d = sectab[i - 1].se_pc + sectab[i - 1].se_d;
+		a = 16;
+		b = sectab[2].se_pc;
+		c = sectab[3].se_pc;
+		d = sectab[4].se_pc;
+		lseek(fd_o, a, 0);
+		lseek(fd_p, a + b, 0);
+		lseek(fd_q, a + b + c, 0);
+		lseek(fd_r, a + c + (b << 1), 0);
+		lseek(fd_s, a + ((b + c) << 1), 0);
+		gca70 = -6137;
+		gca72 = b;
+		gca74 = c;
+		gca76 = d;
+		gca78 = 0;
+	}
+	g90e2 = (int *)objtab;
+	g9046 = 0;
+	for (i = 1; i <= 4; i++)
+		sectab[i].se_pc = 0;
+	gca80 = 1;
+	g90d0 = 3;
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme* (invented; the original had no symbols). */

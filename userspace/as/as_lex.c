@@ -23,7 +23,7 @@ input()
 		else {
 			*lptr++ = c;
 			if (lptr >= &lbuf[127])
-				f1bda();
+				lstflush();
 		}
 	}
 	return (c);
@@ -123,7 +123,7 @@ yylex()
 			return (e);
 		case 1024:
 			if (lflag)
-				f1bda();
+				lstflush();
 			if (g9044 == 0)
 				goto l0c94;
 			g9044 = 0;
