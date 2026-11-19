@@ -37,13 +37,14 @@ int g9042, g9044;
 unsigned g9046;
 int g9048, g904a;
 struct obj objtab[10];			/* 904C */
-int g90b0, g90b2, g90b4;
+int *g90b0[3];				/* 90B0: operand cells of the current instruction (oppush) */
 char g90b6[14];
 int g90c4, g90c6;
 char *bufp2;				/* 90C8 */
-int g90ca, g90cc, g90ce, g90d0, g90d2;
-char g90d4[8];
-int g90dc, g90de, g90e0, g90e2;
+int g90ca, g90cc, g90ce, g90d0;
+int g90d2[5];				/* 90D2..90DB: operand type masks of the matched entry (opmatch) */
+int g90dc, g90de, g90e0;
+int *g90e2;				/* 90E2: current operand cell (opreg, opmask) */
 int uflag;				/* 90E4 */
 char g90e6[200];
 char g91ae[200];
@@ -278,7 +279,7 @@ register int n;
 	}
 	if (symend < symcur) {
 		prmsg(" fatal error: symbol table overflow");
-		f31ba();
+		fatal();
 	}
 	p = sp->s_name;
 	q = yytext;
@@ -333,7 +334,7 @@ found:
 				sp->s_v += sectab[sp->s_t & 7].se_d;
 			break;
 		}
-		f3988(sp);
+		symout(sp);
 	}
 	return ((int)sp);
 }

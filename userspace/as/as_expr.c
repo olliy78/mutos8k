@@ -111,10 +111,33 @@ f38b6()
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 3988 (original 3988) */
-f3988()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
+/* symout (original 3988): write the 12-byte record of the symbol cell SP to the file fd_s: 8 name characters (7 bits),
+   type byte, 0, value (bytes swapped with cflag).  Number -1 counts as 0; type 0x20: the number is the value. */
+struct orec { char or_nm[8]; char or_t; char or_z; int or_v; int or_x; };
+
+symout(sp)
+register struct sym *sp;
 {
-	return (0);
+	struct orec rec;
+	register char *d;
+	register char *s;
+	register int i;
+
+	d = rec.or_nm;
+	s = sp->s_name;
+	for (i = 0; i < 8; i++)
+		*d++ = *s++ & 0177;
+	rec.or_t = sp->s_t;
+	rec.or_v = sp->s_v;
+	rec.or_x = sp->s_x;
+	if (rec.or_x == -1)
+		rec.or_x = 0;
+	if (sp->s_t == 32)
+		rec.or_v = rec.or_x;
+	rec.or_z = 0;
+	swabw(2, &rec.or_v);
+	owrite(fd_s, &rec, 12);
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme* (the name follows the message text or the use). */

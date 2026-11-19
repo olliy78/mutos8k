@@ -42,7 +42,7 @@ extern char symtab[];		/* 13584 B = 849 entries of 16 B (Annahme: symbol table) 
 
 /* scanner data (W7f, names by original address = Annahme) */
 struct obj { int o_t; long o_val; int o_ref; int o_x; };	/* 10 B scanner value cell, original table 904C */
-struct sym { int s_t; unsigned s_v; int s_x; int s_w; char s_name[8]; };	/* 16-byte symbol cell (W7g: s_w at +6, name at +8, measured) */
+struct sym { int s_t; unsigned s_v; int s_x; unsigned s_w; char s_name[8]; };	/* 16-byte symbol cell (W7g: s_w at +6, name at +8, measured) */
 extern struct obj objtab[10];
 extern struct obj *getobj();
 extern char yytext[];		/* 200 B, original 8E76 */
@@ -58,3 +58,12 @@ extern int yylval;		/* defined by the yacc output (union of one int) */
 #define UNPUT(c) { yytchar = (c); if (yytchar == '\n') yylineno--; *yysptr++ = yytchar; \
 	if (pass == 1 && lflag) { if (yyskip || yycnt) yyskip++; else *--lptr = 0; } }
 extern int g90cc, g8d12, gcc36, gca80;
+
+/* object output (W7i): buffers of the output files 1, 3, 4, 5 (6-byte records, original table 6BCA, initialized) */
+struct obf { int ob_n; char *ob_b; char *ob_p; };
+extern struct obf obtab[];
+extern char gca82[], gcaaa[], gcafa[];
+extern int g90de, g90c4;
+extern int *g90b0[];
+extern int g90d2[];
+extern int *g90e2;
