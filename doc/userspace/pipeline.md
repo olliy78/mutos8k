@@ -78,7 +78,8 @@ Gemessen eingefuehrt in den genannten Arbeitspaketen; Einzelheiten dort.
 * **`karte_extra.txt`:** `ohne ADDR` (Vorschlag verwerfen), `code ADDR` (zusaetzlicher Einstieg, z. B. Sprungtabellenziel, toter Code), `db/dw/dwc/txt` (Tabellen und Zeichenketten,
   `dwc` = Sprungtabelle mit Codezeigern).  `--check NAME` liest sie mit (seit Stufe 5).
 * **Mehrdatei-Programme:** ohne `link.txt` werden alle `*.c` alphabetisch gebunden; `userspace/NAME/link.txt` legt die Reihenfolge fest und darf `.s`-Module enthalten
-  (c1: `atof.s`, `table_z8k.s`), die unveraendert in die c2-Runde gehen.  Eine `.c`, die von einer anderen `#include`d wird (cpp: `yylex.c`), zaehlt als Header.
+  (c1: `atof.s`, `table_z8k.s`), die unveraendert in die c2-Runde gehen.  Eine Zeile `NAME.c noopt` uebersetzt das Modul ohne `-O` (und ohne c2-Modell in der zweiten Runde): der ausgelieferte c2 haengt bei Modulen mit mehr als
+  ~10 KB initialisierter Daten (`as`, `wk_w7d.md`); reine Datenmodule brauchen `-O` nicht (W7e).  Eine `.c`, die von einer anderen `#include`d wird (cpp: `yylex.c`), zaehlt als Header.
 * **Stufenbau** fuer Quellen ab 20000 B (`STUFEN_AB`): `cpp`, `c0`, `c1`, `c2`, `as`, `ld` einzeln (`/tmp`-Platz); seit W3 in drei kurzen Gastbefehlen statt einem 440-Zeichen-Befehl
   (im Gast-tty ging ein Zeichen verloren, die Kette lief dann still nicht).
 * **yacc-Quellen:** `tools/userspace/erg_yacc.py [DIR/]NAME` erzeugt `NAME.c` aus `NAME.y` mit dem Gast-yacc (Plan 45; cpp `cpy.y` W2).  Die erzeugte `.c` wird eingecheckt.
