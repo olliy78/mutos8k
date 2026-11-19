@@ -44,7 +44,7 @@ L0900:
 L0904:
 	cp	r13,#__iob
 	jr	ne,L0936
-	ld	r2,#%26D4
+	ld	r2,#__sibuf
 	jr	L092A
 L0910:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L092A:
 	ld	%0004(r13),r2
 	jr	L0914
 L0930:
-	ld	r2,#%1F6+__sibuf
+	ld	r2,#__sobuf
 	jr	L092A
 L0936:
 	cp	r13,#%8+__iob

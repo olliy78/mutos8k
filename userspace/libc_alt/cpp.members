@@ -28,7 +28,7 @@ sbrk 3316 3352 data=3FEC:3FEE exp=_sbrk@3316,_brk@333A src=A
 write 3352 3368 exp=_write@3352 src=A
 cerror 3368 3376 bss=8560:2 exp=cerror@3368,_errno@8560 src=A
 csv 3376 3392 exp=csv@3376,cret@3384 src=A
-common __sibuf 8152 200 data
-common __sobuf 8352 200 data
+common __sibuf 8352 200 data
+common __sobuf 8022 200 data
 extern _environ 8552 2
 extern _end 8562 0

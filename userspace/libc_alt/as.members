@@ -25,7 +25,7 @@ sbrk 55D0 560C data=8BD4:8BD6 exp=_sbrk@55D0,_brk@55F4 src=A
 write 560C 5622 exp=_write@560C src=A
 cerror 5622 5630 bss=D124:2 exp=cerror@5622,_errno@D124 src=A
 csv 5630 564C exp=csv@5630,cret@563E src=A
-common __sibuf CD02 200 data
-common __sobuf CF02 200 data
-extern _environ D102 2
+common __sibuf CCEE 200 data
+common __sobuf CEEE 200 data
+extern _environ D0EE 2
 extern _end D126 0

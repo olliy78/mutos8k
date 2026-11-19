@@ -23,9 +23,9 @@ I
 G
 __iob	L
 __iob:
-WV __sobuf
+WV __sibuf
 BV %0;BV %0
-WV __sobuf
+WV __sibuf
 BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %2;BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %6;BV %2;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0

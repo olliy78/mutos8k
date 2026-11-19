@@ -23,9 +23,12 @@ I
 G
 __iob	L
 __iob:
-BV %1A;BV %E0;BV %0;BV %0;BV %1A;BV %E0;BV %1;BV %0
-BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %2;BV %1
-BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %6;BV %2
+WV __sibuf
+BV %0;BV %0
+WV __sibuf
+BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
+BV %2;BV %1;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
+BV %6;BV %2;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
@@ -42,7 +45,7 @@ BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
 BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
-BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0;BV %0
+BV %0;BV %0
 D1AA0:
 G
 __lastbu	L

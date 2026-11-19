@@ -34,7 +34,7 @@ wait 15E0 15FA exp=_wait@15E0 src=A
 write 15FA 1610 exp=_write@15FA src=A
 cerror 1610 161E bss=1F90:2 exp=cerror@1610,_errno@1F90 src=A
 csv 161E 163A exp=csv@161E,cret@162C src=A
-common __sibuf 1B44 200 data
-common __sobuf 1D44 200 data
-extern _environ 1F44 2
+common __sibuf 1AE0 200 data
+common __sobuf 1CE0 200 data
+extern _environ 1EE0 2
 extern _end 1F92 0

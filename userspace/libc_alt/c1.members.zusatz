@@ -4,3 +4,8 @@ doprnt code=6C2C,6C32,6C48 data=8A3E:8A88
 data data=8A88:8B2A exp=__iob@8A88,__lastbu@8B28
 # _ctype_ (129 B + pad), the libc member that atof uses (shipped ctype_, as in chown; no text); name ctype_ so that libc_alt.py bau c1 puts it into the archive
 + ctype_ 7264 7264 data=8B2A:8BAC exp=__ctype@8B2A src=S
+# W10d: the commons are the ORIGINAL buffers, not members_auto's `bstart - 2 - 0x400` guess.  Measured: the _flsbuf/_filbuf
+# literals of the original (#%8E96 stdin branch, #%9096 stdout branch); the `#%OFF+__sibuf` forms were only relative to the wrong guess.
+common __sibuf 8E96 200 data
+common __sobuf 9096 200 data
+extern _environ 9296 2

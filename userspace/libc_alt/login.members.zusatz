@@ -3,3 +3,8 @@
 # counts it as own code.  Measured: own code 504 -> 406 instructions after moving it, whole file byte-identical
 # (doc/userspace/libc_alt.md).  data = 3 literals, bss = static pbuf[9].
 + getpass 04FA 0614 data=2228:2236 bss=2AD6:A exp=_getpass@04FA src=G
+# W10d: the commons are the ORIGINAL buffers, not members_auto's `bstart - 2 - 0x400` guess.  Measured: the _flsbuf/_filbuf
+# literals of the original (#%26D4 stdin branch, #%28D4 stdout branch); the `#%OFF+__sibuf` forms were only relative to the wrong guess.
+common __sibuf 26D4 200 data
+common __sobuf 28D4 200 data
+extern _environ 2AD4 2

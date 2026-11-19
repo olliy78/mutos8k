@@ -62,7 +62,7 @@ L6E74:
 	jr	ne,L6ED2
 	cp	r13,#__iob
 	jr	ne,L6EAC
-	ld	r2,#%8E96
+	ld	r2,#__sibuf
 L6E86:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L6EA0:
 	setb	%0006(r13),#2
 	jr	L6E46
 L6EA6:
-	ld	r2,#%1E4+__sibuf
+	ld	r2,#__sobuf
 	jr	L6E86
 L6EAC:
 	cp	r13,#%8+__iob
