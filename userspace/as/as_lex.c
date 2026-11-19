@@ -111,7 +111,7 @@ yylex()
 		case 321:
 		case 257:
 		case 259:
-			s = (char *)f3a18();
+			s = (char *)upname();
 		case 81:
 		case 17:
 		case 19:
@@ -378,7 +378,7 @@ plzlook()
 	register int mask, last;
 
 	if (g8d08) {
-		yylval = f3ec0();
+		yylval = cpool();
 		return (296);
 	}
 	p = yytext;

@@ -26,7 +26,16 @@ extern int yytchar, yylineno, yycnt, yyskip, lflag, uflag, cflag, errcount, yyde
 extern char lbuf[];		/* 128 B listing line buffer */
 extern char *oname, *curname;
 extern char numcls[];		/* 8 B */
-extern int fd_o, fd_p, fd_q, fd_r, fd_s, cp_o, cp_q, cp_p, cp_r;
+extern int fd_o, fd_p, fd_q, fd_r, fd_s;
+/* 12-byte section record, original table CA0A (8 records; W7h, measured from secsave/secsel/outbyte) */
+struct sect { int se_pc; int se_a; int se_b; int se_c; int se_d; int se_e; };
+extern struct sect sectab[];
+#define cp_o sectab[2].se_a
+#define cp_q sectab[2].se_b
+#define cp_p sectab[3].se_a
+#define cp_r sectab[3].se_b
+extern char *gca06;
+extern char ucbuf[];
 extern char *bufp1, *bufp2, *bufp3, *bufp4;
 extern char area3[], area4[], lname[];
 extern char symtab[];		/* 13584 B = 849 entries of 16 B (Annahme: symbol table) */
@@ -42,10 +51,10 @@ extern int cls[];		/* character class table, 128 words, original 8F42 */
 extern int g8d06, g8d08, g8d0c, g8d0e, g8d10, g8d22;	/* flags set by the parser actions (Annahme) */
 extern unsigned g9046;
 extern int g9042, g9044, g9048, g904a, g90dc, g90e0, g90ce, g90d0, g9276, g9278, g9288, gca78, gccba;
-extern char gca12[];
 		/* scanner state words (Annahme) */
 extern int yylval;		/* defined by the yacc output (union of one int) */
 
 /* lex frame unput(c) with the pass-2 listing capture, as it is inlined in the binary */
 #define UNPUT(c) { yytchar = (c); if (yytchar == '\n') yylineno--; *yysptr++ = yytchar; \
 	if (pass == 1 && lflag) { if (yyskip || yycnt) yyskip++; else *--lptr = 0; } }
+extern int g90cc, g8d12, gcc36, gca80;

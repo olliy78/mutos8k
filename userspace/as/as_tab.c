@@ -54,14 +54,9 @@ int errcount, g9288, cflag;		/* 9286, 9288, 928A */
 char *oname;				/* 928C */
 char symtab[13584];			/* 928E..C79E */
 char gc79e[616];			/* C79E..CA06 */
-int gca06;
+char *gca06;				/* CA06: fill pointer of the constant pool gc79e (cpool) */
 char *curname;				/* CA08 (error() pushes it as the module name) */
-int gca0a, gca0c, gca0e, gca10;
-char gca12[18];				/* CA12..CA24: start of a table of 12-byte records (Annahme) */
-int cp_o, cp_q;				/* CA24, CA26 */
-char gca28[8];
-int cp_p, cp_r;				/* CA30, CA32 */
-char gca34[54];
+struct sect sectab[8];			/* CA0A..CA6A: 12-byte section records (cp_o/cp_q/cp_p/cp_r are fields of it, see as.h) */
 int fd_p, fd_r, fd_s;			/* CA6A, CA6C, CA6E */
 int gca70, gca72, gca74, gca76, gca78;
 char gca7a[6];
@@ -74,15 +69,55 @@ char area4[150];			/* CB8A */
 char *bufp4;				/* CC20 */
 char lname[20];				/* CC22 */
 int gcc36;
-char gcc38[128];
+char ucbuf[128];
 int gccb8, gccba;
 char gccbc[50];
 /* CCEE: the libc BSS starts here (measured: environ D0EE = CCEE + 400h as in the build; LD R2,#CCEE = a libc buffer) */
 
-/* TEMPORARY STUB for the function at 43C6 (original 43C6) */
-f43c6()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme* (the name follows the message text or the use). */
+/* nodeset (original 43C6): fills the symbol/value cell A by the kind K (pass 2: only iniobj()): 0 = location counter
+   (type 2), 1 = copy of the 8 bytes of cell B, 2 = value from B+4 (type 1), 3 = pointer B as value (type 20); the word at +4 is
+   set to -1 first (measured: switch through the 4-entry table at 6F7A, not error) */
+nodeset(a, k, b)
+struct sym *a;
+int k;
+struct sym *b;
 {
-	return (0);
+	char *p;
+	char *q;
+	int n;
+
+	if (pass == 1) {
+		iniobj();
+		return;
+	}
+	a->s_x = -1;
+	switch (k) {
+	case 0:
+		secsave();
+		a->s_t = 2;
+		a->s_v = g9046;
+		break;
+	case 1:
+		p = (char *)a;
+		q = (char *)b;
+		n = 8;
+		while (n > 0) {
+			*p++ = *q++;
+			n--;
+		}
+		a->s_x = -1;
+		break;
+	case 2:
+		a->s_t = 1;
+		a->s_v = b->s_x;
+		iniobj();
+		break;
+	case 3:
+		a->s_t = 20;
+		a->s_v = (int)b;
+		break;
+	}
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
@@ -168,7 +203,7 @@ char *s;
 	}
 	yylval = (int)p;
 	if (((struct kwent *)p)->k_tok == 15) {
-		f3d6c();
+		stpush();
 		g8d0e = 0;
 		g9042 = 0;
 		g8d22 = 0;
@@ -295,7 +330,7 @@ found:
 		case 3:
 		case 4:
 			if (g9288 == 0)
-				sp->s_v += *(int *)(gca12 + 12 * (sp->s_t & 7));
+				sp->s_v += sectab[sp->s_t & 7].se_d;
 			break;
 		}
 		f3988(sp);
