@@ -117,7 +117,7 @@ yylex()
 		case 19:
 			if (brk)
 				goto l0bb6;
-			e = f46da(s);
+			e = kwlook(s);
 			if (e == 0)
 				goto l0bb6;
 			return (e);
@@ -207,10 +207,10 @@ yylex()
 			yylval = v;
 			return (311);
 		l0e78:
-			yylval = (int)(sp = (struct sym *)f48a4(6));
+			yylval = (int)(sp = (struct sym *)symget(6));
 			if (sp)
 				goto l0f20;
-			sp = (struct sym *)f4814(6);
+			sp = (struct sym *)symadd(6);
 			yylval = (int)sp;
 		l0e9e:
 			return (TOK_IDENT);
@@ -220,13 +220,13 @@ yylex()
 			if (pass == 0)
 				goto l0f10;
 		l0eb0:
-			sp = (struct sym *)f48a4(30);
+			sp = (struct sym *)symget(30);
 			yylval = (int)sp;
 			if (sp && brk == 0 && sp->s_w == -1)
 				sp = 0;
 			if (sp)
 				goto l0f20;
-			yylval = (int)(sp = (struct sym *)f48a4(6));
+			yylval = (int)(sp = (struct sym *)symget(6));
 			if (sp)
 				goto l0f20;
 			ty = 6;
@@ -235,7 +235,7 @@ yylex()
 			if (g8d10)
 				ty = 30;
 		l0f10:
-			sp = (struct sym *)f4814(ty);
+			sp = (struct sym *)symadd(ty);
 			yylval = (int)sp;
 		l0f20:
 			if (sp->s_t != TOK_CTL)

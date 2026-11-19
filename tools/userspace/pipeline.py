@@ -116,7 +116,9 @@ C2_AUS = {"ld": {"R32", "R43"},
          "ed": {"R42", "R45"},
          # c2: the shipped c2 itself is built with the older stand.  R5 (`test`/`ld` forms), R7 (an `xorb` between `ldb` and `cp`), R32 (a repeated `xorb` in char range tests)
          # and R45 (`exts` before the output() hash switch) would each differ from the original (doc/userspace/wk_w5.md)
-         "c2": {"R5", "R7", "R32", "R45"}}
+         "c2": {"R5", "R7", "R32", "R45"},
+         # as: the yylex hash switch (`DIV RR2,#5`) keeps `xor r2,r2` as in c1/ed (doc/userspace/wk_w7f.md, wk_w7g.md)
+         "as": {"R45"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}

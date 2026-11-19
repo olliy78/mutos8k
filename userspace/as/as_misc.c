@@ -8,10 +8,46 @@ f167a()
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 16A0 (original 16A0) */
-f16a0()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
+/* labsym (original 16A0): symbol for token T of the cell A.  T = 0x125 (numeric label reference): the symbol "#%6d" of the
+   number is allocated (pass 1) or looked up (pass 2).  Otherwise, in pass 1 only: T = 0x1B marks the cell (bit 5) while
+   g8d06 is 14 or 6; T = ':' sets the value to g9046 and the type bits (bit 0 if g90ce, else g90d0).  Returns the cell. */
+labsym(a, t)
+register struct sym *a;
+register int t;
 {
-	return (0);
+	register struct sym *sp;
+	char buf[8];
+
+	sp = a;
+	if (t == 0x125) {
+		t = a->s_x;
+		sprintf(buf, "#%6d", t);
+		if (pass == 0) {
+			sp = (struct sym *)symadd(30);
+			sp->s_v = g9046;
+			sp->s_t = 2;
+		} else {
+			sp = (struct sym *)symget(30);
+			iniobj();
+		}
+		return ((int)sp);
+	}
+	if (pass)
+		return ((int)sp);
+	if (t == 0x1B) {
+		if (g8d06 == 14 || g8d06 == 6)
+			a->s_t |= 32;
+		return ((int)sp);
+	}
+	if (t != ':')
+		return ((int)sp);
+	sp->s_v = g9046;
+	if (g90ce)
+		sp->s_t |= 1;
+	else
+		sp->s_t |= g90d0;
+	return ((int)sp);
 }
 
 /* TEMPORARY STUB for the function at 174A (original 174A) */
