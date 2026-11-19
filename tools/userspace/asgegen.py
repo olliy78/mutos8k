@@ -29,6 +29,13 @@ DIAG = {
     "e1": "m1_ module\n",
     "e2": "m2_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n",
     "e3": "m3_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tI\t:= internal\n",
+    # W7q: pass 0 length bisect: one construct each (module header as in e3, then an entry with the construct)
+    "t1": "t1_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tPR\t:= procedure\n\tE\t:= entry\n"
+          "X\tcsv\tPR\nG\t_f\tPR\nE\n_f:\n\tcall\tcsv\n\tret\nend _f\nend t1_\n",
+    "t2": "t2_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tPR\t:= procedure\n\tE\t:= entry\n"
+          "X\tcsv\tPR\nG\t_f\tPR\nE\n_f:\n\tld\tr2,#%FFFF\n\tret\nend _f\nend t2_\n",
+    "t3": "t3_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tPR\t:= procedure\n\tE\t:= entry\n"
+          "X\t_v\tW\nG\t_f\tPR\nE\n_f:\n\tld\t_v,r4\n\tret\nend _f\nend t3_\n",
 }
 
 
@@ -88,12 +95,25 @@ def kopf(b):
 
 def auswerten():
     ein = open(os.path.join(WORK, "inputs.txt")).read().split()
-    gleich = 0
+    gleich = beide = 0
     for x in ein:
         def rd(s):
             p = os.path.join(WORK, x + s)
-            return open(p, "rb").read() if os.path.exists(p) else None
+            b = open(p, "rb").read() if os.path.exists(p) else None
+            return b if (b or s == ".e") else None      # an empty .o (creat, then fatal()) is no object either
         o, n, e = rd(".o"), rd(".n"), (rd(".e") or b"").decode("latin-1")
+        # status/messages of both assemblers: X.e holds "<orig msgs>st=N\n<our msgs>st=N\n" (split at the first st= line)
+        parts = e.split("st=")          # [msgs_o, "N\nmsgs_n", "M\n"]
+        if len(parts) == 3:
+            mo, mn = parts[0].strip(), parts[1].split("\n", 1)[1].strip()
+            so, sn = parts[1].split("\n", 1)[0], parts[2].strip()
+        else:
+            mo = mn = so = sn = "?"
+        if o is None and n is None:
+            beide += 1
+            print("%s NO-OBJ (beide ohne .o) status o=%s n=%s msgs %s  | o: %s | n: %s" % (
+                x, so, sn, "equal" if mo == mn else "DIFFERENT", mo[:70].replace("\n", " / "), mn[:70].replace("\n", " / ")))
+            continue
         same = o is not None and o == n
         gleich += same
         print("%s %s o=%s n=%s  %s" % (x, "EQUAL" if same else "DIFF", len(o) if o else None, len(n) if n else None,
@@ -101,7 +121,7 @@ def auswerten():
         if not same and o and n:
             k = next((i for i in range(min(len(o), len(n))) if o[i] != n[i]), min(len(o), len(n)))
             print("   first difference at byte %d; header o=%s n=%s" % (k, kopf(o), kopf(n)))
-    print("identical %d of %d" % (gleich, len(ein)))
+    print("identical %d of %d (without .o on both sides: %d)" % (gleich, len(ein), beide))
 
 
 def main():

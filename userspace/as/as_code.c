@@ -89,14 +89,25 @@ len1:
 					g9046 += 2;
 				g9046 += 2;
 			}
+			if (n == 1) {
+				/* W7q: class 21 (LD, PUSH, XOR ...): the first operand (a store to a direct address or an
+				   indexed cell) takes its words too */
+				n = 2;
+				g90e2 = g90b0[0];
+				goto len1;
+			}
 			if (cls == 51 || cls == 97) {
 				g9046 += 2;
 				if (g9278)
 					g9046 += 2;
 			}
 			break;
+		case 11:
+			/* W7q: CALL, CLR: the only operand (call csv = 4 bytes) was not counted in pass 0 */
+			goto len1;
 		case 21:
 			g90e2 = g90b0[1];
+			n = 1;
 			goto len1;
 		case 41: case 42: case 43: case 44:
 		case 63: case 64: case 65: case 66: case 67:
