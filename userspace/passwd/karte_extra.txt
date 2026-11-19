@@ -1,0 +1,3 @@
+# bogus --vorschlaege entries inside instructions (map overlap)
+ohne 0B06
+ohne 0B08
