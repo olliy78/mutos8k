@@ -11,7 +11,7 @@ int *cws = g90e6;
 int *rws = g91ae;
 
 /* encode (original 1C0C, W7j: FIRST HALF = prologue, pass 0 length switch, pass 1/2 code switch up to class 108/103/104
-   and the common tail; the cases of the second half 22BE..29DA are TEMPORARY, see doc/userspace/wk_w7j.md):
+   and the common tail, W7k: second half 22BE..29DA, see doc/userspace/wk_w7j.md):
    builds the code words of the instruction of the mnemonic entry MN in g90e6 (relocation words in g91ae) from the
    operand cells g90b0[] and writes them; pass 0 only counts the length into g9046. */
 encode(mn)
@@ -24,9 +24,10 @@ register struct mncl *mn;
 	int *xp;
 	int *yp;
 	int n;
-	int pad1, pad2;
+	int msk;			/* displacement mask (original FFEC) */
+	int iv;
 	long lv;
-	int pad3, pad4;
+	long lt;
 	char *endp;
 	char *begp;
 
@@ -233,10 +234,220 @@ L2216:
 			*cws |= 0x8E04;
 			*xp |= opmask(15);
 			break;
-		/* TEMPORARY: the cases of the second half (original 22BE..29BE) and the type switch 29DA..2BA6 are not
-		   written yet; they all end here without code (the instruction gets no operand words) */
+		case 21:
+		case 73:
+			*cws |= opmask(15);
+			g90e2 = g90b0[1];
+			goto L29DA;
+		case 22:
+		case 74:
+			g90e2 = g90b0[1];
+			*cws |= opmask(15);
+			g90e2 = g90b0[0];
+			goto L29DA;
+		case 71:
+			*cws |= opmask(15) << 4;
+			k = 0;
+			g90e2 = g90b0[1];
+			goto L29DA;
+		case 72:
+			g90e2 = g90b0[1];
+			*cws |= opmask(15) << 4;
+			g90e2 = g90b0[0];
+			k = 0;
+			goto L29DA;
+		case 91:
+			*cws |= opmask(240);
+			break;
+		case 92:
+			*cws &= ~opmask(3);
+			break;
+		case 94:
+			if (g90de == 1)
+				*cws |= opmask(15);
+			break;
+		case 93:
+			break;
+		case 31:
+			*cws |= opmask(15) << 8;
+			msk = 255;
+L23F0:
+			/* relative displacement: lt = address of the next instruction */
+			lt = g9046 + 2;
+			lt &= 0xFFFFL;
+			lv = opmask(-1);
+			lv = lv - lt;
+			k = msk >> 1;
+			if (cls != 33 && cls != 96)
+				lv = -lv;
+			lv >>= 1;
+			if (-k >= lv || k < lv || (cls == 31 && lv <= 0))
+				if (pass == 1)
+					error("ILLEGAL VALUE");
+			*cws |= msk & lv;
+			break;
+		case 32:
+			*cws |= opmask(15) << 8;
+			*cws |= opmask(255);
+			break;
+		case 96:
+			*cws |= opmask(15) << 8;
+		case 33:
+			msk = 255;
+			goto L23F0;
+		case 34:
+			msk = 4095;
+			goto L23F0;
+		case 41:
+			*rwp++ = 0;
+			*cwp++ = (15 & (((struct obj *)g90e2)->o_val >> 16)) << 8;
+			*cws |= opmask(15) << 4;
+			*cws |= opmask(15);
+			break;
+		case 43:
+			*cws |= opmask(15);
+			*rwp++ = 0;
+			*cwp++ = (15 & (((struct obj *)g90e2)->o_val >> 16)) << 8;
+			*cws |= opmask(15) << 4;
+			break;
+		case 42:
+		case 44:
+			while (g90de--) {
+				g90c4++;
+				g90c4 &= 1;
+				g90c4--;
+				if (*g90e2 == 32) {
+					*rwp++ = opreg();
+					*cwp++ = opmask(-1);
+					continue;
+				}
+				if (*g90e2 == 1024) {
+					*cws |= (15 & (((struct obj *)g90e2)->o_val >> 16)) << 4;
+					*rwp++ = opreg();
+					*cwp++ = opmask(-1);
+					continue;
+				}
+				if (*g90e2 == 8)
+					*cws |= opmask(15);
+			}
+			break;
+		case 51:
+		case 97:
+			goto L29DA;
+L2700:
+			/* the same operand format dispatch as case 16 below, for the second operand */
+			g90e2 = g90b0[1];
+			if (g9278) {
+				*rwp++ = 0;
+				*cwp++ = ((struct obj *)g90e2)->o_val >> 16;
+				*rwp++ = 0;
+				*cwp++ = opmask(-1);
+			} else if (g9276) {
+				*rwp++ = 0;
+				*cwp++ = opmask(255);
+				*(cwp - 1) |= *(cwp - 1) << 8;
+			} else {
+				*rwp++ = opreg();
+				iv = opmask(-1);
+				if (cls == 97)
+					iv = -iv;
+				*cwp++ = iv;
+			}
+			break;
+		case 61:
+		case 62:
+			*cwp |= opmask(15) << 8;
+			g90e2 = g90b0[2];
+			((struct obj *)g90e2)->o_val--;
+			*rwp++ = 0;
+			*cwp++ |= opmask(15);
+			g90e2 = g90b0[1];
+			if (cls == 62)
+				g90e2 = g90b0[0];
+			goto L29DA;
+		case 63:
+			*rwp++ = 0;
+			*cwp++ = opmask(15) << 8;
+			*(cwp - 2) |= opmask(15);
+			break;
+		case 67:
+			g90c4++;
+			g90c4 &= 1;
+			g90c4--;
+		case 64:
+		case 65:
+			*cwp |= (*cws & 0xE0) >> 4;
+			*cws &= 0xFF0F;
+			*rwp++ = 0;
+			*cwp++ |= opmask(15) << 4;
+			*cws |= opmask(15) << 4;
+			g90e2 = g90b0[2];
+			*(cws + 1) |= opmask(15) << 8;
+			if (g90de == 4)
+				*(cws + 1) |= opmask(15);
+			break;
+		case 66:
+			*cws |= opmask(15) << 4;
+			*rwp++ = 0;
+			*cwp++ = opmask(15) << 8;
+			break;
+		case 95:
+			*cws |= opmask(255);
+			break;
+		/* The dead code at original 2C48 (error("no code")) is not reproduced: no case reaches it and its
+		   source form is unknown. */
 		default:
 L29DA:
+			/* dispatch on the type word of the operand cell g90e2 (original 29DA..2BEA) */
+			switch (*g90e2) {
+			case 4:
+			case 8:
+			case 64:
+			case 256:
+			case 2048:
+				*cws |= opmask(15) << k;
+				break;
+			case 1:
+				lv = ((struct obj *)g90e2)->o_val >> 16;
+				if (lv & 0x000FFFF0 && (lv & 0x000FFFF0) != 0x000FFFF0 && pass == 1)
+					error("illegal value");
+				lv = 15 & lv;
+				*cws |= lv << k;
+			case 2:
+				*rwp++ = opreg();
+				*cwp++ = opmask(-1);
+				break;
+			case 16:
+				if (g9278) {
+					*rwp++ = 0;
+					*cwp++ = ((struct obj *)g90e2)->o_val >> 16;
+					*rwp++ = 0;
+					*cwp++ = opmask(-1);
+				} else if (g9276) {
+					*rwp++ = 0;
+					*cwp++ = opmask(255);
+					*(cwp - 1) |= *(cwp - 1) << 8;
+				} else {
+					*rwp++ = opreg();
+					iv = opmask(-1);
+					if (cls == 97)
+						iv = -iv;
+					*cwp++ = iv;
+				}
+				break;
+			default:
+				error(" illegal operation format");
+			}
+			if (cls == 51 || cls == 97)
+				goto L2700;
+			if (*mn->mc_name == 'P') {
+				/* swap the two register nibbles of the first word */
+				k = *cws & 15;
+				cls = *cws & 0xF0;
+				*cws &= 0xFF00;
+				*cws |= k << 4;
+				*cws |= cls >> 4;
+			}
 			break;
 		}
 	}
