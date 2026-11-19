@@ -2,7 +2,7 @@
    Functions marked TEMPORARY STUB only make the program link; real code: doc/userspace/wk_w7c.md. */
 #include "as.h"
 
-#include "as_tabd.h"
+#include "as_tabd3.h"
 
 /* Not V7: reconstructed from the MUTOS binary */
 
