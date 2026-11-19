@@ -1,8 +1,14 @@
-/* as_y.c: GENERATED from as.y (V7 text, unchanged) by the MUTOS V7-yacc (userspace/ergaenzung/yacc, size class SMALL)
-   in the emulator guest: cd /tmp; yacc as.y; y.tab.c -> as_y.c.  Regenerate: tools/userspace/erg_yacc.py userspace/as/as.
+/* as.c: GENERATED from as.y (V7 text, unchanged) by the MUTOS V7-yacc (userspace/ergaenzung/yacc, size class SMALL)
+   in the emulator guest: cd /tmp; yacc as.y; y.tab.c -> as.c.  Regenerate: tools/userspace/erg_yacc.py userspace/as/as.
    Not V7 source text, not edited by hand. */
 
-# line 4 "as.y"
+# line 5 "as.y"
+#define IN_AS_Y 1
+#include "as.h"
+/* value of a cell at byte offset 4 (low word of the long value of a struct obj, or s_x of a struct sym; Annahme) */
+#define CELL4(p) (*(int *)((char *)(p) + 4))
+
+# line 10 "as.y"
 typedef union  { int u; } YYSTYPE;
 # define MODULE 3
 # define TYPE 5
@@ -431,517 +437,607 @@ yyparse() {
 		switch(yym){
 			
 case 1:
-# line 65 "as.y"
-{ /* action 1 */ } break;
+# line 71 "as.y"
+{
+	/* action 1 */
+	if (yypvt[-3].u != yypvt[-0].u)
+		error("wrong end of module");
+	f3844();
+} break;
 case 2:
-# line 66 "as.y"
-{ /* action 2 */ } break;
+# line 77 "as.y"
+{
+	/* action 2 */
+	yyval.u = yypvt[-1].u;
+	f2e38(yypvt[-1].u);
+} break;
 case 3:
-# line 67 "as.y"
+# line 82 "as.y"
 { /* action 3 */ } break;
 case 4:
-# line 68 "as.y"
+# line 83 "as.y"
 { /* action 4 */ } break;
 case 5:
-# line 69 "as.y"
+# line 84 "as.y"
 { /* action 5 */ } break;
 case 6:
-# line 70 "as.y"
+# line 85 "as.y"
 { /* action 6 */ } break;
 case 7:
-# line 71 "as.y"
+# line 86 "as.y"
 { /* action 7 */ } break;
 case 8:
-# line 72 "as.y"
+# line 87 "as.y"
 { /* action 8 */ } break;
 case 9:
-# line 73 "as.y"
+# line 88 "as.y"
 { /* action 9 */ } break;
 case 10:
-# line 74 "as.y"
+# line 89 "as.y"
 { /* action 10 */ } break;
 case 11:
-# line 75 "as.y"
+# line 90 "as.y"
 { /* action 11 */ } break;
 case 12:
-# line 76 "as.y"
+# line 91 "as.y"
 { /* action 12 */ } break;
 case 13:
-# line 77 "as.y"
-{ /* action 13 */ } break;
+# line 92 "as.y"
+{
+	/* action 13 */
+	g8d06 = 258;
+} break;
 case 14:
-# line 78 "as.y"
+# line 96 "as.y"
 { /* action 14 */ } break;
 case 15:
-# line 79 "as.y"
+# line 97 "as.y"
 { /* action 15 */ } break;
 case 16:
-# line 80 "as.y"
+# line 98 "as.y"
 { /* action 16 */ } break;
 case 17:
-# line 81 "as.y"
-{ /* action 17 */ } break;
+# line 99 "as.y"
+{
+	/* action 17 */
+	g8d06 = 5;
+} break;
 case 18:
-# line 82 "as.y"
+# line 103 "as.y"
 { /* action 18 */ } break;
 case 19:
-# line 83 "as.y"
+# line 104 "as.y"
 { /* action 19 */ } break;
 case 20:
-# line 84 "as.y"
+# line 105 "as.y"
 { /* action 20 */ } break;
 case 21:
-# line 85 "as.y"
-{ /* action 21 */ } break;
+# line 106 "as.y"
+{
+	/* action 21 */
+	g8d06 = 6;
+} break;
 case 22:
-# line 86 "as.y"
+# line 110 "as.y"
 { /* action 22 */ } break;
 case 23:
-# line 87 "as.y"
-{ /* action 23 */ } break;
+# line 111 "as.y"
+{
+	/* action 23 */
+	g8d06 = 7;
+} break;
 case 24:
-# line 88 "as.y"
+# line 115 "as.y"
 { /* action 24 */ } break;
 case 25:
-# line 89 "as.y"
+# line 116 "as.y"
 { /* action 25 */ } break;
 case 26:
-# line 90 "as.y"
+# line 117 "as.y"
 { /* action 26 */ } break;
 case 27:
-# line 91 "as.y"
-{ /* action 27 */ } break;
+# line 118 "as.y"
+{
+	/* action 27 */
+	g8d06 = 32;
+} break;
 case 28:
-# line 92 "as.y"
-{ /* action 28 */ } break;
+# line 122 "as.y"
+{
+	/* action 28 */
+	f2dac(yypvt[-1].u, yypvt[-0].u);
+	g8d08 = 0;
+} break;
 case 29:
-# line 93 "as.y"
-{ /* action 29 */ } break;
+# line 127 "as.y"
+{
+	/* action 29 */
+	if (g8d06 == 258)
+		g8d08 = 1;
+	else
+		error(" wrong: IDENT :=___");
+} break;
 case 30:
-# line 94 "as.y"
-{ /* action 30 */ } break;
+# line 134 "as.y"
+{
+	/* action 30 */
+	secdir(yypvt[-1].u, 0);
+} break;
 case 31:
-# line 95 "as.y"
-{ /* action 31 */ } break;
+# line 138 "as.y"
+{
+	/* action 31 */
+	secdir(yypvt[-2].u, yypvt[-1].u);
+} break;
 case 32:
-# line 96 "as.y"
-{ /* action 32 */ } break;
+# line 142 "as.y"
+{
+	/* action 32 */
+	secdir(yypvt[-2].u, yypvt[-1].u);
+} break;
 case 33:
-# line 97 "as.y"
-{ /* action 33 */ } break;
+# line 146 "as.y"
+{
+	/* action 33 */
+	error(" invalid ASSDIR construction");
+	yyerrok;
+} break;
 case 34:
-# line 98 "as.y"
-{ /* action 34 */ } break;
+# line 151 "as.y"
+{
+	/* action 34 */
+	f2dcc(yypvt[-1].u, yypvt[-0].u);
+} break;
 case 35:
-# line 99 "as.y"
+# line 155 "as.y"
 { /* action 35 */ } break;
 case 36:
-# line 100 "as.y"
-{ /* action 36 */ } break;
+# line 156 "as.y"
+{
+	/* action 36 */
+	yyval.u = yypvt[-0].u;
+} break;
 case 37:
-# line 101 "as.y"
-{ /* action 37 */ } break;
+# line 160 "as.y"
+{
+	/* action 37 */
+	yyval.u = yypvt[-0].u;
+} break;
 case 38:
-# line 102 "as.y"
-{ /* action 38 */ } break;
+# line 164 "as.y"
+{
+	/* action 38 */
+	yyval.u = 1;
+} break;
 case 39:
-# line 103 "as.y"
-{ /* action 39 */ } break;
+# line 168 "as.y"
+{
+	/* action 39 */
+	yyval.u = 2;
+} break;
 case 40:
-# line 104 "as.y"
-{ /* action 40 */ } break;
+# line 172 "as.y"
+{
+	/* action 40 */
+	yyval.u = 4;
+} break;
 case 41:
-# line 105 "as.y"
-{ /* action 41 */ } break;
+# line 176 "as.y"
+{
+	/* action 41 */
+	yyval.u = CELL4(yypvt[-0].u);
+} break;
 case 42:
-# line 106 "as.y"
-{ /* action 42 */ } break;
+# line 180 "as.y"
+{
+	/* action 42 */
+	yyval.u = yypvt[-0].u;
+} break;
 case 43:
-# line 107 "as.y"
-{ /* action 43 */ } break;
+# line 184 "as.y"
+{
+	/* action 43 */
+	yyval.u = CELL4(yypvt[-2].u) * yypvt[-1].u;
+	((struct obj *)yypvt[-2].u)->o_t = -1;
+} break;
 case 44:
-# line 108 "as.y"
-{ /* action 44 */ } break;
+# line 189 "as.y"
+{
+	/* action 44 */
+	yyval.u = CELL4(yypvt[-0].u);
+} break;
 case 45:
-# line 109 "as.y"
-{ /* action 45 */ } break;
+# line 193 "as.y"
+{
+	/* action 45 */
+	g8d0a = 1;
+} break;
 case 46:
-# line 110 "as.y"
+# line 197 "as.y"
 { /* action 46 */ } break;
 case 47:
-# line 111 "as.y"
+# line 198 "as.y"
 { /* action 47 */ } break;
 case 48:
-# line 112 "as.y"
+# line 199 "as.y"
 { /* action 48 */ } break;
 case 49:
-# line 113 "as.y"
+# line 200 "as.y"
 { /* action 49 */ } break;
 case 50:
-# line 114 "as.y"
+# line 201 "as.y"
 { /* action 50 */ } break;
 case 51:
-# line 115 "as.y"
+# line 202 "as.y"
 { /* action 51 */ } break;
 case 52:
-# line 116 "as.y"
+# line 203 "as.y"
 { /* action 52 */ } break;
 case 53:
-# line 117 "as.y"
-{ /* action 53 */ } break;
+# line 204 "as.y"
+{
+	/* action 53 */
+	labsym(yypvt[-1].u, 58);
+} break;
 case 54:
-# line 118 "as.y"
+# line 208 "as.y"
 { /* action 54 */ } break;
 case 55:
-# line 119 "as.y"
+# line 209 "as.y"
 { /* action 55 */ } break;
 case 56:
-# line 120 "as.y"
+# line 210 "as.y"
 { /* action 56 */ } break;
 case 57:
-# line 121 "as.y"
+# line 211 "as.y"
 { /* action 57 */ } break;
 case 58:
-# line 122 "as.y"
+# line 212 "as.y"
 { /* action 58 */ } break;
 case 59:
-# line 123 "as.y"
-{ /* action 59 */ } break;
+# line 213 "as.y"
+{
+	/* action 59 */
+	f404a(yypvt[-1].u, yypvt[-0].u, 1);
+} break;
 case 60:
-# line 124 "as.y"
-{ /* action 60 */ } break;
+# line 217 "as.y"
+{
+	/* action 60 */
+	f404a(yypvt[-5].u, yypvt[-1].u, -1);
+} break;
 case 61:
-# line 125 "as.y"
+# line 221 "as.y"
 { /* action 61 */ } break;
 case 62:
-# line 126 "as.y"
+# line 222 "as.y"
 { /* action 62 */ } break;
 case 63:
-# line 127 "as.y"
+# line 223 "as.y"
 { /* action 63 */ } break;
 case 64:
-# line 128 "as.y"
+# line 224 "as.y"
 { /* action 64 */ } break;
 case 65:
-# line 129 "as.y"
+# line 225 "as.y"
 { /* action 65 */ } break;
 case 66:
-# line 130 "as.y"
+# line 226 "as.y"
 { /* action 66 */ } break;
 case 67:
-# line 131 "as.y"
+# line 227 "as.y"
 { /* action 67 */ } break;
 case 68:
-# line 132 "as.y"
+# line 228 "as.y"
 { /* action 68 */ } break;
 case 69:
-# line 133 "as.y"
+# line 229 "as.y"
 { /* action 69 */ } break;
 case 70:
-# line 134 "as.y"
+# line 230 "as.y"
 { /* action 70 */ } break;
 case 71:
-# line 135 "as.y"
+# line 231 "as.y"
 { /* action 71 */ } break;
 case 72:
-# line 136 "as.y"
+# line 232 "as.y"
 { /* action 72 */ } break;
 case 73:
-# line 137 "as.y"
+# line 233 "as.y"
 { /* action 73 */ } break;
 case 74:
-# line 138 "as.y"
+# line 234 "as.y"
 { /* action 74 */ } break;
 case 75:
-# line 139 "as.y"
+# line 235 "as.y"
 { /* action 75 */ } break;
 case 76:
-# line 140 "as.y"
+# line 236 "as.y"
 { /* action 76 */ } break;
 case 77:
-# line 141 "as.y"
+# line 237 "as.y"
 { /* action 77 */ } break;
 case 78:
-# line 142 "as.y"
+# line 238 "as.y"
 { /* action 78 */ } break;
 case 79:
-# line 143 "as.y"
+# line 239 "as.y"
 { /* action 79 */ } break;
 case 80:
-# line 144 "as.y"
+# line 240 "as.y"
 { /* action 80 */ } break;
 case 81:
-# line 145 "as.y"
+# line 241 "as.y"
 { /* action 81 */ } break;
 case 82:
-# line 146 "as.y"
+# line 242 "as.y"
 { /* action 82 */ } break;
 case 83:
-# line 147 "as.y"
+# line 243 "as.y"
 { /* action 83 */ } break;
 case 84:
-# line 148 "as.y"
+# line 244 "as.y"
 { /* action 84 */ } break;
 case 85:
-# line 149 "as.y"
+# line 245 "as.y"
 { /* action 85 */ } break;
 case 86:
-# line 150 "as.y"
+# line 246 "as.y"
 { /* action 86 */ } break;
 case 87:
-# line 151 "as.y"
+# line 247 "as.y"
 { /* action 87 */ } break;
 case 88:
-# line 152 "as.y"
+# line 248 "as.y"
 { /* action 88 */ } break;
 case 89:
-# line 153 "as.y"
+# line 249 "as.y"
 { /* action 89 */ } break;
 case 90:
-# line 154 "as.y"
+# line 250 "as.y"
 { /* action 90 */ } break;
 case 91:
-# line 155 "as.y"
+# line 251 "as.y"
 { /* action 91 */ } break;
 case 92:
-# line 156 "as.y"
+# line 252 "as.y"
 { /* action 92 */ } break;
 case 93:
-# line 157 "as.y"
+# line 253 "as.y"
 { /* action 93 */ } break;
 case 94:
-# line 158 "as.y"
+# line 254 "as.y"
 { /* action 94 */ } break;
 case 95:
-# line 159 "as.y"
+# line 255 "as.y"
 { /* action 95 */ } break;
 case 96:
-# line 160 "as.y"
+# line 256 "as.y"
 { /* action 96 */ } break;
 case 97:
-# line 161 "as.y"
+# line 257 "as.y"
 { /* action 97 */ } break;
 case 98:
-# line 162 "as.y"
+# line 258 "as.y"
 { /* action 98 */ } break;
 case 99:
-# line 163 "as.y"
+# line 259 "as.y"
 { /* action 99 */ } break;
 case 100:
-# line 164 "as.y"
+# line 260 "as.y"
 { /* action 100 */ } break;
 case 101:
-# line 165 "as.y"
+# line 261 "as.y"
 { /* action 101 */ } break;
 case 102:
-# line 166 "as.y"
+# line 262 "as.y"
 { /* action 102 */ } break;
 case 103:
-# line 167 "as.y"
+# line 263 "as.y"
 { /* action 103 */ } break;
 case 104:
-# line 168 "as.y"
+# line 264 "as.y"
 { /* action 104 */ } break;
 case 105:
-# line 169 "as.y"
+# line 265 "as.y"
 { /* action 105 */ } break;
 case 106:
-# line 170 "as.y"
+# line 266 "as.y"
 { /* action 106 */ } break;
 case 107:
-# line 171 "as.y"
+# line 267 "as.y"
 { /* action 107 */ } break;
 case 108:
-# line 172 "as.y"
+# line 268 "as.y"
 { /* action 108 */ } break;
 case 109:
-# line 173 "as.y"
+# line 269 "as.y"
 { /* action 109 */ } break;
 case 110:
-# line 174 "as.y"
+# line 270 "as.y"
 { /* action 110 */ } break;
 case 111:
-# line 175 "as.y"
+# line 271 "as.y"
 { /* action 111 */ } break;
 case 112:
-# line 176 "as.y"
+# line 272 "as.y"
 { /* action 112 */ } break;
 case 113:
-# line 177 "as.y"
+# line 273 "as.y"
 { /* action 113 */ } break;
 case 114:
-# line 178 "as.y"
+# line 274 "as.y"
 { /* action 114 */ } break;
 case 115:
-# line 179 "as.y"
+# line 275 "as.y"
 { /* action 115 */ } break;
 case 116:
-# line 180 "as.y"
+# line 276 "as.y"
 { /* action 116 */ } break;
 case 117:
-# line 181 "as.y"
+# line 277 "as.y"
 { /* action 117 */ } break;
 case 118:
-# line 182 "as.y"
+# line 278 "as.y"
 { /* action 118 */ } break;
 case 119:
-# line 183 "as.y"
+# line 279 "as.y"
 { /* action 119 */ } break;
 case 120:
-# line 184 "as.y"
+# line 280 "as.y"
 { /* action 120 */ } break;
 case 121:
-# line 185 "as.y"
+# line 281 "as.y"
 { /* action 121 */ } break;
 case 122:
-# line 186 "as.y"
+# line 282 "as.y"
 { /* action 122 */ } break;
 case 123:
-# line 187 "as.y"
+# line 283 "as.y"
 { /* action 123 */ } break;
 case 124:
-# line 188 "as.y"
+# line 284 "as.y"
 { /* action 124 */ } break;
 case 125:
-# line 189 "as.y"
+# line 285 "as.y"
 { /* action 125 */ } break;
 case 126:
-# line 190 "as.y"
+# line 286 "as.y"
 { /* action 126 */ } break;
 case 127:
-# line 191 "as.y"
+# line 287 "as.y"
 { /* action 127 */ } break;
 case 128:
-# line 192 "as.y"
+# line 288 "as.y"
 { /* action 128 */ } break;
 case 129:
-# line 193 "as.y"
+# line 289 "as.y"
 { /* action 129 */ } break;
 case 130:
-# line 194 "as.y"
+# line 290 "as.y"
 { /* action 130 */ } break;
 case 131:
-# line 195 "as.y"
+# line 291 "as.y"
 { /* action 131 */ } break;
 case 132:
-# line 196 "as.y"
+# line 292 "as.y"
 { /* action 132 */ } break;
 case 133:
-# line 197 "as.y"
+# line 293 "as.y"
 { /* action 133 */ } break;
 case 134:
-# line 198 "as.y"
+# line 294 "as.y"
 { /* action 134 */ } break;
 case 135:
-# line 199 "as.y"
+# line 295 "as.y"
 { /* action 135 */ } break;
 case 136:
-# line 200 "as.y"
+# line 296 "as.y"
 { /* action 136 */ } break;
 case 137:
-# line 201 "as.y"
+# line 297 "as.y"
 { /* action 137 */ } break;
 case 138:
-# line 202 "as.y"
+# line 298 "as.y"
 { /* action 138 */ } break;
 case 139:
-# line 203 "as.y"
+# line 299 "as.y"
 { /* action 139 */ } break;
 case 140:
-# line 204 "as.y"
+# line 300 "as.y"
 { /* action 140 */ } break;
 case 141:
-# line 205 "as.y"
+# line 301 "as.y"
 { /* action 141 */ } break;
 case 142:
-# line 206 "as.y"
+# line 302 "as.y"
 { /* action 142 */ } break;
 case 143:
-# line 207 "as.y"
+# line 303 "as.y"
 { /* action 143 */ } break;
 case 144:
-# line 208 "as.y"
+# line 304 "as.y"
 { /* action 144 */ } break;
 case 145:
-# line 209 "as.y"
+# line 305 "as.y"
 { /* action 145 */ } break;
 case 146:
-# line 210 "as.y"
+# line 306 "as.y"
 { /* action 146 */ } break;
 case 147:
-# line 211 "as.y"
+# line 307 "as.y"
 { /* action 147 */ } break;
 case 148:
-# line 212 "as.y"
+# line 308 "as.y"
 { /* action 148 */ } break;
 case 149:
-# line 213 "as.y"
+# line 309 "as.y"
 { /* action 149 */ } break;
 case 150:
-# line 214 "as.y"
+# line 310 "as.y"
 { /* action 150 */ } break;
 case 151:
-# line 215 "as.y"
+# line 311 "as.y"
 { /* action 151 */ } break;
 case 152:
-# line 216 "as.y"
+# line 312 "as.y"
 { /* action 152 */ } break;
 case 153:
-# line 217 "as.y"
+# line 313 "as.y"
 { /* action 153 */ } break;
 case 154:
-# line 218 "as.y"
+# line 314 "as.y"
 { /* action 154 */ } break;
 case 155:
-# line 219 "as.y"
+# line 315 "as.y"
 { /* action 155 */ } break;
 case 156:
-# line 220 "as.y"
+# line 316 "as.y"
 { /* action 156 */ } break;
 case 157:
-# line 221 "as.y"
+# line 317 "as.y"
 { /* action 157 */ } break;
 case 158:
-# line 222 "as.y"
+# line 318 "as.y"
 { /* action 158 */ } break;
 case 159:
-# line 223 "as.y"
+# line 319 "as.y"
 { /* action 159 */ } break;
 case 160:
-# line 224 "as.y"
+# line 320 "as.y"
 { /* action 160 */ } break;
 case 161:
-# line 225 "as.y"
+# line 321 "as.y"
 { /* action 161 */ } break;
 case 162:
-# line 226 "as.y"
+# line 322 "as.y"
 { /* action 162 */ } break;
 case 163:
-# line 227 "as.y"
+# line 323 "as.y"
 { /* action 163 */ } break;
 case 164:
-# line 228 "as.y"
+# line 324 "as.y"
 { /* action 164 */ } break;
 case 165:
-# line 229 "as.y"
+# line 325 "as.y"
 { /* action 165 */ } break;
 case 166:
-# line 230 "as.y"
+# line 326 "as.y"
 { /* action 166 */ } break;
 case 167:
-# line 231 "as.y"
+# line 327 "as.y"
 { /* action 167 */ } break;
 case 168:
-# line 232 "as.y"
+# line 328 "as.y"
 { /* action 168 */ } break;
 case 169:
-# line 233 "as.y"
+# line 329 "as.y"
 { /* action 169 */ } break;
 case 170:
-# line 234 "as.y"
+# line 330 "as.y"
 { /* action 170 */ } break;
 case 171:
-# line 235 "as.y"
+# line 331 "as.y"
 { /* action 171 */ } break;
 		}
 		goto yystack;  /* stack new state and value */

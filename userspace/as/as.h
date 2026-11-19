@@ -48,11 +48,13 @@ extern struct obj *getobj();
 extern char yytext[];		/* 200 B, original 8E76 */
 extern int yyleng;		/* original 8F3E */
 extern int cls[];		/* character class table, 128 words, original 8F42 */
-extern int g8d06, g8d08, g8d0c, g8d0e, g8d10, g8d22;	/* flags set by the parser actions (Annahme) */
+extern int g8d06, g8d08, g8d0a, g8d0c, g8d0e, g8d10, g8d22;	/* flags set by the parser actions (Annahme) */
 extern unsigned g9046;
 extern int g9042, g9044, g9048, g904a, g90dc, g90e0, g90ce, g90d0, g9276, g9278, g9288, gca78, gccba;
 		/* scanner state words (Annahme) */
+#ifndef IN_AS_Y		/* as_y.c declares yylval itself (as the union YYSTYPE) */
 extern int yylval;		/* defined by the yacc output (union of one int) */
+#endif
 
 /* lex frame unput(c) with the pass-2 listing capture, as it is inlined in the binary */
 #define UNPUT(c) { yytchar = (c); if (yytchar == '\n') yylineno--; *yysptr++ = yytchar; \

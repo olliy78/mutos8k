@@ -1,6 +1,12 @@
 /* as.y: yacc grammar of /usr/bin/as, RECOVERED from the parser tables (tools/userspace/as_grammatik.py).
    Rules in yyr1 order, so rule N here = rule N of the original tables = `case N` of yyparse.  Names of
-   nonterminals (ntN = yacc number N) and of unnamed tokens (TOKn) are invented; actions are placeholders. */
+   nonterminals (ntN = yacc number N) and of unnamed tokens (TOKn) are invented; actions 1..60 filled in (W7l), 61.. are placeholders. */
+%{
+#define IN_AS_Y 1
+#include "as.h"
+/* value of a cell at byte offset 4 (low word of the long value of a struct obj, or s_x of a struct sym; Annahme) */
+#define CELL4(p) (*(int *)((char *)(p) + 4))
+%}
 %union { int u; }
 
 %token MODULE 3
@@ -62,8 +68,17 @@
 %type <u> nt1 nt2 nt3 nt4 nt5 nt6 nt7 nt8 nt9 nt10 nt11 nt12 nt13 nt14 nt15 nt16 nt17
 
 %%
-nt18	: nt5 nt19 END IDENT	{ /* action 1 */ };
-nt5	: IDENT MODULE	{ /* action 2 */ };
+nt18	: nt5 nt19 END IDENT	{
+	/* action 1 */
+	if ($<u>1 != $<u>4)
+		error("wrong end of module");
+	f3844();
+};
+nt5	: IDENT MODULE	{
+	/* action 2 */
+	$<u>$ = $<u>1;
+	f2e38($<u>1);
+};
 nt19	: 	{ /* action 3 */ };
 nt19	: nt19 nt20	{ /* action 4 */ };
 nt20	: nt21	{ /* action 5 */ };
@@ -74,39 +89,111 @@ nt20	: nt25	{ /* action 9 */ };
 nt20	: nt26	{ /* action 10 */ };
 nt20	: error	{ /* action 11 */ };
 nt21	: nt27 nt28	{ /* action 12 */ };
-nt27	: CONSTANT	{ /* action 13 */ };
+nt27	: CONSTANT	{
+	/* action 13 */
+	g8d06 = 258;
+};
 nt28	: 	{ /* action 14 */ };
 nt28	: nt28 nt29	{ /* action 15 */ };
 nt22	: nt30 nt31	{ /* action 16 */ };
-nt30	: TYPE	{ /* action 17 */ };
+nt30	: TYPE	{
+	/* action 17 */
+	g8d06 = 5;
+};
 nt31	: 	{ /* action 18 */ };
 nt31	: nt31 nt32	{ /* action 19 */ };
 nt23	: nt33 nt34	{ /* action 20 */ };
-nt33	: GLOBAL	{ /* action 21 */ };
+nt33	: GLOBAL	{
+	/* action 21 */
+	g8d06 = 6;
+};
 nt24	: nt35 nt34	{ /* action 22 */ };
-nt35	: INTERNAL	{ /* action 23 */ };
+nt35	: INTERNAL	{
+	/* action 23 */
+	g8d06 = 7;
+};
 nt25	: nt36 nt37	{ /* action 24 */ };
 nt37	: 	{ /* action 25 */ };
 nt37	: nt37 nt38	{ /* action 26 */ };
-nt36	: EXTERNAL	{ /* action 27 */ };
-nt29	: nt6 TOK296	{ /* action 28 */ };
-nt6	: IDENT ':' '='	{ /* action 29 */ };
-nt26	: SECDIR TOK315	{ /* action 30 */ };
-nt26	: SECDIR nt1 TOK315	{ /* action 31 */ };
-nt26	: SECDIR IDENT TOK315	{ /* action 32 */ };
-nt26	: SECDIR error TOK315	{ /* action 33 */ };
-nt32	: IDENT nt7	{ /* action 34 */ };
+nt36	: EXTERNAL	{
+	/* action 27 */
+	g8d06 = 32;
+};
+nt29	: nt6 TOK296	{
+	/* action 28 */
+	f2dac($<u>1, $<u>2);
+	g8d08 = 0;
+};
+nt6	: IDENT ':' '='	{
+	/* action 29 */
+	if (g8d06 == 258)
+		g8d08 = 1;
+	else
+		error(" wrong: IDENT :=___");
+};
+nt26	: SECDIR TOK315	{
+	/* action 30 */
+	secdir($<u>1, 0);
+};
+nt26	: SECDIR nt1 TOK315	{
+	/* action 31 */
+	secdir($<u>1, $<u>2);
+};
+nt26	: SECDIR IDENT TOK315	{
+	/* action 32 */
+	secdir($<u>1, $<u>2);
+};
+nt26	: SECDIR error TOK315	{
+	/* action 33 */
+	error(" invalid ASSDIR construction");
+	yyerrok;
+};
+nt32	: IDENT nt7	{
+	/* action 34 */
+	f2dcc($<u>1, $<u>2);
+};
 nt32	: nt26	{ /* action 35 */ };
-nt7	: nt8	{ /* action 36 */ };
-nt7	: nt10	{ /* action 37 */ };
-nt8	: BYTE	{ /* action 38 */ };
-nt8	: WORD	{ /* action 39 */ };
-nt8	: LONG	{ /* action 40 */ };
-nt8	: TOK299	{ /* action 41 */ };
-nt10	: nt9	{ /* action 42 */ };
-nt9	: ARRAY nt39 nt2 nt7 ']'	{ /* action 43 */ };
-nt9	: TOK300	{ /* action 44 */ };
-nt39	: '['	{ /* action 45 */ };
+nt7	: nt8	{
+	/* action 36 */
+	$<u>$ = $<u>1;
+};
+nt7	: nt10	{
+	/* action 37 */
+	$<u>$ = $<u>1;
+};
+nt8	: BYTE	{
+	/* action 38 */
+	$<u>$ = 1;
+};
+nt8	: WORD	{
+	/* action 39 */
+	$<u>$ = 2;
+};
+nt8	: LONG	{
+	/* action 40 */
+	$<u>$ = 4;
+};
+nt8	: TOK299	{
+	/* action 41 */
+	$<u>$ = CELL4($<u>1);
+};
+nt10	: nt9	{
+	/* action 42 */
+	$<u>$ = $<u>1;
+};
+nt9	: ARRAY nt39 nt2 nt7 ']'	{
+	/* action 43 */
+	$<u>$ = CELL4($<u>3) * $<u>4;
+	((struct obj *)$<u>3)->o_t = -1;
+};
+nt9	: TOK300	{
+	/* action 44 */
+	$<u>$ = CELL4($<u>1);
+};
+nt39	: '['	{
+	/* action 45 */
+	g8d0a = 1;
+};
 nt34	: 	{ /* action 46 */ };
 nt34	: nt34 nt40	{ /* action 47 */ };
 nt40	: nt41	{ /* action 48 */ };
@@ -114,14 +201,23 @@ nt40	: nt42	{ /* action 49 */ };
 nt40	: nt43	{ /* action 50 */ };
 nt40	: nt44	{ /* action 51 */ };
 nt40	: nt26	{ /* action 52 */ };
-nt43	: IDENT ':'	{ /* action 53 */ };
+nt43	: IDENT ':'	{
+	/* action 53 */
+	labsym($<u>1, 58);
+};
 nt41	: nt45	{ /* action 54 */ };
 nt41	: nt46	{ /* action 55 */ };
 nt38	: nt32	{ /* action 56 */ };
 nt38	: nt11	{ /* action 57 */ };
 nt38	: nt46	{ /* action 58 */ };
-nt47	: IDENT nt8	{ /* action 59 */ };
-nt48	: IDENT ARRAY '[' '*' nt8 ']'	{ /* action 60 */ };
+nt47	: IDENT nt8	{
+	/* action 59 */
+	f404a($<u>1, $<u>2, 1);
+};
+nt48	: IDENT ARRAY '[' '*' nt8 ']'	{
+	/* action 60 */
+	f404a($<u>1, $<u>5, -1);
+};
 nt48	: IDENT ARRAY '[' nt1 nt8 ']'	{ /* action 61 */ };
 nt49	: nt48 ':' '=' '['	{ /* action 62 */ };
 nt50	: nt47 ':'	{ /* action 63 */ };
