@@ -67,3 +67,9 @@ extern int g90de, g90c4;
 extern int *g90b0[];
 extern int g90d2[];
 extern int *g90e2;
+
+/* encoder (W7j): the mnemonic entry as the encoder 1C0C sees it: class byte +2, operand count +3, template word +12 */
+struct mncl { char *mc_name; char mc_cls; char mc_cnt; int mc_w[5]; };
+extern char g90e6[], g91ae[];	/* 200-byte code and relocation word buffers of one instruction */
+extern int *cwp, *rwp, *cws, *rws;
+extern int g90ca;
