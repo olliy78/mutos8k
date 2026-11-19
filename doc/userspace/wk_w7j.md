@@ -1,0 +1,18 @@
+# W7j (Plan 52): `as` -- Kodierer 1C0C, Struktur und erste Haelfte
+
+Fortsetzung von `wk_w7i.md`.  *Gemessen* = aus dem Original-Listing `userspace/as/as.lst` (1C0C..2DA8) bzw. Bau, sonst *Annahme*.  Alle Namen sind *Annahme*.
+
+## 1. Karte des Kodierers (1C0C..2DA8, 4512 B, ein Parameter `mn` = Mnemoniktabelleneintrag)
+
+* Rahmen: `CALL csv`, `R13 = mn`, 0x16 Byte Lokale (`SUB R15,#16`, Sprung 1C0C -> 2DA4 -> 1C18); Register: R13 `mn`, R12/R11 ungenutzt, R10 `cls` (Klassenbyte +2), R9 `k` (Schiebezaehler 4 bzw. Operandenindex 0/1), R8 `ty` (Typwort des aktuellen Operanden / Maske).  Lokale: FFF2 `xp` (Zeiger auf das zweite Codewort, nur bei `cls > 100`), FFF0 `yp`, FFEE `n`, FFE6 `long lv`, FFE0 `endp`, FFDE `begp`.
+* Eintragsansicht: Byte +2 = Klasse, +3 = Operandenzahl, Wort +12 = Befehlsschablone (Codewort).
+* Statische Datenwoerter 69A8..69AE (initialisiert): `cwp` (90E6, Schreibzeiger Codepuffer), `rwp` (91AE, Schreibzeiger Relokationspuffer), `cws`/`rws` (Anfang des aktuellen Befehls in beiden Puffern, 69AC/69AE).
+* **Ablauf:** 1C18 Puffer zuruecksetzen; Schablone schreiben (`cls > 100`: Nullwort, dann Schablone, `xp` auf Schablone); Relokationswoerter 0; `opclass(cws, mn)`; `g90c4 = 0`.
+  1. 1CE8 Schalter 1 (69B0, Hash 2): Klassen 44 62 72 106 67 101 105 109 -> `g90c4 = 1` (1CC2); 51 97 -> bei Name `'S'` `g9276 = g9278 = 0`; Rest nichts.
+  2. 1D52 `g90e2 = g90b0[g90c4]`, `ty = *g90e2`, `k = 4`.
+  3. **Pass 0 (Laenge, `pass == 0`)**: `g9046 += 2` (ab 1D74), Schalter 2 (69B4, 108 Eintraege `cls - 11`): Gruppen 1D7E (13 14 81), 1D8E (11 12 22 23 51 97 98), 1DE8 (21), 1DF4 (41-44 63-67 71 72 103 104 107 108 118), 1DFC (61), 1E04 (62 101 102 105 106 109 115 116 119), Rest 1DE4; Ende 1E24 `iniobj(); g90de = 0;` -> Rueckkehr (2DA0 = `JP cret`).
+  4. **Pass 1/2 (Kodieren)**: 1E34 -> Schalter 3 (6A8E, 108 Eintraege `cls - 11`), Standard 29DA (zweite, typabhaengige Verteilung 2BA6, siehe unten); alle Faelle enden an 2C6A.
+  5. 2C6A Schwanz: `endp = cwp; n = endp - begp;` bei `pass == 1 && lflag` Listing (`fprintf(lstfile, "%04x %c %04x %04x\n", g9046, "*ATDB"[g90d0], *xp, *yp)` je Wort von `cws` bis `cwp`); `g9046 += n; begp = endp;` bei `endp > g90e6` und `pass == 1`: `swabw`/`owrite` beider Puffer (Dateien `fd_o`, `fd_q`); Puffer zuruecksetzen (4 Woerter loeschen); 2D94 `iniobj(); g90de = 0`.
+* **Schalter 3 (Kodierfaelle), Sprungziele:** 1E3A (11); 1E74 (12 98); 1EF0 (13); 1F96 (14); 1F26 (81); 1F5E (82); 1FBA (102 115 116 119; `k = 1`) und 1FC0 (101 105 106 109; `k = 0`) mit gemeinsamer Verteilung nach Operandentyp 2170 (1 -> 20A2, 2 -> 2114, 4 -> 2072, 8 -> 2022, 0x4000 -> 2006) und Schwanz 219C (Klassen 106/116: `*xp |= 4` oder `9`); 21E0 (118); 21EA (107); 2216 (108); 223A (103); 2296 (104); **zweite Haelfte:** 22BE (21 73), 22E2 (22 74), 230E (71), 2338 (72), 236A (91), 2386 (92), 23A4 (94), 23CA (93), 23CE (31), 24BE (32), 24F6 (96), 2512 (33), 251C (34), 2526 (41), 2596 (43), 2606 (42 44), 26FC (51 97), 27EE (61 62), 2864 (63), 28AA (67), 28BE (64 65), 2976 (66), 29BE (95), 29DA (Standard: 15-20 23-30 35-40 45-50 52-60 68-70 75-80 83-90 99 100 110-114 117), danach 29E6.. bis 2BA6 Verteilung nach Operandentyp (CP-Kette 2BBE ..), 2C56 Verteilung Schalter 3.
+* Schreibweisen des Originals (*gemessen*): `*cws |= opmask(m)` erscheint als `PUSH R2(Adresse); PUSH m; CALL opmask; INC R15,#2; LD R3,R2; POP R2; OR R3,@R2; LD @R2,R3`; Argumente werden von rechts nach links gestapelt (`opclass(cws, mn)` = `PUSH mn; PUSH cws`).
+* Schalterfall-Werte: Hash-Schalter vergleichen den Quotienten, die Fallwerte sind `2 * q + r` (hier mod 2, in `opclass` mod 6).
