@@ -108,8 +108,8 @@ outbyte(c)
 char c;
 {
 	if (g90d0 != 4) {
-		f3038(sectab[g90d0].se_a, &c, 1);
-		f3038(sectab[g90d0].se_b, "", 1);
+		owrite(sectab[g90d0].se_a, &c, 1);
+		owrite(sectab[g90d0].se_b, "", 1);
 	}
 }
 

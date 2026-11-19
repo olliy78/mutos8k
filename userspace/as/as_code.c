@@ -26,32 +26,91 @@ f2e38()
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 2FF4 (original 2FF4) */
-f2ff4()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme* (invented; the original had no symbols). */
+/* swabw (original 2FF4): with cflag set, swap the two bytes of each of the (N + 1) / 2 words at P, in place */
+swabw(n, p)
+register int n;
+register unsigned *p;
 {
-	return (0);
+	register unsigned *q;
+
+	if (cflag) {
+		if (n & 1)
+			n++;
+		n >>= 1;
+		for (q = p; n; n--)
+			*q++ = *p >> 8 | *p++ << 8;
+	}
 }
 
-/* TEMPORARY STUB for the function at 3038 (original 3038) */
-f3038()
+/* owrite (original 3038): output of N bytes at P to the file FD.  Pass 2 only.  Up to 20 bytes of the files 1, 3, 4, 5
+   are collected in the 40-byte buffers of obtab (flushed when full); longer pieces and file 2 are written directly.
+   A write error is fatal. */
+owrite(fd, p, n)
+int fd;
+register char *p;
+int n;
 {
-	return (0);
+	register char *d;
+
+	if (pass) {
+		if (n > 20)
+			goto big;
+		switch (fd) {
+		case 1:
+		case 3:
+		case 4:
+		case 5:
+			if (obtab[fd].ob_n + n >= 40)
+				goto big;
+			d = obtab[fd].ob_p;
+			while (n--) {
+				*d++ = *p++;
+				obtab[fd].ob_n++;
+			}
+			obtab[fd].ob_p = d;
+			return;
+		default:
+			goto direct;
+		}
+big:
+		oflush(fd);
+direct:
+		if (write(fd, p, n) < 0) {
+			error("fatal output error");
+			fatal();
+		}
+	}
 }
 
-/* TEMPORARY STUB for the function at 3100 (original 3100) */
-f3100()
+/* oflush (original 3100): write the collected bytes of the buffer N, then empty it */
+oflush(n)
+int n;
 {
-	return (0);
+	if (obtab[n].ob_n > 0)
+		if (write(n, obtab[n].ob_b, obtab[n].ob_n) < 0) {
+			error("fatal output error");
+			fatal();
+		}
+	obtab[n].ob_n = 0;
+	obtab[n].ob_p = obtab[n].ob_b;
 }
 
-/* TEMPORARY STUB for the function at 3188 (original 3188) */
-f3188()
+/* oflall (original 3188): flush all buffers (1, 3, 4, 5) */
+oflall()
 {
-	return (0);
+	int i;
+
+	oflush(1);
+	for (i = 3; i < 6; i++)
+		oflush(i);
 }
 
-/* TEMPORARY STUB for the function at 31BA (original 31BA) */
-f31ba()
+/* fatal (original 31BA): flush, truncate the object file (creat) and leave with exit status 4 */
+fatal()
 {
-	return (0);
+	oflall();
+	creat(oname, 0666);
+	fprintf(stderr, "error exit from assembler\n");
+	exit(4);
 }

@@ -6,6 +6,16 @@
 FILE *lstfile = stderr;
 FILE *errfile = stderr;
 
+/* Not V7: reconstructed from the MUTOS binary: output buffers (owrite, oflush); file 2 is unbuffered */
+struct obf obtab[6] = {
+	{0, 0, 0},
+	{0, gca82, gca82},
+	{0, 0, 0},
+	{0, gcaaa, gcaaa},
+	{0, gcaaa + 40, gcaaa + 40},
+	{0, gcafa, gcafa}
+};
+
 /* Not V7: reconstructed from the MUTOS binary */
 main(argc, argv)
 int argc;
@@ -39,8 +49,8 @@ first:
 	if (pass == 0)
 		goto again;
 	if (errcount)
-		f31ba();
-	f3188();
+		fatal();
+	oflall();
 	exit(0);
 }
 

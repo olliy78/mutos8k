@@ -358,7 +358,7 @@ struct obj *getobj()
 			return (&objtab[i]);
 		}
 	prmsg("fatal error: overflow of expression/operands list");
-	f31ba();
+	fatal();
 }
 
 /* 13A2: mark all scanner value cells free (original 13A2) */

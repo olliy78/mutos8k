@@ -118,7 +118,9 @@ C2_AUS = {"ld": {"R32", "R43"},
          # and R45 (`exts` before the output() hash switch) would each differ from the original (doc/userspace/wk_w5.md)
          "c2": {"R5", "R7", "R32", "R45"},
          # as: the yylex hash switch (`DIV RR2,#5`) keeps `xor r2,r2` as in c1/ed (doc/userspace/wk_w7f.md, wk_w7g.md)
-         "as": {"R45"}}
+         # W7i: R1 (`inc sp,#k ; ld @sp,x`), R2 (XORB before a byte store) and R4 (`cp MEM,#k` -> `ld r0,MEM ; cp r0,#k`) are not the
+         # form of the original as: its listing keeps `inc r15,#2 ; ld @r15,x`, `xorb ; ldb @r2,rl4` and `cp MEM,#k` (doc/userspace/wk_w7i.md)
+         "as": {"R1", "R2", "R4", "R45"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
