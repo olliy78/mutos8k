@@ -25,8 +25,7 @@ sbrk 7564 75A0 data=8BAC:8BAE exp=_sbrk@7564,_brk@7588 src=A
 write 75A0 75B6 exp=_write@75A0 src=A
 cerror 75B6 75C4 bss=92D4:2 exp=cerror@75B6,_errno@92D4 src=A
 csv 75C4 75E0 exp=csv@75C4,cret@75D2 src=A
-common __sibuf 8EB2 200 data
-common __sobuf 90B2 200 data
-extern _environ 92B2 2
+common __sibuf 8E96 200 data
+common __sobuf 9096 200 data
+extern _environ 9296 2
 extern _end 92D6 0
-

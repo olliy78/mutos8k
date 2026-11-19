@@ -44,7 +44,7 @@ L08A2:
 L08A6:
 	cp	r13,#__iob
 	jr	ne,L08D8
-	ld	r2,#%25B2
+	ld	r2,#__sibuf
 	jr	L08CC
 L08B2:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L08CC:
 	ld	%0004(r13),r2
 	jr	L08B6
 L08D2:
-	ld	r2,#%1F6+__sibuf
+	ld	r2,#__sobuf
 	jr	L08CC
 L08D8:
 	cp	r13,#%8+__iob

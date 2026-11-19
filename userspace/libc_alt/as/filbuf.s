@@ -44,7 +44,7 @@ L4A9E:
 L4AA2:
 	cp	r13,#__iob
 	jr	ne,L4AD4
-	ld	r2,#%CCEE
+	ld	r2,#__sibuf
 	jr	L4AC8
 L4AAE:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L4AC8:
 	ld	%0004(r13),r2
 	jr	L4AB2
 L4ACE:
-	ld	r2,#%1EC+__sibuf
+	ld	r2,#__sobuf
 	jr	L4AC8
 L4AD4:
 	cp	r13,#%8+__iob

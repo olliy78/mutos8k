@@ -47,7 +47,7 @@ unlink 1D26 1D3A exp=_unlink@1D26 src=S
 write 1D3A 1D50 exp=_write@1D3A src=A
 cerror 1D50 1D5E bss=30D8:2 exp=cerror@1D50,_errno@30D8 src=A
 csv 1D5E 1D7A exp=csv@1D5E,cret@1D6C src=A
-common __sibuf 25BC 200 data
-common __sobuf 27BC 200 data
-extern _environ 29BC 2
+common __sibuf 25B2 200 data
+common __sobuf 27B2 200 data
+extern _environ 29B2 2
 extern _end 30DA 0

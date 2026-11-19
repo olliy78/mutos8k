@@ -62,7 +62,7 @@ L0E06:
 	jr	ne,L0E64
 	cp	r13,#__iob
 	jr	ne,L0E3E
-	ld	r2,#%1AE0
+	ld	r2,#__sibuf
 L0E18:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L0E32:
 	setb	%0006(r13),#2
 	jr	L0DD8
 L0E38:
-	ld	r2,#%19C+__sibuf
+	ld	r2,#__sobuf
 	jr	L0E18
 L0E3E:
 	cp	r13,#%8+__iob

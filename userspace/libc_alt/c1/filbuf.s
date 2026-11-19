@@ -44,7 +44,7 @@ L6A48:
 L6A4C:
 	cp	r13,#__iob
 	jr	ne,L6A7E
-	ld	r2,#%8E96
+	ld	r2,#__sibuf
 	jr	L6A72
 L6A58:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L6A72:
 	ld	%0004(r13),r2
 	jr	L6A5C
 L6A78:
-	ld	r2,#%1E4+__sibuf
+	ld	r2,#__sobuf
 	jr	L6A72
 L6A7E:
 	cp	r13,#%8+__iob

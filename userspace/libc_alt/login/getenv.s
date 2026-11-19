@@ -20,7 +20,7 @@ E
 _getenv:
 	call	csv
 	ld	r13,%0004(r14)
-	ld	r12,%1F6+__sobuf
+	ld	r12,_environ
 L1338:
 	test	@r12
 	jr	eq,L1356

@@ -62,7 +62,7 @@ L4ECA:
 	jr	ne,L4F28
 	cp	r13,#__iob
 	jr	ne,L4F02
-	ld	r2,#%CCEE
+	ld	r2,#__sibuf
 L4EDC:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L4EF6:
 	setb	%0006(r13),#2
 	jr	L4E9C
 L4EFC:
-	ld	r2,#%1EC+__sibuf
+	ld	r2,#__sobuf
 	jr	L4EDC
 L4F02:
 	cp	r13,#%8+__iob

@@ -33,7 +33,7 @@ time 1D10 1D34 exp=_time@1D10,_ftime@1D26 src=A
 write 1D34 1D4A exp=_write@1D34 src=A
 cerror 1D4A 1D58 bss=2F32:2 exp=cerror@1D4A,_errno@2F32 src=A
 csv 1D58 1D74 exp=csv@1D58,cret@1D66 src=A
-common __sibuf 2AE0 200 data
-common __sobuf 2CE0 200 data
-extern _environ 2EE0 2
+common __sibuf 2A68 200 data
+common __sobuf 2C68 200 data
+extern _environ 2E68 2
 extern _end 2F34 0
