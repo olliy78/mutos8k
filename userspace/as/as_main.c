@@ -1,5 +1,5 @@
 /* as_main.c: reconstructed /usr/bin/as, original addresses 322C..35FE (function order measured, module boundaries *Annahme*).
-   Functions marked TEMPORARY STUB only make the program link; real code: doc/userspace/wk_w7c.md. */
+   All functions are reconstructed (no stubs since doc/userspace/wk_w7o.md). */
 #include "as.h"
 
 /* Not V7: reconstructed from the MUTOS binary */
