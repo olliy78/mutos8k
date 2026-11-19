@@ -442,7 +442,7 @@ case 1:
 	/* action 1 */
 	if (yypvt[-3].u != yypvt[-0].u)
 		error("wrong end of module");
-	f3844();
+	modend();
 } break;
 case 2:
 # line 77 "as.y"
@@ -698,19 +698,19 @@ case 59:
 # line 213 "as.y"
 {
 	/* action 59 */
-	f404a(yypvt[-1].u, yypvt[-0].u, 1);
+	inibeg(yypvt[-1].u, yypvt[-0].u, 1);
 } break;
 case 60:
 # line 217 "as.y"
 {
 	/* action 60 */
-	f404a(yypvt[-5].u, yypvt[-1].u, -1);
+	inibeg(yypvt[-5].u, yypvt[-1].u, -1);
 } break;
 case 61:
 # line 221 "as.y"
 {
 	/* action 61 */
-	f404a(yypvt[-5].u, yypvt[-1].u, CELL4(yypvt[-2].u));
+	inibeg(yypvt[-5].u, yypvt[-1].u, CELL4(yypvt[-2].u));
 	((struct obj *)yypvt[-2].u)->o_t = -1;
 } break;
 case 62:
@@ -730,32 +730,32 @@ case 64:
 # line 235 "as.y"
 {
 	/* action 64 */
-	f3fd6();
+	inifin();
 } break;
 case 65:
 # line 239 "as.y"
 {
 	/* action 65 */
 	g8d0e = 1;
-	f3fd6();
+	inifin();
 } break;
 case 66:
 # line 244 "as.y"
 {
 	/* action 66 */
-	f3fd6();
+	inifin();
 } break;
 case 67:
 # line 248 "as.y"
 {
 	/* action 67 */
-	f3fd6();
+	inifin();
 } break;
 case 68:
 # line 252 "as.y"
 {
 	/* action 68 */
-	f3fd6();
+	inifin();
 } break;
 case 69:
 # line 256 "as.y"
@@ -770,19 +770,19 @@ case 72:
 # line 259 "as.y"
 {
 	/* action 72 */
-	yyval.u = f40a4(yypvt[-0].u);
+	yyval.u = iniput(yypvt[-0].u);
 } break;
 case 73:
 # line 263 "as.y"
 {
 	/* action 73 */
-	yyval.u = f40a4(0);
+	yyval.u = iniput(0);
 } break;
 case 74:
 # line 267 "as.y"
 {
 	/* action 74 */
-	f43ae(yypvt[-1].u);
+	labtyp(yypvt[-1].u);
 } break;
 case 75:
 # line 271 "as.y"
@@ -794,7 +794,7 @@ case 76:
 # line 275 "as.y"
 {
 	/* action 76 */
-	yyval.u = f4372(yypvt[-3].u);
+	yyval.u = textsec(yypvt[-3].u);
 } break;
 case 77:
 # line 279 "as.y"
@@ -924,13 +924,13 @@ case 109:
 # line 339 "as.y"
 {
 	/* action 109 */
-	f3fd6();
+	inifin();
 } break;
 case 110:
 # line 343 "as.y"
 {
 	/* action 110 */
-	f3e9e(g8d12);
+	labset(g8d12);
 	stpop();
 } break;
 case 111:
@@ -1220,21 +1220,24 @@ case 165:
 } break;
 case 166:
 # line 523 "as.y"
-{ /* action 166 */ } break;
+{
+	/* action 166 */
+	yyval.u = valobj(yypvt[-1].u);
+} break;
 case 167:
-# line 524 "as.y"
+# line 527 "as.y"
 { /* action 167 */ } break;
 case 168:
-# line 525 "as.y"
+# line 528 "as.y"
 { /* action 168 */ } break;
 case 169:
-# line 526 "as.y"
+# line 529 "as.y"
 { /* action 169 */ } break;
 case 170:
-# line 527 "as.y"
+# line 530 "as.y"
 { /* action 170 */ } break;
 case 171:
-# line 528 "as.y"
+# line 531 "as.y"
 { /* action 171 */ } break;
 		}
 		goto yystack;  /* stack new state and value */

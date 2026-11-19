@@ -72,7 +72,7 @@ nt18	: nt5 nt19 END IDENT	{
 	/* action 1 */
 	if ($<u>1 != $<u>4)
 		error("wrong end of module");
-	f3844();
+	modend();
 };
 nt5	: IDENT MODULE	{
 	/* action 2 */
@@ -212,15 +212,15 @@ nt38	: nt11	{ /* action 57 */ };
 nt38	: nt46	{ /* action 58 */ };
 nt47	: IDENT nt8	{
 	/* action 59 */
-	f404a($<u>1, $<u>2, 1);
+	inibeg($<u>1, $<u>2, 1);
 };
 nt48	: IDENT ARRAY '[' '*' nt8 ']'	{
 	/* action 60 */
-	f404a($<u>1, $<u>5, -1);
+	inibeg($<u>1, $<u>5, -1);
 };
 nt48	: IDENT ARRAY '[' nt1 nt8 ']'	{
 	/* action 61 */
-	f404a($<u>1, $<u>5, CELL4($<u>4));
+	inibeg($<u>1, $<u>5, CELL4($<u>4));
 	((struct obj *)$<u>4)->o_t = -1;
 };
 nt49	: nt48 ':' '=' '['	{
@@ -234,39 +234,39 @@ nt50	: nt47 ':'	{
 };
 nt45	: nt50 '=' nt3	{
 	/* action 64 */
-	f3fd6();
+	inifin();
 };
 nt45	: nt47	{
 	/* action 65 */
 	g8d0e = 1;
-	f3fd6();
+	inifin();
 };
 nt45	: nt49 nt51 ']'	{
 	/* action 66 */
-	f3fd6();
+	inifin();
 };
 nt45	: nt48 ':' '=' TOK302	{
 	/* action 67 */
-	f3fd6();
+	inifin();
 };
 nt45	: nt48	{
 	/* action 68 */
-	f3fd6();
+	inifin();
 };
 nt51	: nt52 nt3	{ /* action 69 */ };
 nt52	: nt52 nt3	{ /* action 70 */ };
 nt52	: 	{ /* action 71 */ };
 nt3	: nt1	{
 	/* action 72 */
-	$<u>$ = f40a4($<u>1);
+	$<u>$ = iniput($<u>1);
 };
 nt3	: '?'	{
 	/* action 73 */
-	$<u>$ = f40a4(0);
+	$<u>$ = iniput(0);
 };
 nt46	: IDENT LABEL	{
 	/* action 74 */
-	f43ae($<u>1);
+	labtyp($<u>1);
 };
 nt42	: nt12 nt53 END IDENT	{
 	/* action 75 */
@@ -274,7 +274,7 @@ nt42	: nt12 nt53 END IDENT	{
 };
 nt12	: nt11 nt54 nt55 ENTRY	{
 	/* action 76 */
-	$<u>$ = f4372($<u>1);
+	$<u>$ = textsec($<u>1);
 };
 nt11	: IDENT PROCEDURE	{
 	/* action 77 */
@@ -338,11 +338,11 @@ nt70	: DATADIR TOK315	{
 };
 nt44	: INITKW nt51 TOK315	{
 	/* action 109 */
-	f3fd6();
+	inifin();
 };
 nt62	: nt71 nt53 OD	{
 	/* action 110 */
-	f3e9e(g8d12);
+	labset(g8d12);
 	stpop();
 };
 nt71	: DO	{
@@ -520,7 +520,10 @@ nt1	: '(' nt1 ')'	{
 	/* action 165 */
 	$<u>$ = $<u>2;
 };
-nt1	: SIZEOF '(' IDENT ')'	{ /* action 166 */ };
+nt1	: SIZEOF '(' IDENT ')'	{
+	/* action 166 */
+	$<u>$ = valobj($<u>3);
+};
 nt1	: NUMBER	{ /* action 167 */ };
 nt1	: TOK314	{ /* action 168 */ };
 nt17	: SPV	{ /* action 169 */ };

@@ -4,13 +4,13 @@
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
 /* mklabs (original 167A): saves the parser state (stpush) and opens two generic labels: g90cc = first, g8d12 = second
-   (the stub f3e9e gets the first one) */
+   (labset gets the first one) */
 mklabs()
 {
 	stpush();
 	g90cc = getlab();
 	g8d12 = getlab();
-	f3e9e(g90cc);
+	labset(g90cc);
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */

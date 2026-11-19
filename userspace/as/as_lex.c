@@ -188,7 +188,7 @@ yylex()
 				e = escchar();
 				if (e == 512)
 					break;
-				f4298(e);
+				inibyte(e);
 			}
 			return (302);
 		case 1:

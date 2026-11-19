@@ -99,16 +99,56 @@ register struct obj *b;
 	return (a);
 }
 
-/* TEMPORARY STUB for the function at 3844 (original 3844) */
-f3844()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
+/* modend (original 3844): end of a module (after END): pass 2 writes the 16-byte header (gca70..) at the start of the
+   object file; then the section is closed and, with the listing on, the last line and the symbol table are printed */
+modend()
 {
-	return (0);
+	if (pass == 1) {
+		gca78 *= 12;
+		oflush(fd_o);
+		lseek(fd_o, (long)0, 0);
+		swabw(16, &gca70);
+		owrite(fd_o, &gca70, 16);
+	}
+	secsave();
+	if (lflag) {
+		lstflush();
+		if (pass == 1)
+			symdump();
+	}
 }
 
-/* TEMPORARY STUB for the function at 38B6 (original 38B6) */
-f38b6()
+/* symdump (original 38B6): listing of the symbol table: all symbols, then the local ones (name copied to the buffer D0FA) */
+symdump()
 {
-	return (0);
+	register struct sym *p;
+	register int i;
+	register char *d;
+	register char *s;
+
+	fprintf(lstfile, "\tSYMBOL - TABLE \n");
+	for (p = (struct sym *)symtab; p < (struct sym *)symcur; p++) {
+		d = (char *)0xD0FA;
+		s = p->s_name;
+		for (i = 0; i < 8; i++)
+			*d++ = *s++;
+		fprintf(lstfile, "0x%x\t0x%x\t0x%x\t0x%x\t\t%s\n", p->s_t, p->s_v, p->s_x, p->s_w, (char *)0xD0FA);
+	}
+	fprintf(lstfile, "\n\tLOCAL SYMBOLS:\n");
+	p = (struct sym *)symend;
+	for (;;) {
+		p++;
+		if ((char *)p >= gc79e + 16) {
+			fprintf(lstfile, "\n\n\tNumber of input lines:\n");
+			return;
+		}
+		d = (char *)0xD0FA;
+		s = p->s_name;
+		for (i = 0; i < 8; i++)
+			*d++ = *s++;
+		fprintf(lstfile, "0x%x\t0x%x\t0x%x\t0x%x\t\t%s\n", p->s_t, p->s_v, p->s_x, p->s_w, (char *)0xD0FA);
+	}
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
@@ -186,8 +226,19 @@ char *s;
 	error(s);
 }
 
-/* TEMPORARY STUB for the function at 3AC8 (original 3AC8) */
-f3ac8()
+/* clsini (original 3AC8): fills the character class table cls[] (class masks, see setcls) */
+clsini()
 {
-	return (0);
+	setcls("01234567", 15);
+	setcls("89", 7);
+	setcls("abcdefABCDEF", 3);
+	setcls("abcdefghijklmnopqrstuvwxyz", 0x901);
+	setcls("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 0x811);
+	setcls("_", 1);
+	setcls("#|.?@<>()[]+-*/:=%", 0x20);
+	setcls("rRfFhHlLqQ0123456789", 0x40);
+	setcls("\f;\n\r", 0x400);
+	setcls(" ,\t", 0x200);
+	setcls("$", 0x800);
+	setcls("'!~", 0x80);
 }

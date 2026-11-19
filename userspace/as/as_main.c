@@ -30,8 +30,8 @@ char **argv;
 	bufp2 = loc1;
 	bufp3 = area3;
 	bufp4 = area4;
-	f459c();
-	f3ac8();
+	hashini();
+	clsini();
 	args(argc, argv);
 	goto first;
 again:
