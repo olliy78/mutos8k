@@ -199,11 +199,15 @@ def quelle_lesen(p):
     p = os.path.join(U.REPO, p) if not os.path.isabs(p) else p
     if not os.path.isdir(p):
         return open(p, encoding="latin-1").read(), {}
-    dat, koepfe = {}, {}
+    dat, koepfe = U.Module(), {}
     # `link.txt` (optional): the modules (.c or .s) in link order, one name per line; without it all *.c alphabetically.
     # c1 needs it: atof.s (EPA code, not compilable by the guest cc) and the generated table module sit between c13 and libc.
     lt = os.path.join(p, "link.txt")
-    reihe = [z.strip() for z in open(lt) if z.strip() and not z.startswith("#")] if os.path.isfile(lt) else None
+    # A line may carry the marker `noopt` (`as_y.c noopt`): that module is compiled WITHOUT -O (pure data modules; the shipped
+    # c2 hangs on > ~10 KB of initialised data, doc/userspace/wk_w7e.md).  Default: all modules with the program's flags.
+    zeilen = [z.split() for z in open(lt) if z.strip() and not z.startswith("#")] if os.path.isfile(lt) else None
+    reihe = [z[0] for z in zeilen] if zeilen is not None else None
+    ohne = {z[0] for z in zeilen if "noopt" in z[1:]} if zeilen else set()
     for f in sorted(os.listdir(p)):
         if f.endswith(".c") and reihe is None:
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
@@ -215,6 +219,7 @@ def quelle_lesen(p):
     for f in list(dat):
         if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):
             koepfe[f] = dat.pop(f).encode("latin-1")
+    dat.noopt = ohne & set(dat)
     return dat, koepfe
 
 
@@ -266,7 +271,11 @@ def cmd_bau(name, a):
                     todo = [(f, fixe[f] if f in fixe else r["s"][f]) for f in reihe if f in fixe or f in r["s"]]
                 else:
                     todo = sorted(r["s"].items())
+                ohne = {f[:-2] + ".s" for f in getattr(v[n], "noopt", ())}
                 for fn, t in todo:
+                    if fn in ohne:      # compiled without -O: no c2 to model, the .s is already what cc -S gives
+                        zwei[n + "_c2"][fn] = t
+                        continue
                     if fn in fixe:
                         zwei[n + "_c2"][fn] = t
                         continue

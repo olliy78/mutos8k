@@ -9,7 +9,7 @@ struct mnent { char *m_name; int m_w[6]; };		/* mnemonic table, 14 B */
 
 extern struct kwent kwtab[];
 extern struct ctent ctab1[], ctab2[];
-extern struct mnent mnem[], mnem_b[], mnem_c[];	/* one table of 301 entries in three parts (W7d), NOT contiguous; the last entry of mnem_c is "" */
+extern struct mnent mnem[];	/* 301 entries, the last one is "" */
 
 /* scalar data (initialized, original data 8310..8320) */
 extern int pass;		/* 0 during pass 1, 1 during pass 2 */
