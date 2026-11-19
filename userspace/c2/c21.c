@@ -21,6 +21,9 @@ extern char revbr[];
  * jump table at 0x4778.  Variable names are Annahme.  flt is the bank of the
  * destination, fl2 the bank of the source operand.
  */
+#ifdef XCMPMEM
+#define	X4MARK	-4	/* -xcmpmem: labno of the `ld r0,MEM` nodes inserted for a `cp MEM,#k`; they keep MEM (no register copy propagation; cat, od measured) */
+#endif
 rmove()
 {
 	register struct node *p;
@@ -86,7 +89,11 @@ rmove()
 					continue;
 				}
 			}
+#ifdef XCMPMEM
+			if (p->op != LDK && p->labno != X4MARK) {
+#else
 			if (p->op != LDK) {
+#endif
 				repladdr(p, 0, flt);
 				dualop(p);
 			}
@@ -282,6 +289,31 @@ rmove()
 			delnode(p);
 			continue;
 		}
+/* c2x -xcmpmem (W10g): -DXCMPMEM loads a memory operand of a word `cp MEM,#k` into R0 first (`ld r0,MEM ; cp r0,#k`), as the older c2 of the
+   original programs did; the new MOV node then runs through the register tracking (a second `cp MEM,#k` behind a jr cc reuses R0).
+   Never defined in the byte-identical c2. */
+#ifdef XCMPMEM
+		if (p->op == CMP && (p->subop & (BYTE | LONG | FLTF)) == 0) {
+			dualop(p);
+			if (regs[RT2][0] == '#' && regs[RT1][0] != '@' && isreg(regs[RT1]) < 0) {
+				struct node *np;
+
+				np = (struct node *)alloc(sizeof first);
+				np->op = MOV;
+				np->subop = 0;
+				np->labno = X4MARK;
+				np->code = copy(2, "r0,", regs[RT1]);
+				np->forw = p;
+				np->back = p->back;
+				p->back->forw = np;
+				p->back = np;
+				p->code = copy(2, "r0,", regs[RT2]);
+				p = np->back;
+				nchange++;
+				continue;
+			}
+		}
+#endif
 	case BIC:
 		dualop(p);
 		if (p->op == BIC && regs[RT2][0] == '#' && p->subop == 0) {
