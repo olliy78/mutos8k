@@ -25,7 +25,7 @@ sbrk 41D4 4210 data=4A0E:4A10 exp=_sbrk@41D4,_brk@41F8 src=A
 write 4210 4226 exp=_write@4210 src=A
 cerror 4226 4234 bss=56EE:2 exp=cerror@4226,_errno@56EE src=A
 csv 4234 4250 exp=csv@4234,cret@4242 src=A
-common __sibuf 52CC 200 data
-common __sobuf 54CC 200 data
-extern _environ 56CC 2
+common __sibuf 513A 200 data
+common __sobuf 533A 200 data
+extern _environ 553A 2
 extern _end 56F0 0

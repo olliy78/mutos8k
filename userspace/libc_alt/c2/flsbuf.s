@@ -62,7 +62,7 @@ L3AE4:
 	jr	ne,L3B42
 	cp	r13,#__iob
 	jr	ne,L3B1C
-	ld	r2,#%513A
+	ld	r2,#__sibuf
 L3AF6:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L3B10:
 	setb	%0006(r13),#2
 	jr	L3AB6
 L3B16:
-	ld	r2,#%6E+__sibuf
+	ld	r2,#__sobuf
 	jr	L3AF6
 L3B1C:
 	cp	r13,#%8+__iob
