@@ -38,10 +38,38 @@ f3dd0()
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 3E1E (original 3E1E) */
-f3e1e()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme* (the name follows the message text). */
+/* getlab (original 3E1E): a new generic (numeric) label: yytext = the counter string numcls; then the counter byte behind the
+   8 numerals (9286) is incremented with decimal carry through at most 8 places; the symbol is created (pass 1) or fetched (pass 2). */
+getlab()
 {
-	return (0);
+	register char *p;
+	register char *q;
+	register int i;
+	register struct sym *sp;
+
+	p = yytext;
+	q = numcls;
+	while (*p++ = *q++)
+		;
+	q = numcls + 8;
+	(*q)++;
+	for (i = 8; i; i--) {
+		if (*q < '9')
+			goto ok;
+		*q-- = '0';
+		(*q)++;
+	}
+	error(" too many generic labels");
+ok:
+	if (pass == 0)
+		sp = (struct sym *)symadd(30);
+	else {
+		sp = (struct sym *)symget(30);
+		if (sp == 0)
+			error("getlab: label not found in PASS1");
+	}
+	return ((int)sp);
 }
 
 /* TEMPORARY STUB for the function at 3E9E (original 3E9E) */
