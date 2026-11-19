@@ -50,7 +50,7 @@ extern int yyleng;		/* original 8F3E */
 extern int cls[];		/* character class table, 128 words, original 8F42 */
 extern int g8d06, g8d08, g8d0a, g8d0c, g8d0e, g8d10, g8d22;	/* flags set by the parser actions (Annahme) */
 extern unsigned g9046;
-extern int g9042, g9044, g9048, g904a, g90dc, g90e0, g90ce, g90d0, g9276, g9278, g9288, gca78, gccba;
+extern int g9042, g9044, g9048, g904a, g90dc, g90e0, g90ce, g90d0, g9276, g9278, g9288, gccba;
 		/* scanner state words (Annahme) */
 #ifndef IN_AS_Y		/* as_y.c declares yylval itself (as the union YYSTYPE) */
 extern int yylval;		/* defined by the yacc output (union of one int) */
@@ -66,7 +66,12 @@ struct obf { int ob_n; char *ob_b; char *ob_p; };
 extern struct obf obtab[];
 extern char gca82[], gcaaa[], gcafa[];
 extern int g90de, g90c4, g90c6;
-extern int gca70, gca72, gca74, gca76;
+extern int objhdr[];
+#define gca70 objhdr[0]
+#define gca72 objhdr[1]
+#define gca74 objhdr[2]
+#define gca76 objhdr[3]
+#define gca78 objhdr[4]
 /* W7p: gc79e (constant pool, 616 B) must directly follow symtab: symend = symlim = gc79e is the end of symtab (symtab + 13584).
    As a separate array the linker placed it BEFORE symtab (bss order) -> every symadd() hit 'symbol table overflow'. */
 #define gc79e (symtab + 13584)

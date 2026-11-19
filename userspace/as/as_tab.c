@@ -58,8 +58,9 @@ char *gca06;				/* CA06: fill pointer of the constant pool gc79e (cpool) */
 char *curname;				/* CA08 (error() pushes it as the module name) */
 struct sect sectab[8];			/* CA0A..CA6A: 12-byte section records (cp_o/cp_q/cp_p/cp_r are fields of it, see as.h) */
 int fd_p, fd_r, fd_s;			/* CA6A, CA6C, CA6E */
-int gca70, gca72, gca74, gca76, gca78;
-char gca7a[6];
+/* W7q: the 16-byte object header (gca70..gca78 + 6 zero bytes gca7a) is ONE array: modend writes 16 bytes from &gca70, and
+   the linker did not keep the declaration order (gca80 landed behind gca78 -> garbage in header words 5..7). */
+int objhdr[8];
 int gca80;
 char gca82[40], gcaaa[80], gcafa[40];
 char *bufp1;				/* CB22 */
