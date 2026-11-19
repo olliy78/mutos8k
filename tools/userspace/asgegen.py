@@ -12,6 +12,7 @@ Run with python3 -I.  The guest session takes minutes: run it in the background 
 """
 import argparse
 import os
+import shutil
 import struct
 import sys
 
@@ -77,9 +78,12 @@ def lauf(asx, libc_max, progs):
     q["asx"] = open(asx, "rb").read()
     for x in ein:
         rueck += [x + ".o", x + ".n", x + ".e"]
+    # W7r: the /tmp disk (3 files per input + compiler outputs) ran out of INODES (200) after ~50 inputs ("I can not creat");
+    # clear stale results of earlier runs (old .n files would otherwise be evaluated again)
+    shutil.rmtree(os.path.join(WORK), ignore_errors=True)
     ar = os.path.join(WORK, "sess")
     aus = {}
-    r = gast_as.gast_befehle(ar, q, bs, rueck, frist=20_000_000_000, ausgabe=aus, ausfuehrbar=("asx",))
+    r = gast_as.gast_befehle(ar, q, bs, rueck, frist=20_000_000_000, ausgabe=aus, ausfuehrbar=("asx",), tmp_inodes=500)
     print("%d s wall clock, %d inputs" % (aus.get("dauer", 0), len(ein)), flush=True)
     os.makedirs(WORK, exist_ok=True)
     for k, v in r.items():

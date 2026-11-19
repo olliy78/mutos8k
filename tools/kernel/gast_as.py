@@ -163,7 +163,7 @@ def gast_assemblieren(arbeit, teile, ausgabe=None, kommando=">asm.out;as %s.s >/
     return erg
 
 
-def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=(), mnt="/mnt", quelle_hfe=None):
+def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dateien=None, ausgabe=None, boot_hfe=None, schirm=False, ausfuehrbar=(), mnt="/mnt", quelle_hfe=None, tmp_inodes=200):
     """Allgemeiner Gastlauf (AP K5): `quellen` {name: bytes|str} kommen auf die Quelldiskette D (im Gast /mnt = Arbeitsordner),
     `befehle` laufen nacheinander in der Shell (Rueckmeldung je Befehl ueber eine Marke), danach werden die Dateien
     `rueck` aus /tmp (eigene leere Diskette A) geholt.  Rueckgabe {name: bytes oder None}.
@@ -198,7 +198,7 @@ def gast_befehle(arbeit, quellen, befehle, rueck, frist=3_000_000_000, extra_dat
         p = os.path.join(arbeit, img)
         if os.path.exists(p):
             os.remove(p)
-    rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "tmp.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes", "200"])
+    rc, o = _lauf([disktool(), "create", os.path.join(arbeit, "tmp.hfe"), "--fs", "mutos8k_26x128_mfm", "--inodes", str(tmp_inodes)])
     if rc:
         raise RuntimeError("create tmp: " + o)
     if quelle_hfe:
