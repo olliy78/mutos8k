@@ -708,336 +708,533 @@ case 60:
 } break;
 case 61:
 # line 221 "as.y"
-{ /* action 61 */ } break;
+{
+	/* action 61 */
+	f404a(yypvt[-5].u, yypvt[-1].u, CELL4(yypvt[-2].u));
+	((struct obj *)yypvt[-2].u)->o_t = -1;
+} break;
 case 62:
-# line 222 "as.y"
-{ /* action 62 */ } break;
-case 63:
-# line 223 "as.y"
-{ /* action 63 */ } break;
-case 64:
-# line 224 "as.y"
-{ /* action 64 */ } break;
-case 65:
-# line 225 "as.y"
-{ /* action 65 */ } break;
-case 66:
 # line 226 "as.y"
-{ /* action 66 */ } break;
+{
+	/* action 62 */
+	g8d0c = 1;
+	g8d0e = 1;
+} break;
+case 63:
+# line 231 "as.y"
+{
+	/* action 63 */
+	g8d0e = 1;
+} break;
+case 64:
+# line 235 "as.y"
+{
+	/* action 64 */
+	f3fd6();
+} break;
+case 65:
+# line 239 "as.y"
+{
+	/* action 65 */
+	g8d0e = 1;
+	f3fd6();
+} break;
+case 66:
+# line 244 "as.y"
+{
+	/* action 66 */
+	f3fd6();
+} break;
 case 67:
-# line 227 "as.y"
-{ /* action 67 */ } break;
+# line 248 "as.y"
+{
+	/* action 67 */
+	f3fd6();
+} break;
 case 68:
-# line 228 "as.y"
-{ /* action 68 */ } break;
+# line 252 "as.y"
+{
+	/* action 68 */
+	f3fd6();
+} break;
 case 69:
-# line 229 "as.y"
+# line 256 "as.y"
 { /* action 69 */ } break;
 case 70:
-# line 230 "as.y"
+# line 257 "as.y"
 { /* action 70 */ } break;
 case 71:
-# line 231 "as.y"
+# line 258 "as.y"
 { /* action 71 */ } break;
 case 72:
-# line 232 "as.y"
-{ /* action 72 */ } break;
+# line 259 "as.y"
+{
+	/* action 72 */
+	yyval.u = f40a4(yypvt[-0].u);
+} break;
 case 73:
-# line 233 "as.y"
-{ /* action 73 */ } break;
+# line 263 "as.y"
+{
+	/* action 73 */
+	yyval.u = f40a4(0);
+} break;
 case 74:
-# line 234 "as.y"
-{ /* action 74 */ } break;
+# line 267 "as.y"
+{
+	/* action 74 */
+	f43ae(yypvt[-1].u);
+} break;
 case 75:
-# line 235 "as.y"
-{ /* action 75 */ } break;
+# line 271 "as.y"
+{
+	/* action 75 */
+	f19da(yypvt[-3].u, yypvt[-0].u);
+} break;
 case 76:
-# line 236 "as.y"
-{ /* action 76 */ } break;
+# line 275 "as.y"
+{
+	/* action 76 */
+	yyval.u = f4372(yypvt[-3].u);
+} break;
 case 77:
-# line 237 "as.y"
-{ /* action 77 */ } break;
+# line 279 "as.y"
+{
+	/* action 77 */
+	yyval.u = f1a1e(yypvt[-1].u);
+} break;
 case 78:
-# line 238 "as.y"
+# line 283 "as.y"
 { /* action 78 */ } break;
 case 79:
-# line 239 "as.y"
+# line 284 "as.y"
 { /* action 79 */ } break;
 case 80:
-# line 240 "as.y"
+# line 285 "as.y"
 { /* action 80 */ } break;
 case 81:
-# line 241 "as.y"
+# line 286 "as.y"
 { /* action 81 */ } break;
 case 82:
-# line 242 "as.y"
-{ /* action 82 */ } break;
+# line 287 "as.y"
+{
+	/* action 82 */
+	nodeset(yypvt[-1].u, 0, 0);
+} break;
 case 83:
-# line 243 "as.y"
-{ /* action 83 */ } break;
+# line 291 "as.y"
+{
+	/* action 83 */
+	g8d0e = 0;
+} break;
 case 84:
-# line 244 "as.y"
-{ /* action 84 */ } break;
+# line 295 "as.y"
+{
+	/* action 84 */
+	g8d10 = 1;
+	g8d0e = 1;
+} break;
 case 85:
-# line 245 "as.y"
+# line 300 "as.y"
 { /* action 85 */ } break;
 case 86:
-# line 246 "as.y"
+# line 301 "as.y"
 { /* action 86 */ } break;
 case 87:
-# line 247 "as.y"
+# line 302 "as.y"
 { /* action 87 */ } break;
 case 88:
-# line 248 "as.y"
+# line 303 "as.y"
 { /* action 88 */ } break;
 case 89:
-# line 249 "as.y"
+# line 304 "as.y"
 { /* action 89 */ } break;
 case 90:
-# line 250 "as.y"
+# line 305 "as.y"
 { /* action 90 */ } break;
 case 91:
-# line 251 "as.y"
+# line 306 "as.y"
 { /* action 91 */ } break;
 case 92:
-# line 252 "as.y"
+# line 307 "as.y"
 { /* action 92 */ } break;
 case 93:
-# line 253 "as.y"
+# line 308 "as.y"
 { /* action 93 */ } break;
 case 94:
-# line 254 "as.y"
+# line 309 "as.y"
 { /* action 94 */ } break;
 case 95:
-# line 255 "as.y"
+# line 310 "as.y"
 { /* action 95 */ } break;
 case 96:
-# line 256 "as.y"
+# line 311 "as.y"
 { /* action 96 */ } break;
 case 97:
-# line 257 "as.y"
+# line 312 "as.y"
 { /* action 97 */ } break;
 case 98:
-# line 258 "as.y"
+# line 313 "as.y"
 { /* action 98 */ } break;
 case 99:
-# line 259 "as.y"
+# line 314 "as.y"
 { /* action 99 */ } break;
 case 100:
-# line 260 "as.y"
+# line 315 "as.y"
 { /* action 100 */ } break;
 case 101:
-# line 261 "as.y"
+# line 316 "as.y"
 { /* action 101 */ } break;
 case 102:
-# line 262 "as.y"
+# line 317 "as.y"
 { /* action 102 */ } break;
 case 103:
-# line 263 "as.y"
+# line 318 "as.y"
 { /* action 103 */ } break;
 case 104:
-# line 264 "as.y"
-{ /* action 104 */ } break;
+# line 319 "as.y"
+{
+	/* action 104 */
+	nodeset(yypvt[-3].u, 1, yypvt[-0].u);
+} break;
 case 105:
-# line 265 "as.y"
-{ /* action 105 */ } break;
+# line 323 "as.y"
+{
+	/* action 105 */
+	nodeset(yypvt[-3].u, 2, yypvt[-0].u);
+} break;
 case 106:
-# line 266 "as.y"
-{ /* action 106 */ } break;
+# line 327 "as.y"
+{
+	/* action 106 */
+	nodeset(yypvt[-3].u, 3, yypvt[-0].u);
+} break;
 case 107:
-# line 267 "as.y"
-{ /* action 107 */ } break;
+# line 331 "as.y"
+{
+	/* action 107 */
+	dirclr();
+} break;
 case 108:
-# line 268 "as.y"
-{ /* action 108 */ } break;
+# line 335 "as.y"
+{
+	/* action 108 */
+	dirset();
+} break;
 case 109:
-# line 269 "as.y"
-{ /* action 109 */ } break;
+# line 339 "as.y"
+{
+	/* action 109 */
+	f3fd6();
+} break;
 case 110:
-# line 270 "as.y"
-{ /* action 110 */ } break;
+# line 343 "as.y"
+{
+	/* action 110 */
+	f3e9e(g8d12);
+	stpop();
+} break;
 case 111:
-# line 271 "as.y"
-{ /* action 111 */ } break;
+# line 348 "as.y"
+{
+	/* action 111 */
+	f167a();
+} break;
 case 112:
-# line 272 "as.y"
-{ /* action 112 */ } break;
+# line 352 "as.y"
+{
+	/* action 112 */
+	labsym(yypvt[-1].u, 58);
+} break;
 case 113:
-# line 273 "as.y"
-{ /* action 113 */ } break;
+# line 356 "as.y"
+{
+	/* action 113 */
+	labsym(yypvt[-1].u, 293);
+} break;
 case 114:
-# line 274 "as.y"
+# line 360 "as.y"
 { /* action 114 */ } break;
 case 115:
-# line 275 "as.y"
+# line 361 "as.y"
 { /* action 115 */ } break;
 case 116:
-# line 276 "as.y"
+# line 362 "as.y"
 { /* action 116 */ } break;
 case 117:
-# line 277 "as.y"
+# line 363 "as.y"
 { /* action 117 */ } break;
 case 118:
-# line 278 "as.y"
+# line 364 "as.y"
 { /* action 118 */ } break;
 case 119:
-# line 279 "as.y"
+# line 365 "as.y"
 { /* action 119 */ } break;
 case 120:
-# line 280 "as.y"
+# line 366 "as.y"
 { /* action 120 */ } break;
 case 121:
-# line 281 "as.y"
+# line 367 "as.y"
 { /* action 121 */ } break;
 case 122:
-# line 282 "as.y"
+# line 368 "as.y"
 { /* action 122 */ } break;
 case 123:
-# line 283 "as.y"
+# line 369 "as.y"
 { /* action 123 */ } break;
 case 124:
-# line 284 "as.y"
+# line 370 "as.y"
 { /* action 124 */ } break;
 case 125:
-# line 285 "as.y"
-{ /* action 125 */ } break;
+# line 371 "as.y"
+{
+	/* action 125 */
+	yyval.u = exprdo(yypvt[-1].u, 42, yypvt[-0].u);
+} break;
 case 126:
-# line 286 "as.y"
-{ /* action 126 */ } break;
+# line 375 "as.y"
+{
+	/* action 126 */
+	yyval.u = yypvt[-0].u;
+} break;
 case 127:
-# line 287 "as.y"
-{ /* action 127 */ } break;
+# line 379 "as.y"
+{
+	/* action 127 */
+	opmatch(yypvt[-2].u);
+} break;
 case 128:
-# line 288 "as.y"
-{ /* action 128 */ } break;
+# line 383 "as.y"
+{
+	/* action 128 */
+	error(" error in operands ");
+} break;
 case 129:
-# line 289 "as.y"
+# line 387 "as.y"
 { /* action 129 */ } break;
 case 130:
-# line 290 "as.y"
-{ /* action 130 */ } break;
+# line 388 "as.y"
+{
+	/* action 130 */
+	oppush(yypvt[-0].u);
+} break;
 case 131:
-# line 291 "as.y"
-{ /* action 131 */ } break;
+# line 392 "as.y"
+{
+	/* action 131 */
+	yyval.u = f1938(yypvt[-0].u, 8);
+} break;
 case 132:
-# line 292 "as.y"
-{ /* action 132 */ } break;
+# line 396 "as.y"
+{
+	/* action 132 */
+	yyval.u = f1938(yypvt[-0].u, 16384);
+} break;
 case 133:
-# line 293 "as.y"
-{ /* action 133 */ } break;
+# line 400 "as.y"
+{
+	/* action 133 */
+	yyval.u = f1938(yypvt[-0].u, 8192);
+} break;
 case 134:
-# line 294 "as.y"
-{ /* action 134 */ } break;
+# line 404 "as.y"
+{
+	/* action 134 */
+	yyval.u = f1938(yypvt[-0].u, 4096);
+} break;
 case 135:
-# line 295 "as.y"
-{ /* action 135 */ } break;
+# line 408 "as.y"
+{
+	/* action 135 */
+	yyval.u = f1938(yypvt[-0].u, 4);
+} break;
 case 136:
-# line 296 "as.y"
-{ /* action 136 */ } break;
+# line 412 "as.y"
+{
+	/* action 136 */
+	yyval.u = f1938(yypvt[-0].u, 16);
+} break;
 case 137:
-# line 297 "as.y"
+# line 416 "as.y"
 { /* action 137 */ } break;
 case 138:
-# line 298 "as.y"
+# line 417 "as.y"
 { /* action 138 */ } break;
 case 139:
-# line 299 "as.y"
+# line 418 "as.y"
 { /* action 139 */ } break;
 case 140:
-# line 300 "as.y"
-{ /* action 140 */ } break;
+# line 419 "as.y"
+{
+	/* action 140 */
+	yyval.u = f1938(yypvt[-0].u, 34);
+} break;
 case 141:
-# line 301 "as.y"
-{ /* action 141 */ } break;
+# line 423 "as.y"
+{
+	/* action 141 */
+	yyval.u = f1938(yypvt[-0].u, 2112);
+} break;
 case 142:
-# line 302 "as.y"
-{ /* action 142 */ } break;
+# line 427 "as.y"
+{
+	/* action 142 */
+	yyval.u = f1938(yypvt[-0].u, 256);
+} break;
 case 143:
-# line 303 "as.y"
-{ /* action 143 */ } break;
+# line 431 "as.y"
+{
+	/* action 143 */
+	yyval.u = yypvt[-0].u;
+} break;
 case 144:
-# line 304 "as.y"
-{ /* action 144 */ } break;
+# line 435 "as.y"
+{
+	/* action 144 */
+	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 1);
+} break;
 case 145:
-# line 305 "as.y"
-{ /* action 145 */ } break;
+# line 439 "as.y"
+{
+	/* action 145 */
+	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 1024);
+} break;
 case 146:
-# line 306 "as.y"
-{ /* action 146 */ } break;
+# line 443 "as.y"
+{
+	/* action 146 */
+	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 512);
+} break;
 case 147:
-# line 307 "as.y"
-{ /* action 147 */ } break;
+# line 447 "as.y"
+{
+	/* action 147 */
+	yyval.u = exprdo(yypvt[-2].u, 60, yypvt[-0].u);
+} break;
 case 148:
-# line 308 "as.y"
-{ /* action 148 */ } break;
+# line 451 "as.y"
+{
+	/* action 148 */
+	yyval.u = exprdo(yypvt[-2].u, 62, yypvt[-0].u);
+} break;
 case 149:
-# line 309 "as.y"
-{ /* action 149 */ } break;
+# line 455 "as.y"
+{
+	/* action 149 */
+	yyval.u = exprdo(yypvt[-2].u, 61, yypvt[-0].u);
+} break;
 case 150:
-# line 310 "as.y"
-{ /* action 150 */ } break;
+# line 459 "as.y"
+{
+	/* action 150 */
+	yyval.u = exprdo(yypvt[-3].u, 15676, yypvt[-0].u);
+} break;
 case 151:
-# line 311 "as.y"
-{ /* action 151 */ } break;
+# line 463 "as.y"
+{
+	/* action 151 */
+	yyval.u = exprdo(yypvt[-3].u, 15678, yypvt[-0].u);
+} break;
 case 152:
-# line 312 "as.y"
-{ /* action 152 */ } break;
+# line 467 "as.y"
+{
+	/* action 152 */
+	yyval.u = exprdo(yypvt[-2].u, 43, yypvt[-0].u);
+} break;
 case 153:
-# line 313 "as.y"
-{ /* action 153 */ } break;
+# line 471 "as.y"
+{
+	/* action 153 */
+	yyval.u = exprdo(yypvt[-2].u, 45, yypvt[-0].u);
+} break;
 case 154:
-# line 314 "as.y"
-{ /* action 154 */ } break;
+# line 475 "as.y"
+{
+	/* action 154 */
+	yyval.u = exprdo(yypvt[-2].u, 286, yypvt[-0].u);
+} break;
 case 155:
-# line 315 "as.y"
-{ /* action 155 */ } break;
+# line 479 "as.y"
+{
+	/* action 155 */
+	yyval.u = exprdo(yypvt[-2].u, 287, yypvt[-0].u);
+} break;
 case 156:
-# line 316 "as.y"
-{ /* action 156 */ } break;
+# line 483 "as.y"
+{
+	/* action 156 */
+	yyval.u = exprdo(yypvt[-2].u, 42, yypvt[-0].u);
+} break;
 case 157:
-# line 317 "as.y"
-{ /* action 157 */ } break;
+# line 487 "as.y"
+{
+	/* action 157 */
+	yyval.u = exprdo(yypvt[-2].u, 47, yypvt[-0].u);
+} break;
 case 158:
-# line 318 "as.y"
-{ /* action 158 */ } break;
+# line 491 "as.y"
+{
+	/* action 158 */
+	yyval.u = exprdo(yypvt[-2].u, 289, yypvt[-0].u);
+} break;
 case 159:
-# line 319 "as.y"
-{ /* action 159 */ } break;
+# line 495 "as.y"
+{
+	/* action 159 */
+	yyval.u = exprdo(yypvt[-2].u, 290, yypvt[-0].u);
+} break;
 case 160:
-# line 320 "as.y"
-{ /* action 160 */ } break;
+# line 499 "as.y"
+{
+	/* action 160 */
+	yyval.u = exprdo(yypvt[-2].u, 291, yypvt[-0].u);
+} break;
 case 161:
-# line 321 "as.y"
-{ /* action 161 */ } break;
+# line 503 "as.y"
+{
+	/* action 161 */
+	yyval.u = exprdo(yypvt[-2].u, 288, yypvt[-0].u);
+} break;
 case 162:
-# line 322 "as.y"
-{ /* action 162 */ } break;
+# line 507 "as.y"
+{
+	/* action 162 */
+	yyval.u = exprdo(yypvt[-0].u, 43, 0);
+} break;
 case 163:
-# line 323 "as.y"
-{ /* action 163 */ } break;
+# line 511 "as.y"
+{
+	/* action 163 */
+	yyval.u = exprdo(yypvt[-0].u, 45, 0);
+} break;
 case 164:
-# line 324 "as.y"
-{ /* action 164 */ } break;
+# line 515 "as.y"
+{
+	/* action 164 */
+	yyval.u = exprdo(yypvt[-0].u, 292, 0);
+} break;
 case 165:
-# line 325 "as.y"
-{ /* action 165 */ } break;
+# line 519 "as.y"
+{
+	/* action 165 */
+	yyval.u = yypvt[-1].u;
+} break;
 case 166:
-# line 326 "as.y"
+# line 523 "as.y"
 { /* action 166 */ } break;
 case 167:
-# line 327 "as.y"
+# line 524 "as.y"
 { /* action 167 */ } break;
 case 168:
-# line 328 "as.y"
+# line 525 "as.y"
 { /* action 168 */ } break;
 case 169:
-# line 329 "as.y"
+# line 526 "as.y"
 { /* action 169 */ } break;
 case 170:
-# line 330 "as.y"
+# line 527 "as.y"
 { /* action 170 */ } break;
 case 171:
-# line 331 "as.y"
+# line 528 "as.y"
 { /* action 171 */ } break;
 		}
 		goto yystack;  /* stack new state and value */

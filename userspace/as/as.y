@@ -1,6 +1,6 @@
 /* as.y: yacc grammar of /usr/bin/as, RECOVERED from the parser tables (tools/userspace/as_grammatik.py).
    Rules in yyr1 order, so rule N here = rule N of the original tables = `case N` of yyparse.  Names of
-   nonterminals (ntN = yacc number N) and of unnamed tokens (TOKn) are invented; actions 1..60 filled in (W7l), 61.. are placeholders. */
+   nonterminals (ntN = yacc number N) and of unnamed tokens (TOKn) are invented; actions 1..165 filled in (W7l, W7m); 166..171 have no case in the original (default $$ = $1). */
 %{
 #define IN_AS_Y 1
 #include "as.h"
@@ -218,30 +218,85 @@ nt48	: IDENT ARRAY '[' '*' nt8 ']'	{
 	/* action 60 */
 	f404a($<u>1, $<u>5, -1);
 };
-nt48	: IDENT ARRAY '[' nt1 nt8 ']'	{ /* action 61 */ };
-nt49	: nt48 ':' '=' '['	{ /* action 62 */ };
-nt50	: nt47 ':'	{ /* action 63 */ };
-nt45	: nt50 '=' nt3	{ /* action 64 */ };
-nt45	: nt47	{ /* action 65 */ };
-nt45	: nt49 nt51 ']'	{ /* action 66 */ };
-nt45	: nt48 ':' '=' TOK302	{ /* action 67 */ };
-nt45	: nt48	{ /* action 68 */ };
+nt48	: IDENT ARRAY '[' nt1 nt8 ']'	{
+	/* action 61 */
+	f404a($<u>1, $<u>5, CELL4($<u>4));
+	((struct obj *)$<u>4)->o_t = -1;
+};
+nt49	: nt48 ':' '=' '['	{
+	/* action 62 */
+	g8d0c = 1;
+	g8d0e = 1;
+};
+nt50	: nt47 ':'	{
+	/* action 63 */
+	g8d0e = 1;
+};
+nt45	: nt50 '=' nt3	{
+	/* action 64 */
+	f3fd6();
+};
+nt45	: nt47	{
+	/* action 65 */
+	g8d0e = 1;
+	f3fd6();
+};
+nt45	: nt49 nt51 ']'	{
+	/* action 66 */
+	f3fd6();
+};
+nt45	: nt48 ':' '=' TOK302	{
+	/* action 67 */
+	f3fd6();
+};
+nt45	: nt48	{
+	/* action 68 */
+	f3fd6();
+};
 nt51	: nt52 nt3	{ /* action 69 */ };
 nt52	: nt52 nt3	{ /* action 70 */ };
 nt52	: 	{ /* action 71 */ };
-nt3	: nt1	{ /* action 72 */ };
-nt3	: '?'	{ /* action 73 */ };
-nt46	: IDENT LABEL	{ /* action 74 */ };
-nt42	: nt12 nt53 END IDENT	{ /* action 75 */ };
-nt12	: nt11 nt54 nt55 ENTRY	{ /* action 76 */ };
-nt11	: IDENT PROCEDURE	{ /* action 77 */ };
+nt3	: nt1	{
+	/* action 72 */
+	$<u>$ = f40a4($<u>1);
+};
+nt3	: '?'	{
+	/* action 73 */
+	$<u>$ = f40a4(0);
+};
+nt46	: IDENT LABEL	{
+	/* action 74 */
+	f43ae($<u>1);
+};
+nt42	: nt12 nt53 END IDENT	{
+	/* action 75 */
+	f19da($<u>1, $<u>4);
+};
+nt12	: nt11 nt54 nt55 ENTRY	{
+	/* action 76 */
+	$<u>$ = f4372($<u>1);
+};
+nt11	: IDENT PROCEDURE	{
+	/* action 77 */
+	$<u>$ = f1a1e($<u>1);
+};
 nt55	: 	{ /* action 78 */ };
 nt55	: nt55 nt56	{ /* action 79 */ };
 nt54	: 	{ /* action 80 */ };
 nt54	: nt54 nt57	{ /* action 81 */ };
-nt57	: TOK297 ':'	{ /* action 82 */ };
-nt56	: nt58 nt59	{ /* action 83 */ };
-nt58	: LOCAL	{ /* action 84 */ };
+nt57	: TOK297 ':'	{
+	/* action 82 */
+	nodeset($<u>1, 0, 0);
+};
+nt56	: nt58 nt59	{
+	/* action 83 */
+	g8d0e = 0;
+};
+nt58	: LOCAL	{
+	/* action 84 */
+	g8d10 = 1;
+	g8d0e = 1;
+};
 nt59	: 	{ /* action 85 */ };
 nt59	: nt59 nt41	{ /* action 86 */ };
 nt53	: 	{ /* action 87 */ };
@@ -261,16 +316,47 @@ nt60	: nt56	{ /* action 100 */ };
 nt60	: nt44	{ /* action 101 */ };
 nt60	: nt69	{ /* action 102 */ };
 nt60	: error	{ /* action 103 */ };
-nt69	: TOK297 ':' '=' IDENT	{ /* action 104 */ };
-nt69	: TOK297 ':' '=' nt1	{ /* action 105 */ };
-nt69	: TOK297 ':' '=' TOK294	{ /* action 106 */ };
-nt68	: nt70 nt19 CODEDIR TOK315	{ /* action 107 */ };
-nt70	: DATADIR TOK315	{ /* action 108 */ };
-nt44	: INITKW nt51 TOK315	{ /* action 109 */ };
-nt62	: nt71 nt53 OD	{ /* action 110 */ };
-nt71	: DO	{ /* action 111 */ };
-nt61	: IDENT ':'	{ /* action 112 */ };
-nt61	: '$' NUMBER ':'	{ /* action 113 */ };
+nt69	: TOK297 ':' '=' IDENT	{
+	/* action 104 */
+	nodeset($<u>1, 1, $<u>4);
+};
+nt69	: TOK297 ':' '=' nt1	{
+	/* action 105 */
+	nodeset($<u>1, 2, $<u>4);
+};
+nt69	: TOK297 ':' '=' TOK294	{
+	/* action 106 */
+	nodeset($<u>1, 3, $<u>4);
+};
+nt68	: nt70 nt19 CODEDIR TOK315	{
+	/* action 107 */
+	dirclr();
+};
+nt70	: DATADIR TOK315	{
+	/* action 108 */
+	dirset();
+};
+nt44	: INITKW nt51 TOK315	{
+	/* action 109 */
+	f3fd6();
+};
+nt62	: nt71 nt53 OD	{
+	/* action 110 */
+	f3e9e(g8d12);
+	stpop();
+};
+nt71	: DO	{
+	/* action 111 */
+	f167a();
+};
+nt61	: IDENT ':'	{
+	/* action 112 */
+	labsym($<u>1, 58);
+};
+nt61	: '$' NUMBER ':'	{
+	/* action 113 */
+	labsym($<u>2, 293);
+};
 nt63	: EXIT nt72	{ /* action 114 */ };
 nt64	: REPEAT nt72	{ /* action 115 */ };
 nt72	: 	{ /* action 116 */ };
@@ -282,47 +368,158 @@ nt66	: IF nt75 CASE nt1 THEN nt53 nt74 FI	{ /* action 121 */ };
 nt74	: 	{ /* action 122 */ };
 nt74	: ELSE nt53	{ /* action 123 */ };
 nt75	: TOK294	{ /* action 124 */ };
-nt2	: nt2 nt1	{ /* action 125 */ };
-nt2	: nt1	{ /* action 126 */ };
-nt67	: TOK305 nt76 TOK315	{ /* action 127 */ };
-nt67	: TOK305 error TOK315	{ /* action 128 */ };
+nt2	: nt2 nt1	{
+	/* action 125 */
+	$<u>$ = exprdo($<u>1, 42, $<u>2);
+};
+nt2	: nt1	{
+	/* action 126 */
+	$<u>$ = $<u>1;
+};
+nt67	: TOK305 nt76 TOK315	{
+	/* action 127 */
+	opmatch($<u>1);
+};
+nt67	: TOK305 error TOK315	{
+	/* action 128 */
+	error(" error in operands ");
+};
 nt76	: 	{ /* action 129 */ };
-nt76	: nt76 nt4	{ /* action 130 */ };
-nt4	: TOK294	{ /* action 131 */ };
-nt4	: TOK311	{ /* action 132 */ };
-nt4	: CTLREG	{ /* action 133 */ };
-nt4	: FPFLAG	{ /* action 134 */ };
-nt4	: '@' TOK294	{ /* action 135 */ };
-nt4	: '#' nt1	{ /* action 136 */ };
+nt76	: nt76 nt4	{
+	/* action 130 */
+	oppush($<u>2);
+};
+nt4	: TOK294	{
+	/* action 131 */
+	$<u>$ = f1938($<u>1, 8);
+};
+nt4	: TOK311	{
+	/* action 132 */
+	$<u>$ = f1938($<u>1, 16384);
+};
+nt4	: CTLREG	{
+	/* action 133 */
+	$<u>$ = f1938($<u>1, 8192);
+};
+nt4	: FPFLAG	{
+	/* action 134 */
+	$<u>$ = f1938($<u>1, 4096);
+};
+nt4	: '@' TOK294	{
+	/* action 135 */
+	$<u>$ = f1938($<u>2, 4);
+};
+nt4	: '#' nt1	{
+	/* action 136 */
+	$<u>$ = f1938($<u>2, 16);
+};
 nt4	: nt14	{ /* action 137 */ };
 nt4	: nt15	{ /* action 138 */ };
 nt4	: nt16	{ /* action 139 */ };
-nt4	: nt1	{ /* action 140 */ };
-nt4	: nt17	{ /* action 141 */ };
-nt4	: VIFLAG	{ /* action 142 */ };
-nt13	: '#' nt1	{ /* action 143 */ };
-nt14	: nt1 '(' TOK294 ')'	{ /* action 144 */ };
-nt15	: TOK294 '(' nt13 ')'	{ /* action 145 */ };
-nt16	: TOK294 '(' TOK294 ')'	{ /* action 146 */ };
-nt1	: nt1 '<' nt1	{ /* action 147 */ };
-nt1	: nt1 '>' nt1	{ /* action 148 */ };
-nt1	: nt1 '=' nt1	{ /* action 149 */ };
-nt1	: nt1 '<' '=' nt1	{ /* action 150 */ };
-nt1	: nt1 '>' '=' nt1	{ /* action 151 */ };
-nt1	: nt1 '+' nt1	{ /* action 152 */ };
-nt1	: nt1 '-' nt1	{ /* action 153 */ };
-nt1	: nt1 LOR nt1	{ /* action 154 */ };
-nt1	: nt1 LXOR nt1	{ /* action 155 */ };
-nt1	: nt1 '*' nt1	{ /* action 156 */ };
-nt1	: nt1 '/' nt1	{ /* action 157 */ };
-nt1	: nt1 MOD nt1	{ /* action 158 */ };
-nt1	: nt1 SHL nt1	{ /* action 159 */ };
-nt1	: nt1 SHR nt1	{ /* action 160 */ };
-nt1	: nt1 LAND nt1	{ /* action 161 */ };
-nt1	: '+' nt1 %prec LNOT	{ /* action 162 */ };
-nt1	: '-' nt1 %prec LNOT	{ /* action 163 */ };
-nt1	: LNOT nt1	{ /* action 164 */ };
-nt1	: '(' nt1 ')'	{ /* action 165 */ };
+nt4	: nt1	{
+	/* action 140 */
+	$<u>$ = f1938($<u>1, 34);
+};
+nt4	: nt17	{
+	/* action 141 */
+	$<u>$ = f1938($<u>1, 2112);
+};
+nt4	: VIFLAG	{
+	/* action 142 */
+	$<u>$ = f1938($<u>1, 256);
+};
+nt13	: '#' nt1	{
+	/* action 143 */
+	$<u>$ = $<u>2;
+};
+nt14	: nt1 '(' TOK294 ')'	{
+	/* action 144 */
+	$<u>$ = f1ab6($<u>1, $<u>3, 1);
+};
+nt15	: TOK294 '(' nt13 ')'	{
+	/* action 145 */
+	$<u>$ = f1ab6($<u>1, $<u>3, 1024);
+};
+nt16	: TOK294 '(' TOK294 ')'	{
+	/* action 146 */
+	$<u>$ = f1ab6($<u>1, $<u>3, 512);
+};
+nt1	: nt1 '<' nt1	{
+	/* action 147 */
+	$<u>$ = exprdo($<u>1, 60, $<u>3);
+};
+nt1	: nt1 '>' nt1	{
+	/* action 148 */
+	$<u>$ = exprdo($<u>1, 62, $<u>3);
+};
+nt1	: nt1 '=' nt1	{
+	/* action 149 */
+	$<u>$ = exprdo($<u>1, 61, $<u>3);
+};
+nt1	: nt1 '<' '=' nt1	{
+	/* action 150 */
+	$<u>$ = exprdo($<u>1, 15676, $<u>4);
+};
+nt1	: nt1 '>' '=' nt1	{
+	/* action 151 */
+	$<u>$ = exprdo($<u>1, 15678, $<u>4);
+};
+nt1	: nt1 '+' nt1	{
+	/* action 152 */
+	$<u>$ = exprdo($<u>1, 43, $<u>3);
+};
+nt1	: nt1 '-' nt1	{
+	/* action 153 */
+	$<u>$ = exprdo($<u>1, 45, $<u>3);
+};
+nt1	: nt1 LOR nt1	{
+	/* action 154 */
+	$<u>$ = exprdo($<u>1, 286, $<u>3);
+};
+nt1	: nt1 LXOR nt1	{
+	/* action 155 */
+	$<u>$ = exprdo($<u>1, 287, $<u>3);
+};
+nt1	: nt1 '*' nt1	{
+	/* action 156 */
+	$<u>$ = exprdo($<u>1, 42, $<u>3);
+};
+nt1	: nt1 '/' nt1	{
+	/* action 157 */
+	$<u>$ = exprdo($<u>1, 47, $<u>3);
+};
+nt1	: nt1 MOD nt1	{
+	/* action 158 */
+	$<u>$ = exprdo($<u>1, 289, $<u>3);
+};
+nt1	: nt1 SHL nt1	{
+	/* action 159 */
+	$<u>$ = exprdo($<u>1, 290, $<u>3);
+};
+nt1	: nt1 SHR nt1	{
+	/* action 160 */
+	$<u>$ = exprdo($<u>1, 291, $<u>3);
+};
+nt1	: nt1 LAND nt1	{
+	/* action 161 */
+	$<u>$ = exprdo($<u>1, 288, $<u>3);
+};
+nt1	: '+' nt1 %prec LNOT	{
+	/* action 162 */
+	$<u>$ = exprdo($<u>2, 43, 0);
+};
+nt1	: '-' nt1 %prec LNOT	{
+	/* action 163 */
+	$<u>$ = exprdo($<u>2, 45, 0);
+};
+nt1	: LNOT nt1	{
+	/* action 164 */
+	$<u>$ = exprdo($<u>2, 292, 0);
+};
+nt1	: '(' nt1 ')'	{
+	/* action 165 */
+	$<u>$ = $<u>2;
+};
 nt1	: SIZEOF '(' IDENT ')'	{ /* action 166 */ };
 nt1	: NUMBER	{ /* action 167 */ };
 nt1	: TOK314	{ /* action 168 */ };
