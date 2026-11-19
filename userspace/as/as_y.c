@@ -449,7 +449,7 @@ case 2:
 {
 	/* action 2 */
 	yyval.u = yypvt[-1].u;
-	f2e38(yypvt[-1].u);
+	passini(yypvt[-1].u);
 } break;
 case 3:
 # line 82 "as.y"
@@ -545,7 +545,7 @@ case 28:
 # line 122 "as.y"
 {
 	/* action 28 */
-	f2dac(yypvt[-1].u, yypvt[-0].u);
+	setcon(yypvt[-1].u, yypvt[-0].u);
 	g8d08 = 0;
 } break;
 case 29:
@@ -586,7 +586,7 @@ case 34:
 # line 151 "as.y"
 {
 	/* action 34 */
-	f2dcc(yypvt[-1].u, yypvt[-0].u);
+	symdef(yypvt[-1].u, yypvt[-0].u);
 } break;
 case 35:
 # line 155 "as.y"
@@ -788,7 +788,7 @@ case 75:
 # line 271 "as.y"
 {
 	/* action 75 */
-	f19da(yypvt[-3].u, yypvt[-0].u);
+	endproc(yypvt[-3].u, yypvt[-0].u);
 } break;
 case 76:
 # line 275 "as.y"
@@ -800,7 +800,7 @@ case 77:
 # line 279 "as.y"
 {
 	/* action 77 */
-	yyval.u = f1a1e(yypvt[-1].u);
+	yyval.u = procnam(yypvt[-1].u);
 } break;
 case 78:
 # line 283 "as.y"
@@ -937,7 +937,7 @@ case 111:
 # line 348 "as.y"
 {
 	/* action 111 */
-	f167a();
+	mklabs();
 } break;
 case 112:
 # line 352 "as.y"
@@ -1021,37 +1021,37 @@ case 131:
 # line 392 "as.y"
 {
 	/* action 131 */
-	yyval.u = f1938(yypvt[-0].u, 8);
+	yyval.u = mkopnd(yypvt[-0].u, 8);
 } break;
 case 132:
 # line 396 "as.y"
 {
 	/* action 132 */
-	yyval.u = f1938(yypvt[-0].u, 16384);
+	yyval.u = mkopnd(yypvt[-0].u, 16384);
 } break;
 case 133:
 # line 400 "as.y"
 {
 	/* action 133 */
-	yyval.u = f1938(yypvt[-0].u, 8192);
+	yyval.u = mkopnd(yypvt[-0].u, 8192);
 } break;
 case 134:
 # line 404 "as.y"
 {
 	/* action 134 */
-	yyval.u = f1938(yypvt[-0].u, 4096);
+	yyval.u = mkopnd(yypvt[-0].u, 4096);
 } break;
 case 135:
 # line 408 "as.y"
 {
 	/* action 135 */
-	yyval.u = f1938(yypvt[-0].u, 4);
+	yyval.u = mkopnd(yypvt[-0].u, 4);
 } break;
 case 136:
 # line 412 "as.y"
 {
 	/* action 136 */
-	yyval.u = f1938(yypvt[-0].u, 16);
+	yyval.u = mkopnd(yypvt[-0].u, 16);
 } break;
 case 137:
 # line 416 "as.y"
@@ -1066,19 +1066,19 @@ case 140:
 # line 419 "as.y"
 {
 	/* action 140 */
-	yyval.u = f1938(yypvt[-0].u, 34);
+	yyval.u = mkopnd(yypvt[-0].u, 34);
 } break;
 case 141:
 # line 423 "as.y"
 {
 	/* action 141 */
-	yyval.u = f1938(yypvt[-0].u, 2112);
+	yyval.u = mkopnd(yypvt[-0].u, 2112);
 } break;
 case 142:
 # line 427 "as.y"
 {
 	/* action 142 */
-	yyval.u = f1938(yypvt[-0].u, 256);
+	yyval.u = mkopnd(yypvt[-0].u, 256);
 } break;
 case 143:
 # line 431 "as.y"
@@ -1090,19 +1090,19 @@ case 144:
 # line 435 "as.y"
 {
 	/* action 144 */
-	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 1);
+	yyval.u = mkpair(yypvt[-3].u, yypvt[-1].u, 1);
 } break;
 case 145:
 # line 439 "as.y"
 {
 	/* action 145 */
-	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 1024);
+	yyval.u = mkpair(yypvt[-3].u, yypvt[-1].u, 1024);
 } break;
 case 146:
 # line 443 "as.y"
 {
 	/* action 146 */
-	yyval.u = f1ab6(yypvt[-3].u, yypvt[-1].u, 512);
+	yyval.u = mkpair(yypvt[-3].u, yypvt[-1].u, 512);
 } break;
 case 147:
 # line 447 "as.y"

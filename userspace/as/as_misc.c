@@ -2,10 +2,15 @@
    Functions marked TEMPORARY STUB only make the program link; real code: doc/userspace/wk_w7c.md. */
 #include "as.h"
 
-/* TEMPORARY STUB for the function at 167A (original 167A) */
-f167a()
+/* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
+/* mklabs (original 167A): saves the parser state (stpush) and opens two generic labels: g90cc = first, g8d12 = second
+   (the stub f3e9e gets the first one) */
+mklabs()
 {
-	return (0);
+	stpush();
+	g90cc = getlab();
+	g8d12 = getlab();
+	f3e9e(g90cc);
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
@@ -157,40 +162,130 @@ int *p;
 	g90de++;
 }
 
-/* TEMPORARY STUB for the function at 1938 (original 1938) */
-f1938()
+/* mkopnd (original 1938): operand cell for the value A with the type mask M.  M = 16 or 34: A already is a cell, only its type
+   is set.  Else a new cell (value A, type M); for M = 2112 with an operand of the kind 0x800 A becomes 1 << A, and for M = 256
+   or such a 2112 an open operand of the same type on the operand stack (g90b0) is merged: its value gets A or-ed in. */
+mkopnd(a, m)
+register int a;
+register int m;
 {
-	return (0);
+	register struct obj *r11;
+	register struct obj *r10;
+
+	if (m == 16 || m == 34) {
+		r10 = (struct obj *)a;
+		r10->o_t = m;
+		return (a);
+	}
+	r10 = getobj();
+	r10->o_val = a;
+	r10->o_t = m;
+	switch (m) {
+	case 2112:
+		if (((int *)g90e0)[2] != 2048 && ((int *)g90e0)[3] != 2048)
+			break;
+		a = 1 << a;
+		r10->o_val = a;
+	case 256:
+		if (g90de != 0) {
+			r11 = (struct obj *)g90b0[g90de - 1];
+			if (r11->o_t == m) {
+				r11->o_val |= a;
+				g90de--;
+				return ((int)r11);
+			}
+		}
+	}
+	return ((int)r10);
 }
 
-/* TEMPORARY STUB for the function at 19DA (original 19DA) */
-f19da()
+/* endproc (original 19DA): end of a procedure: the names A and B must agree; in pass 1 the local area stack gets the
+   symbol table end (lapush) and the low area limit is set to it; then section 3 */
+endproc(a, b)
+int a, b;
 {
-	return (0);
+	int t1, t2;	/* unused: the original frame has 4 bytes of locals */
+
+	if (a != b)
+		error("wrong END of procedure");
+	if (pass == 0) {
+		lapush(symend);
+		symlim = symend;
+	}
+	secsel(3);
+	g8d10 = 0;
 }
 
-/* TEMPORARY STUB for the function at 1A1E (original 1A1E) */
-f1a1e()
+/* procnam (original 1A1E): after a procedure heading: d831e = g8d0e = 0; type 32 marks the cell A (bit 5);
+   otherwise in pass 2 the symbol table end comes back from the local area stack.  Returns A */
+procnam(a)
+int *a;
 {
-	return (0);
+	g8d0e = d831e = 0;
+	if (g8d06 == 32) {
+		*a |= 32;
+		return ((int)a);
+	}
+	if (pass == 1)
+		symend = (char *)lapop();
+	return ((int)a);
 }
 
-/* TEMPORARY STUB for the function at 1A54 (original 1A54) */
-f1a54()
+/* lapush (original 1A54): push the word V on the local area stack bufp2 (limit 100 entries) */
+lapush(v)
+int v;
 {
-	return (0);
+	if (g90c6 > 100) {
+		error("too many local areas");
+		return;
+	}
+	((int *)bufp2)[g90c6++] = v;
 }
 
-/* TEMPORARY STUB for the function at 1A86 (original 1A86) */
-f1a86()
+/* lapop (original 1A86): the counterpart of lapush.  The original advances the index here too (g90c6++, not --) and so
+   reads the entry above; kept as measured */
+lapop()
 {
-	return (0);
+	if (g90c6 > 100) {
+		error("too many local areas");
+		return;
+	}
+	return (((int *)bufp2)[g90c6++]);
 }
 
-/* TEMPORARY STUB for the function at 1AB6 (original 1AB6) */
-f1ab6()
+/* mkpair (original 1AB6): operand cell with a base A and an index B.  M = 1: A is the cell, B the index; 1024: B is the
+   cell, A the index; 512: new cell with the value A, B the index.  The cell gets the type M and the value
+   (low word of the old value) | (index << 16).  Other M: fatal error. */
+mkpair(a, b, m)
+register int a;
+register int b;
+register int m;
 {
-	return (0);
+	register int r10;
+	register struct obj *r9;
+
+	switch (m) {
+	case 1:
+		r9 = (struct obj *)a;
+		r10 = b;
+		break;
+	case 512:
+		r9 = getobj();
+		r9->o_val = a;
+		r10 = b;
+		break;
+	case 1024:
+		r9 = (struct obj *)b;
+		r10 = a;
+		break;
+	default:
+		prmsg("fatal error: opxba: wrong =Q= ");
+		fatal();
+	}
+	r9->o_t = m;
+	r9->o_val = r9->o_val & 65535L;
+	r9->o_val |= (long)r10 << 16;
+	return ((int)r9);
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
@@ -240,8 +335,13 @@ register int m;
 	return (w);
 }
 
-/* TEMPORARY STUB for the function at 1BDA (original 1BDA) */
-f1bda()
+/* lstflush (original 1BDA): pass 2 listing: when the line buffer holds text, terminate it and write it with the line
+   number to the listing file */
+lstflush()
 {
-	return (0);
+	if (lptr != lbuf) {
+		*lptr = 0;
+		lptr = lbuf;
+		fprintf(lstfile, "\t\t%05d  %s\n", yylineno, lbuf);
+	}
 }

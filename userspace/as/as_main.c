@@ -136,7 +136,7 @@ char **argv;
 				exit(1);
 			}
 			errfile = lstfile;
-			f1bda();
+			lstflush();
 			fprintf(lstfile, "\nPLZ/ASM  -  ASSEMBLER\t\tV 1.0\t%s\n", argv[-1]);
 		}
 	}
@@ -160,8 +160,15 @@ defla()
 	error("defla not implemented");
 }
 
-/* TEMPORARY STUB for the function at 35FE (original 35FE) */
-f35fe()
+/* Not V7: reconstructed from the MUTOS binary.  Name is *Annahme*. */
+/* valobj (original 35FE): restore the parser state (stpop); a new cell with the (unsigned) word at +4 of A as value */
+valobj(a)
+register unsigned *a;
 {
-	return (0);
+	register struct obj *r12;
+
+	stpop();
+	r12 = getobj();
+	r12->o_val = a[2];
+	return ((int)r12);
 }

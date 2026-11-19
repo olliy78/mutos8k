@@ -77,7 +77,7 @@ nt18	: nt5 nt19 END IDENT	{
 nt5	: IDENT MODULE	{
 	/* action 2 */
 	$<u>$ = $<u>1;
-	f2e38($<u>1);
+	passini($<u>1);
 };
 nt19	: 	{ /* action 3 */ };
 nt19	: nt19 nt20	{ /* action 4 */ };
@@ -121,7 +121,7 @@ nt36	: EXTERNAL	{
 };
 nt29	: nt6 TOK296	{
 	/* action 28 */
-	f2dac($<u>1, $<u>2);
+	setcon($<u>1, $<u>2);
 	g8d08 = 0;
 };
 nt6	: IDENT ':' '='	{
@@ -150,7 +150,7 @@ nt26	: SECDIR error TOK315	{
 };
 nt32	: IDENT nt7	{
 	/* action 34 */
-	f2dcc($<u>1, $<u>2);
+	symdef($<u>1, $<u>2);
 };
 nt32	: nt26	{ /* action 35 */ };
 nt7	: nt8	{
@@ -270,7 +270,7 @@ nt46	: IDENT LABEL	{
 };
 nt42	: nt12 nt53 END IDENT	{
 	/* action 75 */
-	f19da($<u>1, $<u>4);
+	endproc($<u>1, $<u>4);
 };
 nt12	: nt11 nt54 nt55 ENTRY	{
 	/* action 76 */
@@ -278,7 +278,7 @@ nt12	: nt11 nt54 nt55 ENTRY	{
 };
 nt11	: IDENT PROCEDURE	{
 	/* action 77 */
-	$<u>$ = f1a1e($<u>1);
+	$<u>$ = procnam($<u>1);
 };
 nt55	: 	{ /* action 78 */ };
 nt55	: nt55 nt56	{ /* action 79 */ };
@@ -347,7 +347,7 @@ nt62	: nt71 nt53 OD	{
 };
 nt71	: DO	{
 	/* action 111 */
-	f167a();
+	mklabs();
 };
 nt61	: IDENT ':'	{
 	/* action 112 */
@@ -391,42 +391,42 @@ nt76	: nt76 nt4	{
 };
 nt4	: TOK294	{
 	/* action 131 */
-	$<u>$ = f1938($<u>1, 8);
+	$<u>$ = mkopnd($<u>1, 8);
 };
 nt4	: TOK311	{
 	/* action 132 */
-	$<u>$ = f1938($<u>1, 16384);
+	$<u>$ = mkopnd($<u>1, 16384);
 };
 nt4	: CTLREG	{
 	/* action 133 */
-	$<u>$ = f1938($<u>1, 8192);
+	$<u>$ = mkopnd($<u>1, 8192);
 };
 nt4	: FPFLAG	{
 	/* action 134 */
-	$<u>$ = f1938($<u>1, 4096);
+	$<u>$ = mkopnd($<u>1, 4096);
 };
 nt4	: '@' TOK294	{
 	/* action 135 */
-	$<u>$ = f1938($<u>2, 4);
+	$<u>$ = mkopnd($<u>2, 4);
 };
 nt4	: '#' nt1	{
 	/* action 136 */
-	$<u>$ = f1938($<u>2, 16);
+	$<u>$ = mkopnd($<u>2, 16);
 };
 nt4	: nt14	{ /* action 137 */ };
 nt4	: nt15	{ /* action 138 */ };
 nt4	: nt16	{ /* action 139 */ };
 nt4	: nt1	{
 	/* action 140 */
-	$<u>$ = f1938($<u>1, 34);
+	$<u>$ = mkopnd($<u>1, 34);
 };
 nt4	: nt17	{
 	/* action 141 */
-	$<u>$ = f1938($<u>1, 2112);
+	$<u>$ = mkopnd($<u>1, 2112);
 };
 nt4	: VIFLAG	{
 	/* action 142 */
-	$<u>$ = f1938($<u>1, 256);
+	$<u>$ = mkopnd($<u>1, 256);
 };
 nt13	: '#' nt1	{
 	/* action 143 */
@@ -434,15 +434,15 @@ nt13	: '#' nt1	{
 };
 nt14	: nt1 '(' TOK294 ')'	{
 	/* action 144 */
-	$<u>$ = f1ab6($<u>1, $<u>3, 1);
+	$<u>$ = mkpair($<u>1, $<u>3, 1);
 };
 nt15	: TOK294 '(' nt13 ')'	{
 	/* action 145 */
-	$<u>$ = f1ab6($<u>1, $<u>3, 1024);
+	$<u>$ = mkpair($<u>1, $<u>3, 1024);
 };
 nt16	: TOK294 '(' TOK294 ')'	{
 	/* action 146 */
-	$<u>$ = f1ab6($<u>1, $<u>3, 512);
+	$<u>$ = mkpair($<u>1, $<u>3, 512);
 };
 nt1	: nt1 '<' nt1	{
 	/* action 147 */
