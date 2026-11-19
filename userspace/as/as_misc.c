@@ -87,7 +87,7 @@ next:
 			r = g90b0[i];
 			*r = g90d2[i];
 		}
-		f1c0c(mp);
+		encode(mp);
 		return;
 	}
 }
