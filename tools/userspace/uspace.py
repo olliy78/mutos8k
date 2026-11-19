@@ -309,6 +309,11 @@ def stufen_befehl(name, lib, nur_s):
     return [";".join(x) for x in (a, b, c) if x]
 
 
+class Module(dict):
+    """{file: text} of a multi-file program in link order; `noopt` = names of the files compiled without -O (link.txt marker)."""
+    noopt = frozenset()
+
+
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
                log=print, libs=()):
     """varianten: {name: source text (str/bytes)}.  Each variant = its own emulator session (copies of the disks,
@@ -366,8 +371,12 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         cfl = flags.replace("-s", "").strip()
         befehle = []
         rueck = [name, name + ".err"]
+        ohne = getattr(dateien, "noopt", frozenset())     # modules without -O: same flags minus -O
+
+        def cfl_von(f):
+            return " ".join(x for x in cfl.split() if x != "-O") if f in ohne else cfl
         for f in cs:
-            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl if f.endswith(".c") else "", f, name))
+            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl_von(f) if f.endswith(".c") else "", f, name))
         lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
         # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
         befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
@@ -389,7 +398,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             for gi, grp in enumerate(gruppen):
                 qs = {f: dateien[f] for f in dateien}
                 qs.update(kopfdateien)
-                bs = ["cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl, f, name) for f in grp]
+                bs = ["cd /tmp;cc %s -S -I/mnt /mnt/%s >>%s.err2 2>&1;cd /mnt" % (cfl_von(f), f, name) for f in grp]
                 rs = [f[:-2] + ".s" for f in grp] + [name + ".err2"]
                 rr = gast_as.gast_befehle(os.path.join(arbeit, "%s_s%d" % (name, gi)), qs, bs, rs, frist=frist, ausgabe={})
                 for f in grp:
