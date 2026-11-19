@@ -53,8 +53,7 @@ int fd_o, fd_q;				/* 927A, 927C */
 char numcls[8];				/* 927E */
 int errcount, g9288, cflag;		/* 9286, 9288, 928A */
 char *oname;				/* 928C */
-char symtab[13584];			/* 928E..C79E */
-char gc79e[616];			/* C79E..CA06 */
+char symtab[13584 + 616];		/* 928E..CA06: symbol cells 928E..C79E, then the constant pool gc79e (C79E..CA06, see as.h) */
 char *gca06;				/* CA06: fill pointer of the constant pool gc79e (cpool) */
 char *curname;				/* CA08 (error() pushes it as the module name) */
 struct sect sectab[8];			/* CA0A..CA6A: 12-byte section records (cp_o/cp_q/cp_p/cp_r are fields of it, see as.h) */

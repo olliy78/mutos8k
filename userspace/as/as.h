@@ -67,7 +67,9 @@ extern struct obf obtab[];
 extern char gca82[], gcaaa[], gcafa[];
 extern int g90de, g90c4, g90c6;
 extern int gca70, gca72, gca74, gca76;
-extern char gc79e[];
+/* W7p: gc79e (constant pool, 616 B) must directly follow symtab: symend = symlim = gc79e is the end of symtab (symtab + 13584).
+   As a separate array the linker placed it BEFORE symtab (bss order) -> every symadd() hit 'symbol table overflow'. */
+#define gc79e (symtab + 13584)
 extern int *g90b0[];
 extern int g90d2[];
 extern int *g90e2;
