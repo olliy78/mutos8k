@@ -142,6 +142,11 @@ rmove()
 					r1 -= 2;
 				else
 					goto dflt;
+/* c2x -xpush (W10f): -DXPUSH keeps `inc SP,#n+2 ; push` unmerged unless the inc vanishes (r1 == 0); never defined in the byte-identical c2 */
+#ifdef XPUSH
+				if (r1 != 0)
+					goto dflt;
+#endif
 				if (r1 == 0)
 					delnode(p);
 				else
