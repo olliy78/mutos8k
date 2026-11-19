@@ -28,7 +28,7 @@ extern char *oname, *curname;
 extern char numcls[];		/* 8 B */
 extern int fd_o, fd_p, fd_q, fd_r, fd_s;
 /* 12-byte section record, original table CA0A (8 records; W7h, measured from secsave/secsel/outbyte) */
-struct sect { int se_pc; int se_a; int se_b; int se_c; int se_d; int se_e; };
+struct sect { unsigned se_pc; int se_a; int se_b; int se_c; int se_d; int se_e; };
 extern struct sect sectab[];
 #define cp_o sectab[2].se_a
 #define cp_q sectab[2].se_b
@@ -71,6 +71,7 @@ extern char gc79e[];
 extern int *g90b0[];
 extern int g90d2[];
 extern int *g90e2;
+extern int *gccb8;
 
 /* encoder (W7j): the mnemonic entry as the encoder 1C0C sees it: class byte +2, operand count +3, template word +12 */
 struct mncl { char *mc_name; char mc_cls; char mc_cnt; int mc_w[5]; };

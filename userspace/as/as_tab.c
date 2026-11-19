@@ -71,7 +71,8 @@ char *bufp4;				/* CC20 */
 char lname[20];				/* CC22 */
 int gcc36;
 char ucbuf[128];
-int gccb8, gccba;
+int *gccb8;
+int gccba;
 char gccbc[50];
 /* CCEE: the libc BSS starts here (measured: environ D0EE = CCEE + 400h as in the build; LD R2,#CCEE = a libc buffer) */
 
@@ -162,16 +163,64 @@ int ind;
 	return (0);
 }
 
-/* TEMPORARY STUB for the function at 459C (original 459C) */
-f459c()
+/* hashini (original 459C): enters the mnemonics (not the names starting with '#'), the keywords and both condition tables
+   into the hash table (hashins, IND = 1) */
+hashini()
 {
-	return (0);
+	register struct kwent *kp;
+	register struct mnent *mp;
+	register struct ctent *cp;
+
+	for (mp = mnem; *mp->m_name; mp++)
+		if (*mp->m_name != '#')
+			hashins(mp, 1);
+	for (kp = kwtab; *kp->k_name; kp++)
+		hashins(kp, 1);
+	for (cp = ctab1; *cp->c_name; cp++)
+		hashins(cp, 1);
+	for (cp = ctab2; *cp->c_name; cp++)
+		hashins(cp, 1);
 }
 
-/* TEMPORARY STUB for the function at 4628 (original 4628) */
-f4628()
+/* hashins (original 4628): enters the entry P into the hash table (counterpart of hashfind; same hash, step 32 backwards
+   on collisions; more than 1601 steps: message and fatal) */
+hashins(p, ind)
+int *p;
+int ind;
 {
-	return (0);
+	register int h;
+	register char *s;
+	register int c;
+	register int n;
+
+	n = 0;
+	if (ind)
+		s = (char *)*p;
+	else
+		s = (char *)p + 8;
+	h = *s++;
+	c = *s++;
+	if (c) {
+		h <<= 4;
+		h = h + c;
+		c = *s++;
+		if (c) {
+			h <<= 4;
+			h = h + c;
+		}
+	}
+	h = h % 1601;
+	while (h < 0)
+		h += 1601;
+	while (((int *)bufp1)[h]) {
+		if ((h -= 32) < 0)
+			h += 1601;
+		if (++n >= 1601) {
+			prmsg("fatal error: HASHSZ too small \n");
+			fatal();
+		}
+	}
+	((int *)bufp1)[h] = (int)p;
 }
 
 /* Not V7: reconstructed from the MUTOS binary.  Names are *Annahme*. */
@@ -287,7 +336,7 @@ register int n;
 		;
 	sp->s_w = -1;
 	if (n == 6)
-		f4628(sp, 0);
+		hashins(sp, 0);
 	return ((int)sp);
 }
 
