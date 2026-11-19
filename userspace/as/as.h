@@ -30,3 +30,20 @@ extern int fd_o, fd_p, fd_q, fd_r, fd_s, cp_o, cp_q, cp_p, cp_r;
 extern char *bufp1, *bufp2, *bufp3, *bufp4;
 extern char area3[], area4[], lname[];
 extern char symtab[];		/* 13584 B = 849 entries of 16 B (Annahme: symbol table) */
+
+/* scanner data (W7f, names by original address = Annahme) */
+struct obj { int o_t; long o_val; int o_ref; int o_x; };	/* 10 B scanner value cell, original table 904C */
+struct sym { int s_t; unsigned s_v; int s_w; };	/* symbol/keyword entry as the scanner sees it (Annahme) */
+extern struct obj objtab[10];
+extern struct obj *getobj();
+extern char yytext[];		/* 200 B, original 8E76 */
+extern int yyleng;		/* original 8F3E */
+extern int cls[];		/* character class table, 128 words, original 8F42 */
+extern int g8d06, g8d08, g8d0c, g8d0e, g8d10, g8d22;	/* flags set by the parser actions (Annahme) */
+extern unsigned g9046;
+extern int g9042, g9044, g9048, g904a;		/* scanner state words (Annahme) */
+extern int yylval;		/* defined by the yacc output (union of one int) */
+
+/* lex frame unput(c) with the pass-2 listing capture, as it is inlined in the binary */
+#define UNPUT(c) { yytchar = (c); if (yytchar == '\n') yylineno--; *yysptr++ = yytchar; \
+	if (pass == 1 && lflag) { if (yyskip || yycnt) yyskip++; else *--lptr = 0; } }
