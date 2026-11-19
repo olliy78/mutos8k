@@ -270,7 +270,7 @@ def cmd_bau(name, a):
                 # Modules that are already assembler (.s in link.txt: c1's atof.s and table_z8k.s) are not rewritten and keep
                 # their place in the link order; without them the second link round lacks them (Undefined: _regtab ...).
                 fixe = {f[:-2] + ".s": t for f, t in v[n].items() if f.endswith(".s")} if isinstance(v.get(n), dict) else {}
-                if fixe:
+                if fixe or name == "as":     # `as` (W7k): second round in link.txt order too, not alphabetically (encode lay at 0030)
                     reihe = [f[:-2] + ".s" for f in v[n]]
                     todo = [(f, fixe[f] if f in fixe else r["s"][f]) for f in reihe if f in fixe or f in r["s"]]
                 else:
