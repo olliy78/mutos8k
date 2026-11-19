@@ -1,0 +1,13 @@
+# link order of /usr/bin/as = address order of the original (doc/userspace/wk_w7c.md); as_y1..3.c = as_y.c (yacc output of as.y) split by tools/userspace/as_ysplit.py (guest c2 hang, doc/userspace/wk_w7d.md)
+as_y1.c
+as_y2.c
+as_y3.c
+as_lex.c
+as_misc.c
+as_code.c
+as_main.c
+as_expr.c
+as_dir.c
+as_tab1.c
+as_tab2.c
+as_tab.c
