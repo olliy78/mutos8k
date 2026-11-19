@@ -28,8 +28,17 @@ KEIN_MODELL = {"mt"}
 LIMIT = 14_000           # source bytes per shared session (the /tmp disk holds ca. 250 KB)
 
 
+KERN_C = os.path.join(U.REPO, "kernel", "c")
+KERN_H = os.path.join(U.REPO, "kernel", "h")
+
+
 def quellen(name):
-    """(modules {file.c: text}, headers {name: bytes}) of program NAME (single file = one module named NAME.c)."""
+    """(modules {file.c: text}, headers {name: bytes}) of program NAME (single file = one module named NAME.c).
+    W10f: NAME = k_MOD is the kernel module kernel/c/MOD.c with all of kernel/h as headers (the guest module is MOD.c)."""
+    if name.startswith("k_"):
+        txt = open(os.path.join(KERN_C, name[2:] + ".c"), encoding="latin-1").read()
+        hs = {h: open(os.path.join(KERN_H, h), "rb").read() for h in os.listdir(KERN_H) if h.endswith(".h")}
+        return {name[2:] + ".c": txt}, hs
     class A:
         quelle = None
         variante = "neu"
@@ -45,6 +54,12 @@ def quellen(name):
 def verfuegbar(namen):
     erg = []
     for n in namen:
+        if n.startswith("k_"):
+            if os.path.isfile(os.path.join(KERN_C, n[2:] + ".c")):
+                erg.append(n)
+            else:
+                print("unknown:", n)
+            continue
         try:
             _pl, _pf, q, _h = P.info(n)
         except SystemExit:
@@ -61,7 +76,7 @@ def verfuegbar(namen):
     return erg
 
 
-def befehle(mods, c2x=None, c2o=False, s0=False):
+def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False):
     """Guest commands for the modules (names without .c).  Every command ends in /mnt, none is longer than ca. 200 characters."""
     b = []
     for m in mods:
@@ -71,7 +86,9 @@ def befehle(mods, c2x=None, c2o=False, s0=False):
         else:
             b.append("cd /tmp;/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1;/usr/lib/c0 ci c1 c2 >>%s 2>&1;>ci;cd /mnt" % (m, e, e))
             b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
-        if c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
+        if c2x and kurz:   # W10f: one run each of the shipped c2 (MOD.s) and c2x (MOD.sn), no repeat runs (-xpush acceptance)
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;>c5;cd /mnt" % (m, e, m, e))
+        elif c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
             # /tmp is small: every repeat run is compared in the guest with cmp and deleted when identical (the file is then
             # missing in the result and MOD.cmp is empty for it); a file that stays is the one that differs
             b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;cmp %s.s %s.sn >%s.cmp 2>&1;cd /mnt" % (m, e, m, e, m, m, m))
@@ -87,7 +104,7 @@ def befehle(mods, c2x=None, c2o=False, s0=False):
     return b
 
 
-def lauf(namen, c2x=None, c2o=None, s0=False):
+def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False):
     sys.path.insert(0, os.path.join(U.TOOLS, "kernel"))
     import gast_as
     U.pruefe()
@@ -117,7 +134,7 @@ def lauf(namen, c2x=None, c2o=None, s0=False):
                 q[f] = jobs[n][0][f]
                 q.update(jobs[n][1])
             mods_alle.append((n, f[:-2]))
-        bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0)
+        bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0, kurz)
         ausf = ()
         if c2x:
             q["c2x"] = open(c2x, "rb").read()
@@ -125,7 +142,7 @@ def lauf(namen, c2x=None, c2o=None, s0=False):
         if c2o:
             q["c2o"] = open(c2o, "rb").read()
             ausf += ("c2o",)
-        extra = (".sn", ".sm", ".sb", ".sp") + ((".so",) if c2o else ())
+        extra = ((".sn",) if kurz else (".sn", ".sm", ".sb", ".sp")) + ((".so",) if c2o else ())
         rueck = []
         for n, m in mods_alle:
             rueck += ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".err", m + ".cmp"] + ([m + e for e in extra] if c2x else [])
@@ -245,6 +262,33 @@ def auswerten(namen):
             print("%s\t%d\t%d\t%d" % (op, h["s0"], h["s"], h["model"]))
 
 
+def xpush(namen):
+    """W10f: acceptance of c2x -xpush.  For every module under WORK/NAME with MOD.sn (output of c2x built with -DXPUSH, from `lauf --c2x
+    c2x_c2.bin --s0`) check  MOD.sn == host rule R1 applied to MOD.s (shipped c2 output); R1 = uspace.c2_emu_s with every other rule off."""
+    _t, cnt = U.c2_emu_s("", (), False)
+    alle = set(cnt)
+    ok = bad = 0
+    for n in namen:
+        d = os.path.join(WORK, n)
+        for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+            if not f.endswith(".sn"):
+                continue
+            s = open(os.path.join(d, f[:-1]), encoding="latin-1").read()
+            sn = open(os.path.join(d, f), encoding="latin-1").read()
+            y, c = U.c2_emu_s(s, alle - {"R1"}, False)
+            if y == sn:
+                ok += 1
+                print("%-10s %-10s R1 sites %3d  c2x == shipped + R1" % (n, f[:-3], c["R1"]))
+            else:
+                bad += 1
+                a, b = y.split("\n"), sn.split("\n")
+                k = next((i for i in range(min(len(a), len(b))) if a[i] != b[i]), min(len(a), len(b)))
+                print("%-10s %-10s R1 sites %3d  DIFFERS at line %d: model %r  c2x %r" % (n, f[:-3], c["R1"], k + 1,
+                      a[k] if k < len(a) else None, b[k] if k < len(b) else None))
+    print("xpush: %d equal, %d differ" % (ok, bad))
+    return bad
+
+
 def bauen(namen):
     """Assemble and link, per program, (x) the shipped c2's output unchanged and (y) the model output, with the program's libc_alt
     archive, and compare both bytes with the original (`cmp` of the whole file incl. the 16-byte header).  One guest session at a
@@ -289,16 +333,19 @@ def bauen(namen):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen"])
+    ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen", "xpush"])
     ap.add_argument("namen", nargs="*")
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
+    ap.add_argument("--kurz", action="store_true", help="lauf with --c2x: only the shipped c2 and c2x once each (MOD.s, MOD.sn)")
     ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
     a = ap.parse_args()
     if a.cmd == "lauf":
-        lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0)
+        lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0, a.kurz)
     elif a.cmd == "bauen":
         bauen(a.namen)
+    elif a.cmd == "xpush":
+        sys.exit(1 if xpush(a.namen) else 0)
     else:
         auswerten(a.namen)
 
