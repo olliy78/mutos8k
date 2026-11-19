@@ -1,2 +1,9 @@
 # Hand-made correction for c2.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see cpp.members.zusatz).
 doprnt code=389C,38A2,38B8
+# W10c: the commons are NOT at the 52CC/54CC/56CC that members_auto derives (bstart - 2 - 0x400).  Measured in the original c2: the code uses
+# #%513A (stdin buffer) and #%533A (stdout buffer), crt0 stores `LD %553A,R7` (_environ); own c2 variables follow from 553C on.  With the
+# derived anchors the generated `#%6E+__sibuf` / literal `#%513A` only match the original layout; our c2 is 20 bytes shorter, so the
+# literals pointed 20 bytes off and the stdin and stdout buffers overlapped (c2 wrote pieces of its input into its output, then looped).
+common __sibuf 513A 200 data
+common __sobuf 533A 200 data
+extern _environ 553A 2

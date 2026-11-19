@@ -25,7 +25,7 @@ import pipeline as P     # noqa: E402
 WORK = os.path.join(U.REPO, "userspace", "c2", "work", "gegen")
 # programs whose original is byte-identical to the PLAIN cc -O build (measured here: mt; sync, rm, pstat have no active rule)
 KEIN_MODELL = {"mt"}
-LIMIT = 30_000           # source bytes per shared session (the /tmp disk holds ca. 250 KB)
+LIMIT = 14_000           # source bytes per shared session (the /tmp disk holds ca. 250 KB)
 
 
 def quellen(name):
@@ -61,21 +61,33 @@ def verfuegbar(namen):
     return erg
 
 
-def befehle(mods, c2x=None):
+def befehle(mods, c2x=None, c2o=False, s0=False):
     """Guest commands for the modules (names without .c).  Every command ends in /mnt, none is longer than ca. 200 characters."""
     b = []
     for m in mods:
         e = m + ".err"
-        b.append("cd /tmp;/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1;/usr/lib/c0 ci c1 c2 >>%s 2>&1;>ci;cd /mnt" % (m, e, e))
-        b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
+        if s0:   # W10c: the c1 output is already on /mnt as MOD.s0 (kept from an earlier run): only the c2 runs
+            b.append("cd /tmp;cat /mnt/%s.s0 >c5;cd /mnt" % m)
+        else:
+            b.append("cd /tmp;/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1;/usr/lib/c0 ci c1 c2 >>%s 2>&1;>ci;cd /mnt" % (m, e, e))
+            b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
         if c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
-            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;/mnt/c2x c5 %s.sm >>%s 2>&1;/usr/lib/c2 c5 %s.sb >>%s 2>&1;>c5;cd /mnt" % (m, e, m, e, m, e, m, e))
+            # /tmp is small: every repeat run is compared in the guest with cmp and deleted when identical (the file is then
+            # missing in the result and MOD.cmp is empty for it); a file that stays is the one that differs
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;cmp %s.s %s.sn >%s.cmp 2>&1;cd /mnt" % (m, e, m, e, m, m, m))
+            b.append("cd /tmp;/mnt/c2x c5 %s.sm >>%s 2>&1;cmp %s.sn %s.sm >>%s.cmp 2>&1&&rm %s.sm;cd /mnt" % (m, e, m, m, m, m))
+            # our c2 with the shell redirecting stdout (no freopen of stdout): MOD.sp
+            b.append("cd /tmp;/mnt/c2x <c5 >%s.sp 2>>%s;cmp %s.sn %s.sp >>%s.cmp 2>&1&&rm %s.sp;cd /mnt" % (m, e, m, m, m, m))
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.sb >>%s 2>&1;cmp %s.s %s.sb >>%s.cmp 2>&1&&rm %s.sb;cd /mnt" % (m, e, m, m, m, m))
+            if c2o:   # the shipped binary run from /mnt: separates "run from /mnt" from "our code"
+                b.append("cd /tmp;/mnt/c2o c5 %s.so >>%s 2>&1;cmp %s.s %s.so >>%s.cmp 2>&1&&rm %s.so;cd /mnt" % (m, e, m, m, m, m))
+            b.append("cd /tmp;>c5;cd /mnt")
         else:
             b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;>c5;cd /mnt" % (m, e))                  # shipped c2 on it
     return b
 
 
-def lauf(namen, c2x=None):
+def lauf(namen, c2x=None, c2o=None, s0=False):
     sys.path.insert(0, os.path.join(U.TOOLS, "kernel"))
     import gast_as
     U.pruefe()
@@ -83,6 +95,9 @@ def lauf(namen, c2x=None):
     # items = (program, module file); /tmp holds ca. 250 KB and s0 + s of every module stay there, so one session takes
     # modules up to LIMIT source bytes (a full disk shows as "Binary expression botch" / truncated output)
     jobs = {n: quellen(n) for n in namen}
+    if s0:   # modules whose MOD.s0 an earlier run left under WORK/NAME/: those only (no sources needed in the guest)
+        jobs = {n: ({f: t for f, t in jobs[n][0].items()
+                     if os.path.exists(os.path.join(WORK, n, f[:-2] + ".s0"))}, jobs[n][1]) for n in namen}
     items = [(n, f, len(t)) for n in namen for f, t in jobs[n][0].items()]
     gruppen, akt, gr = [], [], 0
     for n, f, ln in items:
@@ -96,32 +111,43 @@ def lauf(namen, c2x=None):
     for gi, grp in enumerate(gruppen):
         q, mods_alle = {}, []
         for n, f in grp:
-            q[f] = jobs[n][0][f]
-            q.update(jobs[n][1])
+            if s0:
+                q[f[:-2] + ".s0"] = open(os.path.join(WORK, n, f[:-2] + ".s0"), "rb").read()
+            else:
+                q[f] = jobs[n][0][f]
+                q.update(jobs[n][1])
             mods_alle.append((n, f[:-2]))
-        bs = befehle([m for _n, m in mods_alle], c2x)
+        bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0)
+        ausf = ()
         if c2x:
             q["c2x"] = open(c2x, "rb").read()
+            ausf = ("c2x",)
+        if c2o:
+            q["c2o"] = open(c2o, "rb").read()
+            ausf += ("c2o",)
+        extra = (".sn", ".sm", ".sb", ".sp") + ((".so",) if c2o else ())
         rueck = []
         for n, m in mods_alle:
-            rueck += [m + ".s0", m + ".s", m + ".err"] + ([m + ".sn", m + ".sm", m + ".sb"] if c2x else [])
+            rueck += ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".err", m + ".cmp"] + ([m + e for e in extra] if c2x else [])
         ar = os.path.join(WORK, "sess_%d" % gi)
         print("session %d: %s" % (gi, " ".join(n + "/" + f for n, f in grp)), flush=True)
         aus = {}
         r = gast_as.gast_befehle(ar, q, bs, rueck, frist=20_000_000_000, ausgabe=aus,
-                              ausfuehrbar=("c2x",) if c2x else ())
+                              ausfuehrbar=ausf)
         print("  %d s wall clock" % aus.get("dauer", 0), flush=True)
         for n, m in mods_alle:
             d = os.path.join(WORK, n)
             os.makedirs(d, exist_ok=True)
-            for fn in (m + ".s0", m + ".s") + ((m + ".sn", m + ".sm", m + ".sb") if c2x else ()):
-                if r.get(fn):
+            for fn in ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".cmp"] + ([m + e for e in extra] if c2x else []):
+                if r.get(fn) is not None:
                     with open(os.path.join(d, fn), "wb") as f:
                         f.write(r[fn])
-                    if not r[fn].rstrip().endswith(b"end c_"):
-                        print("  TRUNCATED", n, fn)
-                else:
-                    print("  MISSING", n, fn)
+            # verdict per module: .sn against the shipped c2's .s; a repeat file that is missing was identical (deleted in the guest)
+            sn, so_ = r.get(m + ".sn"), r.get(m + ".s")
+            if c2x:
+                print("  %-10s s %6d B  sn %6d B  %s  | %s" % (m, len(so_ or b""), len(sn or b""),
+                      "IDENTICAL" if sn is not None and sn == so_ else "DIFFERS",
+                      " ".join((r.get(m + ".cmp") or b"").decode("latin-1").split("\n"))[:150]), flush=True)
             e = (r.get(m + ".err") or b"").decode("latin-1").strip()
             if e:
                 print("  %s messages: %s" % (m, e[:200]))
@@ -266,9 +292,11 @@ def main():
     ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen"])
     ap.add_argument("namen", nargs="*")
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
+    ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
+    ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
     a = ap.parse_args()
     if a.cmd == "lauf":
-        lauf(verfuegbar(a.namen), a.c2x)
+        lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0)
     elif a.cmd == "bauen":
         bauen(a.namen)
     else:
