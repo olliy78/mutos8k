@@ -35,9 +35,13 @@ DIAG = {
           "X\tcsv\tPR\nG\t_f\tPR\nE\n_f:\n\tcall\tcsv\n\tret\nend _f\nend t1_\n",
     "t2": "t2_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tPR\t:= procedure\n\tE\t:= entry\n"
           "X\tcsv\tPR\nG\t_f\tPR\nE\n_f:\n\tld\tr2,#%FFFF\n\tret\nend _f\nend t2_\n",
-    "t3": "t3_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n\tPR\t:= procedure\n\tE\t:= entry\n"
-          "X\t_v\tW\nG\t_f\tPR\nE\n_f:\n\tld\t_v,r4\n\tret\nend _f\nend t3_\n",
 }
+# W7s: t3 is a valid minimal case now (it was an invalid declaration); t4..t8 bisect 4-operand block instructions with a
+# condition code (crt0, execle, mcrt0, doprnt)
+for _n, _b in ((3, "\tld\tr4,#1\n"), (4, "\tcpir\tr0,@r7,r1,z\n"), (5, "\tcpirb\trl0,@r10,r11,eq\n"),
+               (6, "\tldir\t@r2,@r3,r4\n"), (7, "\tcpsir\t@r2,@r3,r4,z\n"), (8, "\tjr\tz,_f\n")):
+    DIAG["t%d" % _n] = ("t%d_ module\n$NONSEGMENTED\nconstant\n\tFP\t:= r14\n\tSP\t:= r15\n\tX\t:= external\n\tG\t:= global\n"
+                        "\tPR\t:= procedure\n\tE\t:= entry\nG\t_f\tPR\nE\n_f:\n%s\tret\nend _f\nend t%d_\n" % (_n, _b, _n))
 
 
 def asbefehl(x, quelle):

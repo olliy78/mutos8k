@@ -37,8 +37,10 @@ int g9042, g9044;
 unsigned g9046;
 int g9048, g904a;
 struct obj objtab[10];			/* 904C */
-int *g90b0[3];				/* 90B0: operand cells of the current instruction (oppush) */
-char g90b6[14];
+/* 90B0..90C3: operand cells of the current instruction (oppush).  W7s: ONE array of 10 words as in the original (90B0 up to
+   g90c4 at 90C4); before it was int[3] plus an unused char[14], and the 4th operand cell of CPIR/CPSIR/CPD... (cc as 4th
+   operand: crt0, execle, mcrt0, doprnt) was stored beyond the array (*Annahme*: not where opmatch reads it) */
+int *g90b0[10];
 int g90c4, g90c6;
 char *bufp2;				/* 90C8 */
 int g90ca, g90cc, g90ce, g90d0;
