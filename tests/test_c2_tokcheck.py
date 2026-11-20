@@ -1,6 +1,6 @@
 """Guard of the byte-identical c2 source (Plan 52 W10l): without switch defines, c20.c and c21.c must give the same
-preprocessed token stream as before the first c2x switch (userspace/c2/tokens.md5).  The c2x switches (XPUSH, XCMPMEM,
-XHZERO) may only add code under #ifdef."""
+preprocessed token stream as before the first c2x switch (userspace/c2/tokens.md5).  The c2x switches (everything under C2X;
+run-time flags since W10o) may only add code under #ifdef."""
 import os
 import shutil
 import subprocess

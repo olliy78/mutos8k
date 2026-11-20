@@ -21,7 +21,7 @@ extern char revbr[];
  * jump table at 0x4778.  Variable names are Annahme.  flt is the bank of the
  * destination, fl2 the bank of the source operand.
  */
-#ifdef XCMPMEM
+#ifdef C2X
 int	x4keep;	/* regs[0] holds the MEM of an inserted `ld r0,MEM` (set in rmove, cleared by kill(0)) */
 #define	X4MARK	-4	/* -xcmpmem: labno of the `ld r0,MEM` nodes inserted for a `cp MEM,#k`; they keep MEM (no register copy propagation; cat, od measured) */
 #endif
@@ -57,7 +57,7 @@ rmove()
 	mv:
 		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
 		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
-#ifdef XCMPMEM
+#ifdef C2X
 		 /* W10k: a repeated inserted `ld r0,MEM` goes only when R0 came from an inserted one (x4keep), not from an ordinary `ld r0,MEM` (tar) */
 		 && (p->labno != X4MARK || x4keep)
 #endif
@@ -94,7 +94,7 @@ rmove()
 					continue;
 				}
 			}
-#ifdef XCMPMEM
+#ifdef C2X
 			if (p->op != LDK && p->labno != X4MARK) {
 #else
 			if (p->op != LDK) {
@@ -128,7 +128,7 @@ rmove()
 				savereg(r+14, regs[RT1], rsz[RT1], 0);
 			}
 		} else if (r1 >= 0)
-#ifdef XCMPMEM
+#ifdef C2X
 		{	/* braces only here: the default c2 stays token-identical (c2gegen.py tokcheck) */
 			savereg(r1+flt, regs[RT2], rsz[RT2], p);
 			if (p->labno == X4MARK && r1 == 0 && flt == 0)
@@ -162,9 +162,9 @@ rmove()
 					r1 -= 2;
 				else
 					goto dflt;
-/* c2x -xpush (W10f): -DXPUSH keeps `inc SP,#n+2 ; push` unmerged unless the inc vanishes (r1 == 0); never defined in the byte-identical c2 */
-#ifdef XPUSH
-				if (r1 != 0)
+/* c2x -xpush (W10f): with run-time flag p (XR1) keeps `inc SP,#n+2 ; push` unmerged unless the inc vanishes (r1 == 0); compiled only under C2X, off without the flag */
+#ifdef C2X
+				if ((xfl & XR1) && r1 != 0)
 					goto dflt;
 #endif
 				if (r1 == 0)
@@ -230,9 +230,9 @@ rmove()
 				if (isreg(ccloc) == r)
 					clrcc();
 			}
-#ifdef XHZERO
+#ifdef C2X
 			/* c2x -xhzero (R3, R7, R10, R32): the older c2 does not drop this xorb as redundant (hzkeep) */
-			if (rsz[RT1] == 'h' && hzkeep(p, r))
+			if (rsz[RT1] == 'h' && (xfl & (XR7 | XR3 | XR10 | XR32)) && hzkeep(p, r))
 				goto hzset;
 #endif
 			if (rsz[r] == rsz[RT1]) {
@@ -245,7 +245,7 @@ rmove()
 				goto del;
 			if (rsz[r] == 'h' && rsz[RT1] == 'l' && equstr(regs[r], "#0"))
 				goto del;
-#ifdef XHZERO
+#ifdef C2X
 		hzset:
 #endif
 			if (rsz[RT1] == 'h') {
@@ -310,11 +310,11 @@ rmove()
 			delnode(p);
 			continue;
 		}
-/* c2x -xcmpmem (W10g): -DXCMPMEM loads a memory operand of a word `cp MEM,#k` into R0 first (`ld r0,MEM ; cp r0,#k`), as the older c2 of the
+/* c2x -xcmpmem (W10g): with run-time flag c (XR4) loads a memory operand of a word `cp MEM,#k` into R0 first (`ld r0,MEM ; cp r0,#k`), as the older c2 of the
    original programs did; the new MOV node then runs through the register tracking (a second `cp MEM,#k` behind a jr cc reuses R0).
-   Never defined in the byte-identical c2. */
-#ifdef XCMPMEM
-		if (p->op == CMP && (p->subop & (BYTE | LONG | FLTF)) == 0) {
+   Only compiled under C2X, off unless -xc is given. */
+#ifdef C2X
+		if ((xfl & XR4) && p->op == CMP && (p->subop & (BYTE | LONG | FLTF)) == 0) {
 			dualop(p);
 			if (regs[RT2][0] == '#' && regs[RT1][0] != '@' && isreg(regs[RT1]) < 0) {
 				struct node *np;
@@ -973,13 +973,13 @@ register flt;
 	register r1, n, r, t;
 	char *p1, *p2;
 	static char rt1[50], rt2[50];
-#ifdef XCMPMEM
+#ifdef C2X
 	char save0;
 
 	save0 = 0;
 #endif
 
-#ifdef XCMPMEM
+#ifdef C2X
 	/* c2x -xcmpmem (W10j): the R0 copy made by an inserted `ld r0,MEM` (X4MARK) serves only a repeated `cp MEM,#k` (see rmove, mv:); the older
 	   c2 keeps MEM in `ld r2,MEM`, `test MEM`, `push MEM` or reuses another register (cpp, mkfs, sh/cmd, sh/xec, tar measured).  Hide it here. */
 	/* W10l: no exception behind a conditional branch any more: the rule R38 reuse (`cp r0,#k ; jr cc ; ld rN,MEM` -> `ld rN,r0`) is done by
@@ -994,7 +994,7 @@ register flt;
 	else
 		r1 = -1;
 	r = findrand(regs[RT2], rsz[RT2], flt);
-#ifdef XCMPMEM
+#ifdef C2X
 	if (save0)
 		regs[0][0] = save0;
 #endif
@@ -1301,7 +1301,7 @@ char sz;
 	i = ai & ~3;
 	if (ai < 8 && sz != 'l')
 		cregs[ai][0] = 0;
-#ifdef XCMPMEM
+#ifdef C2X
 	if (ai == 0)
 		x4keep = 0;
 #endif
@@ -1337,7 +1337,7 @@ char sz;
 }
 
 /* Not V7 */
-#ifdef XCMPMEM
+#ifdef C2X
 /* c2x -xcmpmem (W10l, R38): late pass after shortjmp: `ld r0,MEM [X4MARK] ; cp r0,.. ; jr cc ; ld rN,MEM` -> `ld rN,r0`, only when the branch is a
    short jr (CBRS).  A label or any other node in between breaks the pattern. */
 char	rt0buf[8];
@@ -1371,7 +1371,7 @@ cmppass()
 }
 #endif
 
-#ifdef XHZERO
+#ifdef C2X
 /*
  * c2x -xhzero (R2 with its exceptions R30, R63): the xorb p (rhN) is dead when the next node is a byte store `ldb mem,rlN`
  * (mem not a register).  It stays when the node behind the store reads the register again: `testb rlN` (R30) or a word move
@@ -1395,7 +1395,7 @@ register r;
 			ok = 1;
 			/* R43: `inc rK,#n (n > 1) ; ldb rlN,@rK ; xorb ; ldb @rM,rlN` keeps the xorb */
 			q2 = p->back;
-			if (regs[RT1][0] == '@' && regs[RT1][1] == 'r' && q2->op == MOV && (q2->subop & BYTE) && q2->back->op == INC) {
+			if ((xfl & XR43) && regs[RT1][0] == '@' && regs[RT1][1] == 'r' && q2->op == MOV && (q2->subop & BYTE) && q2->back->op == INC) {
 				dualop(q2);
 				cp = regs[RT2];
 				if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && cp[0] == '@' && cp[1] == 'r') {
@@ -1411,11 +1411,11 @@ register r;
 				}
 			}
 			q2 = q->forw;
-			if (q2 && q2->op == TST && (q2->subop & BYTE)) {
+			if ((xfl & XR30) && q2 && q2->op == TST && (q2->subop & BYTE)) {
 				singop(q2);
 				if (isreg(regs[RT1]) == r && rsz[RT1] == 'l')
 					ok = 0;
-			} else if (q2 && q2->op == MOV && (q2->subop & (BYTE | LONG | FLTF)) == 0) {
+			} else if ((xfl & XR63) && q2 && q2->op == MOV && (q2->subop & (BYTE | LONG | FLTF)) == 0) {
 				/* R63: `ld rK,rN ; ld rX,rN ; test rN` behind the store keeps the xorb */
 				dualop(q2);
 				if (isreg(regs[RT2]) == r && rsz[RT2] == 0 && q2->forw && q2->forw->op == MOV
@@ -1436,7 +1436,7 @@ register r;
 
 /*
  * c2x -xhzero: is p (xorb rhN) one the older c2 keeps although the high byte is known to be zero?
- *   R7:  `ldb rlN,mem ; xorb ; cp rN,..`
+ *   R7:  `ldb rlN,mem ; xorb ; cp rN,..`  (each rule has its own run-time bit, see c2.h: R3 jr/jp, R10 add, R32 cp)
  *   R3, R10, R32 (first xorb behind a compare chain only): `xorb ; cp rN,.. ; jr cc ; xorb ; jr M | add rN,.. | cp rN,..`
  */
 hzkeep(p, r)
@@ -1453,7 +1453,7 @@ register r;
 		dualop(q);
 		if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && regs[RT2][0] && regs[RT2][0] != 'r') {
 			dualop(f);
-			if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
+			if (isreg(regs[RT1]) == r && rsz[RT1] == 0 && (xfl & XR7))
 				ok = 1;
 		}
 	} else if ((q->op == CBR || q->op == CBRS) && f && q->back->op == CMP && q->back->back->op == XOR
@@ -1463,10 +1463,10 @@ register r;
 			dualop(q->back->back);
 			if (isreg(regs[RT1]) == r && rsz[RT1] == 'h') {
 				if (f->op == JBR || f->op == JMP)
-					ok = 1;
+					ok = (xfl & XR3) != 0;
 				else if (f->op == CMP || f->op == ADD) {
 					dualop(f);
-					if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
+					if (isreg(regs[RT1]) == r && rsz[RT1] == 0 && (xfl & (f->op == ADD ? XR10 : XR32)))
 						ok = 1;
 				}
 			}
