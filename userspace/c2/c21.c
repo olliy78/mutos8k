@@ -57,6 +57,10 @@ rmove()
 	mv:
 		if ((r = findrand(regs[RT2], rsz[RT2], fl2)) >= 0
 		 && rsz[r+fl2] == rsz[RT2] && isreg(regs[RT1]) == r
+#ifdef XCMPMEM
+		 /* W10k: a repeated inserted `ld r0,MEM` goes only when R0 came from an inserted one (x4keep), not from an ordinary `ld r0,MEM` (tar) */
+		 && (p->labno != X4MARK || x4keep)
+#endif
 		 && rsz[r+flt] == rsz[RT1]) {
 		del:
 			delnode(p);
@@ -974,7 +978,9 @@ register flt;
 #ifdef XCMPMEM
 	/* c2x -xcmpmem (W10j): the R0 copy made by an inserted `ld r0,MEM` (X4MARK) serves only a repeated `cp MEM,#k` (see rmove, mv:); the older
 	   c2 keeps MEM in `ld r2,MEM`, `test MEM`, `push MEM` or reuses another register (cpp, mkfs, sh/cmd, sh/xec, tar measured).  Hide it here. */
-	if (x4keep) {
+	/* W10k: except directly behind a conditional branch (`cp r0,#k ; jr cc ; ld rN,MEM` -> `ld rN,r0`, rule R38).  The original does this only
+	   for a branch that ends up short (jr); rmove runs before shortjmp, so a far `jp cc` (cpp, xec) is not told apart here (open, wk_w10k.md). */
+	if (x4keep && !(p->op == MOV && (p->back->op == CBRS || p->back->op == CBR))) {
 		save0 = regs[0][0];
 		regs[0][0] = 0;
 	}
