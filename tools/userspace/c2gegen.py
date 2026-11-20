@@ -269,31 +269,45 @@ def auswerten(namen):
             print("%s\t%d\t%d\t%d" % (op, h["s0"], h["s"], h["model"]))
 
 
-def xpush(namen, regeln=("R1",)):
+def regelsatz(name, regeln, extra=()):
+    """W10n: host rule set the real build of program NAME uses for the switch groups under test: (regeln + program-bound extra)
+    minus the program's own C2_AUS (pipeline.c2_aus).  Programs built plain (KEIN_MODELL) get no rule."""
+    if name in KEIN_MODELL:
+        return set()
+    return (set(regeln) | set(extra)) - set(P.c2_aus(name))
+
+
+def xpush(namen, regeln=("R1",), extra=(), global_=False):
     """W10f: acceptance of c2x -xpush.  For every module under WORK/NAME with MOD.sn (output of c2x built with -DXPUSH, from `lauf --c2x
-    c2x_c2.bin --s0`) check  MOD.sn == host rule R1 applied to MOD.s (shipped c2 output); R1 = uspace.c2_emu_s with every other rule off.
-    W10g: `regeln` names the active rules (--regeln R4 for -DXCMPMEM, R1,R4 for both switches)."""
+    c2x_c2.bin --s0`) check  MOD.sn == host rules applied to MOD.s (shipped c2 output); the rules are uspace.c2_emu_s with all others off.
+    W10g: `regeln` names the active rules (--regeln R4 for -DXCMPMEM, R1,R4 for both switches).
+    W10n: the set is per program (regelsatz: regeln + extra - C2_AUS of the program, the same code as the build); global_=True gives the old
+    single list.  A difference is classified: (b) when the program has rules of the group OFF (c2x applies them unconditionally, needs a
+    finer switch), else (a/c) to be judged by hand."""
     _t, cnt = U.c2_emu_s("", (), False)
     alle = set(cnt)
     ok = bad = 0
     for n in namen:
         d = os.path.join(WORK, n)
+        akt = set(regeln) | set(extra) if global_ else regelsatz(n, regeln, extra)
+        aus_gr = sorted((set(regeln) | set(extra)) - akt, key=lambda r: int(r[1:]))
         for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
             if not f.endswith(".sn"):
                 continue
             s = open(os.path.join(d, f[:-1]), encoding="latin-1").read()
             sn = open(os.path.join(d, f), encoding="latin-1").read()
-            y, c = U.c2_emu_s(s, alle - set(regeln), False)
+            y, c = U.c2_emu_s(s, alle - akt, False)
+            tag = "off:" + ",".join(aus_gr) if aus_gr else "off:-"
             if y == sn:
                 ok += 1
-                print("%-10s %-10s %s sites %3s  c2x == shipped + %s" % (n, f[:-3], "+".join(regeln), "+".join(str(c[r]) for r in regeln), "+".join(regeln)))
+                print("%-10s %-10s EQUAL    %s" % (n, f[:-3], tag))
             else:
                 bad += 1
                 a, b = y.split("\n"), sn.split("\n")
                 k = next((i for i in range(min(len(a), len(b))) if a[i] != b[i]), min(len(a), len(b)))
-                print("%-10s %-10s %s sites %3s  DIFFERS at line %d: model %r  c2x %r" % (n, f[:-3], "+".join(regeln), "+".join(str(c[r]) for r in regeln), k + 1,
+                print("%-10s %-10s DIFFERS  %s line %d: model %r  c2x %r" % (n, f[:-3], tag, k + 1,
                       a[k] if k < len(a) else None, b[k] if k < len(b) else None))
-    print("xpush %s: %d equal, %d differ" % ("+".join(regeln), ok, bad))
+    print("xpush %s%s: %d equal, %d differ" % ("+".join(regeln), "" if global_ else " per program" + (" +" + "+".join(extra) if extra else ""), ok, bad))
     return bad
 
 
@@ -392,6 +406,8 @@ def main():
     ap.add_argument("namen", nargs="*")
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
+    ap.add_argument("--extra", default="", help="xpush: program-bound rules added to every program's set (W10n, e.g. R3), minus its C2_AUS")
+    ap.add_argument("--global", dest="glob", action="store_true", help="xpush: old behaviour, one list for all programs")
     ap.add_argument("--regeln", default="R1", help="xpush: host rules the c2x output must equal (comma list, W10g)")
     ap.add_argument("--kurz", action="store_true", help="lauf with --c2x: only the shipped c2 and c2x once each (MOD.s, MOD.sn)")
     ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
@@ -407,7 +423,7 @@ def main():
     elif a.cmd == "bauen":
         bauen(a.namen)
     elif a.cmd == "xpush":
-        sys.exit(1 if xpush(a.namen, tuple(a.regeln.split(","))) else 0)
+        sys.exit(1 if xpush(a.namen, tuple(a.regeln.split(",")), tuple(x for x in a.extra.split(",") if x), a.glob) else 0)
     else:
         auswerten(a.namen)
 
