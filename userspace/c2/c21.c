@@ -22,6 +22,7 @@ extern char revbr[];
  * destination, fl2 the bank of the source operand.
  */
 #ifdef XCMPMEM
+int	x4keep;	/* regs[0] holds the MEM of an inserted `ld r0,MEM` (set in rmove, cleared by kill(0)) */
 #define	X4MARK	-4	/* -xcmpmem: labno of the `ld r0,MEM` nodes inserted for a `cp MEM,#k`; they keep MEM (no register copy propagation; cat, od measured) */
 #endif
 rmove()
@@ -122,9 +123,13 @@ rmove()
 					continue;
 				savereg(r+14, regs[RT1], rsz[RT1], 0);
 			}
-		} else if (r1 >= 0)
+		} else if (r1 >= 0) {
 			savereg(r1+flt, regs[RT2], rsz[RT2], p);
-		else
+#ifdef XCMPMEM
+			if (p->labno == X4MARK && r1 == 0 && flt == 0)
+				x4keep = 1;
+#endif
+		} else
 			setcon(regs[RT2], regs[RT1], rsz[RT1]);
 		continue;
 
@@ -960,12 +965,29 @@ register flt;
 	register r1, n, r, t;
 	char *p1, *p2;
 	static char rt1[50], rt2[50];
+#ifdef XCMPMEM
+	char save0;
 
+	save0 = 0;
+#endif
+
+#ifdef XCMPMEM
+	/* c2x -xcmpmem (W10j): the R0 copy made by an inserted `ld r0,MEM` (X4MARK) serves only a repeated `cp MEM,#k` (see rmove, mv:); the older
+	   c2 keeps MEM in `ld r2,MEM`, `test MEM`, `push MEM` or reuses another register (cpp, mkfs, sh/cmd, sh/xec, tar measured).  Hide it here. */
+	if (x4keep) {
+		save0 = regs[0][0];
+		regs[0][0] = 0;
+	}
+#endif
 	if (f)
 		r1 = findrand(regs[RT1], rsz[RT1], flt);
 	else
 		r1 = -1;
 	r = findrand(regs[RT2], rsz[RT2], flt);
+#ifdef XCMPMEM
+	if (save0)
+		regs[0][0] = save0;
+#endif
 	if (r >= FREG)
 		r -= FREG;
 	if (r1 >= FREG)
@@ -1269,6 +1291,10 @@ char sz;
 	i = ai & ~3;
 	if (ai < 8 && sz != 'l')
 		cregs[ai][0] = 0;
+#ifdef XCMPMEM
+	if (ai == 0)
+		x4keep = 0;
+#endif
 	if (rsz[i] == 'q' || sz == 'q') {
 		regs[i][0] = 0;
 		rsz[i] = 0;
