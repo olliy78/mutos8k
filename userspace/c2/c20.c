@@ -167,6 +167,9 @@ char **argv;
 		do {
 			shortjmp();
 		} while (nchange);
+#ifdef XHZERO
+		hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
+#endif
 		output();
 		if (niter > maxiter)
 			maxiter = niter;

@@ -223,7 +223,12 @@ rmove()
 				if (rsz[r] == 'h' && equstr(cregs[r], "#0"))
 					goto del;
 			}
+#ifdef XHZERO
+			/* c2x -xhzero (R7): `ldb rlN,mem ; xorb rhN,rhN ; cp rN,..` keeps the xorb (hzkeep) */
+			if (rsz[r] == 'l' && rsz[RT1] == 'h' && equstr(cregs[r], "#0") && !hzkeep(p, r))
+#else
 			if (rsz[r] == 'l' && rsz[RT1] == 'h' && equstr(cregs[r], "#0"))
+#endif
 				goto del;
 			if (rsz[r] == 'h' && rsz[RT1] == 'l' && equstr(regs[r], "#0"))
 				goto del;
@@ -360,6 +365,15 @@ rmove()
 
 	case CBRS:
 	case CBR:
+/* c2x -xhzero: behind `cp rN,..` the older c2 no longer knows that the high byte of rN is zero (rules R10, R32) */
+#ifdef XHZERO
+		if (p->back->op == CMP && p->back->back->op == XOR && p->back->back->back->op != CBR
+		 && p->back->back->back->op != CBRS) {
+			dualop(p->back);
+			if ((r = isreg(regs[RT1])) >= 0 && r < 8 && rsz[RT1] == 0)
+				cregs[r][0] = 0;
+		}
+#endif
 		if (p->back->op == TST || p->back->op == CMP) {
 			if (p->back->op == TST) {
 				singop(p->back);
@@ -1293,6 +1307,106 @@ char sz;
 }
 
 /* Not V7 */
+#ifdef XHZERO
+/*
+ * c2x -xhzero (R2 with its exceptions R30, R63): the xorb p (rhN) is dead when the next node is a byte store `ldb mem,rlN`
+ * (mem not a register).  It stays when the node behind the store reads the register again: `testb rlN` (R30) or a word move
+ * from rN (R63).  R43 (struct member array copy) is not modelled.  Returns 1 when p can go.
+ */
+char hzbuf[20];
+
+hzdrop(p, r)
+struct node *p;
+register r;
+{
+	register struct node *q, *q2;
+	register ok;
+	register char *cp;
+
+	ok = 0;
+	q = p->forw;
+	if (q && q->op == MOV && (q->subop & BYTE) && !(q->subop & (LONG | FLTF))) {
+		dualop(q);
+		if (regs[RT1][0] && isreg(regs[RT1]) < 0 && isreg(regs[RT2]) == r && rsz[RT2] == 'l') {
+			ok = 1;
+			/* R43: `inc rK,#n (n > 1) ; ldb rlN,@rK ; xorb ; ldb mem,rlN` keeps the xorb */
+			q2 = p->back;
+			if (q2->op == MOV && (q2->subop & BYTE) && q2->back->op == INC) {
+				dualop(q2);
+				cp = regs[RT2];
+				if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && cp[0] == '@' && cp[1] == 'r') {
+					strcpy(hzbuf, cp + 1);	/* dualop below overwrites regs[] */
+					dualop(q2->back);
+					if (equstr(regs[RT1], hzbuf) && regs[RT2][0] == '#') {
+						cp = &regs[RT2][1];
+						if (*cp == '%')
+							cp++;
+						if (atoh(cp) > 1)
+							ok = 0;
+					}
+				}
+			}
+			q2 = q->forw;
+			if (q2 && q2->op == TST && (q2->subop & BYTE)) {
+				singop(q2);
+				if (isreg(regs[RT1]) == r && rsz[RT1] == 'l')
+					ok = 0;
+			} else if (q2 && q2->op == MOV && (q2->subop & (BYTE | LONG | FLTF)) == 0) {
+				/* R63: `ld rK,rN ; ld rX,rN ; test rN` behind the store keeps the xorb */
+				dualop(q2);
+				if (isreg(regs[RT2]) == r && rsz[RT2] == 0 && q2->forw && q2->forw->op == MOV
+				 && (q2->forw->subop & (BYTE | LONG | FLTF)) == 0 && q2->forw->forw && q2->forw->forw->op == TST) {
+					dualop(q2->forw);
+					if (isreg(regs[RT2]) == r && rsz[RT2] == 0) {
+						singop(q2->forw->forw);
+						if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
+							ok = 0;
+					}
+				}
+			}
+		}
+	}
+	dualop(p);
+	return(ok);
+}
+
+/* c2x -xhzero (R7): is p (xorb rhN) the one between `ldb rlN,mem` and `cp rN,..`?  Such a xorb is kept.  */
+hzkeep(p, r)
+struct node *p;
+register r;
+{
+	register struct node *q;
+	register ok;
+
+	ok = 0;
+	q = p->back;
+	if (q->op == MOV && (q->subop & BYTE) && !(q->subop & (LONG | FLTF)) && p->forw && p->forw->op == CMP) {
+		dualop(q);
+		if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && regs[RT2][0] && regs[RT2][0] != 'r') {
+			dualop(p->forw);
+			if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
+				ok = 1;
+		}
+	}
+	dualop(p);
+	return(ok);
+}
+
+/* c2x -xhzero (R2): last pass before output: the xorb that hzdrop() condemns goes now (after jump optimisation and shortjmp, as in the originals) */
+hzpass()
+{
+	register struct node *p;
+	register r;
+
+	for (p = first.forw; p != 0; p = p->forw)
+		if (p->op == XOR) {
+			dualop(p);
+			if (rsz[RT1] == 'h' && (r = isreg(regs[RT1])) >= 0 && equstr(regs[RT1], regs[RT2]) && hzdrop(p, r))
+				delnode(p);
+		}
+}
+#endif
+
 clrptr30()
 {
 	register i;
