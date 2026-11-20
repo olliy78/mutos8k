@@ -160,3 +160,19 @@ char	*sbrk();
 char	*alloc();
 struct	node *insertl();
 struct	node *codemove();
+
+#ifdef C2X
+/* c2x run-time switches (W10o): one flag word `xfl`, one bit per rule of the older c2 (doc/userspace/wk_w10o.md).  Set by `-x<letters>` in main(). */
+extern int xfl;
+#define	XR1	0x1	/* p  inc SP,#n+2 ; push stays unmerged */
+#define	XR4	0x2	/* c  cp MEM,#k -> ld r0,MEM ; cp r0,#k */
+#define	XR38	0x4	/* m  R0 reuse behind a short jr cc (needs c) */
+#define	XR2	0x8	/* z  late deletion of a dead xorb before a byte store */
+#define	XR30	0x10	/* k  exception to z: testb of the stored value */
+#define	XR63	0x20	/* w  exception to z: word move + test of the register behind the store */
+#define	XR43	0x40	/* s  exception to z: struct member array element copy */
+#define	XR7	0x80	/* 7  xorb kept between ldb rlN,mem and cp rN,.. */
+#define	XR3	0x100	/* 3  xorb kept before the final jr behind cp ; jr cc */
+#define	XR10	0x200	/* t  xorb kept before add rN behind cp ; jr cc */
+#define	XR32	0x400	/* r  xorb kept before the 2nd cp of a compare chain */
+#endif

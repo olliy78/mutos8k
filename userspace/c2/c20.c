@@ -105,6 +105,44 @@ struct optab optab[] {
 	0,	0};
 
 char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
+#ifdef C2X
+int	xfl;	/* c2x run-time switches, see c2.h */
+
+/* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
+xparse(s)
+register char *s;
+{
+	register c;
+
+	if (equstr(s, "push")) {
+		xfl |= XR1;
+		return;
+	}
+	if (equstr(s, "cmpmem")) {
+		xfl |= XR4 | XR38;
+		return;
+	}
+	if (equstr(s, "hzero")) {
+		xfl |= XR2 | XR30 | XR63 | XR43 | XR7 | XR3 | XR10 | XR32;
+		return;
+	}
+	while (c = *s++)
+		switch (c) {
+		case 'p': xfl |= XR1; break;
+		case 'c': xfl |= XR4; break;
+		case 'm': xfl |= XR38; break;
+		case 'z': xfl |= XR2; break;
+		case 'k': xfl |= XR30; break;
+		case 'w': xfl |= XR63; break;
+		case 's': xfl |= XR43; break;
+		case '7': xfl |= XR7; break;
+		case '3': xfl |= XR3; break;
+		case 't': xfl |= XR10; break;
+		case 'r': xfl |= XR32; break;
+		case 'A': xfl = 0x7FF; break;
+		}
+}
+#endif
 int	isn	= 9000;
 int	lastseg	= 32;
 
@@ -119,6 +157,14 @@ char **argv;
 		argv++;
 		debug++;
 	}
+#ifdef C2X
+	xfl = 0;	/* explicit: flag-less guest runs showed stray bits in the BSS word (W10o) */
+	while (argc>1 && argv[1][0]=='-' && argv[1][1]=='x') {
+		xparse(argv[1]+2);	/* -x<letters>, -xpush, -xcmpmem, -xhzero, -xA (all) */
+		argc--;
+		argv++;
+	}
+#endif
 	nflag = 0;
 	if (argc>1 && argv[1][0]=='-') {
 		argc--;
@@ -167,11 +213,13 @@ char **argv;
 		do {
 			shortjmp();
 		} while (nchange);
-#ifdef XCMPMEM
-		cmppass();	/* c2x -xcmpmem: R0 reuse behind a short jr cc (R38) */
+#ifdef C2X
+		if (xfl & XR38)
+			cmppass();	/* c2x -xcmpmem: R0 reuse behind a short jr cc (R38) */
 #endif
-#ifdef XHZERO
-		hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
+#ifdef C2X
+		if (xfl & XR2)
+			hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
 #endif
 		output();
 		if (niter > maxiter)

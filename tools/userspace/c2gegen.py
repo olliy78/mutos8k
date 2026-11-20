@@ -13,6 +13,8 @@ the original program".  This tool measures what the shipped c2 does:
   var NAME DEF...  host (W10l): write the variant directory userspace/c2/work/var/NAME/ (c20.c, c21.c, c2.h) with `#define DEF 1`
                   lines in front of both c20.c and c21.c (e.g. `var cm9 XCMPMEM`, `var all9 XPUSH XCMPMEM XHZERO`); the build uses
                   `pipeline.py bau c2 --c2emu --libc alt --quelle NAME=userspace/c2/work/var/NAME`.
+  lauf --c2x BIN --auto --regeln R.. --extra R3 [--null]  (W10o) each module runs c2x with `-x<letters>` derived from its program's rule set
+                  (c2x_flags; letters in userspace/c2/c2.h); --null adds a flag-less run MOD.sz that must equal MOD.s.
   tokcheck [--update] host (W10l): the default c2 (no defines) must be token-identical to the sources before the first c2x switch
                   (git rev C2_BASE_REV): `cpp -P -I. FILE | tr -s ' \\t\\n' '\\n' | md5sum`, stored in userspace/c2/tokens.md5.
                   Exit 1 on a difference.  --update re-derives the stored md5 from C2_BASE_REV.
@@ -83,7 +85,17 @@ def verfuegbar(namen):
     return erg
 
 
-def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False):
+# W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "w", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r"}
+
+
+def c2x_flags(name, regeln, extra=()):
+    """W10o: the `-x...` argument for program NAME: letters of the rules in regelsatz(name, ...) that c2x implements ('' = no flag)."""
+    r = regelsatz(name, regeln, extra)
+    return "".join(FLAGBUCHSTABE[x] for x in FLAGBUCHSTABE if x in r)
+
+
+def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=False):
     """Guest commands for the modules (names without .c).  Every command ends in /mnt, none is longer than ca. 200 characters."""
     b = []
     for m in mods:
@@ -94,7 +106,10 @@ def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False):
             b.append("cd /tmp;/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1;/usr/lib/c0 ci c1 c2 >>%s 2>&1;>ci;cd /mnt" % (m, e, e))
             b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
         if c2x and kurz:   # W10f: one run each of the shipped c2 (MOD.s) and c2x (MOD.sn), no repeat runs (-xpush acceptance)
-            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x c5 %s.sn >>%s 2>&1;>c5;cd /mnt" % (m, e, m, e))
+            fl = ("-x" + flags[m] + " ") if flags and flags.get(m) else ""   # W10o: flags of the module's program
+            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x %sc5 %s.sn >>%s 2>&1;>c5;cd /mnt" % (m, e, fl, m, e))
+            if null:   # c2x without any flag must equal the shipped c2: MOD.sz
+                b.append("cd /tmp;cat /mnt/%s.s0 >c5;/mnt/c2x c5 %s.sz >>%s 2>&1;>c5;cd /mnt" % (m, m, e))
         elif c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
             # /tmp is small: every repeat run is compared in the guest with cmp and deleted when identical (the file is then
             # missing in the result and MOD.cmp is empty for it); a file that stays is the one that differs
@@ -111,7 +126,7 @@ def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False):
     return b
 
 
-def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False):
+def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False, regeln=None, extra=(), null=False):
     sys.path.insert(0, os.path.join(U.TOOLS, "kernel"))
     import gast_as
     U.pruefe()
@@ -141,7 +156,8 @@ def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False):
                 q[f] = jobs[n][0][f]
                 q.update(jobs[n][1])
             mods_alle.append((n, f[:-2]))
-        bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0, kurz)
+        fls = {m: c2x_flags(n, regeln, extra) for n, m in mods_alle} if regeln else None   # W10o: per-program flags
+        bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0, kurz, fls, null)
         ausf = ()
         if c2x:
             q["c2x"] = open(c2x, "rb").read()
@@ -149,10 +165,10 @@ def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False):
         if c2o:
             q["c2o"] = open(c2o, "rb").read()
             ausf += ("c2o",)
-        extra = ((".sn",) if kurz else (".sn", ".sm", ".sb", ".sp")) + ((".so",) if c2o else ())
+        extra_ = ((".sn",) if kurz else (".sn", ".sm", ".sb", ".sp")) + ((".so",) if c2o else ()) + ((".sz",) if null else ())
         rueck = []
         for n, m in mods_alle:
-            rueck += ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".err", m + ".cmp"] + ([m + e for e in extra] if c2x else [])
+            rueck += ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".err", m + ".cmp"] + ([m + e for e in extra_] if c2x else [])
         ar = os.path.join(WORK, "sess_%d" % gi)
         print("session %d: %s" % (gi, " ".join(n + "/" + f for n, f in grp)), flush=True)
         aus = {}
@@ -162,12 +178,14 @@ def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False):
         for n, m in mods_alle:
             d = os.path.join(WORK, n)
             os.makedirs(d, exist_ok=True)
-            for fn in ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".cmp"] + ([m + e for e in extra] if c2x else []):
+            for fn in ([] if s0 else [m + ".s0"]) + [m + ".s", m + ".cmp"] + ([m + e for e in extra_] if c2x else []):
                 if r.get(fn) is not None:
                     with open(os.path.join(d, fn), "wb") as f:
                         f.write(r[fn])
             # verdict per module: .sn against the shipped c2's .s; a repeat file that is missing was identical (deleted in the guest)
             sn, so_ = r.get(m + ".sn"), r.get(m + ".s")
+            if null:
+                print("  %-10s flags %-12r no-flag run %s" % (m, fls.get(m) if fls else "", "SAME as shipped c2" if r.get(m + ".sz") == so_ and so_ else "DIFFERS"), flush=True)
             if c2x:
                 print("  %-10s s %6d B  sn %6d B  %s  | %s" % (m, len(so_ or b""), len(sn or b""),
                       "IDENTICAL" if sn is not None and sn == so_ else "DIFFERS",
@@ -409,6 +427,8 @@ def main():
     ap.add_argument("--extra", default="", help="xpush: program-bound rules added to every program's set (W10n, e.g. R3), minus its C2_AUS")
     ap.add_argument("--global", dest="glob", action="store_true", help="xpush: old behaviour, one list for all programs")
     ap.add_argument("--regeln", default="R1", help="xpush: host rules the c2x output must equal (comma list, W10g)")
+    ap.add_argument("--auto", action="store_true", help="lauf with --c2x: pass each module the -x flags of its program (c2x_flags from --regeln/--extra, W10o)")
+    ap.add_argument("--null", action="store_true", help="lauf with --c2x --kurz: also run c2x WITHOUT flags on the same input (MOD.sz, must equal MOD.s)")
     ap.add_argument("--kurz", action="store_true", help="lauf with --c2x: only the shipped c2 and c2x once each (MOD.s, MOD.sn)")
     ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
     ap.add_argument("--update", action="store_true", help="tokcheck: re-derive userspace/c2/tokens.md5 from C2_BASE_REV")
@@ -419,7 +439,8 @@ def main():
     if a.cmd == "tokcheck":
         sys.exit(1 if tokcheck(a.update) else 0)
     if a.cmd == "lauf":
-        lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0, a.kurz)
+        lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0, a.kurz, tuple(a.regeln.split(",")) if a.auto else None,
+             tuple(x for x in a.extra.split(",") if x), a.null)
     elif a.cmd == "bauen":
         bauen(a.namen)
     elif a.cmd == "xpush":
