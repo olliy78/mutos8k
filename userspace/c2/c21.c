@@ -127,13 +127,17 @@ rmove()
 					continue;
 				savereg(r+14, regs[RT1], rsz[RT1], 0);
 			}
-		} else if (r1 >= 0) {
-			savereg(r1+flt, regs[RT2], rsz[RT2], p);
+		} else if (r1 >= 0)
 #ifdef XCMPMEM
+		{	/* braces only here: the default c2 stays token-identical (c2gegen.py tokcheck) */
+			savereg(r1+flt, regs[RT2], rsz[RT2], p);
 			if (p->labno == X4MARK && r1 == 0 && flt == 0)
 				x4keep = 1;
+		}
+#else
+			savereg(r1+flt, regs[RT2], rsz[RT2], p);
 #endif
-		} else
+		else
 			setcon(regs[RT2], regs[RT1], rsz[RT1]);
 		continue;
 
@@ -978,9 +982,9 @@ register flt;
 #ifdef XCMPMEM
 	/* c2x -xcmpmem (W10j): the R0 copy made by an inserted `ld r0,MEM` (X4MARK) serves only a repeated `cp MEM,#k` (see rmove, mv:); the older
 	   c2 keeps MEM in `ld r2,MEM`, `test MEM`, `push MEM` or reuses another register (cpp, mkfs, sh/cmd, sh/xec, tar measured).  Hide it here. */
-	/* W10k: except directly behind a conditional branch (`cp r0,#k ; jr cc ; ld rN,MEM` -> `ld rN,r0`, rule R38).  The original does this only
-	   for a branch that ends up short (jr); rmove runs before shortjmp, so a far `jp cc` (cpp, xec) is not told apart here (open, wk_w10k.md). */
-	if (x4keep && !(p->op == MOV && (p->back->op == CBRS || p->back->op == CBR))) {
+	/* W10l: no exception behind a conditional branch any more: the rule R38 reuse (`cp r0,#k ; jr cc ; ld rN,MEM` -> `ld rN,r0`) is done by
+	   cmppass() after shortjmp, only for a branch that ended up short (the original does not reuse R0 behind a far `jp cc`). */
+	if (x4keep) {
 		save0 = regs[0][0];
 		regs[0][0] = 0;
 	}
@@ -1333,6 +1337,40 @@ char sz;
 }
 
 /* Not V7 */
+#ifdef XCMPMEM
+/* c2x -xcmpmem (W10l, R38): late pass after shortjmp: `ld r0,MEM [X4MARK] ; cp r0,.. ; jr cc ; ld rN,MEM` -> `ld rN,r0`, only when the branch is a
+   short jr (CBRS).  A label or any other node in between breaks the pattern. */
+char	rt0buf[8];
+
+cmppass()
+{
+	register struct node *p, *q, *b, *m;
+	register char *c1, *c2;
+
+	for (p = first.forw; p != 0; p = p->forw) {
+		if (p->op != MOV || p->labno != X4MARK || (q = p->forw) == 0 || q->op != CMP || (b = q->forw) == 0 || b->op != CBRS)
+			continue;
+		m = b->forw;
+		if (m == 0 || m->op != MOV || m->subop != 0 || m->labno == X4MARK)
+			continue;
+		c1 = p->code + 3;	/* p->code is "r0,MEM" */
+		c2 = m->code;
+		if (c2[0] != 'r' || c2[1] < '1' || c2[1] > '9')	/* destination rN, N != 0 */
+			continue;
+		while (*c2 && *c2 != ',')
+			c2++;
+		if (*c2++ != ',' || !equstr(c1, c2))
+			continue;
+		c2 = m->code;
+		for (c1 = rt0buf; (*c1 = *c2) != ','; c1++, c2++);
+		c1[1] = 'r';
+		c1[2] = '0';
+		c1[3] = 0;
+		m->code = copy(1, rt0buf);
+	}
+}
+#endif
+
 #ifdef XHZERO
 /*
  * c2x -xhzero (R2 with its exceptions R30, R63): the xorb p (rhN) is dead when the next node is a byte store `ldb mem,rlN`

@@ -10,6 +10,13 @@ the original program".  This tool measures what the shipped c2 does:
   auswerten NAME... host: model on MOD.s (rule counts, with the program's real C2_AUS and with every rule on), line
                   differences, opcode histograms s0 / s / model.  Writes userspace/c2/gegenprobe.tsv.
 
+  var NAME DEF...  host (W10l): write the variant directory userspace/c2/work/var/NAME/ (c20.c, c21.c, c2.h) with `#define DEF 1`
+                  lines in front of both c20.c and c21.c (e.g. `var cm9 XCMPMEM`, `var all9 XPUSH XCMPMEM XHZERO`); the build uses
+                  `pipeline.py bau c2 --c2emu --libc alt --quelle NAME=userspace/c2/work/var/NAME`.
+  tokcheck [--update] host (W10l): the default c2 (no defines) must be token-identical to the sources before the first c2x switch
+                  (git rev C2_BASE_REV): `cpp -P -I. FILE | tr -s ' \\t\\n' '\\n' | md5sum`, stored in userspace/c2/tokens.md5.
+                  Exit 1 on a difference.  --update re-derives the stored md5 from C2_BASE_REV.
+
 Run with python3 -I.  Guest runs take minutes: the caller runs them in the foreground, one at a time.
 """
 import argparse
@@ -332,16 +339,69 @@ def bauen(namen):
     return erg
 
 
+C2DIR = os.path.join(U.REPO, "userspace", "c2")
+C2_BASE_REV = "705e611^"     # last commit before the first c2x define (W10f -xpush): the original reconstruction
+C2_FILES = ("c20.c", "c21.c")
+
+
+def var(name, defs):
+    """Write userspace/c2/work/var/NAME/{c20.c,c21.c,c2.h}; both modules get the #define lines (hzpass lives in c21.c, its call in c20.c)."""
+    d = os.path.join(C2DIR, "work", "var", name)
+    os.makedirs(d, exist_ok=True)
+    kopf = "".join("#define %s 1\n" % x for x in defs)
+    for f in C2_FILES:
+        open(os.path.join(d, f), "w", encoding="latin-1").write(kopf + open(os.path.join(C2DIR, f), encoding="latin-1").read())
+    open(os.path.join(d, "c2.h"), "wb").write(open(os.path.join(C2DIR, "c2.h"), "rb").read())
+    print(d, "defines:", " ".join(defs) or "(none)")
+
+
+def tokmd5(text):
+    """md5 of the cpp -P token stream (white space folded to newlines) of a c2 source text, headers from userspace/c2."""
+    import hashlib
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as t:
+        f = os.path.join(t, "x.c")
+        open(f, "w", encoding="latin-1").write(text)
+        o = subprocess.run(["cpp", "-P", "-I" + C2DIR, f], capture_output=True, check=True).stdout.decode("latin-1")
+    return hashlib.md5(re.sub(r"[ \t\n]+", "\n", o).encode("latin-1")).hexdigest()
+
+
+def tokcheck(update):
+    import subprocess
+    mdf = os.path.join(C2DIR, "tokens.md5")
+    if update:
+        zeilen = []
+        for f in C2_FILES:
+            txt = subprocess.run(["git", "-C", U.REPO, "show", C2_BASE_REV + ":userspace/c2/" + f], capture_output=True, check=True).stdout.decode("latin-1")
+            zeilen.append("%s  %s" % (tokmd5(txt), f))
+        open(mdf, "w").write("\n".join(zeilen) + "\n")
+    soll = dict(l.split()[::-1] for l in open(mdf).read().splitlines())
+    bad = 0
+    for f in C2_FILES:
+        ist = tokmd5(open(os.path.join(C2DIR, f), encoding="latin-1").read())
+        ok = ist == soll.get(f)
+        bad += not ok
+        print("%s %s %s" % (f, ist, "OK" if ok else "DIFFERS (expected %s)" % soll.get(f)))
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen", "xpush"])
+    ap.add_argument("cmd", choices=["lauf", "auswerten", "bauen", "xpush", "var", "tokcheck"])
     ap.add_argument("namen", nargs="*")
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
     ap.add_argument("--regeln", default="R1", help="xpush: host rules the c2x output must equal (comma list, W10g)")
     ap.add_argument("--kurz", action="store_true", help="lauf with --c2x: only the shipped c2 and c2x once each (MOD.s, MOD.sn)")
     ap.add_argument("--s0", action="store_true", help="lauf: skip cpp/c0/c1, take MOD.s0 left by an earlier run (W10c)")
+    ap.add_argument("--update", action="store_true", help="tokcheck: re-derive userspace/c2/tokens.md5 from C2_BASE_REV")
     a = ap.parse_args()
+    if a.cmd == "var":
+        var(a.namen[0], a.namen[1:])
+        return
+    if a.cmd == "tokcheck":
+        sys.exit(1 if tokcheck(a.update) else 0)
     if a.cmd == "lauf":
         lauf(verfuegbar(a.namen), a.c2x, a.c2o, a.s0, a.kurz)
     elif a.cmd == "bauen":

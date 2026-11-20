@@ -167,6 +167,9 @@ char **argv;
 		do {
 			shortjmp();
 		} while (nchange);
+#ifdef XCMPMEM
+		cmppass();	/* c2x -xcmpmem: R0 reuse behind a short jr cc (R38) */
+#endif
 #ifdef XHZERO
 		hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
 #endif
