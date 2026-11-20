@@ -15,7 +15,7 @@ Die `MOD.s0` stammen aus einem aelteren Arbeitsbaum (gleicher c1, gleiche Quelle
 ## 2. Abnahme `hz4` (53 Module, Regeln R2,R7,R10,R30,R32,R43,R63)
 **45 von 53 gleich** (Stufe 3: 43). Abweichend (8): c0/c00, c2/c21, init (c2x behaelt noch ein `xorb` mehr), c2/c20 (neu: c2x loescht ein `xorb`, das das Modell behaelt, bei `cp r2,#%6C`),
 convert, cpp (`jr`/Blocklage, Folge der `xorb`-Zahl), ld (R32 nach `jr eq L370`, c1-Ausgabe hat dort kein `xorb`), mv (nur der Kopieanteil von R63, gehoert zu `-xcopyprop`).
-Stufe 4 behoben gegenueber Stufe 3: zwei der bisher abweichenden Module (sh/macro u.a.); c20 ist dagegen neu abweichend.
+Stufe 4 behoben gegenueber Stufe 3: drei der zehn bisher abweichenden Module (sh/macro, ps, ed); c20 ist dagegen neu abweichend.
 Stufe 4 bleibt im Commit (besser als 3).
 
 ## 3. Abnahme der Kombination `all4` (65 Module = 53 + echo cat wc size cmp who ln mkdir mknod pr passwd chown)
