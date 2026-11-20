@@ -217,21 +217,24 @@ rmove()
 				if (isreg(ccloc) == r)
 					clrcc();
 			}
+#ifdef XHZERO
+			/* c2x -xhzero (R3, R7, R10, R32): the older c2 does not drop this xorb as redundant (hzkeep) */
+			if (rsz[RT1] == 'h' && hzkeep(p, r))
+				goto hzset;
+#endif
 			if (rsz[r] == rsz[RT1]) {
 				if (rsz[r] != 'h' && equstr(regs[r], "#0"))
 					goto del;
 				if (rsz[r] == 'h' && equstr(cregs[r], "#0"))
 					goto del;
 			}
-#ifdef XHZERO
-			/* c2x -xhzero (R7): `ldb rlN,mem ; xorb rhN,rhN ; cp rN,..` keeps the xorb (hzkeep) */
-			if (rsz[r] == 'l' && rsz[RT1] == 'h' && equstr(cregs[r], "#0") && !hzkeep(p, r))
-#else
 			if (rsz[r] == 'l' && rsz[RT1] == 'h' && equstr(cregs[r], "#0"))
-#endif
 				goto del;
 			if (rsz[r] == 'h' && rsz[RT1] == 'l' && equstr(regs[r], "#0"))
 				goto del;
+#ifdef XHZERO
+		hzset:
+#endif
 			if (rsz[RT1] == 'h') {
 				if (rsz[r] != 'l')
 					kill(r, 'h');
@@ -365,15 +368,6 @@ rmove()
 
 	case CBRS:
 	case CBR:
-/* c2x -xhzero: behind `cp rN,..` the older c2 no longer knows that the high byte of rN is zero (rules R10, R32) */
-#ifdef XHZERO
-		if (p->back->op == CMP && p->back->back->op == XOR && p->back->back->back->op != CBR
-		 && p->back->back->back->op != CBRS) {
-			dualop(p->back);
-			if ((r = isreg(regs[RT1])) >= 0 && r < 8 && rsz[RT1] == 0)
-				cregs[r][0] = 0;
-		}
-#endif
 		if (p->back->op == TST || p->back->op == CMP) {
 			if (p->back->op == TST) {
 				singop(p->back);
@@ -1311,7 +1305,7 @@ char sz;
 /*
  * c2x -xhzero (R2 with its exceptions R30, R63): the xorb p (rhN) is dead when the next node is a byte store `ldb mem,rlN`
  * (mem not a register).  It stays when the node behind the store reads the register again: `testb rlN` (R30) or a word move
- * from rN (R63).  R43 (struct member array copy) is not modelled.  Returns 1 when p can go.
+ * from rN (R63), or when the store copies a struct member array element (R43).  Returns 1 when p can go.
  */
 char hzbuf[20];
 
@@ -1329,9 +1323,9 @@ register r;
 		dualop(q);
 		if (regs[RT1][0] && isreg(regs[RT1]) < 0 && isreg(regs[RT2]) == r && rsz[RT2] == 'l') {
 			ok = 1;
-			/* R43: `inc rK,#n (n > 1) ; ldb rlN,@rK ; xorb ; ldb mem,rlN` keeps the xorb */
+			/* R43: `inc rK,#n (n > 1) ; ldb rlN,@rK ; xorb ; ldb @rM,rlN` keeps the xorb */
 			q2 = p->back;
-			if (q2->op == MOV && (q2->subop & BYTE) && q2->back->op == INC) {
+			if (regs[RT1][0] == '@' && regs[RT1][1] == 'r' && q2->op == MOV && (q2->subop & BYTE) && q2->back->op == INC) {
 				dualop(q2);
 				cp = regs[RT2];
 				if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && cp[0] == '@' && cp[1] == 'r') {
@@ -1370,22 +1364,42 @@ register r;
 	return(ok);
 }
 
-/* c2x -xhzero (R7): is p (xorb rhN) the one between `ldb rlN,mem` and `cp rN,..`?  Such a xorb is kept.  */
+/*
+ * c2x -xhzero: is p (xorb rhN) one the older c2 keeps although the high byte is known to be zero?
+ *   R7:  `ldb rlN,mem ; xorb ; cp rN,..`
+ *   R3, R10, R32 (first xorb behind a compare chain only): `xorb ; cp rN,.. ; jr cc ; xorb ; jr M | add rN,.. | cp rN,..`
+ */
 hzkeep(p, r)
 struct node *p;
 register r;
 {
-	register struct node *q;
+	register struct node *q, *f;
 	register ok;
 
 	ok = 0;
 	q = p->back;
-	if (q->op == MOV && (q->subop & BYTE) && !(q->subop & (LONG | FLTF)) && p->forw && p->forw->op == CMP) {
+	f = p->forw;
+	if (q->op == MOV && (q->subop & BYTE) && !(q->subop & (LONG | FLTF)) && f && f->op == CMP) {
 		dualop(q);
 		if (isreg(regs[RT1]) == r && rsz[RT1] == 'l' && regs[RT2][0] && regs[RT2][0] != 'r') {
-			dualop(p->forw);
+			dualop(f);
 			if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
 				ok = 1;
+		}
+	} else if ((q->op == CBR || q->op == CBRS) && f && q->back->op == CMP && q->back->back->op == XOR
+	 && q->back->back->back->op != CBR && q->back->back->back->op != CBRS) {
+		dualop(q->back);
+		if (isreg(regs[RT1]) == r && rsz[RT1] == 0) {
+			dualop(q->back->back);
+			if (isreg(regs[RT1]) == r && rsz[RT1] == 'h') {
+				if (f->op == JBR || f->op == JMP)
+					ok = 1;
+				else if (f->op == CMP || f->op == ADD) {
+					dualop(f);
+					if (isreg(regs[RT1]) == r && rsz[RT1] == 0)
+						ok = 1;
+				}
+			}
 		}
 	}
 	dualop(p);
