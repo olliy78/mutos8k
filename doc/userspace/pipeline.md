@@ -84,3 +84,9 @@ Gemessen eingefuehrt in den genannten Arbeitspaketen; Einzelheiten dort.
   (im Gast-tty ging ein Zeichen verloren, die Kette lief dann still nicht).
 * **yacc-Quellen:** `tools/userspace/erg_yacc.py [DIR/]NAME` erzeugt `NAME.c` aus `NAME.y` mit dem Gast-yacc (Plan 45; cpp `cpy.y` W2).  Die erzeugte `.c` wird eingecheckt.
 
+
+## `--xcc`: Bau im Gast mit `xcc` + `c2x` (W10s, `wk_w10s.md`)
+`python3 -I tools/userspace/pipeline.py bau NAME --xcc --libc alt` und `vergleich NAME --ist neu_x`.
+Voraussetzung: `userspace/cc/work/bau/xcc_c2_s.bin` (`xcc.py var` + `bau cc --c2emu`, `wk_w10r.md`) und `userspace/c2/work/bau/c2x_c2.bin` (`bau c2 --c2emu` mit `c2x`).
+Der Gast uebersetzt mit `xcc -O -X<Buchstaben des Programms>` (c2gegen.c2x_flags, Gruppen von c2x minus `C2_AUS`), kein Host-Patch des `.s`; `noopt`-Module ohne `-O`.
+`xcc` und `c2x` liegen auf der `usr`-Kopie der Sitzung (dort ersetzt ein Ein-Glied-Archiv `libc.a`). Bei Programmen, deren Hostmodell Regeln ohne c2x-Buchstaben braucht, meldet `bau` diese vorab.

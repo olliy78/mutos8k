@@ -2,7 +2,7 @@
 
   python3 -I tools/userspace/pipeline.py holen   NAME [--platte root --pfad etc/init]
   python3 -I tools/userspace/pipeline.py karte   NAME [--ablegen]          # map + listing + libc names + strings
-  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm] [--c2emu] [--libc alt]   (guest, minutes)
+  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm] [--c2emu] [--xcc] [--libc alt]   (guest, minutes)
   python3 -I tools/userspace/pipeline.py vergleich NAME [--ist VARIANTE]   # report against the original
   python3 -I tools/userspace/pipeline.py alles   NAME [--quelle V=FILE]... # holen, karte, bau, vergleich
   python3 -I tools/userspace/pipeline.py --check [NAME]                    # host-side self test (no guest run)
@@ -256,11 +256,50 @@ def quellen_lesen(name, a):
     return v, koepfe
 
 
+def xcc_einstellung(name, v):
+    """W10s: the `xcc` argument of gast_bauen: the two binaries and the -X letters of the program (c2gegen.c2x_flags = the groups c2x
+    implements minus C2_AUS, the same function as `c2gegen lauf --auto`; one letter set for all modules of the program)."""
+    import c2gegen
+    import xcc
+    fl = c2gegen.c2x_flags(name, xcc.REGELN, ("R3",))
+    bins = {"xcc": os.path.join(U.REPO, "userspace", "cc", "work", "bau", "xcc_c2_s.bin"),
+            "c2x": os.path.join(U.REPO, "userspace", "c2", "work", "bau", "c2x_c2.bin")}
+    for b in bins.values():
+        if not os.path.isfile(b):
+            raise U.Fehlt(b)
+    return dict(bins, flags=fl)
+
+
+def xcc_luecken(name, ar):
+    """W10s: rules of the host model (c2_emu_s counts on the plain `cc -O -S` text work/bau/neu.s or neu_s/*.s, the program's own C2_AUS)
+    that c2x has no letter for; those sites are not reproduced by an xcc build.  {} = the program can be G with xcc (as far as measured)."""
+    import c2gegen
+    bd = os.path.join(ar, "bau")
+    texte = []
+    if os.path.isfile(os.path.join(bd, "neu.s")):
+        texte = [open(os.path.join(bd, "neu.s"), encoding="latin-1").read()]
+    elif os.path.isdir(os.path.join(bd, "neu_s")):
+        texte = [open(os.path.join(bd, "neu_s", f), encoding="latin-1").read() for f in sorted(os.listdir(os.path.join(bd, "neu_s")))]
+    tot = {}
+    for t in texte:
+        _s, cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
+        for k, n in cnt.items():
+            if n and k not in c2gegen.FLAGBUCHSTABE:
+                tot[k] = tot.get(k, 0) + n
+    return tot
+
+
 def cmd_bau(name, a):
     ar = arbeit_von(name, a)
     v, koepfe = quellen_lesen(name, a)
+    xcc_arg = None
+    if a.xcc:       # W10s: guest build with xcc + c2x and the program's -X flags, no host rewriting of the .s
+        if a.c2emu or a.asm:
+            raise SystemExit("--xcc excludes --c2emu and --asm")
+        xcc_arg = xcc_einstellung(name, v)
+        print("xcc build of %s: -X%s; model rules without a c2x letter: %s" % (name, xcc_arg["flags"], xcc_luecken(name, ar) or "none"))
     libs = sorted(k for k in koepfe if k.startswith("libc_alt")) if a.libc == "alt" else []
-    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs)
+    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs, xcc=xcc_arg)
     os.makedirs(os.path.join(ar, "bau"), exist_ok=True)
     if a.c2emu:     # second round: assemble the rewritten .s (original-c2 model) and link it
         zwei = {}
@@ -394,6 +433,8 @@ def main(argv=None):
     ap.add_argument("--flags", default="-O -s")
     ap.add_argument("--asm", action="store_true", help="also cc -S (assembler source of the variant)")
     ap.add_argument("--c2emu", action="store_true", help="also assemble the .s rewritten to the original c2's form (R1-R3)")
+    ap.add_argument("--xcc", action="store_true",
+                    help="build in the guest with /usr/bin/xcc -O -X<flags of the program> and /usr/lib/c2x instead of cc + host c2 model (W10s; variant name default neu_x; use with --libc alt)")
     ap.add_argument("--libc", choices=["disk", "alt"], default="disk",
                     help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
@@ -403,6 +444,8 @@ def main(argv=None):
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
     ap.add_argument("--voll", action="store_true", help="print the full report")
     a = ap.parse_args(argv)
+    if a.xcc and a.variante == "neu":
+        a.variante = "neu_x"
     try:
         if a.check or a.cmd is None:
             return check(a.check or a.name)

@@ -14,6 +14,7 @@ emulator raises Fehlt (CLI: exit 77) when it is not there.
 import difflib
 import os
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -293,7 +294,7 @@ def kartenzeilen_namen(namen, libc=None):
 STUFEN_AB = 20000     # source size (bytes) from which gast_bauen runs the cc passes one by one
 
 
-def stufen_befehl(name, lib, nur_s):
+def stufen_befehl(name, lib, nur_s, c2="/usr/lib/c2"):
     """cc -O [-S] by hand: cpp, c0, c1, c2 (V7 cc.c order, MUTOS paths /usr/lib/.., /usr/bin/as from the strings of `cc`).  Every pass
     truncates the files it consumed (`>file`; there is no `rm` on the guest PATH, the commands disk is not mounted), which frees the blocks.
     Errors go to NAME.err (NAME.err2 for the -S run).  Result: /tmp/NAME (linked by `cc -s -o` like the one-step cc) or /tmp/NAME.s."""
@@ -301,7 +302,7 @@ def stufen_befehl(name, lib, nur_s):
     # Three guest commands, each ending in /mnt: one line longer than ca. 250 characters is damaged by the guest tty (a character is
     # lost, the chain silently does not run: measured with ld, 22 KB source + libc_alt archive, 2026-11-17).
     a = ["cd /tmp", "/usr/lib/cpp -I/mnt /mnt/%s.c ci >%s 2>&1" % (name, e), "/usr/lib/c0 ci c1 c2 >>%s 2>&1" % e, ">ci", "cd /mnt"]
-    b = ["cd /tmp", "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "/usr/lib/c2 c5 %s >>%s 2>&1" % (name + ".s" if nur_s else "c3", e), ">c5", "cd /mnt"]
+    b = ["cd /tmp", "/usr/lib/c1 c1 c2 c5 >>%s 2>&1" % e, ">c1", ">c2", "%s c5 %s >>%s 2>&1" % (c2, name + ".s" if nur_s else "c3", e), ">c5", "cd /mnt"]
     c = []
     if not nur_s:
         c = ["cd /tmp", "/usr/bin/as -u -o %s.o c3 >>%s 2>&1" % (name, e), ">c3",
@@ -314,17 +315,62 @@ class Module(dict):
     noopt = frozenset()
 
 
+def xcc_usr(usr_hfe, xcc):
+    """W10s: install the adapted tool chain on a COPY of the usr disk: /usr/bin/xcc, /usr/lib/c2x (0755, mtime 1987).  usr has only
+    4 KB free, so libc.a (72 KB) is replaced by a one-member archive (smallest member): the build links against the program's libc_alt archive
+    (--libc alt), the shipped libc.a would only be searched behind it.  xcc = {"xcc": path, "c2x": path, ...}."""
+    import tempfile
+    dt = emu.binary("k1520disktool")
+    d = tempfile.mkdtemp(prefix="xcc_inst_")
+    try:
+        os.makedirs(os.path.join(d, "bin"))
+        os.makedirs(os.path.join(d, "lib"))
+        shutil.copyfile(xcc["xcc"], os.path.join(d, "bin", "xcc"))
+        shutil.copyfile(xcc["c2x"], os.path.join(d, "lib", "c2x"))
+        g = os.path.join(d, "get")
+        os.makedirs(g)
+        subprocess.run([dt, "get", usr_hfe, "lib/libc.a", "--to", g], check=True, capture_output=True)
+        lc = [os.path.join(r, f) for r, _d, fs in os.walk(g) for f in fs if f == "libc.a"][0]
+        a = objformat.Archiv.lesen(open(lc, "rb").read())
+        a.mitglieder = [min(a.mitglieder, key=lambda m: len(m.daten))]      # ld accepts an archive with one real member
+        with open(os.path.join(d, "lib", "libc.a"), "wb") as f:
+            f.write(a.schreiben())
+        shutil.rmtree(g)
+        subprocess.run([dt, "rm", usr_hfe, "lib/libc.a"], check=True, capture_output=True)
+        subprocess.run([dt, "put", usr_hfe, d], check=True, capture_output=True)
+        for n, m in (("bin/xcc", "0755"), ("lib/c2x", "0755"), ("lib/libc.a", "0664")):
+            subprocess.run([dt, "attr", usr_hfe, n, "--mode", m, "--mtime", "536457600"], check=True, capture_output=True)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, parallel=4, frist=20_000_000_000,
-               log=print, libs=()):
+               log=print, libs=(), xcc=None):
     """varianten: {name: source text (str/bytes)}.  Each variant = its own emulator session (copies of the disks,
     drive A empty /tmp, D = source disk = /mnt) -- sessions run in parallel threads.  Headers in kopfdateien
     ({name: bytes}) are put next to the sources and found with -I/mnt.  `libs` = names of kopfdateien that are archives:
     they are named on the cc command line behind the source, i.e. searched BEFORE -lc (libc_alt, doc/userspace/libc_alt.md).
+    `xcc` (W10s) = {"xcc": xcc binary, "c2x": c2x binary, "flags": letters or {module file: letters}}: the modules are compiled by
+    `xcc -O -X<letters>` (/usr/lib/c2x -x<letters> instead of the shipped c2; modules without -O stay plain), nothing is patched on the host.
     Result {name: {"bin": bytes|None, "err": str, "s": str|None, "dauer": sec}}."""
     pruefe()
     sys.path.insert(0, os.path.join(TOOLS, "kernel"))
     import gast_as            # noqa: E402
     emu.build()
+    cc = "xcc" if xcc else "cc"
+
+    def xf(f=None):       # the -X option of one module (empty text without xcc)
+        if not xcc:
+            return ""
+        fl = xcc["flags"]
+        return " -X" + (fl.get(f, "") if isinstance(fl, dict) else fl)
+    if xcc:
+        os.makedirs(arbeit, exist_ok=True)
+        usr = os.path.join(arbeit, "xcc_usr.hfe")
+        shutil.copyfile(gast_as.disk(gast_as.PLATTEN["usr.hfe"]), usr)
+        xcc_usr(usr, xcc)
+        orig_disk = gast_as.disk
+        gast_as.disk = lambda n: usr if n == gast_as.PLATTEN["usr.hfe"] else orig_disk(n)
     erg = {}
     sperre = threading.Semaphore(parallel)
 
@@ -342,9 +388,9 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             # passes are run by hand and each pass deletes its inputs (same commands as cc.c, cc -O only; USERSPACE_STUFEN=1 forces it).
             stufen = (not ist_s) and "-O" in flags.split() and (len(text) > STUFEN_AB or os.environ.get("USERSPACE_STUFEN") == "1")
             if stufen:
-                befehle = stufen_befehl(name, lib, False)
+                befehle = stufen_befehl(name, lib, False, "/usr/lib/c2x -x" + xf(name + ".c")[3:] if xcc else "/usr/lib/c2")
             else:
-                befehle = [("cd /tmp;cc %s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (fl, name, name, ".s" if ist_s else ".c", lib, name))]
+                befehle = [("cd /tmp;%s %s%s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (cc, fl, xf(name + ".c") if "-O" in fl.split() else "", name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 if stufen:
@@ -376,7 +422,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         def cfl_von(f):
             return " ".join(x for x in cfl.split() if x != "-O") if f in ohne else cfl
         for f in cs:
-            befehle.append("cd /tmp;cc %s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cfl_von(f) if f.endswith(".c") else "", f, name))
+            befehle.append("cd /tmp;%s %s%s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cc, cfl_von(f) if f.endswith(".c") else "", xf(f) if f.endswith(".c") and "-O" in cfl_von(f).split() else "", f, name))
         lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
         # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
         befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
@@ -412,6 +458,8 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         t.start()
     for t in ts:
         t.join()
+    if xcc:
+        gast_as.disk = orig_disk
     return erg
 
 
