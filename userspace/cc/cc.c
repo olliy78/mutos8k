@@ -35,6 +35,12 @@ char	pass1[20] = "/usr/lib/c1";
 char	pass2[20] = "/usr/lib/c2";
 char	passp[20] = "/usr/lib/cpp";
 char	*pref = "/usr/lib/crt0.o";
+#ifdef XCC
+/* xcc (Plan 52 W10r): -X<letters> runs the adapted optimizer c2x instead of c2 and passes it -x<letters> */
+char	pass2x[20] = "/usr/lib/c2x";
+char	xopt[20];
+int	xflag;
+#endif
 char	*copy();
 char	*setsuf();
 char	*strcat();
@@ -49,6 +55,10 @@ char *argv[];
 	char **pv, *ptemp[MAXOPT], **pvt;
 	int nc, nl, i, j, c, nxo, na, fd;
 	int idexit();
+#ifdef XCC
+	char *p2;
+	int xk;
+#endif
 
 	i = nc = nl = nxo = 0;
 	setbuf(stdout, (char *)NULL);
@@ -74,6 +84,17 @@ char *argv[];
 		case 'O':
 			oflag++;
 			break;
+#ifdef XCC
+		case 'X':
+			/* -X or -X<letters>: letters (at most 15) become the c2x argument -x<letters> */
+			xflag++;
+			xopt[0] = '-';
+			xopt[1] = 'x';
+			for (j = 0; j < 15 && argv[i][j+2]; j++)
+				xopt[j+2] = argv[i][j+2];
+			xopt[j+2] = 0;
+			break;
+#endif
 		case 'p':
 			proflag++;
 			break;
@@ -223,7 +244,22 @@ passa:
 			av[1] = tmp5;
 			av[2] = tmp3;
 			av[3] = 0;
+#ifdef XCC
+			p2 = pass2;
+			if (xflag) {
+				p2 = pass2x;
+				av[0] = "c2x";
+				xk = 1;
+				if (xopt[2])
+					av[xk++] = xopt;
+				av[xk++] = tmp5;
+				av[xk++] = tmp3;
+				av[xk] = 0;
+			}
+			if (callsys(p2, av)) {
+#else
 			if (callsys(pass2, av)) {
+#endif
 				unlink(tmp3);
 				tmp3 = assource = tmp5;
 			} 
