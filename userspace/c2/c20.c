@@ -106,7 +106,11 @@ struct optab optab[] {
 
 char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
 #ifdef C2X
-int	xfl;	/* c2x run-time switches, see c2.h */
+/* c2x run-time switches, see c2.h.  Must be initialized (data, not BSS):
+ * opsetup() can store one entry past ophash[OPHS] (V7 test `ophp > &ophash[OPHS]`),
+ * harmless in the original layout, but it would hit a BSS variable placed right
+ * after ophash. */
+int	xfl = 0;
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
