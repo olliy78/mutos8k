@@ -1,6 +1,6 @@
 # Plan 47: Branch `mutos-plus` -- funktionsfaehiges, aenderbares MUTOS
 
-Stand 2026-11-15.  Gilt nur im Branch `mutos-plus`.  Vorlagen: Plan 41 (K8, K11), Plan 43 §15, `doc/kernel/gesamtbau.md`.  Folgeplaene: 48 (`mutos_io` nach CP/A), 49 (groessere Disketten), 50 (RTC), 51 (Festplatte).
+Stand 2026-11-15.  Gilt nur im Branch `mutos-plus`.  Vorlagen: Plan 41 (K8, K11), Plan 43 §15, `doc/kernel/gesamtbau.md`.  Folgeplaene: 48 (`mutos_io` nach CP/A), 49 (groessere Disketten), 50 (RTC), 51 (Festplatte), 53 (Fehlerbereinigung, einheitlicher Compiler-Regelsatz).
 Aussagen sind *gemessen* (mit Fundstelle), *abgeleitet* (aus Quelle gelesen, nicht im Lauf geprueft) oder *Annahme*.
 
 ## 1. Ziel
