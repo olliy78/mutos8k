@@ -294,6 +294,8 @@ def xcc_je_modul(name, v, ar, einst):
             continue
         _t, cnt = c2gegen.modell(name, open(q, encoding="latin-1").read())
         fl[f] = einst["flags"] if any(k in c2gegen.FLAGBUCHSTABE for k in cnt) else None
+        if fl[f] is not None and f[:-2] in c2gegen.SHARE_MODS:
+            fl[f] += "S"        # W10z: shared strings above a heap use of XTHR (as_code fits only with them)
     return dict(einst, flags=fl)
 
 

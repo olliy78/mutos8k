@@ -111,15 +111,16 @@ char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
  * harmless in the original layout, but it would hit a BSS variable placed right
  * after ophash. */
 int	xfl = 0;
-#ifdef C2XSHARE
-/* W10y: shared strings in copy() are OFF by default (compile with -DC2XSHARE to get them).  They change the heap layout, and the heap
+/* W10z: shared strings in copy() are run-time optional: flag S (XR_SH in xfl2), off by default.  They change the heap layout, and the heap
  * layout is not neutral: addsob() reads p->refc of a DEC node that nothing ever initialised (known bug F6), so the djnz decision
- * depends on leftover heap content of the previous function.  With sharing, dd/ed/tar lost their djnz (W10w/W10x). */
+ * depends on leftover heap content of the previous function.  With sharing everywhere, dd/ed/tar lost their djnz (W10w/W10x).
+ * Hence only the part of a function's heap above XTHR bytes is shared; functions that stay below XTHR are heap-identical to c2.
+ * The tables are initialised data (F1), not BSS. */
 #define	XTBSZ	120	/* longest string that copy() shares */
-#define	XIHS	64	/* hash chains of the shared strings */
-char	xtb[XTBSZ + 8] = {0};	/* initialized (data) too: see above */
+#define	XIHS	32	/* hash chains of the shared strings */
+#define	XTHR	6144	/* heap use of the current function above which copy() starts to share */
+char	xtb[XTBSZ + 8] = {0};
 char	*xih[XIHS] = {0};
-#endif
 int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
@@ -158,6 +159,7 @@ register char *s;
 		case '4': xfl |= XR42; break;
 		case '6': xfl |= XR64; break;
 		case 'W': xfl |= XR63C; break;
+		case 'S': xfl2 |= XR_SH; break;
 		case 'e': xfl2 |= XR45; break;
 		case 'a': xfl2 |= XR71; break;
 		case 'n': xfl2 |= XR34; break;
@@ -248,14 +250,14 @@ char **argv;
 			hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
 #endif
 #ifdef C2X
-		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || xfl2)
+		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || (xfl2 & ~XR_SH))
 			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
 #endif
 		output();
 		if (niter > maxiter)
 			maxiter = niter;
 		lasta = firstr;
-#ifdef C2XSHARE
+#ifdef C2X
 		for (c = 0; c < XIHS; c++)
 			xih[c] = 0;	/* the shared strings lived in the heap that was just released */
 #endif
@@ -540,12 +542,12 @@ char *ap;
 		while (*p++)
 			n++;
 	}
-#ifdef C2XSHARE
+#ifdef C2X
 	/* W10w: equal strings are stored once.  c2x is 6.7 KB bigger than c2 and the process has no more than 64 KB for text, data, heap and
 	   stack (sbrk does not check): the biggest function of `as` (encode, 61K core with plain c2) did not fit any more.  The code strings
 	   are never written after copy() (all writers work on regs[]) and nobody compares the pointers, so sharing is invisible.
 	   Chains of the interned strings hang off xih[]; the link word sits in front of each string. */
-	if (n <= XTBSZ) {
+	if ((xfl2 & XR_SH) && n <= XTBSZ && (int)lasta - (int)firstr > XTHR) {
 		np = xtb;
 		p = ap;
 		while (*np++ = *p++)

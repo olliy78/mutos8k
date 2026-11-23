@@ -185,5 +185,6 @@ extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 #define	XR34	0x4	/* n  (xfl2) R34: ld MEM,rN ; test rN ; jr eq|ne ; jr mi|pl|lt|ge|gt|le -> test rN repeated after the first jump (cp, W10w) */
 #define	XR6	0x8	/* d  (xfl2) R6: ld rA,M ; testb @rA ; jr cc ; ld rB,rA -> ld rB,M (date, W10w) */
 #define	XR65	0x10	/* g  (xfl2) R65: ld rN,#k ; ldl rr2,X ; xor r0,r0 ; ld r1,rN ; cpl rr2,rr0 -> ld r1,#k (strip, W10w) */
+#define	XR_SH	0x20	/* S  (xfl2) shared strings in copy() above a heap use of XTHR (as_code, W10z) */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif
