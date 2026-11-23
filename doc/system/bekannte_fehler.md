@@ -63,6 +63,14 @@ Jeder Eintrag ist *gemessen* (mit Fundstelle), Annahmen sind markiert.
 * **Sichtbar geworden:** `c2x` (6-7 KB groesser) liefert bei `as_code` 0 Byte oder haengt, ohne Fehlermeldung.
 * **Behebung (`mutos-plus`):** Kollisionspruefung in `sbreak()` (Fehler `ENOMEM` statt stiller Zerstoerung).  Ob V7 hier prueft, ist nicht verglichen.
 
+### F6 `c2`: `addsob()` liest `refc` eines `dec`-Knotens, den nichts setzt (djnz-Entscheidung haengt vom Heap-Inhalt ab)
+
+* **Ort:** `addsob()` (`userspace/c2/c21.c`, Zeile `if (p->refc < p1->ref->refc) continue;`); V7 hat dieselbe Zeile (`original/unix-v7/usr/src/cmd/c/c21.c`, ~255).
+* **Befund (Quelltext gelesen, *nicht im Gast gemessen*):** Instruktionsknoten bekommen `refc` in `input()` nie gesetzt (c20.c, Zweige `default`/`CBR`/`JBR`: `op`, `subop`, `labno`, `code`); `refcount()` setzt nur `refc` der Marken (`LABEL`). In V7 nummeriert `jumpsw()` vorher alle Knoten (`p->refc = ++t`); im MUTOS-c2 wird `jumpsw()` nie aufgerufen (c20.c "no jumpsw()"; Kommentar c21.c "nothing calls it"). Folge: `p->refc` des `dec`-Knotens ist der **Rest des Heaps** aus der vorigen Funktion (`alloc()` nullt nicht, `lasta = firstr` je Funktion), verglichen mit dem Referenzzaehler der Zielmarke. Nur Knoten, die nach einer Nummerierung angelegt werden (`insertl`, R34), setzen `refc = 0` selbst.
+* **Folge (*Annahme*, passt zu W10x):** jede Aenderung der Heap-Belegung (z.B. gemeinsame Zeichenketten in `copy()`) kippt die djnz-Entscheidung; dd/ed/tar verloren so je eine `djnz`-Zeile (W10w/W10x), obwohl die Bedingungen von `addsob` sonst nichts vergleichen. Die Ausgabe des ausgelieferten c2 ist hier eine Funktion der Heap-Lage.
+* **Behandlung:** auf `main` muss es **bleiben** (Bytegleichheit; der Heap-Inhalt ist Teil des Originalverhaltens). Auf `mutos-plus`: `p->refc = 0` bzw. echte Knotennummerierung (V7 `jumpsw`-Schritt) in `input()` setzen -- das aendert dann die djnz-Entscheidung gegenueber dem Original und ist dort bewusst zu pruefen.
+* **Nicht geprueft:** ob weitere Knotenfelder unbelegt gelesen werden (`ref` wird nur nach `op <= JSW` gelesen, stichprobenhaft).
+
 ## 2. Gleiches Schadensbild, aber Fehler der Rekonstruktion (behoben)
 
 Zur Abgrenzung -- diese Faelle sahen aus wie F1, lagen aber an uns:

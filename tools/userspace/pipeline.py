@@ -274,6 +274,29 @@ def xcc_einstellung(name, v):
     return dict(bins, flags=fl)
 
 
+def xcc_je_modul(name, v, ar, einst):
+    """W10y: per-module selection for `bau --xcc`.  A module whose `cc -O -S` text (work/bau/neu_s/<module>.s, plain build) has no site
+    of any rule with a c2x letter (host model c2gegen.modell = the program's own rule set) gets flag None = built by plain `cc -O`
+    (the shipped c2).  Reason: c2x is 6-7 KB bigger than c2 and as_code (encode, 61K heap with c2) does not fit in the 64 KB segment
+    (F5).  Modules with a site keep the program's full letter set (as before W10y).  Single-file programs and missing .s texts: unchanged."""
+    import c2gegen
+    bd = os.path.join(ar, "bau", "neu_s")
+    files = [f for t in v.values() if isinstance(t, dict) for f in t]       # v = {variant: text | {module.c: text}}
+    if not files or not os.path.isdir(bd):
+        return einst
+    fl = {}
+    for f in files:
+        if not f.endswith(".c"):
+            continue
+        q = os.path.join(bd, f[:-2] + ".s")
+        if not os.path.isfile(q):
+            fl[f] = einst["flags"]
+            continue
+        _t, cnt = c2gegen.modell(name, open(q, encoding="latin-1").read())
+        fl[f] = einst["flags"] if any(k in c2gegen.FLAGBUCHSTABE for k in cnt) else None
+    return dict(einst, flags=fl)
+
+
 def xcc_luecken(name, ar):
     """W10s: rules of the host model (c2_emu_s counts on the plain `cc -O -S` text work/bau/neu.s or neu_s/*.s, the program's own C2_AUS)
     that c2x has no letter for; those sites are not reproduced by an xcc build.  {} = the program can be G with xcc (as far as measured)."""
@@ -336,7 +359,9 @@ def cmd_bau(name, a):
     if a.xcc:       # W10s: guest build with xcc + c2x and the program's -X flags, no host rewriting of the .s
         if a.c2emu or a.asm:
             raise SystemExit("--xcc excludes --c2emu and --asm")
-        xcc_arg = xcc_einstellung(name, v)
+        xcc_arg = xcc_je_modul(name, v, ar, xcc_einstellung(name, v))
+        if isinstance(xcc_arg["flags"], dict):
+            print("xcc per module: plain cc -O for " + (" ".join(f for f, x in xcc_arg["flags"].items() if x is None) or "none"))
         print("xcc build of %s: -X%s; model rules without a c2x letter: %s" % (name, xcc_arg["flags"], xcc_luecken(name, ar) or "none"))
     libs = sorted(k for k in koepfe if k.startswith("libc_alt")) if a.libc == "alt" else []
     erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs, xcc=xcc_arg)
