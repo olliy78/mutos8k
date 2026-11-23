@@ -21,7 +21,7 @@ Verweise auf `k1520emu: <pfad>` zeigen in das Emulatorprojekt (`~/projects/a5120
 |--------|--------|
 | `plan/` | Entwuerfe 39 (System), 40 (`mutos_io`), 41 (Kernel), 42 (Herkunft), 43 (Kernel bytegleich aus C), 44 (Userspace-Rueckbau), 45 (V7-Ergaenzungen), 52 (Werkzeugkette): Ziele, Stand, Entscheidungen.  Plaene 46-51 (Umbauten ohne Bytegleichheit) liegen im Branch `mutos-plus` |
 | `herkunft/` | Herkunft je Kernelmodul (V7/System III/WEGA-Vergleich), `rundlauf.md` (Quelle -> Werkzeugkette -> Bytes), `README.md` (Uebersicht) |
-| `system/` | `befund.md` -- erster Befund zum Kernel-Abbild |
+| `system/` | `befund.md` -- erster Befund zum Kernel-Abbild; `bekannte_fehler.md` -- latente Fehler im Originalcode (auf `main` erhalten, auf `mutos-plus` behoben) |
 | `kernel/` | `kernel_struktur.md` (Laufabdeckung, Funktionen), `kernel_namen.md` (Namen, Tabellen), `header_belegstand.md` (Header), `c_rueckbau.md` (C-Rueckbau, Abweichungen), `linkbau.md` (Neubinden aus Modulen), `gesamtbau.md` (+`gesamtbau_adressen.txt`; Selbstbau und Boot) |
 | `mutos_io/` | `analyse.md` (Semantik der U880-Seite), `bauanleitung.md`, `merkposten.md` (Festlegungen mit Waechtern) |
 | `werkzeugkette/` | `k1_cc_im_gast.md` (cc/as/ld im Gast), `as_dialekt.md`, `objformat.md` (a.out/Archiv; `libc_signaturen.txt`), `make.md` (unser `make`) |
