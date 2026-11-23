@@ -1599,6 +1599,14 @@ register struct node *n;
 	return(c);
 }
 
+/* node n has opcode op, sub-opcode sub and (when s != 0) code text s */
+xnd(n, op, sub, s)
+register struct node *n;
+char *s;
+{
+	return(n->op == op && n->subop == sub && (s == 0 || equstr(n->code, s)));
+}
+
 /* s is `%HEX(FP)`: a frame operand with an upper-case hex offset */
 xisfp(s)
 register char *s;
@@ -1623,19 +1631,19 @@ r5pass()
 
 	for (p = first.forw; p != 0; p = p->forw) {
 		/* R64: ten nodes in a row */
-		if ((xfl & XR64) && p->op == MOV && p->subop == LONG && p->code[0] != 'r' && (b = xcomma(p->code)) && equstr(b, "rr4")) {
+		if ((xfl & XR64) && xnd(p, MOV, LONG, 0) && p->code[0] != 'r' && (b = xcomma(p->code)) && equstr(b, "rr4")) {
 			n[0] = p;
 			for (i = 1; i < 10 && n[i-1]->forw; i++)
 				n[i] = n[i-1]->forw;
-			if (i == 10 && n[1]->op == TST && n[1]->subop == LONG && equstr(n[1]->code, "rr4")
-			 && n[2]->op == CBRS && n[2]->subop == JEQ
-			 && n[3]->op == MOV && n[3]->subop == LONG && equstr(n[3]->code, "rr2,rr4")
+			if (i == 10 && xnd(n[1], TST, LONG, "rr4")
+			 && xnd(n[2], CBRS, JEQ, 0)
+			 && xnd(n[3], MOV, LONG, "rr2,rr4")
 			 && n[4]->op != LABEL && n[4]->op != DLABEL
-			 && n[5]->op == XOR && n[5]->subop == 0 && equstr(n[5]->code, "r4,r4")
-			 && n[6]->op == CMP && n[6]->subop == LONG && equstr(n[6]->code, "rr2,rr4")
-			 && n[7]->op == CBRS && n[7]->subop == JLT
-			 && n[8]->op == MOV && n[8]->subop == LONG
-			 && n[9]->op == CMP && n[9]->subop == LONG && xeq2(n[9]->code, "rr0,", n[9]->code + 4)) {
+			 && xnd(n[5], XOR, 0, "r4,r4")
+			 && xnd(n[6], CMP, LONG, "rr2,rr4")
+			 && xnd(n[7], CBRS, JLT, 0)
+			 && xnd(n[8], MOV, LONG, 0)
+			 && xnd(n[9], CMP, LONG, 0) && xeq2(n[9]->code, "rr0,", n[9]->code + 4)) {
 				a = xhead(p->code, 0);		/* MEM */
 				if (xeq2(n[8]->code, "rr0,", a)) {
 					n[1]->code = copy(1, a);
@@ -1651,23 +1659,23 @@ r5pass()
 		if (q == 0)
 			break;
 		/* R45 (W10v): `xor r2,r2 ; div rr2,#k` -> `exts rr2 ; div rr2,#k` (the original divides as signed) */
-		if ((xfl2 & XR45) && p->op == XOR && p->subop == 0 && equstr(p->code, "r2,r2") && q->op == DIV && q->subop == 0
+		if ((xfl2 & XR45) && xnd(p, XOR, 0, "r2,r2") && xnd(q, DIV, 0, 0)
 		 && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ',' && q->code[4] == '#') {
 			p->op = SXT;
 			p->code = copy(1, "rr2");
 			continue;
 		}
 		/* R71 (W10w): `ld rA,%k(FP) ; ld rB,rA ; jr L` -> `ld rA,%k(FP) ; ld rB,%k(FP) ; jr L` (ar trim()) */
-		if ((xfl2 & XR71) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && xisfp(b) && xisrw(a = xhead(p->code, 0))
-		 && q->op == MOV && q->subop == 0 && (c = xcomma(q->code)) && equstr(c, a) && xisrw(xhead(q->code, 0))
+		if ((xfl2 & XR71) && xnd(p, MOV, 0, 0) && (b = xcomma(p->code)) && xisfp(b) && xisrw(a = xhead(p->code, 0))
+		 && xnd(q, MOV, 0, 0) && (c = xcomma(q->code)) && equstr(c, a) && xisrw(xhead(q->code, 0))
 		 && q->forw && q->forw->op == JBR) {
 			q->code = copy(2, xhead(q->code, 1), b);
 			p = q;
 			continue;
 		}
 		/* R6 (W10w): `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `... ; ld rB,M` (date) */
-		if ((xfl2 & XR6) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && b[0] != 'r' && b[0] != '@' && xcomma(b) == 0
-		 && xisrw(a = xhead(p->code, 0)) && q->op == TST && q->subop == BYTE && q->code[0] == '@' && equstr(q->code + 1, a)
+		if ((xfl2 & XR6) && xnd(p, MOV, 0, 0) && (b = xcomma(p->code)) && b[0] != 'r' && b[0] != '@' && xcomma(b) == 0
+		 && xisrw(a = xhead(p->code, 0)) && xnd(q, TST, BYTE, 0) && q->code[0] == '@' && equstr(q->code + 1, a)
 		 && q->forw && (q->forw->op == CBRS || q->forw->op == JBR) && q->forw->forw
 		 && (w = q->forw->forw)->op == MOV && w->subop == 0 && (d = xcomma(w->code)) && equstr(d, a) && xisrw(xhead(w->code, 0))) {
 			w->code = copy(2, xhead(w->code, 1), b);
@@ -1675,17 +1683,17 @@ r5pass()
 			continue;
 		}
 		/* R65 (W10w): `ld rN,#k ; ldl rr2,X ; xor r0,r0 ; ld r1,rN ; cpl rr2,rr0` -> `... ; ld r1,#k ; cpl rr2,rr0` (strip) */
-		if ((xfl2 & XR65) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && b[0] == '#' && xcomma(b) == 0 && xisrw(a = xhead(p->code, 0))
-		 && q->op == MOV && q->subop == LONG && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ','
-		 && (w = q->forw) && w->op == XOR && w->subop == 0 && equstr(w->code, "r0,r0")
-		 && w->forw && w->forw->op == MOV && w->forw->subop == 0 && xeq2(w->forw->code, "r1,", a)
-		 && w->forw->forw && w->forw->forw->op == CMP && w->forw->forw->subop == LONG && equstr(w->forw->forw->code, "rr2,rr0")) {
+		if ((xfl2 & XR65) && xnd(p, MOV, 0, 0) && (b = xcomma(p->code)) && b[0] == '#' && xcomma(b) == 0 && xisrw(a = xhead(p->code, 0))
+		 && xnd(q, MOV, LONG, 0) && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ','
+		 && (w = q->forw) && xnd(w, XOR, 0, "r0,r0")
+		 && w->forw && xnd(w->forw, MOV, 0, 0) && xeq2(w->forw->code, "r1,", a)
+		 && w->forw->forw && xnd(w->forw->forw, CMP, LONG, "rr2,rr0")) {
 			w->forw->code = copy(2, "r1,", b);
 			p = w->forw->forw;
 			continue;
 		}
 		/* R34 (W10w): `ld MEM,rN ; test rN ; jr eq|ne L ; jr mi|pl|lt|ge|gt|le L2` -> test rN repeated after the first jump (cp) */
-		if ((xfl2 & XR34) && p->op == TST && p->subop == 0 && xisrw(p->code) && p->back->op == MOV && p->back->subop == 0
+		if ((xfl2 & XR34) && xnd(p, TST, 0, 0) && xisrw(p->code) && xnd(p->back, MOV, 0, 0)
 		 && (c = xcomma(p->back->code)) && equstr(c, p->code) && p->back->code[0] != 'r' && q->op == CBRS && (q->subop == JEQ || q->subop == JNE)
 		 && q->forw && q->forw->op == CBRS && (q->forw->subop == JMI || q->forw->subop == JPL || q->forw->subop == JLT
 		 || q->forw->subop == JGE || q->forw->subop == JGT || q->forw->subop == JLE)) {
@@ -1708,24 +1716,24 @@ r5pass()
 		/* R63 copy part (W10v): `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` -> `... ; ld rK,rN ; ld rX,rK ; test rK`
 		   (the original works on the copy; the xorb itself is kept by the hzpass exception, flag w) */
 		if ((xfl & XR63C) && (b = xldsrc(p)) && xisrw(a = xhead(p->code, 0)) && q->forw && (c = xldsrc(q)) && equstr(c, b)
-		 && xisrw(xhead(q->code, 0)) && q->forw->op == TST && q->forw->subop == 0 && equstr(q->forw->code, b)
-		 && p->back->op == MOV && p->back->subop == BYTE && p->back->code[0] == '@' && p->back->code[1] == 'r'
+		 && xisrw(xhead(q->code, 0)) && xnd(q->forw, TST, 0, 0) && equstr(q->forw->code, b)
+		 && xnd(p->back, MOV, BYTE, 0) && p->back->code[0] == '@' && p->back->code[1] == 'r'
 		 && (c = xcomma(p->back->code)) && c[0] == 'r' && c[1] == 'l' && equstr(c + 2, b + 1)
-		 && p->back->back->op == XOR && p->back->back->subop == BYTE && xzerob(p->back->back->code, b)) {
+		 && xnd(p->back->back, XOR, BYTE, 0) && xzerob(p->back->back->code, b)) {
 			q->code = copy(2, xhead(q->code, 1), a);
 			q->forw->code = copy(1, a);
 			p = q->forw;
 			continue;
 		}
 		/* R42: p = `ld MEM,rN`, behind `ld rN,SRC`, before `test rN` */
-		if ((xfl & XR42) && p->op == MOV && p->subop == 0 && q->op == TST && q->subop == 0 && (b = xcomma(p->code)) && xisrw(b) && equstr(q->code, b)
-		 && p->back->op == MOV && p->back->subop == 0 && (c = xcomma(p->back->code)) && c[0] != 'r' && c[0] != '#') {
+		if ((xfl & XR42) && xnd(p, MOV, 0, 0) && xnd(q, TST, 0, 0) && (b = xcomma(p->code)) && xisrw(b) && equstr(q->code, b)
+		 && xnd(p->back, MOV, 0, 0) && (c = xcomma(p->back->code)) && c[0] != 'r' && c[0] != '#') {
 			a = xhead(p->code, 0);		/* MEM */
 			for (i = 0; a[i] && a[i] != '@' && a[i] != '#'; i++)
 				;
 			if (a[0] && a[i] == 0 && !xisreg2(a)
 			 && equstr(xhead(p->back->code, 0), b)	/* destination of the previous `ld` is rN */
-			 && !(q->forw && q->forw->op == CBRS && q->forw->forw && q->forw->forw->op == MOV && q->forw->forw->subop == 0
+			 && !(q->forw && q->forw->op == CBRS && q->forw->forw && xnd(q->forw->forw, MOV, 0, 0)
 			      && xeq2(q->forw->forw->code, "r0,", b))) {
 				q->code = copy(1, a);
 				p = q;
@@ -1734,12 +1742,12 @@ r5pass()
 		}
 		/* R5 */
 		if ((xfl & XR5) && (b = xldsrc(p)) && xisrw(a = xhead(p->code, 0))) {
-			if (q->op == TST && q->subop == 0 && equstr(q->code, b)) {
+			if (xnd(q, TST, 0, 0) && equstr(q->code, b)) {
 				if (equstr(b, "r2") && p->back->op == CALL) {		/* R33 */
 					p = q;
 					continue;
 				}
-				if ((a[2] || a[1] >= '8') && p->back->op == XOR && p->back->subop == BYTE && xzerob(p->back->code, b)) {
+				if ((a[2] || a[1] >= '8') && xnd(p->back, XOR, BYTE, 0) && xzerob(p->back->code, b)) {
 					p = q;		/* R39: rA is r8..r14 */
 					continue;
 				}
@@ -1794,79 +1802,3 @@ register n;
 	buf[4] = 0;
 	np->code = copy(2, regs[RT1], buf);
 }
-
-#ifdef C2X
-/* W10aa: minimal formatted output, replaces printf/fprintf/sprintf (see c2.h).  Conversions: %d %s %x %%; ONE argument at most.
- * to = FILE * (fp != 0) or a buffer (fp == 0, NUL terminated). */
-xfm(fp, to, f, a)
-register char *f;
-char *to;
-{
-	register int c, n, k;
-	register char *s;
-	char t[8];
-
-	while (c = *f++) {
-		s = 0;
-		if (c == '%' && *f) {
-			c = *f++;
-			if (c == 's')
-				s = (char *)a;
-			else if (c == 'd' || c == 'x') {
-				n = a;
-				k = c == 'd' ? 10 : 16;
-				if (c == 'd' && n < 0) {
-					xout(fp, &to, '-');
-					n = -n;
-				}
-				s = t + 7;
-				*s = 0;
-				do {
-					*--s = "0123456789abcdef"[n % k];
-					n = n / k;
-				} while (n);
-			}
-		}
-		if (s == 0)
-			xout(fp, &to, c);
-		else while (*s)
-			xout(fp, &to, *s++);
-	}
-	if (fp == 0)
-		*to = 0;
-}
-
-xout(fp, top, c)
-register char **top;
-{
-	if (fp)
-		putc(c, (FILE *)fp);
-	else
-		*(*top)++ = c;
-}
-
-xpf(fp, f, a)
-{
-	xfm(fp, 0, f, a);
-}
-
-xpo(f, a)
-{
-	xfm(stdout, 0, f, a);
-}
-
-xsp(b, f, a)
-{
-	xfm(0, b, f, a);
-}
-
-xputc(c)
-{
-	return putc(c, stdout);
-}
-
-xgetc()
-{
-	return getc(stdin);
-}
-#endif
