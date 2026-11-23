@@ -1015,7 +1015,7 @@ char *to;
 				s = t + 7;
 				*s = 0;
 				do {
-					*--s = "0123456789abcdef"[n % k];
+					*--s = "0123456789ABCDEF"[n % k];
 					n = n / k;
 				} while (n);
 			}
