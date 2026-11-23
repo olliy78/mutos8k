@@ -55,6 +55,14 @@ Jeder Eintrag ist *gemessen* (mit Fundstelle), Annahmen sind markiert.
 * **Behebung (`mutos-plus`):** Kernel ohne K6 bauen; `c2x` bekommt dafuer keinen Schalter, der den Fehler einschaltet,
   ausser fuer den bytegleichen Nachweis.
 
+### F5 Kernel `sbreak()`: keine Pruefung Halde gegen Stapel
+
+* **Ort:** Kernel `sbreak()` (`kernel/c/sys1.c` bzw. Speicherverwaltung); gemessen in W10w (`doc/userspace/wk_w10w.md`).
+* **Fehler:** `sbreak()` prueft nicht, ob die wachsende Halde in den Stapel laeuft; im 64-KB-Prozess kollidieren beide stillschweigend.
+* **Im Original verdeckt:** die ausgelieferten Programme bleiben knapp darunter -- `c2` braucht bei `as_code` 61K Halde (gemessen mit `c2 -`).
+* **Sichtbar geworden:** `c2x` (6-7 KB groesser) liefert bei `as_code` 0 Byte oder haengt, ohne Fehlermeldung.
+* **Behebung (`mutos-plus`):** Kollisionspruefung in `sbreak()` (Fehler `ENOMEM` statt stiller Zerstoerung).  Ob V7 hier prueft, ist nicht verglichen.
+
 ## 2. Gleiches Schadensbild, aber Fehler der Rekonstruktion (behoben)
 
 Zur Abgrenzung -- diese Faelle sahen aus wie F1, lagen aber an uns:
