@@ -98,6 +98,10 @@ def c2x_flags(name, regeln, extra=()):
     return "".join(FLAGBUCHSTABE[x] for x in FLAGBUCHSTABE if x in r) + ("T" if "R5" in r and "R5T" in P.c2_aus(name) else "")
 
 
+# W10z: modules that get c2x's flag S (shared strings in copy() above a heap use of XTHR): the one function that does not fit with c2x otherwise
+SHARE_MODS = ("as_code",)
+
+
 def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=False):
     """Guest commands for the modules (names without .c).  Every command ends in /mnt, none is longer than ca. 200 characters."""
     b = []
@@ -110,7 +114,8 @@ def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=Fa
             b.append("cd /tmp;/usr/lib/c1 c1 c2 c5 >>%s 2>&1;>c1;>c2;cat c5 >%s.s0;cd /mnt" % (e, m))   # c1 output = unoptimized text
         if c2x and kurz:   # W10f: one run each of the shipped c2 (MOD.s) and c2x (MOD.sn), no repeat runs (-xpush acceptance)
             fl = ("-x" + flags[m] + " ") if flags and flags.get(m) else ""   # W10o: flags of the module's program
-            b.append("cd /tmp;/usr/lib/c2 c5 %s.s >>%s 2>&1;/mnt/c2x %sc5 %s.sn >>%s 2>&1;>c5;cd /mnt" % (m, e, fl, m, e))
+            nf = "- " if os.environ.get("C2GEGEN_N") else ""   # W10z: option `-` prints "<n>K core" (heap peak) to the .err file
+            b.append("cd /tmp;/usr/lib/c2 %sc5 %s.s >>%s 2>&1;/mnt/c2x %s%sc5 %s.sn >>%s 2>&1;>c5;cd /mnt" % (nf, m, e, fl, nf, m, e))
             if null:   # c2x without any flag must equal the shipped c2: MOD.sz
                 b.append("cd /tmp;cat /mnt/%s.s0 >c5;/mnt/c2x c5 %s.sz >>%s 2>&1;>c5;cd /mnt" % (m, m, e))
         elif c2x:   # also run the given c2 binary (on /mnt) on the same c1 output: MOD.sn
@@ -159,7 +164,7 @@ def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False, regeln=None, extra=(),
                 q[f] = jobs[n][0][f]
                 q.update(jobs[n][1])
             mods_alle.append((n, f[:-2]))
-        fls = {m: c2x_flags(n, regeln, extra) for n, m in mods_alle} if regeln else None   # W10o: per-program flags
+        fls = {m: c2x_flags(n, regeln, extra) + ("S" if m in SHARE_MODS else "") for n, m in mods_alle} if regeln else None   # W10o: per-program flags
         bs = befehle([m for _n, m in mods_alle], c2x, bool(c2o), s0, kurz, fls, null)
         ausf = ()
         if c2x:
@@ -196,6 +201,7 @@ def lauf(namen, c2x=None, c2o=None, s0=False, kurz=False, regeln=None, extra=(),
             e = (r.get(m + ".err") or b"").decode("latin-1").strip()
             if e:
                 print("  %s messages: %s" % (m, e[:200]))
+                print("  %s core: %s" % (m, " ".join(x for x in e.split("\n") if x.endswith("K core"))))
 
 
 def modell(name, s, aus=None):
