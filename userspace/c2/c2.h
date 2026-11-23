@@ -181,5 +181,9 @@ extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 #define	XR42	0x2000	/* 4  R42: ld rN,SRC ; ld MEM,rN ; test rN -> test MEM */
 #define	XR64	0x4000	/* 6  R64: long compare chain works on the memory copy first (df) */
 #define	XR63C	0x8000	/* W  R63 copy part: ld rK,rN ; ld rX,rN ; test rN behind the store -> ld rX,rK ; test rK (mv, W10v) */
+#define	XR71	0x2	/* a  (xfl2) R71: ld rA,%k(FP) ; ld rB,rA ; jr L -> ld rB,%k(FP) (ar, W10w) */
+#define	XR34	0x4	/* n  (xfl2) R34: ld MEM,rN ; test rN ; jr eq|ne ; jr mi|pl|lt|ge|gt|le -> test rN repeated after the first jump (cp, W10w) */
+#define	XR6	0x8	/* d  (xfl2) R6: ld rA,M ; testb @rA ; jr cc ; ld rB,rA -> ld rB,M (date, W10w) */
+#define	XR65	0x10	/* g  (xfl2) R65: ld rN,#k ; ldl rr2,X ; xor r0,r0 ; ld r1,rN ; cpl rr2,rr0 -> ld r1,#k (strip, W10w) */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif

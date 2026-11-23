@@ -38,7 +38,7 @@ char	*pref = "/usr/lib/crt0.o";
 #ifdef XCC
 /* xcc (Plan 52 W10r): -X<letters> runs the adapted optimizer c2x instead of c2 and passes it -x<letters> */
 char	pass2x[20] = "/usr/lib/c2x";
-char	xopt[20];
+char	xopt[40];
 int	xflag;
 #endif
 char	*copy();
@@ -86,12 +86,21 @@ char *argv[];
 			break;
 #ifdef XCC
 		case 'X':
-			/* -X or -X<letters>: letters (at most 17; W10v: 16 are needed) become the c2x argument -x<letters> */
+			/* -X or -X<letters>: the letters become the c2x argument -x<letters>.  Several -X options add up (W10w), at most 36
+			   letters in all (the xopt buffer); more would be cut off silently, so stop with a message instead */
 			xflag++;
 			xopt[0] = '-';
 			xopt[1] = 'x';
-			for (j = 0; j < 17 && argv[i][j+2]; j++)
-				xopt[j+2] = argv[i][j+2];
+			for (j = 0; xopt[j+2]; j++)
+				;
+			for (xk = 0; argv[i][xk+2]; xk++) {
+				if (j >= 36) {
+					fprintf(stderr, "cc: too many -X letters\n");
+					exit(1);
+				}
+				xopt[j + 2] = argv[i][xk+2];
+				j++;
+			}
 			xopt[j+2] = 0;
 			break;
 #endif
