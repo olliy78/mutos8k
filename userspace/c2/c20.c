@@ -111,6 +111,10 @@ char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
  * harmless in the original layout, but it would hit a BSS variable placed right
  * after ophash. */
 int	xfl = 0;
+#define	XTBSZ	120	/* longest string that copy() shares */
+#define	XIHS	64	/* hash chains of the shared strings */
+char	xtb[XTBSZ + 8] = {0};	/* initialized (data) too: see above */
+char	*xih[XIHS] = {0};
 int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
@@ -150,8 +154,12 @@ register char *s;
 		case '6': xfl |= XR64; break;
 		case 'W': xfl |= XR63C; break;
 		case 'e': xfl2 |= XR45; break;
+		case 'a': xfl2 |= XR71; break;
+		case 'n': xfl2 |= XR34; break;
+		case 'd': xfl2 |= XR6; break;
+		case 'g': xfl2 |= XR65; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45; break;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65; break;
 		}
 }
 #endif
@@ -235,13 +243,17 @@ char **argv;
 			hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
 #endif
 #ifdef C2X
-		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || (xfl2 & XR45))
+		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || xfl2)
 			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
 #endif
 		output();
 		if (niter > maxiter)
 			maxiter = niter;
 		lasta = firstr;
+#ifdef C2X
+		for (c = 0; c < XIHS; c++)
+			xih[c] = 0;	/* the shared strings lived in the heap that was just released */
+#endif
 	} while (isend);
 	if (nflag) {
 		fprintf(stderr, "%d iterations\n", maxiter);
@@ -507,6 +519,9 @@ char *ap;
 {
 	register char *p, *np, *onp;
 	register n;
+#ifdef C2X
+	int h, k;
+#endif
 
 	p = ap;
 	n = 0;
@@ -520,6 +535,41 @@ char *ap;
 		while (*p++)
 			n++;
 	}
+#ifdef C2X
+	/* W10w: equal strings are stored once.  c2x is 6.7 KB bigger than c2 and the process has no more than 64 KB for text, data, heap and
+	   stack (sbrk does not check): the biggest function of `as` (encode, 61K core with plain c2) did not fit any more.  The code strings
+	   are never written after copy() (all writers work on regs[]) and nobody compares the pointers, so sharing is invisible.
+	   Chains of the interned strings hang off xih[]; the link word sits in front of each string. */
+	if (n <= XTBSZ) {
+		np = xtb;
+		p = ap;
+		while (*np++ = *p++)
+			;
+		if (na>1) {
+			p = (&ap)[1];
+			np--;
+			while (*np++ = *p++);
+		}
+		h = 0;
+		for (p = xtb; *p; p++)
+			h = h*3 + *p;
+		h = (h & 077777) % XIHS;
+		/* exact comparison: equstr() treats `#%5` and `#5` as equal, which must not merge two different strings */
+		for (onp = xih[h]; onp; onp = *(char **)(onp - 2)) {
+			for (p = onp, np = xtb; *p == *np; p++, np++)
+				if (*p == 0)
+					return(onp);
+		}
+		k = n;
+		np = alloc(k + 2);
+		*(char **)np = xih[h];
+		onp = np + 2;
+		xih[h] = onp;
+		for (np = xtb; *onp++ = *np++; )
+			;
+		return(xih[h]);
+	}
+#endif
 	onp = np = alloc(n);
 	p = ap;
 	while (*np++ = *p++)

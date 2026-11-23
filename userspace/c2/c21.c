@@ -22,7 +22,7 @@ extern char revbr[];
  * destination, fl2 the bank of the source operand.
  */
 #ifdef C2X
-int	x4keep;	/* regs[0] holds the MEM of an inserted `ld r0,MEM` (set in rmove, cleared by kill(0)) */
+int	x4keep = 0;	/* regs[0] holds the MEM of an inserted `ld r0,MEM` (set in rmove, cleared by kill(0)) */
 #define	X4MARK	-4	/* -xcmpmem: labno of the `ld r0,MEM` nodes inserted for a `cp MEM,#k`; they keep MEM (no register copy propagation; cat, od measured) */
 #endif
 rmove()
@@ -1599,10 +1599,25 @@ register struct node *n;
 	return(c);
 }
 
+/* s is `%HEX(FP)`: a frame operand with an upper-case hex offset */
+xisfp(s)
+register char *s;
+{
+	register n;
+
+	if (*s++ != '%')
+		return(0);
+	for (n = 0; (*s >= '0' && *s <= '9') || (*s >= 'A' && *s <= 'F'); n++)
+		s++;
+	return(n > 0 && equstr(s, "(FP)"));
+}
+
 r5pass()
 {
 	register struct node *p, *q;
 	register char *a, *b, *c;
+	register char *d;
+	struct node *w;
 	struct node *n[10];
 	register i;
 
@@ -1640,6 +1655,54 @@ r5pass()
 		 && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ',' && q->code[4] == '#') {
 			p->op = SXT;
 			p->code = copy(1, "rr2");
+			continue;
+		}
+		/* R71 (W10w): `ld rA,%k(FP) ; ld rB,rA ; jr L` -> `ld rA,%k(FP) ; ld rB,%k(FP) ; jr L` (ar trim()) */
+		if ((xfl2 & XR71) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && xisfp(b) && xisrw(a = xhead(p->code, 0))
+		 && q->op == MOV && q->subop == 0 && (c = xcomma(q->code)) && equstr(c, a) && xisrw(xhead(q->code, 0))
+		 && q->forw && q->forw->op == JBR) {
+			q->code = copy(2, xhead(q->code, 1), b);
+			p = q;
+			continue;
+		}
+		/* R6 (W10w): `ld rA,M ; testb @rA ; jr cc L ; ld rB,rA` -> `... ; ld rB,M` (date) */
+		if ((xfl2 & XR6) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && b[0] != 'r' && b[0] != '@' && xcomma(b) == 0
+		 && xisrw(a = xhead(p->code, 0)) && q->op == TST && q->subop == BYTE && q->code[0] == '@' && equstr(q->code + 1, a)
+		 && q->forw && (q->forw->op == CBRS || q->forw->op == JBR) && q->forw->forw
+		 && (w = q->forw->forw)->op == MOV && w->subop == 0 && (d = xcomma(w->code)) && equstr(d, a) && xisrw(xhead(w->code, 0))) {
+			w->code = copy(2, xhead(w->code, 1), b);
+			p = w;
+			continue;
+		}
+		/* R65 (W10w): `ld rN,#k ; ldl rr2,X ; xor r0,r0 ; ld r1,rN ; cpl rr2,rr0` -> `... ; ld r1,#k ; cpl rr2,rr0` (strip) */
+		if ((xfl2 & XR65) && p->op == MOV && p->subop == 0 && (b = xcomma(p->code)) && b[0] == '#' && xcomma(b) == 0 && xisrw(a = xhead(p->code, 0))
+		 && q->op == MOV && q->subop == LONG && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ','
+		 && (w = q->forw) && w->op == XOR && w->subop == 0 && equstr(w->code, "r0,r0")
+		 && w->forw && w->forw->op == MOV && w->forw->subop == 0 && xeq2(w->forw->code, "r1,", a)
+		 && w->forw->forw && w->forw->forw->op == CMP && w->forw->forw->subop == LONG && equstr(w->forw->forw->code, "rr2,rr0")) {
+			w->forw->code = copy(2, "r1,", b);
+			p = w->forw->forw;
+			continue;
+		}
+		/* R34 (W10w): `ld MEM,rN ; test rN ; jr eq|ne L ; jr mi|pl|lt|ge|gt|le L2` -> test rN repeated after the first jump (cp) */
+		if ((xfl2 & XR34) && p->op == TST && p->subop == 0 && xisrw(p->code) && p->back->op == MOV && p->back->subop == 0
+		 && (c = xcomma(p->back->code)) && equstr(c, p->code) && p->back->code[0] != 'r' && q->op == CBRS && (q->subop == JEQ || q->subop == JNE)
+		 && q->forw && q->forw->op == CBRS && (q->forw->subop == JMI || q->forw->subop == JPL || q->forw->subop == JLT
+		 || q->forw->subop == JGE || q->forw->subop == JGT || q->forw->subop == JLE)) {
+			struct node *np;
+
+			np = (struct node *)alloc(sizeof first);
+			np->op = TST;
+			np->subop = 0;
+			np->labno = 0;
+			np->ref = 0;
+			np->refc = 0;
+			np->code = p->code;
+			np->forw = q->forw;
+			np->back = q;
+			q->forw->back = np;
+			q->forw = np;
+			p = np;
 			continue;
 		}
 		/* R63 copy part (W10v): `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` -> `... ; ld rK,rN ; ld rX,rK ; test rK`

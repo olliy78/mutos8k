@@ -56,7 +56,9 @@ def quellen(name):
     v, koepfe = P.quellen_lesen(name, A)
     t = v["neu"]
     if isinstance(t, dict):
-        return t, koepfe
+        # W10w: `noopt` modules (link.txt marker) are compiled without -O and never reach c2 -- skip them (as_y.c hangs the shipped c2)
+        ohne = getattr(t, "noopt", ())
+        return {f: x for f, x in t.items() if f not in ohne}, koepfe
     return {name + ".c": t}, koepfe
 
 
@@ -86,7 +88,7 @@ def verfuegbar(namen):
 
 
 # W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
-FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e"}
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g"}
 
 
 def c2x_flags(name, regeln, extra=()):
