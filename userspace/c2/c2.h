@@ -162,16 +162,24 @@ struct	node *insertl();
 struct	node *codemove();
 
 #ifdef C2X
-/* W10aa: c2x does not link printf/fprintf/sprintf (_doprnt, strout, ffltpr ~ 2 KB of text: the image is one 64 KB segment, F5).
- * xpf() knows only the conversions c2 uses (%d %s %%) and takes ONE argument (K&R: a missing one is never read).
- * putchar/getchar are macros that expand ~30 bytes per use; one shared function each is smaller. */
+/* W10aa: c2x does not link stdio (_filbuf/_flsbuf/freopen/_endopen, malloc, isatty) nor the printf family (_doprnt, strout,
+ * ffltpr): together ~4 KB of text in an image that is one 64 KB segment (F5).  c20.c has a tiny replacement: two 256-byte
+ * buffers on fds 0/1, unbuffered stderr, formats %d %s %x only, ONE argument.  stdin/stdout/stderr become the fd numbers. */
 #undef putchar
 #undef getchar
+#undef stdin
+#undef stdout
+#undef stderr
 #define	putchar	xputc
 #define	getchar	xgetc
 #define	printf	xpo
 #define	fprintf	xpf
 #define	sprintf	xsp
+#define	freopen	xfro
+#define	exit	xexit
+#define	stdin	0
+#define	stdout	1
+#define	stderr	2
 #endif
 
 #ifdef C2X

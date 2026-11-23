@@ -1032,10 +1032,16 @@ char *to;
 xout(fp, top, c)
 register char **top;
 {
-	if (fp)
-		putc(c, (FILE *)fp);
-	else
+	char ch;
+
+	if (fp == 0)
 		*(*top)++ = c;
+	else if (fp == 1)
+		xputc(c);
+	else {
+		ch = c;
+		write(fp, &ch, 1);
+	}
 }
 
 xpf(fp, f, a)
@@ -1045,7 +1051,7 @@ xpf(fp, f, a)
 
 xpo(f, a)
 {
-	xfm(stdout, 0, f, a);
+	xfm(1, 0, f, a);
 }
 
 xsp(b, f, a)
@@ -1053,13 +1059,60 @@ xsp(b, f, a)
 	xfm(0, b, f, a);
 }
 
+/* buffered stdin/stdout.  Initialised data, not BSS (F1). */
+#define	XBS	256
+char	xib[XBS] = {0};
+char	xob[XBS] = {0};
+int	xin = 0, xip = 0, xon = 0, xifd = 0, xofd = 1;
+
 xputc(c)
 {
-	return putc(c, stdout);
+	if (xon >= XBS)
+		xflush();
+	xob[xon++] = c;
+	return(c);
 }
 
 xgetc()
 {
-	return getc(stdin);
+	if (xip >= xin) {
+		xip = 0;
+		if ((xin = read(xifd, xib, XBS)) <= 0) {
+			xin = 0;
+			return(-1);
+		}
+	}
+	return(xib[xip++] & 0377);
+}
+
+xflush()
+{
+	if (xon > 0)
+		write(xofd, xob, xon);
+	xon = 0;
+}
+
+/* freopen(name, mode, stdin|stdout): returns 0 on failure */
+xfro(name, mode, fp)
+char *name;
+{
+	register fd;
+
+	if (fp == 0)
+		fd = xifd = open(name, 0);
+	else
+		fd = xofd = creat(name, 0666);
+	return(fd >= 0);
+}
+
+xexit(s)
+{
+	xflush();
+	_exit(s);
+}
+
+/* libc's _exit calls _cleanup (fflush of all streams); defining it here keeps _flsbuf out of the image */
+_cleanup()
+{
 }
 #endif
