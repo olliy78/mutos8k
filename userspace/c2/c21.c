@@ -1489,6 +1489,191 @@ hzpass()
 				delnode(p);
 		}
 }
+
+/*
+ * c2x -x5 / -xT / -x4 / -x6 (W10t): last pass before output (after hzpass), peepholes of the older c2 that the shipped c2 does not make.  Each is the
+ * node-level form of the host model rule of the same number (tools/userspace/uspace.py c2_emu_s), same conditions, same exceptions:
+ *   R5  (5, T)  `ld rA,rB ; test rB` -> `test rA`;  `ld rA,rB ; ld DST,rB` -> `ld DST,rA`.  Exceptions R33 (`call ; ld rA,r2 ; test r2`) and R39
+ *               (`xorb rhB,rhB ; ld rA,rB ; test rB`, A >= 8) keep the test; T = pseudo rule R5T: only the `ld DST` form (pr, 4 sites)
+ *   R42 (4)     `ld rN,SRC ; ld MEM,rN ; test rN` -> `test MEM` (SRC, MEM memory operands; not when R37 takes the place: `jr cc ; ld r0,rN` follows)
+ *   R64 (6)     `ldl MEM,rr4 ; testl rr4 ; jr eq ; ldl rr2,rr4 ; ld r5,X ; xor r4,r4 ; cpl rr2,rr4 ; jr lt ; ldl rr0,MEM ; cpl rr0,M` -> memory copy first,
+ *               then the loaded pair (df)
+ * A window is only nodes in a row: a label node in between breaks it, as the text model sees the label line.
+ */
+
+/* word register `rN` (N = 0..14), nothing else */
+xisrw(s)
+register char *s;
+{
+	if (s[0] != 'r' || s[1] < '0' || s[1] > '9')
+		return(0);
+	if (s[2] == 0)
+		return(1);
+	return(s[2] >= '0' && s[2] <= '9' && s[3] == 0);
+}
+
+/* the text behind the first comma of a node code, 0 if none */
+char *
+xcomma(s)
+register char *s;
+{
+	while (*s && *s != ',')
+		s++;
+	return(*s ? s + 1 : 0);
+}
+
+/* copy of the code text up to the first comma (inc = 1: with the comma) */
+char *
+xhead(s, inc)
+char *s;
+{
+	register char *p, *q, *r;
+	register n;
+
+	n = 0;
+	for (p = s; *p && *p != ','; p++)
+		n++;
+	n += inc;
+	r = q = alloc(n + 1);
+	for (p = s; n-- > 0; )
+		*q++ = *p++;
+	*q = 0;
+	return(r);
+}
+
+/* s is `pre` followed by `rest` */
+xeq2(s, pre, rest)
+register char *s, *pre, *rest;
+{
+	while (*pre)
+		if (*s++ != *pre++)
+			return(0);
+	return(equstr(s, rest));
+}
+
+/* register name as the model's regex sees it: rN, rhN, rlN, rqN, rrN, sp, fp (any case) */
+xisreg2(s)
+register char *s;
+{
+	if (s[0] == 'r') {
+		s++;
+		if (*s == 'h' || *s == 'l' || *s == 'q' || *s == 'r')
+			s++;
+		if (*s < '0' || *s > '9')
+			return(0);
+		while (*s >= '0' && *s <= '9')
+			s++;
+		return(*s == 0);
+	}
+	return((s[0] == 's' || s[0] == 'S' || s[0] == 'f' || s[0] == 'F') && (s[1] == 'p' || s[1] == 'P') && s[2] == 0);
+}
+
+/* s is `rhN,rhN` for the word register rb (= "rN") */
+xzerob(s, rb)
+register char *s, *rb;
+{
+	register char *b;
+
+	if (s[0] != 'r' || s[1] != 'h')
+		return(0);
+	s += 2;
+	for (b = rb + 1; *b && *s == *b; b++)
+		s++;
+	if (*b || *s++ != ',' || s[0] != 'r' || s[1] != 'h')
+		return(0);
+	s += 2;
+	for (b = rb + 1; *b && *s == *b; b++)
+		s++;
+	return(*b == 0 && *s == 0);
+}
+
+/* node n is a word `ld` whose code is `DST,rS` with rS a word register: returns the text behind the comma, else 0 */
+char *
+xldsrc(n)
+register struct node *n;
+{
+	register char *c;
+
+	if (n == 0 || n->op != MOV || n->subop != 0 || (c = xcomma(n->code)) == 0 || !xisrw(c))
+		return(0);
+	return(c);
+}
+
+r5pass()
+{
+	register struct node *p, *q;
+	register char *a, *b, *c;
+	struct node *n[10];
+	register i;
+
+	for (p = first.forw; p != 0; p = p->forw) {
+		/* R64: ten nodes in a row */
+		if ((xfl & XR64) && p->op == MOV && p->subop == LONG && p->code[0] != 'r' && (b = xcomma(p->code)) && equstr(b, "rr4")) {
+			n[0] = p;
+			for (i = 1; i < 10 && n[i-1]->forw; i++)
+				n[i] = n[i-1]->forw;
+			if (i == 10 && n[1]->op == TST && n[1]->subop == LONG && equstr(n[1]->code, "rr4")
+			 && n[2]->op == CBRS && n[2]->subop == JEQ
+			 && n[3]->op == MOV && n[3]->subop == LONG && equstr(n[3]->code, "rr2,rr4")
+			 && n[4]->op != LABEL && n[4]->op != DLABEL
+			 && n[5]->op == XOR && n[5]->subop == 0 && equstr(n[5]->code, "r4,r4")
+			 && n[6]->op == CMP && n[6]->subop == LONG && equstr(n[6]->code, "rr2,rr4")
+			 && n[7]->op == CBRS && n[7]->subop == JLT
+			 && n[8]->op == MOV && n[8]->subop == LONG
+			 && n[9]->op == CMP && n[9]->subop == LONG && xeq2(n[9]->code, "rr0,", n[9]->code + 4)) {
+				a = xhead(p->code, 0);		/* MEM */
+				if (xeq2(n[8]->code, "rr0,", a)) {
+					n[1]->code = copy(1, a);
+					n[3]->code = copy(2, "rr2,", a);
+					n[8]->code = copy(1, "rr0,rr2");
+					n[9]->code = copy(2, "rr2,", n[9]->code + 4);
+					p = n[9];
+					continue;
+				}
+			}
+		}
+		q = p->forw;
+		if (q == 0)
+			break;
+		/* R42: p = `ld MEM,rN`, behind `ld rN,SRC`, before `test rN` */
+		if ((xfl & XR42) && p->op == MOV && p->subop == 0 && q->op == TST && q->subop == 0 && (b = xcomma(p->code)) && xisrw(b) && equstr(q->code, b)
+		 && p->back->op == MOV && p->back->subop == 0 && (c = xcomma(p->back->code)) && c[0] != 'r' && c[0] != '#') {
+			a = xhead(p->code, 0);		/* MEM */
+			for (i = 0; a[i] && a[i] != '@' && a[i] != '#'; i++)
+				;
+			if (a[0] && a[i] == 0 && !xisreg2(a)
+			 && equstr(xhead(p->back->code, 0), b)	/* destination of the previous `ld` is rN */
+			 && !(q->forw && q->forw->op == CBRS && q->forw->forw && q->forw->forw->op == MOV && q->forw->forw->subop == 0
+			      && xeq2(q->forw->forw->code, "r0,", b))) {
+				q->code = copy(1, a);
+				p = q;
+				continue;
+			}
+		}
+		/* R5 */
+		if ((xfl & XR5) && (b = xldsrc(p)) && xisrw(a = xhead(p->code, 0))) {
+			if (q->op == TST && q->subop == 0 && equstr(q->code, b)) {
+				if (equstr(b, "r2") && p->back->op == CALL) {		/* R33 */
+					p = q;
+					continue;
+				}
+				if ((a[2] || a[1] >= '8') && p->back->op == XOR && p->back->subop == BYTE && xzerob(p->back->code, b)) {
+					p = q;		/* R39: rA is r8..r14 */
+					continue;
+				}
+				if (!(xfl & XR5T)) {
+					q->code = copy(1, a);
+					p = q;
+				}
+				continue;
+			}
+			if ((c = xldsrc(q)) && equstr(c, b) && !equstr(xhead(q->code, 0), a)) {
+				q->code = copy(2, xhead(q->code, 1), a);
+				p = q;
+			}
+		}
+	}
+}
 #endif
 
 clrptr30()

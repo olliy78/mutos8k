@@ -143,7 +143,11 @@ register char *s;
 		case '3': xfl |= XR3; break;
 		case 't': xfl |= XR10; break;
 		case 'r': xfl |= XR32; break;
-		case 'A': xfl = 0x7FF; break;
+		case '5': xfl |= XR5; break;
+		case 'T': xfl |= XR5T; break;
+		case '4': xfl |= XR42; break;
+		case '6': xfl |= XR64; break;
+		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64; break;
 		}
 }
 #endif
@@ -224,6 +228,10 @@ char **argv;
 #ifdef C2X
 		if (xfl & XR2)
 			hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
+#endif
+#ifdef C2X
+		if (xfl & (XR5 | XR42 | XR64))
+			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
 #endif
 		output();
 		if (niter > maxiter)
