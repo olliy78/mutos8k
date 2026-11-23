@@ -111,6 +111,7 @@ char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
  * harmless in the original layout, but it would hit a BSS variable placed right
  * after ophash. */
 int	xfl = 0;
+int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
@@ -147,7 +148,10 @@ register char *s;
 		case 'T': xfl |= XR5T; break;
 		case '4': xfl |= XR42; break;
 		case '6': xfl |= XR64; break;
-		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64; break;
+		case 'W': xfl |= XR63C; break;
+		case 'e': xfl2 |= XR45; break;
+		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
+			xfl2 |= XR45; break;
 		}
 }
 #endif
@@ -166,6 +170,7 @@ char **argv;
 		debug++;
 	}
 #ifdef C2X
+	xfl2 = 0;
 	xfl = 0;	/* explicit: flag-less guest runs showed stray bits in the BSS word (W10o) */
 	while (argc>1 && argv[1][0]=='-' && argv[1][1]=='x') {
 		xparse(argv[1]+2);	/* -x<letters>, -xpush, -xcmpmem, -xhzero, -xA (all) */
@@ -230,7 +235,7 @@ char **argv;
 			hzpass();	/* c2x -xhzero: late deletion of dead xorb (rule R2) */
 #endif
 #ifdef C2X
-		if (xfl & (XR5 | XR42 | XR64))
+		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || (xfl2 & XR45))
 			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
 #endif
 		output();

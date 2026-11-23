@@ -1635,6 +1635,25 @@ r5pass()
 		q = p->forw;
 		if (q == 0)
 			break;
+		/* R45 (W10v): `xor r2,r2 ; div rr2,#k` -> `exts rr2 ; div rr2,#k` (the original divides as signed) */
+		if ((xfl2 & XR45) && p->op == XOR && p->subop == 0 && equstr(p->code, "r2,r2") && q->op == DIV && q->subop == 0
+		 && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ',' && q->code[4] == '#') {
+			p->op = SXT;
+			p->code = copy(1, "rr2");
+			continue;
+		}
+		/* R63 copy part (W10v): `xorb rhN,rhN ; ldb @rM,rlN ; ld rK,rN ; ld rX,rN ; test rN` -> `... ; ld rK,rN ; ld rX,rK ; test rK`
+		   (the original works on the copy; the xorb itself is kept by the hzpass exception, flag w) */
+		if ((xfl & XR63C) && (b = xldsrc(p)) && xisrw(a = xhead(p->code, 0)) && q->forw && (c = xldsrc(q)) && equstr(c, b)
+		 && xisrw(xhead(q->code, 0)) && q->forw->op == TST && q->forw->subop == 0 && equstr(q->forw->code, b)
+		 && p->back->op == MOV && p->back->subop == BYTE && p->back->code[0] == '@' && p->back->code[1] == 'r'
+		 && (c = xcomma(p->back->code)) && c[0] == 'r' && c[1] == 'l' && equstr(c + 2, b + 1)
+		 && p->back->back->op == XOR && p->back->back->subop == BYTE && xzerob(p->back->back->code, b)) {
+			q->code = copy(2, xhead(q->code, 1), a);
+			q->forw->code = copy(1, a);
+			p = q->forw;
+			continue;
+		}
 		/* R42: p = `ld MEM,rN`, behind `ld rN,SRC`, before `test rN` */
 		if ((xfl & XR42) && p->op == MOV && p->subop == 0 && q->op == TST && q->subop == 0 && (b = xcomma(p->code)) && xisrw(b) && equstr(q->code, b)
 		 && p->back->op == MOV && p->back->subop == 0 && (c = xcomma(p->back->code)) && c[0] != 'r' && c[0] != '#') {
