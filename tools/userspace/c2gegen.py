@@ -86,13 +86,14 @@ def verfuegbar(namen):
 
 
 # W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
-FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "w", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r"}
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "w", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6"}
 
 
 def c2x_flags(name, regeln, extra=()):
     """W10o: the `-x...` argument for program NAME: letters of the rules in regelsatz(name, ...) that c2x implements ('' = no flag)."""
     r = regelsatz(name, regeln, extra)
-    return "".join(FLAGBUCHSTABE[x] for x in FLAGBUCHSTABE if x in r)
+    # W10t: pseudo rule R5T (only the `ld DST` form of R5, pr) is a letter of its own
+    return "".join(FLAGBUCHSTABE[x] for x in FLAGBUCHSTABE if x in r) + ("T" if "R5" in r and "R5T" in P.c2_aus(name) else "")
 
 
 def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=False):
@@ -314,7 +315,7 @@ def xpush(namen, regeln=("R1",), extra=(), global_=False):
                 continue
             s = open(os.path.join(d, f[:-1]), encoding="latin-1").read()
             sn = open(os.path.join(d, f), encoding="latin-1").read()
-            y, c = U.c2_emu_s(s, alle - akt, False)
+            y, c = U.c2_emu_s(s, (alle - akt) | (set(P.c2_aus(n)) & {"R5T"}), False)   # W10t: the pseudo rule R5T (pr) is not a counter key
             tag = "off:" + ",".join(aus_gr) if aus_gr else "off:-"
             if y == sn:
                 ok += 1

@@ -175,4 +175,8 @@ extern int xfl;
 #define	XR3	0x100	/* 3  xorb kept before the final jr behind cp ; jr cc */
 #define	XR10	0x200	/* t  xorb kept before add rN behind cp ; jr cc */
 #define	XR32	0x400	/* r  xorb kept before the 2nd cp of a compare chain */
+#define	XR5	0x800	/* 5  R5: ld rA,rB ; test rB -> test rA, ld rA,rB ; ld DST,rB -> ld DST,rA (W10t) */
+#define	XR5T	0x1000	/* T  pseudo rule R5T: with 5 only the `ld DST` form (pr) */
+#define	XR42	0x2000	/* 4  R42: ld rN,SRC ; ld MEM,rN ; test rN -> test MEM */
+#define	XR64	0x4000	/* 6  R64: long compare chain works on the memory copy first (df) */
 #endif
