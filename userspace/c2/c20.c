@@ -111,10 +111,15 @@ char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO, JMI, JPL };
  * harmless in the original layout, but it would hit a BSS variable placed right
  * after ophash. */
 int	xfl = 0;
+#ifdef C2XSHARE
+/* W10y: shared strings in copy() are OFF by default (compile with -DC2XSHARE to get them).  They change the heap layout, and the heap
+ * layout is not neutral: addsob() reads p->refc of a DEC node that nothing ever initialised (known bug F6), so the djnz decision
+ * depends on leftover heap content of the previous function.  With sharing, dd/ed/tar lost their djnz (W10w/W10x). */
 #define	XTBSZ	120	/* longest string that copy() shares */
 #define	XIHS	64	/* hash chains of the shared strings */
 char	xtb[XTBSZ + 8] = {0};	/* initialized (data) too: see above */
 char	*xih[XIHS] = {0};
+#endif
 int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
@@ -250,7 +255,7 @@ char **argv;
 		if (niter > maxiter)
 			maxiter = niter;
 		lasta = firstr;
-#ifdef C2X
+#ifdef C2XSHARE
 		for (c = 0; c < XIHS; c++)
 			xih[c] = 0;	/* the shared strings lived in the heap that was just released */
 #endif
@@ -535,7 +540,7 @@ char *ap;
 		while (*p++)
 			n++;
 	}
-#ifdef C2X
+#ifdef C2XSHARE
 	/* W10w: equal strings are stored once.  c2x is 6.7 KB bigger than c2 and the process has no more than 64 KB for text, data, heap and
 	   stack (sbrk does not check): the biggest function of `as` (encode, 61K core with plain c2) did not fit any more.  The code strings
 	   are never written after copy() (all writers work on regs[]) and nobody compares the pointers, so sharing is invisible.

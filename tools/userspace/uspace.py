@@ -363,7 +363,12 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         if not xcc:
             return ""
         fl = xcc["flags"]
-        return " -X" + (fl.get(f, "") if isinstance(fl, dict) else fl)
+        v = fl.get(f, "") if isinstance(fl, dict) else fl
+        return "" if v is None else " -X" + v
+
+    def cc_von(f=None):   # W10y: a module whose flag entry is None has no rule site: plain cc -O (shipped c2, smaller than c2x)
+        fl = xcc["flags"] if xcc else None
+        return "cc" if not xcc or (isinstance(fl, dict) and fl.get(f, "") is None) else "xcc"
     if xcc:
         os.makedirs(arbeit, exist_ok=True)
         usr = os.path.join(arbeit, "xcc_usr.hfe")
@@ -390,7 +395,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
             if stufen:
                 befehle = stufen_befehl(name, lib, False, "/usr/lib/c2x -x" + xf(name + ".c")[3:] if xcc else "/usr/lib/c2")
             else:
-                befehle = [("cd /tmp;%s %s%s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (cc, fl, xf(name + ".c") if "-O" in fl.split() else "", name, name, ".s" if ist_s else ".c", lib, name))]
+                befehle = [("cd /tmp;%s %s%s -I/mnt -o %s /mnt/%s%s%s >%s.err 2>&1;cd /mnt" % (cc_von(name + ".c"), fl, xf(name + ".c") if "-O" in fl.split() else "", name, name, ".s" if ist_s else ".c", lib, name))]
             rueck = [name, name + ".err"]
             if asm and not ist_s:
                 if stufen:
@@ -422,7 +427,7 @@ def gast_bauen(arbeit, varianten, kopfdateien=(), flags="-O -s", asm=False, para
         def cfl_von(f):
             return " ".join(x for x in cfl.split() if x != "-O") if f in ohne else cfl
         for f in cs:
-            befehle.append("cd /tmp;%s %s%s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cc, cfl_von(f) if f.endswith(".c") else "", xf(f) if f.endswith(".c") and "-O" in cfl_von(f).split() else "", f, name))
+            befehle.append("cd /tmp;%s %s%s -c -I/mnt /mnt/%s >>%s.err 2>&1;cd /mnt" % (cc_von(f), cfl_von(f) if f.endswith(".c") else "", xf(f) if f.endswith(".c") and "-O" in cfl_von(f).split() else "", f, name))
         lib = "".join(" /mnt/" + l for l in libs)       # libc_alt archives: behind the objects, i.e. before -lc
         # rm *.o afterwards: the /tmp disk (ca. 250 KB) is too small for objects + all .s files + cc's temporaries (xec.s was lost)
         befehle.append("cd /tmp;cc -s -o %s %s%s >>%s.err 2>&1;rm -f *.o;cd /mnt" % (name, " ".join(f[:-2] + ".o" for f in cs), lib, name))
