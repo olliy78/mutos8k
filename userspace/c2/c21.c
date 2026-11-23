@@ -1794,3 +1794,79 @@ register n;
 	buf[4] = 0;
 	np->code = copy(2, regs[RT1], buf);
 }
+
+#ifdef C2X
+/* W10aa: minimal formatted output, replaces printf/fprintf/sprintf (see c2.h).  Conversions: %d %s %x %%; ONE argument at most.
+ * to = FILE * (fp != 0) or a buffer (fp == 0, NUL terminated). */
+xfm(fp, to, f, a)
+register char *f;
+char *to;
+{
+	register int c, n, k;
+	register char *s;
+	char t[8];
+
+	while (c = *f++) {
+		s = 0;
+		if (c == '%' && *f) {
+			c = *f++;
+			if (c == 's')
+				s = (char *)a;
+			else if (c == 'd' || c == 'x') {
+				n = a;
+				k = c == 'd' ? 10 : 16;
+				if (c == 'd' && n < 0) {
+					xout(fp, &to, '-');
+					n = -n;
+				}
+				s = t + 7;
+				*s = 0;
+				do {
+					*--s = "0123456789abcdef"[n % k];
+					n = n / k;
+				} while (n);
+			}
+		}
+		if (s == 0)
+			xout(fp, &to, c);
+		else while (*s)
+			xout(fp, &to, *s++);
+	}
+	if (fp == 0)
+		*to = 0;
+}
+
+xout(fp, top, c)
+register char **top;
+{
+	if (fp)
+		putc(c, (FILE *)fp);
+	else
+		*(*top)++ = c;
+}
+
+xpf(fp, f, a)
+{
+	xfm(fp, 0, f, a);
+}
+
+xpo(f, a)
+{
+	xfm(stdout, 0, f, a);
+}
+
+xsp(b, f, a)
+{
+	xfm(0, b, f, a);
+}
+
+xputc(c)
+{
+	return putc(c, stdout);
+}
+
+xgetc()
+{
+	return getc(stdin);
+}
+#endif

@@ -263,6 +263,9 @@ char **argv;
 #endif
 	} while (isend);
 	if (nflag) {
+#ifdef C2X
+		/* W10aa: only the heap figure (the statistics strings cost ~400 bytes of the 64 KB image) */
+#else
 		fprintf(stderr, "%d iterations\n", maxiter);
 		fprintf(stderr, "%d jumps to jumps\n", nbrbr);
 		fprintf(stderr, "%d inst. after jumps\n", iaftbr);
@@ -280,6 +283,7 @@ char **argv;
 		fprintf(stderr, "%d sob's added\n", nsob);
 		fprintf(stderr, "%d redundant tst's\n", nrtst);
 		fprintf(stderr, "%d literals eliminated\n", nlit);
+#endif
 		fprintf(stderr, "%dK core\n", (((int)lastr+01777)>>10)&077);
 	}
 	exit(0);

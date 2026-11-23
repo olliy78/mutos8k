@@ -162,6 +162,19 @@ struct	node *insertl();
 struct	node *codemove();
 
 #ifdef C2X
+/* W10aa: c2x does not link printf/fprintf/sprintf (_doprnt, strout, ffltpr ~ 2 KB of text: the image is one 64 KB segment, F5).
+ * xpf() knows only the conversions c2 uses (%d %s %%) and takes ONE argument (K&R: a missing one is never read).
+ * putchar/getchar are macros that expand ~30 bytes per use; one shared function each is smaller. */
+#undef putchar
+#undef getchar
+#define	putchar	xputc
+#define	getchar	xgetc
+#define	printf	xpo
+#define	fprintf	xpf
+#define	sprintf	xsp
+#endif
+
+#ifdef C2X
 /* c2x run-time switches (W10o): one flag word `xfl`, one bit per rule of the older c2 (doc/userspace/wk_w10o.md).  Set by `-x<letters>` in main(). */
 extern int xfl;
 extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
