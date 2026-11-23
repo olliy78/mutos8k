@@ -23,7 +23,7 @@ _execl:
 	ld	r0,%0004(r14)
 	ld	r1,r14
 	inc	r1,#6
-	ld	r2,%19C+__sobuf
+	ld	r2,_environ
 	sc	#%3B
 	jp	cerror
 end _execl

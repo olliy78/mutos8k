@@ -1,0 +1,5 @@
+# W10d: the commons are the ORIGINAL buffers, not members_auto's `bstart - 2 - 0x400` guess.  Measured: the _flsbuf/_filbuf
+# literals of the original (#%2A68 stdin branch, #%2C68 stdout branch); the `#%OFF+__sibuf` forms were only relative to the wrong guess.
+common __sibuf 2A68 200 data
+common __sobuf 2C68 200 data
+extern _environ 2E68 2

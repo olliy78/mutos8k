@@ -2,7 +2,7 @@
 
   python3 -I tools/userspace/pipeline.py holen   NAME [--platte root --pfad etc/init]
   python3 -I tools/userspace/pipeline.py karte   NAME [--ablegen]          # map + listing + libc names + strings
-  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm] [--c2emu] [--libc alt]   (guest, minutes)
+  python3 -I tools/userspace/pipeline.py bau     NAME [--quelle V=FILE]... [--flags "-O -s"] [--asm] [--c2emu] [--xcc] [--libc alt]   (guest, minutes)
   python3 -I tools/userspace/pipeline.py vergleich NAME [--ist VARIANTE]   # report against the original
   python3 -I tools/userspace/pipeline.py alles   NAME [--quelle V=FILE]... # holen, karte, bau, vergleich
   python3 -I tools/userspace/pipeline.py --check [NAME]                    # host-side self test (no guest run)
@@ -78,10 +78,10 @@ PROGRAMME = {
     "adb": ("bin", "adb", "userspace/adb", []),   # doc/userspace/cmd_s5.md
     "cc": ("usr", "bin/cc", "userspace/cc/cc.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ld": ("usr", "bin/ld", "userspace/ld/ld.c", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
-    "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "as": ("usr", "bin/as", "userspace/as", []),   # toolchain, linking skeleton: doc/userspace/wk_w7c.md
     "cpp": ("usr", "lib/cpp", "userspace/cpp", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "c0": ("usr", "lib/c0", "userspace/c0", []),   # toolchain: doc/userspace/wk_w4.md
-    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
+    "c1": ("usr", "lib/c1", "userspace/c1", []),   # toolchain: doc/userspace/wk_w6.md
     "c2": ("usr", "lib/c2", "userspace/c2", []),   # toolchain, holen/karte only: doc/userspace/wk_w0.md
     "ps": ("cmd", "bin/ps", "userspace/ps/ps.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
     "pstat": ("cmd", "bin/pstat", "userspace/pstat/pstat.c", ["userspace/ps/mutosk.h", V7INC + "sys/dir.h"]),
@@ -94,6 +94,7 @@ PROGRAMME = {
 # ld: R32 (1 site, symreloc) and R43 (1 site, getfile) would add an XORB the original does not have (measured, doc/userspace/wk_w13.md)
 C2_AUS = {"ld": {"R32", "R43"},
           "cpp": {"R42"},       # one site in dodef keeps `test r3`, doc/userspace/wk_w2.md
+          "c1": {"R5", "R5T", "R45", "R4"},  # match x2, sdelay, rcexpr keep `ld r13,r2 ; test r2`; rcexpr hash switch keeps `xor r2,r2` (doc/userspace/wk_w6.md part 5); cexpr keeps `CP mem,#k` in chains (no R0 reuse, part 6)
          "sh": {"R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R30", "R31", "R32", "R42", "R45", "R70"},
          # od: R3 would put an XORB before the `jr` into the switch dispatch (`switch(*p++)` after `*p == '-'`); the original has none (1 site, measured)
          "od": {"R3"},
@@ -112,7 +113,14 @@ C2_AUS = {"ld": {"R32", "R43"},
          # ps, pstat: the shipped c2 form everywhere (all of R1-R76 off, measured: the plain cc -O output equals the original up to R77, doc/userspace/cmd_s3b4.md)
          "ps": {"R%d" % k for k in range(1, 77)}, "pstat": {"R%d" % k for k in range(1, 77)},
          # ed: R42 (`test MEM`) and R45 (`exts` before a switch/`% k` division) were measured on other programs; ed keeps `test r2` and the `xor r2,r2` of the switch hash (4 sites)
-         "ed": {"R42", "R45"}}
+         "ed": {"R42", "R45"},
+         # c2: the shipped c2 itself is built with the older stand.  R5 (`test`/`ld` forms), R7 (an `xorb` between `ldb` and `cp`), R32 (a repeated `xorb` in char range tests)
+         # and R45 (`exts` before the output() hash switch) would each differ from the original (doc/userspace/wk_w5.md)
+         "c2": {"R5", "R7", "R32", "R45"},
+         # as: the yylex hash switch (`DIV RR2,#5`) keeps `xor r2,r2` as in c1/ed (doc/userspace/wk_w7f.md, wk_w7g.md)
+         # W7i: R1 (`inc sp,#k ; ld @sp,x`), R2 (XORB before a byte store) and R4 (`cp MEM,#k` -> `ld r0,MEM ; cp r0,#k`) are not the
+         # form of the original as: its listing keeps `inc r15,#2 ; ld @r15,x`, `xorb ; ldb @r2,rl4` and `cp MEM,#k` (doc/userspace/wk_w7i.md)
+         "as": {"R1", "R2", "R4", "R45"}}
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
@@ -195,16 +203,27 @@ def quelle_lesen(p):
     p = os.path.join(U.REPO, p) if not os.path.isabs(p) else p
     if not os.path.isdir(p):
         return open(p, encoding="latin-1").read(), {}
-    dat, koepfe = {}, {}
+    dat, koepfe = U.Module(), {}
+    # `link.txt` (optional): the modules (.c or .s) in link order, one name per line; without it all *.c alphabetically.
+    # c1 needs it: atof.s (EPA code, not compilable by the guest cc) and the generated table module sit between c13 and libc.
+    lt = os.path.join(p, "link.txt")
+    # A line may carry the marker `noopt` (`as_y.c noopt`): that module is compiled WITHOUT -O (pure data modules; the shipped
+    # c2 hangs on > ~10 KB of initialised data, doc/userspace/wk_w7e.md).  Default: all modules with the program's flags.
+    zeilen = [z.split() for z in open(lt) if z.strip() and not z.startswith("#")] if os.path.isfile(lt) else None
+    reihe = [z[0] for z in zeilen] if zeilen is not None else None
+    ohne = {z[0] for z in zeilen if "noopt" in z[1:]} if zeilen else set()
     for f in sorted(os.listdir(p)):
-        if f.endswith(".c"):
+        if f.endswith(".c") and reihe is None:
             dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
         elif f.endswith(".h"):
             koepfe[f] = open(os.path.join(p, f), "rb").read()
+    for f in reihe or []:
+        dat[f] = open(os.path.join(p, f), encoding="latin-1").read()
     # a .c file that another .c of the directory #includes (cpp: cpy.c includes yylex.c, as in V7) is not a module of its own
     for f in list(dat):
         if any(('"%s"' % f) in t and re.search(r'^\s*#\s*include\s+"%s"' % re.escape(f), t, re.M) for g, t in dat.items() if g != f):
             koepfe[f] = dat.pop(f).encode("latin-1")
+    dat.noopt = ohne & set(dat)
     return dat, koepfe
 
 
@@ -237,18 +256,111 @@ def quellen_lesen(name, a):
     return v, koepfe
 
 
+# R33/R39 are exceptions to R5 that c2x's r5pass() has built in (no letter, W10t): not a gap
+XCC_EINGEBAUT = ('R33', 'R39')
+
+
+def xcc_einstellung(name, v):
+    """W10s: the `xcc` argument of gast_bauen: the two binaries and the -X letters of the program (c2gegen.c2x_flags = the groups c2x
+    implements minus C2_AUS, the same function as `c2gegen lauf --auto`; one letter set for all modules of the program)."""
+    import c2gegen
+    import xcc
+    fl = c2gegen.c2x_flags(name, xcc.REGELN, ("R3",))
+    bins = {"xcc": os.path.join(U.REPO, "userspace", "cc", "work", "bau", "xcc_c2_s.bin"),
+            "c2x": os.path.join(U.REPO, "userspace", "c2", "work", "bau", "c2x_c2.bin")}
+    for b in bins.values():
+        if not os.path.isfile(b):
+            raise U.Fehlt(b)
+    return dict(bins, flags=fl)
+
+
+def xcc_luecken(name, ar):
+    """W10s: rules of the host model (c2_emu_s counts on the plain `cc -O -S` text work/bau/neu.s or neu_s/*.s, the program's own C2_AUS)
+    that c2x has no letter for; those sites are not reproduced by an xcc build.  {} = the program can be G with xcc (as far as measured)."""
+    import c2gegen
+    bd = os.path.join(ar, "bau")
+    texte = []
+    if os.path.isfile(os.path.join(bd, "neu.s")):
+        texte = [open(os.path.join(bd, "neu.s"), encoding="latin-1").read()]
+    elif os.path.isdir(os.path.join(bd, "neu_s")):
+        texte = [open(os.path.join(bd, "neu_s", f), encoding="latin-1").read() for f in sorted(os.listdir(os.path.join(bd, "neu_s")))]
+    return xcc_luecken_texte(name, texte)
+
+
+def xcc_luecken_texte(name, texte):
+    """W10u: like xcc_luecken, but on already-read `cc -O -S` texts (one per module); returns {rule: sites} for rules without a c2x letter."""
+    import c2gegen
+    tot = {}
+    for t in texte:
+        _s, cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
+        for k, n in cnt.items():
+            if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
+                tot[k] = tot.get(k, 0) + n
+        if name == "ld":        # W10v: R97-R100 (c2_ld_s, measured on ld only) have no c2x letter either
+            _s, cnt = U.c2_ld_s(_s)
+            for k, n in cnt.items():
+                if n:
+                    tot[k] = tot.get(k, 0) + n
+    return tot
+
+
+def cmd_xccgap(a):
+    """W10u: `pipeline.py xccgap [NAME]`: host-only survey of the model rules each program uses that c2x has no letter for (what
+    `bau --xcc` would print as the gap), from userspace/NAME/work/bau (neu.s | neu_s/*.s | v7fix_s/*.s).  Prints a table, `ready` = no gap."""
+    namen = [a.name] if a.name != "init" else sorted(os.listdir(os.path.join(U.REPO, "userspace")))
+    for n in namen:
+        bd = pfad(n, "work", "bau")
+        texte, art = [], "single"
+        for cand in ("neu.s", "neu_s", "v7fix_s"):
+            q = os.path.join(bd, cand)
+            if os.path.isfile(q):
+                texte = [open(q, encoding="latin-1").read()]
+            elif os.path.isdir(q):
+                texte = [open(os.path.join(q, f), encoding="latin-1").read() for f in sorted(os.listdir(q)) if f.endswith(".s")]
+                art = "multi(%d)" % len(texte)
+            if texte:
+                break
+        if not texte:
+            continue
+        lk = pfad(n, "link.txt")
+        if os.path.isfile(lk) and "noopt" in open(lk).read():
+            art += ",noopt"
+        g = xcc_luecken_texte(n, texte)
+        print("%-10s %-14s %s" % (n, art, " ".join("%s(%d)" % (k, g[k]) for k in sorted(g, key=lambda x: int(x[1:]) if x[1:].isdigit() else 0)) or "ready"))
+
+
 def cmd_bau(name, a):
     ar = arbeit_von(name, a)
     v, koepfe = quellen_lesen(name, a)
+    xcc_arg = None
+    if a.xcc:       # W10s: guest build with xcc + c2x and the program's -X flags, no host rewriting of the .s
+        if a.c2emu or a.asm:
+            raise SystemExit("--xcc excludes --c2emu and --asm")
+        xcc_arg = xcc_einstellung(name, v)
+        print("xcc build of %s: -X%s; model rules without a c2x letter: %s" % (name, xcc_arg["flags"], xcc_luecken(name, ar) or "none"))
     libs = sorted(k for k in koepfe if k.startswith("libc_alt")) if a.libc == "alt" else []
-    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs)
+    erg = U.gast_bauen(os.path.join(ar, "bau"), v, koepfe, flags=a.flags, asm=a.asm or a.c2emu, parallel=a.parallel, libs=libs, xcc=xcc_arg)
     os.makedirs(os.path.join(ar, "bau"), exist_ok=True)
     if a.c2emu:     # second round: assemble the rewritten .s (original-c2 model) and link it
         zwei = {}
         for n, r in erg.items():
             if isinstance(r["s"], dict) and r["s"]:        # multi-file: rewrite each module's .s
                 zwei[n + "_c2"], tot = {}, {}
-                for fn, t in sorted(r["s"].items()):
+                # Modules that are already assembler (.s in link.txt: c1's atof.s and table_z8k.s) are not rewritten and keep
+                # their place in the link order; without them the second link round lacks them (Undefined: _regtab ...).
+                fixe = {f[:-2] + ".s": t for f, t in v[n].items() if f.endswith(".s")} if isinstance(v.get(n), dict) else {}
+                # The second round keeps the module order of quelle_lesen (link.txt if present, else alphabetical -- the same
+                # order sorted() gave before); `as` (W7k) has a link.txt without .s modules and lost its order here otherwise.
+                reihe = [f[:-2] + ".s" for f in v[n]]
+                todo = [(f, fixe[f] if f in fixe else r["s"][f]) for f in reihe if f in fixe or f in r["s"]]
+                ohne = {f[:-2] + ".s" for f in getattr(v[n], "noopt", ())}
+                for fn, t in todo:
+                    if fn in ohne:      # compiled without -O: no c2 to model, the .s is already what cc -S gives
+                        zwei[n + "_c2"][fn] = t
+                        continue
+                    if fn in fixe:
+                        zwei[n + "_c2"][fn] = t
+                        continue
                     zwei[n + "_c2"][fn], cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
                     if name == "ld":
                         zwei[n + "_c2"][fn], c3 = U.c2_ld_s(zwei[n + "_c2"][fn])
@@ -348,7 +460,7 @@ ERWARTET = {"init": ("signal", "setjmp", "open", "close", "kill", "wait", "alarm
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", nargs="?", choices=["holen", "karte", "bau", "vergleich", "alles"])
+    ap.add_argument("cmd", nargs="?", choices=["holen", "karte", "bau", "vergleich", "alles", "xccgap"])
     ap.add_argument("name", nargs="?", default="init")
     ap.add_argument("--check", nargs="?", const="init", metavar="NAME", help="host-side self test (default init); exit 77 without the emulator")
     ap.add_argument("--arbeit")
@@ -361,6 +473,8 @@ def main(argv=None):
     ap.add_argument("--flags", default="-O -s")
     ap.add_argument("--asm", action="store_true", help="also cc -S (assembler source of the variant)")
     ap.add_argument("--c2emu", action="store_true", help="also assemble the .s rewritten to the original c2's form (R1-R3)")
+    ap.add_argument("--xcc", action="store_true",
+                    help="build in the guest with /usr/bin/xcc -O -X<flags of the program> and /usr/lib/c2x instead of cc + host c2 model (W10s; variant name default neu_x; use with --libc alt)")
     ap.add_argument("--libc", choices=["disk", "alt"], default="disk",
                     help="alt = link the rebuilt libc of the original program (userspace/libc_alt/NAME/libc_alt.a) before -lc")
     ap.add_argument("--parallel", type=int, default=4)
@@ -370,6 +484,8 @@ def main(argv=None):
     ap.add_argument("--ohne-c2", action="store_true", help="compare without the c2 model (c2_kanon)")
     ap.add_argument("--voll", action="store_true", help="print the full report")
     a = ap.parse_args(argv)
+    if a.xcc and a.variante == "neu":
+        a.variante = "neu_x"
     try:
         if a.check or a.cmd is None:
             return check(a.check or a.name)
@@ -377,6 +493,8 @@ def main(argv=None):
             cmd_holen(a.name, a)
         elif a.cmd == "karte":
             cmd_karte(a.name, a)
+        elif a.cmd == "xccgap":
+            cmd_xccgap(a)
         elif a.cmd == "bau":
             cmd_bau(a.name, a)
         elif a.cmd == "vergleich":

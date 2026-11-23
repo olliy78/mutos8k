@@ -1,0 +1,102 @@
+# as: false --vorschlaege entries (constants / data addresses read as code targets that fall into the middle of a
+# real instruction; found with a z8kdis variant that names the overlap, see doc/userspace/wk_w7a.md)
+ohne 01B6
+ohne 0592
+ohne 0702
+ohne 0D06
+ohne 0D24
+ohne 1600
+ohne 1700
+ohne 1A00
+ohne 1F00
+ohne 2020
+ohne 203A
+ohne 204C
+ohne 2054
+ohne 2070
+ohne 2074
+ohne 20CA
+ohne 2102
+ohne 2106
+ohne 212A
+ohne 217E
+ohne 21A2
+ohne 21B2
+ohne 21D2
+ohne 2444
+ohne 2452
+ohne 25B0
+ohne 2720
+ohne 28C0
+ohne 2C02
+ohne 2D20
+ohne 2D2A
+ohne 2E20
+ohne 2ECA
+ohne 2F00
+ohne 2F2C
+ohne 2F3A
+ohne 2FAC
+ohne 2FD2
+ohne 3600
+ohne 3664
+ohne 3B88
+ohne 3E00
+ohne 3E28
+ohne 4010
+ohne 4014
+ohne 4024
+ohne 40C0
+ohne 4144
+ohne 414E
+ohne 4202
+ohne 42E6
+ohne 43E2
+ohne 4444
+ohne 445A
+ohne 4702
+ohne 4742
+ohne 4802
+ohne 494C
+ohne 4A02
+ohne 4A50
+ohne 4C56
+ohne 5490
+ohne 5492
+ohne 54A2
+ohne 54D6
+ohne 54E2
+# switch jump tables in the data part (LD R1,Lxxxx(Rn) ; JP @R1): the word entries are code entry points.
+# Range switches (CP R2,#k ; JR UGT) have k+1 entries, hash switches (DIV RR2,#n) n entries; 65CE = yyparse action switch (case 0..165, default 09C4).
+dwc 65C6 65CC
+dwc 65CE 6718
+dwc 6800 6808
+dwc 680A 680E
+dwc 68E2 68EC
+dwc 69B0 69B2
+dwc 69B4 6A8C
+dwc 6A8E 6B66
+dwc 6BEE 6BF6
+dwc 6C06 6C0A
+dwc 6E40 6E46
+dwc 6F6A 6F6C
+dwc 6F72 6F78
+dwc 6F7A 6F80
+dwc 8A6C 8A74
+# dead code (JP after JR / unreferenced function): never reached by the flow
+code 026E
+code 09AC
+code 1476
+code 1E0C
+code 1E30
+code 2C48
+code 31EC
+code 35EC
+code 3A5A
+code 448A
+code 44EA
+code 4C82
+code 4C9E
+code 5454
+code 551A
+code 55F4

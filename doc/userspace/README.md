@@ -23,6 +23,11 @@ so zurueckbauen, dass der MUTOS-`cc -O` im Emulator-Gast aus unserer Quelle das 
 | `wk_w13.md` | Werkzeugkette W1/W3: cc, ld (ganzdatei bytegleich), c2-Regeln R93-R100 nur fuer cc/ld; Stufenbau in drei Gastbefehlen |
 | `wk_w2.md` | Werkzeugkette W2: cpp (A, 13 Restbloecke Codeanordnung); Gast-yacc erzeugt die cpp-Tabellen wortgleich; c2-Regeln R101-R112 nur fuer cpp |
 | `wk_w4.md` | Werkzeugkette W4: c0 (ganzdatei bytegleich), c2-Regeln R130-R133 nur fuer c0; Gleitkommaglieder fltpr/ecvt in libc_alt |
+| `wk_w8.md` | Werkzeugkette W8: `libc.a` je Glied (140: 111 G, 24 E, 5 A), `crt0.o`/`mcrt0.o` E; Quellen `userspace/libc/` |
+| `wk_w5.md` | Werkzeugkette W5: c2 (c20.c und rmove befehlsgleich; 6 c21-Funktionen weichen in der Blockanordnung ab) |
+| `wk_w5e.md` | c2-Gegenprobe: echter ausgelieferter c2 im Gast gegen das Regelmodell, 52 Programme; Werkzeuge `c2gegen.py`, `c2layout.py` |
+| `wk_w10c.md` | c2: Ursache der zerstueckelten Ausgabe (libc_alt-Anker `__sibuf`/`__sobuf` im 20 Byte kuerzeren Bau), Behebung in `c2.members.zusatz`; Gegenprobe offen |
+| `wk_w6.md` | Werkzeugkette W6: c1 (in Arbeit) -- Codetabellen bytegleich (`table.s`, `tools/userspace/cvopt_z8k.py`), Linkreihenfolge `link.txt` |
 | `erg_e0.md`, `erg_e1a.md`, `erg_e1b.md` | Ergaenzungen aus V7 (Plan 45): Rahmen `erg.py`, 17 Programme |
 | `cmd_s3a.md` | `cmd`-Diskette: df, rm, mv, od, who, cmp (ganzdatei bytegleich), c2-Regeln R60-R64, `C2_AUS` fuer df/rm/od |
 | `exp_ldi.md` | Experiment: getrennte I&D (`ld -i`, E811) startet im MUTOS-Kernel nicht; Folge fuer yacc (SMALL bleibt). Branch `us-exp-ldi` (nicht gemergt) |
@@ -195,9 +200,23 @@ Werkzeugaenderungen: `libc_alt` nimmt das Datenglied `ctype_` mit, wenn `doscan`
 | ld | 10726 | V7 `ld.c` ohne Overlay-Verwaltung und `-n`, Z8000-Magics, CALLR-Relokation in `load2td` aus dem Listing (Namen *Annahme*) | R32/R43 aus, R97-R100 (je 1-2 Stellen, nur `ld`) | G |
 | c0 | 26826 | V7 `c00.c`-`c05.c`, `c0.h`: mehr `register`-Variablen (R8-R13), `HSHSIZ` 420, `STAUTO` -12, neue Globale `regmin` (Name *Annahme*), `getcc` nur ein Zeichen, Namenskonflikt-Pruefung in `blkend` u. a. (`wk_w4.md`) | R130-R133 (1-3 Stellen, nur `c0`) | G |
 | cpp | 16382 | V7 `cpp.c`, `cpy.y`, `yylex.c` mit 3 Abweichungen (`unix`/`U8000` fest definiert, `symsiz` 500, `enterf==1`); `cpy.c` vom Gast-yacc, Tabellen wortgleich | R101-R112, R42 aus | **A**: 3268/3323 Befehle gleich, 13 Bloecke Codeanordnung (vermutlich `comjump`/`codemove` des alten c2), Text 90 B kuerzer |
+| libc.a | 71914 | 77 C-Glieder (V7, 19 mit markierten Abweichungen), 63 Assembler-Glieder (Befehlstext aus `libc_alt`, V7-Marken); `userspace/libc/` | ohne c2-Modell bis auf R130-Form (`popen`, `system`) | je Glied 111 G, 24 E (nur Wert der `~f`-Symbole: anderer `as`, *Annahme*), 5 A (`fltpr frexp ldexp ecvt atof` als Datenworte); Archiv als Ganzes nicht G (Kopffelder gid/mode/Datum, E-Glieder) |
+| c2 | 18976 | starke Umarbeitung von V7 `c20.c`/`c21.c` (Z8000-Befehlstabelle, 38 Registerplaetze, neue Funktionen `dest clrptr clrcc delnode log2n mkshift` u. a., Namen teils *Annahme*); Quellen `userspace/c2/` | R5/R7/R32/R45 aus, sonst Standardmodell | **E/A**: eigener Code 4609 von 4717 Befehlen gleich, 28 Bloecke (Blockanordnung in `ilen adrlen equop findrand compare toofar`, toter `JR` in `addsob`), Text 16956 statt 16976 B; Daten und BSS bytegleich (Kontrollbau auf `main` 2026-11-18) |
+| crt0.o, mcrt0.o | 200, 548 | Assembler, rekonstruiert | -- | E (nur Wert zweier Abschnittssymbole) |
 
 Triage aller Passe: `wk_w0.md` (V7-`yacc` erzeugt die Tabellen von `cpp` wortgleich; `as` ist kein V7).
 **Regression nach dem Merge (gemessen 2026-11-17):** cc ld ed tar ps mkfs ls mt und `sh`: alle gleich.  Nach W2: ed tar cc ld sh gleich, `cpy.c`/`bc.c` mit dem Gast-yacc neu erzeugt = eingecheckt, `bc` B.  **Nach W4 (c0, mit `libc_alt.py`-Aenderung fuer Gleitkommaglieder), gemessen 2026-11-17:** alle 47 Originalprogramme, `cc`, `ld`, `c0` (`--ist neu_c2`) und `sh` gleich (51 von 51).  `uspace.py`: der Stufenbau schickt drei kurze Gastbefehle statt eines 440-Zeichen-Befehls (Zeichenverlust im Gast-tty).
+
+## c2-Gegenprobe (gemessen 2026-11-18, `wk_w5e.md`)
+
+`cc -O -S` laeuft schon durch den **ausgelieferten** `/usr/lib/c2`; das Regelmodell bildet also *dessen* Ausgabe auf die Ausgabe des c2 ab, mit dem die Originale gebaut wurden.
+Gemessen mit `tools/userspace/c2gegen.py` (c1-Ausgabe im Gast, echter c2 darauf, Vergleich mit dem Modell) an 52 Programmen / 78 Modulen:
+
+* **Die Originalprogramme wurden nicht mit dem ausgelieferten c2 gebaut.**  82 von 94 Regeln greifen nur dort, wo der ausgelieferte c2 die Originalform *nicht* erzeugt (zusammen 774 Stellen); 280 Stellen macht er wie das Original.
+* Ohne jedes Modell, nur mit dem echten c2, bytegleich: `sync`, `rm`, `pstat`, `mt` (fuer `mt` waere das Modell sogar falsch); `ps` braucht nur R77.  Alle anderen gebauten Programme brauchen das Modell.
+* Der echte c2 tut nichts, was das Modell nicht abbildet (keine unerklaerte Form gefunden).
+* Auch `c2` selbst wurde mit einem anderen c2-Stand gebaut: die Blockanordnung in `adrlen`/`toofar` (erster von mehreren gleichen Rueckkehrbloecken bleibt oben) erzeugt der ausgelieferte c2 aus keiner der drei probierten Quellformen (*Annahme*: anderes `codemove`/`backjmp`).
+* Die Regeln bleiben damit Modell eines **unbekannten aelteren c2-Standes**, jetzt aber mit gemessener Abgrenzung je Regel (`userspace/c2/gegenprobe_regeln.tsv`).
 
 ## Ergaenzungen aus V7 (Plan 45) -- keine Originale
 

@@ -62,7 +62,7 @@ L0D18:
 	jr	ne,L0D76
 	cp	r13,#__iob
 	jr	ne,L0D50
-	ld	r2,#%25B2
+	ld	r2,#__sibuf
 L0D2A:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L0D44:
 	setb	%0006(r13),#2
 	jr	L0CEA
 L0D4A:
-	ld	r2,#%1F6+__sibuf
+	ld	r2,#__sobuf
 	jr	L0D2A
 L0D50:
 	cp	r13,#%8+__iob

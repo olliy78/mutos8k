@@ -62,7 +62,7 @@ L2B74:
 	jr	ne,L2BD2
 	cp	r13,#__iob
 	jr	ne,L2BAC
-	ld	r2,#__sobuf
+	ld	r2,#__sibuf
 L2B86:
 	ld	%0004(r13),r2
 	ld	@r13,r2
@@ -79,7 +79,7 @@ L2BA0:
 	setb	%0006(r13),#2
 	jr	L2B46
 L2BA6:
-	ld	r2,#%8022
+	ld	r2,#__sobuf
 	jr	L2B86
 L2BAC:
 	cp	r13,#%8+__iob

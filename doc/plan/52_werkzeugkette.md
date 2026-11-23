@@ -59,6 +59,8 @@ Die Kette laeuft im Gast (K1, `doc/werkzeugkette/k1_cc_im_gast.md`); Quellen ab 
 | W7 | `as` (Z8000-Assembler, yacc) | W2 (yacc-Befund) | sehr gross; Ergebnis A ist zulaessig |
 | W8 | `libc.a` als Ganzes (alle Glieder, Reihenfolge, Archivkopf) und `crt0.o`/`mcrt0.o` | W0; nutzt `libc_alt` | mittel |
 | W9 | **Selbsthosting-Beweis**: Gastdiskette `usr` aus den neu gebauten Passen zusammenstellen, damit (a) den Kernel bauen (`tools/kernel/gesamtbau.py`, Ergebnis gleich) und (b) Stichprobe Userspace (`sh`, `ed`, `ls` G) | alle G-Programme | mittel |
+| W10 | **Angepasste Werkzeugkette: `cc` mit waehlbarem `c2`, `c2` mit Schaltern fuer aeltere Staende** (eingeplant 2026-11-18, Abschnitt 6a; Vorrang vor W11, Entscheidung Projektinhaber) | W5 (c2-Quelle), W5e (Gegenprobe), W6 (c1) | gross, in kleinen Schritten |
+| W11 | **Herkunft/Verwandtschaft des Compilers** (eingeplant 2026-11-18, Abschnitt 6b; technisch nicht noetig, nach W10) | W5, W6 (c1, c2 weitgehend rekonstruiert), W7 | mittel |
 
 Parallel moeglich nach W0: W1, W2, W3, W4, W5, W8 (je eigener Branch, je Agent).  W6 nach W4, W7 nach W2.  W9 zuletzt; fuer Programme ohne G nimmt W9 das Original
 und nennt das.
@@ -81,6 +83,75 @@ Zeitgrenze 600000 ms oder im Hintergrund mit Benachrichtigung, nie `sleep`, Rund
 Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Programme plus `sh` im Gast (sequentiell), Herkunftstabelle in `doc/userspace/README.md`
 (Abschnitt "Werkzeugkette"), Stand in Plan 44 Stufe 4 und Plan 42 H7 nachtragen.
 
+## 5a. Reihenfolge ab 2026-11-18 (Entscheidung Projektinhaber)
+
+1. W10b (erledigt, `wk_w10b.md`): unser gebauter `c2` (98 % befehlsgleich) ist **funktional noch nicht** gleich -- seine Ausgabedatei ist stueckweise verfaelscht (Teile an falscher Stelle, wie Schreiben an falsche Dateipositionen; Ursache offen: `freopen`, Feldgroessen in `c2.h`, Daten-/BSS-Anordnung oder `libc_alt`).  Erster Punkt von W10, bevor Schalter eingebaut werden.  W10c (`wk_w10c.md`): Ursache gefunden -- nicht c2 selbst, sondern geratene Anker `__sibuf`/`__sobuf` in `libc_alt/c2.members` (stdin- und stdout-Puffer ueberlappten, weil unser Text 20 B kuerzer ist); korrigiert.  W10d (`wk_w10d.md`): gleicher Ankerfehler bei as, c1, login, ls, mv, passwd, cpp behoben; unser c2 liefert auf echo/cat/ed/tar **bytegleiche Ausgabe** wie der ausgelieferte.  Offen: groesserer c2-Testsatz, Neubau der sieben Programme mit `--libc alt`, `--check` login/ls/passwd meldet Kartenueberlappung (schon vor W10d, auf main gemessen 2026-11-19).  W10e (`wk_w10e.md`): Neubau der sieben Programme unveraendert (ls/mv/passwd/login G, cpp/c1/as Zahlen wie vorher); Kartenueberlappung per `karte_extra.txt` behoben, `--check` fuer alle Programme mit `link.txt` gruen (2026-11-19).  W10f (`wk_w10f.md`): unser c2 funktional gleich dem ausgelieferten auf 76 Eingaben (c0, c1, cpp, alle sh-Module, 13 Programme, alle 27 Kernelmodule); **Schritt 2 erledigt**: `-DXPUSH` (R1, verfeinert: Verschmelzen nur bei Rest 0) als Bauvariante `c2x`, 44 von 44 Modulen gleich Original-c2 + R1.  W10g (`wk_w10g.md`): Standard-c2 nach Neubau bytegleich bestaetigt; `-DXCMPMEM` (R4: `ld r0,MEM ; cp r0,#k` statt `cp MEM,#k`) in `rmove`; zusammen mit XPUSH 14 von 15 R4-Modulen gleich Original-c2 + R1+R4+R38 W10h (`wk_w10h.md`): XCMPMEM allein 15/15 (mit R38, R69; passwd `jp` ist richtig, R69); R50/R60 bleiben Host-Regeln; `-DXHZERO` (R2/R7/R10/R30/R32/R43/R63) Stufe 3: 43 von 53 Modulen gleich, Stufe 4 entworfen, W10i (`wk_w10i.md`): XHZERO Stufe 4 45 von 53; alle drei Schalter zusammen 50 von 65 Modulen gleich Original-c2 + Regeln (Rest: 9 xhzero, 6 neu: XCMPMEM laesst in grossen Modulen `r0` als Kopie von MEM in `regs[0]` stehen).  W10j (`wk_w10j.md`): `x4keep` verdeckt die Kopie, XCMPMEM allein 36 von 39 Dateien; Kombination nicht gueltig gemessen (Defines muessen in `c20.c` **und** `c21.c` stehen); naechste Verfeinerung (Wiederverwendung hinter `jr cc`, R38) beschrieben.  W10k (`wk_w10k.md`): Variantenbau mit Defines in beiden Quellen; alle drei Schalter 52 von 65, XCMPMEM allein 35 von 39 (Original nutzt r0 nur hinter kurzem `jr` wieder -- braucht spaeten Durchlauf nach `shortjmp`).  W10l (`wk_w10l.md`): `c2gegen.py var` erzeugt Varianten reproduzierbar, `c2gegen.py tokcheck` (auch als Host-Test) sichert die unveraenderte Standardquelle (fand eine Drift seit W10g, behoben); spaeter Durchlauf `cmppass` nach `shortjmp`: XCMPMEM allein 38 von 39, alle drei Schalter 54 von 65 (Rest: 8 xhzero, cpp, mv, tar).  W10m (`wk_w10m.md`, nur Analyse): init, ld, c2/c20, c2/c21 sind Fehler des Abnahmewerkzeugs (ein Regelsatz fuer alle statt `C2_AUS` je Programm); offen c0/c00 (eine `xorb`-Stelle), c02/convert/ed/cpp Blocklage; mv gehoert zu `-xcopyprop`.  W10n (`wk_w10n.md`): Abnahme nutzt `C2_AUS` je Programm; alle drei Schalter je Programm 40 von 65 -- 18 Reste brauchen feinere Schalter je Regel (sh, ps, pstat, hex, ld, c2), 1 fehlt `-xcopyprop`, 6 echte c2x-Fehler (c00, c02, cpp, ed, tar, convert); Tabelle der Schalter je Programm in Abschnitt 4.  W10o (`wk_w10o.md`): ein `c2x`-Binary (`-DC2X`) mit Laufzeitschaltern je Regel (`-x<Buchstaben>`); je Programm 56 von 65; **offen:** `c2x` ohne Schalter wendet noch R4 an (9/65 gleich dem ausgelieferten c2; Verdacht: Bau ohne `--c2emu`).  W10p/W10q (`wk_w10q.md`): Ursache war der V7-Ueberlauf `ophp > &ophash[OPHS]` in `opsetup`, der ein Wort hinter `ophash` schreibt -- dort lag `xfl`; `xfl` liegt jetzt in den initialisierten Daten: **c2x ohne Schalter 65 von 65 gleich dem ausgelieferten c2**, mit Schaltern je Programm 56 von 65.  **Schritt 3 erledigt** (W10r, `wk_w10r.md`): `xcc` = `cc.c` mit `-DXCC` (Tokenwaechter `xcc.py tokcheck`); `-X<Buchstaben>` ruft `/usr/lib/c2x -x<Buchstaben>`; Vorfuehrung im Gast an df, rm, wc, echo 12 von 12 gleich; usr-Platte zu klein zum Linken mit xcc (4 KB frei).  **Schritt 4 begonnen** (W10s, `wk_w10s.md`): `pipeline.py bau NAME --xcc --libc alt` baut im Gast mit xcc + c2x ohne Host-Patch; **echo und rm bytegleich**; wc, cat brauchen R5, df R42/R64 in c2x.  W10t (`wk_w10t.md`): c2x mit R5/R5T/R42/R64 (`r5pass`); mit xcc bytegleich: **echo, rm, wc, cat, df, size**; c2x ohne Schalter weiter 65/65.  W10u (`wk_w10u.md`): `pipeline.py xccgap` (Luecken je Programm, Host); 29 Programme ohne Luecke, davon 19 mit xcc bytegleich gebaut (zusaetzlich chmod chown clri ln mkdir mknod rmdir pwd kill who stty umount mount); mv 1 Block (R63-Kopieanteil); naechste Regel R45 (ld, ncheck, nm).  W10v (`wk_w10v.md`): c2x mit R45 (`e`, Wort `xfl2`) und R63-Kopieanteil (`W`); xcc nimmt bis 17 Schalterbuchstaben; **27 Programme mit xcc bytegleich** (dazu init login ls hex pstat mv ncheck nm); ld braucht R97-R100; cpp/c2 mehrteilig gebaut, aber Restbloecke; as: `Fatal error in /usr/lib/c2x` (offen); je Programm 57/65.
+2. **W7 `as`** (*W7a erledigt 2026-11-18, `wk_w7a.md`: Karte sauber, 8 yacc-Tabellen = 1976 Worte verortet, Scanner handgeschriebenes C im lex-Rahmen, Kodierer 1C0C 4,5 KB; W7b: Grammatik `as.y` (171 Regeln) zurueckgewonnen, Gast-yacc erzeugt alle 1976 Tabellenworte wortgleich; W7c/W7d: Geruest bindet (Datentabellen, Rahmenfunktionen, Rest Platzhalter); der ausgelieferte c2 haengt bei Modulen mit mehr als ~10 KB initialisierter Daten -- seit W7e je ein Modul mit `noopt` in `link.txt`, Tabellen zusammenhaengend, Nicht-Zeiger-Worte gleich; W7f: Scanner (`yylex`, `plzlook` u. a.) rekonstruiert, W7g: BSS-Anordnung wie im Original, Symboltabelle; W7h: Ausdruecke, Abschnitte/Direktiven (14 Funktionen); W7j/W7k: Befehlskodierer vollstaendig (71 % befehlsgleich), c2-Runde haelt jetzt die Modulreihenfolge -- W7l/W7m: alle Parser-Aktionen; W7n: 12 weitere Funktionen; W7o: alle Platzhalter ersetzt, Quelle vollstaendig; 4192 von 5891 Befehlen gleich (71 %), Text 21824 statt 22092 B; W7p/W7q: Funktionstest im Gast gegen das Original (`asgegen.py`): Symboltabelle und Objektkopf je als ein Feld (Linker haelt Deklarationsreihenfolge nicht), Pass-0-Laengen in `encode`; W7r: Pass-0-Klassengruppen wie Original, `jr $n` nach vorn (Lexer prueft `s_x`), Gast-/tmp mit 500 Inodes; 66 von 75 Eingaben erzeugen bytegleiche `.o` W7s: Operandenfeld `g90b0` als ein Feld wie im Original (4-Operanden-`cpir`), crt0/execle/mcrt0/doprnt bytegleich (gemessen mit `neu.bin`, `wk_w7s.md`); W7t: `neu_c2.bin` uebersetzt 76 von 80 Eingaben bytegleich, die 4 uebrigen liefern wie das Original kein `.o` -- **`as` funktional gleich** auf diesem Testsatz; W7u: Testsatz um 22 Kernelmodule und 8 sh-/mkfs-Module erweitert, alle gemessenen bytegleich (offen: k_sys1/sys2/mbx/daten wegen voller /tmp-Diskette); der Syntaxfehler von `neu.bin` ist mit frischem Bau nicht reproduzierbar (vermutlich veraltetes Binary, `wk_w7u.md`); Befehlsgleichheit 4137/5891; W7i: Objektausgabe, Kodierer-Helfer (11 Funktionen; Zaehlung erfasst ungerufene Funktionen noch nicht); fuer `as` schaden R1/R2/R4 (abgeschaltet) -- Hinweis fuer W10: `as` wurde mit einem c2 gebaut, der diese Formen schon wie der ausgelieferte erzeugt*) in kleinen Schritten (Triage, yacc-Grammatik, Scanner `plzlex`, Codeerzeugung) -- groesste echte Luecke, Voraussetzung fuer W9 und die E-Glieder von `libc.a`.
+3. W10 weiter (Schalter im `c2`), dann gemeinsam fuer die Restbloecke von `c1`, `c2`, `cpp` und `as`.
+4. W9 Selbsthosting mit beiden Ketten; zuletzt W11 (Herkunft ZEUS/WEGA).
+
+## 6a. W10: Original- und angepasste Werkzeugkette (Auftrag des Projektinhabers 2026-11-18)
+
+**Ziel:** Alle Teile des Systems bytegleich **im MUTOS-Gast** bauen, ohne Zwischenergebnisse (`.s`) auf dem Linux-Host zu patchen.
+
+**Zwei Werkzeugketten nebeneinander:**
+1. **Original-Werkzeugkette** -- die rekonstruierten, bytegleichen `cc c0 c1 c2 as ld` (+ `libc.a`, `crt0.o`).  Bleibt unveraendert; sie ist das Rekonstruktionsziel.
+2. **Angepasste Werkzeugkette** -- daneben, unter eigenen Namen (die Originale werden nicht ersetzt):
+   * ein **modifizierter `cc`** (Name *Annahme*, z. B. `xcc`; 8-Zeichen-Grenze beachten) mit einem Parameter, der waehlt, ob der unveraenderte bytegleiche `c2`
+     oder ein **modifizierter `c2`** (z. B. `/usr/lib/c2x`) laeuft, und der dessen Schalter durchreicht;
+   * der **modifizierte `c2`** aus unserer `c2`-Quelle (W5) mit **Schaltern**, die das Verhalten aelterer c2-Staende nachbilden.  Ohne Schalter verhaelt er sich
+     wie der ausgelieferte `c2`.
+
+**Begruendung (gemessen, `wk_w5e.md`, `wk_w6.md` Teil 14):** die Originale wurden mit einem aelteren c2-Stand gebaut als dem ausgelieferten -- auch `c2` selbst, `cpp`
+und Teile von `c1`; ihre Restbloecke (Blockanordnung, `JR`/`JP`, fehlende `BIT`-Umformung) erklaert keine Quellform.  Bisher bildet das Regelmodell auf dem Host
+(`uspace.c2_emu_s`, R1-R133, programmgebundene Saetze) diesen Unterschied als Textersetzung nach.
+
+**Schritte (je klein, mit Gegenprobe):**
+1. Regeln nach gemeinsamem Auftreten ueber die Programme gruppieren (`userspace/c2/gegenprobe_regeln.tsv`) -> Hypothese, wie viele c2-Staende/Schaltergruppen es gibt;
+   programmgebundene 1-Stellen-Regeln auf Ueberanpassung pruefen (erklaert eine Quellform sie doch?).  Die Zahl der noetigen Schaltergruppen ist selbst ein Herkunftsbefund (W11).
+2. Erste Schaltergruppe in die `c2`-Quelle (allgemeine Regeln R1-R10 u. a.); Abnahme: fuer alle Module der Gegenprobe liefert `c2x` mit Schalter dasselbe `.s`
+   wie ausgelieferter `c2` + Regelmodell (`tools/userspace/c2gegen.py`).
+3. `xcc` aus unserer bytegleichen `cc`-Quelle ableiten (Parameter, Pfad zu `c2x`, Schalter durchreichen); die bytegleiche `cc`-Quelle bleibt unveraendert daneben.
+4. Gast-Bauweg in der Pipeline (Variante neben `neu_c2`/`neu_c2_s`): Bau mit `xcc` und den Schaltern des Programms, **kein** Host-Patch; an einem Programm vorfuehren,
+   dann alle G-Programme; Regelmodell bleibt als Pruefung (beide Wege muessen dieselben Bytes liefern).
+5. Weitere Schaltergruppen und programmgebundene Saetze; zuletzt `c2`, `cpp`, `c1` selbst bytegleich mit `xcc` bauen (Henne-Ei: `c2x` wird mit der Original-Kette
+   gebaut, muss dafuer nur richtig arbeiten, nicht bytegleich sein).  Kernelregeln K1-K6 einbeziehen.
+6. Abnahme W9 (Selbsthosting) mit beiden Ketten: Original-Kette fuer alles, was sie bytegleich baut; angepasste Kette fuer den Rest.
+
+*Stand 2026-11-18:* Schritt 1 erledigt (`wk_w10a.md`, `tools/userspace/c2gruppen.py`): **keine** einzelne Kette aelterer Staende (24 widerspruechliche Regelpaare), sondern
+weitgehend unabhaengige Schalter; Vorschlag 9 Gruppen (`-xpush` R1, `-xcmpmem` R4 -- zusammen rund 400 der 774 Stellen --, `-xhzero`, `-xcopyprop`, `-xtestmem`, `-xexts`,
+`-xjrange` mit Blockanordnung, `-xsh`, `-xdjnz`) plus Rest; 80 von 94 Regeln greifen in genau einem Programm, Ueberanpassungskandidaten benannt.
+Vor Schritt 2: pruefen, dass unsere `c2`-Quelle (W5, 98 % befehlsgleich) als Optimierer **funktional** gleich dem ausgelieferten arbeitet (gleiche `.s` fuer alle Module).
+
+**Ablage:** Quellen der angepassten Kette im Repository auf `main` (sie sind Werkzeug der Rekonstruktion, aendern kein Original); Abweichungen gegen die bytegleiche
+Quelle je Stelle kommentiert.  Installation im Gast unter eigenen Namen auf einer eigenen Platte oder neben den Originalen -- die Originaldateien bleiben unangetastet.
+
+## 6b. W11: Herkunft der Z8000-Portierung (Auftrag des Projektinhabers 2026-11-18)
+
+**Frage:** Wer hat den V7-Compiler auf den Z8000 portiert -- der MUTOS-Hersteller selbst, oder stammt die Portierung (`c0`/`c1`/`c2`/`as`, Codetabellen,
+Abschnittsdirektiven) aus einer aelteren Z8000-UNIX-Linie?
+
+**Gemessen bisher (W0-W6):** MUTOS-`c1` ist V7-`c1` mit neuer Codeausgabe und neuen Tabellen im V7-Format (`cvopt`), `c2` ein V7-Geruest mit Z8000-Befehlstabelle,
+`c0` fast reines V7, `as` kein V7 (yacc-Parser).
+
+**Einordnung (Recherche des Projektinhabers, 2026-11-18):** Zilog **ZEUS war urspruenglich ein V7-System**; erst spaeter wurde daraus ein System-III-System,
+und davon ist WEGA (P8000) abgeleitet.  Eine direkte Abstammung MUTOS <- WEGA ist damit unwahrscheinlich, eine **gemeinsame Vorlage** aber naheliegend:
+der Z8000-Compiler der **fruehen V7-Fassung von ZEUS** (ein Vorgaenger von WEGA), aus dem sowohl MUTOS als auch die spaetere ZEUS/WEGA-Werkzeugkette stammen koennten.
+Arbeitshypothese (*Annahme*, zu pruefen): MUTOS-`c0`/`c1`/`c2`/`as` = ZEUS-V7-Werkzeugkette (ggf. angepasst); WEGA traegt deren weiterentwickelte Fassung.
+Die Quellenlage (Versionen, Jahre, erhaltene ZEUS-V7-Binaries oder -Handbuecher) ist noch mit Belegen festzuhalten.
+
+**Vorgehen (Entwurf):**
+1. Recherche: ZEUS-Versionsgeschichte (V7-Fassung, Uebergang zu System III), erhaltene Binaries/Handbuecher der V7-Fassung, andere fruehe Z8000-V7-Portierungen;
+   Ergebnis mit Quellenangabe, Vermutetes markiert.  Findet sich eine ZEUS-V7-Werkzeugkette, ist sie der wichtigste Vergleichspartner (vor WEGA).
+2. WEGA-Werkzeugkette (https://github.com/OlliL/P8000, lokale Kopie **ausserhalb** des Repositorys, nichts kopieren -- `original/wega/README.md`):
+   Zeichenketten, Fehlermeldungen, Funktionsreihenfolge, Codetabellen (Format, Musterbuchstaben, Eintragszahlen), Assembler-Dialekt (`as_dialekt.md`),
+   Abschnittsdirektiven (`$DATA`, `$SECTION`, `$CODE`), Registerkonvention, `c2`-Befehlstabelle -- je Pass gegen MUTOS vergleichen.
+3. Gemeinsamkeiten ueber V7 hinaus (gleiche Z8000-spezifische Funktionen, gleiche Tabellenzeilen, gleiche Meldungen) sprechen fuer eine gemeinsame Vorlage;
+   Unterschiede in den maschinenabhaengigen Teilen fuer unabhaengige Portierungen.  Ergebnis als Verwandtschaftstabelle je Pass, gemessen vs. *Annahme*.
+4. Falls ein frueher Z8000-V7-Compiler auftaucht: derselbe Vergleich; ggf. erklaert er den **aelteren c2-Stand**, mit dem die MUTOS-Originale gebaut wurden (`wk_w5e.md`).
+
+Nicht-Ziel: nichts aus WEGA/System III in die MUTOS-Quellen uebernehmen (Grundsatz "MUTOS bleibt V7"); WEGA ist nur Vergleichsmaterial.
+
 ## 6. Risiken und offene Fragen
 
 * **yacc-Stand** (W2/W7): erzeugt V7-yacc die Original-Tabellen?  Wenn nicht: welcher yacc dann (Zilog-Werkzeugkette?), und reicht die generierte `.c` als belegte Quelle.
@@ -92,7 +163,7 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 
 ## 7. Stand
 
-*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  W4 `c0` **G** (`wk_w4.md`).  W2 `cpp` **A** (`wk_w2.md`): 13 Restbloecke sind Codeanordnung des alten c2 -- G erst mit der c2-Quelle (W5).  Der Gast-yacc erzeugt die cpp-Tabellen wortgleich (gutes Zeichen fuer W7 `as`).  In Arbeit: W5 `c2` (Regeln R170-R199), W8 `libc.a` (R200-R229).
+*2026-11-17:* W0 erledigt (`wk_w0.md`), W1 `cc` und W3 `ld` **G** (`wk_w13.md`), Regression gleich.  W4 `c0` **G** (`wk_w4.md`).  W2 `cpp` **A** (`wk_w2.md`): 13 Restbloecke sind Codeanordnung des alten c2 -- G erst mit der c2-Quelle (W5).  Der Gast-yacc erzeugt die cpp-Tabellen wortgleich (gutes Zeichen fuer W7 `as`).  W8 `libc.a` (`wk_w8.md`): 111 von 140 Gliedern G, 24 E, 5 A; die ausgelieferte `libc.a` braucht **kein** c2-Modell (Stolperstein 1 betrifft nur `libc_alt`).  W5 `c2` (`wk_w5.md`, auf `main`): `c20.c` und `rmove` befehlsgleich, 4609/4717 Befehle, 28 Bloecke Blockanordnung.  W5e Gegenprobe erledigt (`wk_w5e.md`): Originale nicht mit dem ausgelieferten c2 gebaut; 82/94 Regeln bilden einen aelteren c2-Stand nach.  Offen bei c2: Blockanordnung (Hypothese `codemove`/`backjmp`, ungeprueft).  W6 `c1` (`wk_w6.md`, Zwischenstand auf `main`): Karte sauber, Codetabellen ueber `table.s` + `cvopt_z8k.py` bytegleich, Bau bindet (`link.txt`), `c10.c` vollstaendig (`cexpr`, `doinit`, `sreorder` aus dem Binary, W6d), Abschnittsausgabe `fphead`/`fptail` in c12; `c11.c` rekonstruiert (W6e/W6f, Reste in `dcalc`, `cbranch`, `pname`); `c12.c` vollstaendig, `c13.c` Daten (`opdope`/`opntab` 139 Eintraege, Z8000-`instab`/`branchtab`), alle 200 Zeichenketten an Originaladresse (W6g-W6i); 7057 von 7970 Befehlen gleich, 90 Bloecke, Daten gleich gross, BSS 8 B kurz (nach W6m); die Restbloecke sind ueberwiegend Effekte des aelteren c2-Standes (Teil 14) -> W10 (2026-11-18).  Offen: Restbloecke (`getree` 50, `lconst`, `unoptim`, `optim`, `acommute`, `cbranch`, `dcalc`, `pname`), libc-Teil Daten +8/BSS -4, W7 `as`, W9.
 
 ## 8. Naechster Schritt (urspruenglich)
 

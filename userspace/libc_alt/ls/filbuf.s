@@ -44,7 +44,7 @@ L0AC4:
 L0AC8:
 	cp	r13,#__iob
 	jr	ne,L0AFA
-	ld	r2,#%2A68
+	ld	r2,#__sibuf
 	jr	L0AEE
 L0AD4:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L0AEE:
 	ld	%0004(r13),r2
 	jr	L0AD8
 L0AF4:
-	ld	r2,#%188+__sibuf
+	ld	r2,#__sobuf
 	jr	L0AEE
 L0AFA:
 	cp	r13,#%8+__iob

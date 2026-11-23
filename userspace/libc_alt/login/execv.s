@@ -21,7 +21,7 @@ _execv:
 	push	@r15,r14
 	ld	r14,r15
 	ldm	r0,%0004(r14),#2
-	ld	r2,%1F6+__sobuf
+	ld	r2,_environ
 	sc	#%3B
 	jp	cerror
 end _execv

@@ -1,0 +1,7 @@
+# Hand-made correction for as.members: 474 B variant of doprnt, jump-table entry points 2 bytes later than members_auto assumed (see cpp.members.zusatz).
+doprnt code=4C82,4C88,4C9E
+# W10d: the commons are the ORIGINAL buffers, not members_auto's `bstart - 2 - 0x400` guess.  Measured: the _flsbuf/_filbuf
+# literals of the original (#%CCEE stdin branch, #%CEEE stdout branch); the `#%OFF+__sibuf` forms were only relative to the wrong guess.
+common __sibuf CCEE 200 data
+common __sobuf CEEE 200 data
+extern _environ D0EE 2

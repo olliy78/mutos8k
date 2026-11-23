@@ -1,0 +1,48 @@
+# c1 code tables in the text part (cvopt output: pattern texts with macro letters = bit 7, then optab records), see doc/userspace/wk_w6.md
+db 5A40 6987
+# switch jump tables in the data part (LD R1,Lxxxx(Rn) ; JP @R1): the word entries are code entry points.
+# Hash switches (DIV RR2,#n) have n entries, range switches (CP R2,#k ; JR UGT) k+1 entries.
+dwc 7624 762A
+dwc 762C 76E0
+dwc 76E2 76E4
+dwc 76E6 76E8
+dwc 76EA 76F8
+dwc 7B4C 7B60
+dwc 7B62 7B82
+dwc 7B84 7BA4
+dwc 7BA6 7BB4
+dwc 7C6E 7C74
+dwc 7C76 7C86
+dwc 80CA 80D2
+dwc 80D4 80E2
+dwc 80E4 80E6
+dwc 80E8 80EC
+dwc 80EE 80F0
+dwc 80F2 80F4
+dwc 80F6 8108
+# dead code (JP after JR / unreferenced brk): never reached by the flow
+code 3578
+code 4462
+code 7588
+# doprnt (libc, hand-written): format-letter table at 8A3E (char, target); the targets are code entry points
+code 6BCE
+code 6BCA
+code 6BC8
+code 6C2C
+code 6C38
+code 6C32
+code 6C50
+code 6C62
+code 6BA2
+code 6BF2
+code 6C48
+code 6BD8
+code 6BC2
+code 6BC6
+code 6BF0
+# pointer-like constants that --vorschlaege reads as code (inside libc/data, mid-instruction)
+ohne 7400
+ohne 7408
+ohne 740A
+ohne 7472
+ohne 7474

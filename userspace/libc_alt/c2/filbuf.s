@@ -44,7 +44,7 @@ L36B8:
 L36BC:
 	cp	r13,#__iob
 	jr	ne,L36EE
-	ld	r2,#%513A
+	ld	r2,#__sibuf
 	jr	L36E2
 L36C8:
 	setb	%0006(r13),#2
@@ -60,7 +60,7 @@ L36E2:
 	ld	%0004(r13),r2
 	jr	L36CC
 L36E8:
-	ld	r2,#%6E+__sibuf
+	ld	r2,#__sobuf
 	jr	L36E2
 L36EE:
 	cp	r13,#%8+__iob

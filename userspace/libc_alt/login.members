@@ -59,7 +59,7 @@ umask 20C0 20D4 exp=_umask@20C0 src=S
 write 20D4 20EA exp=_write@20D4 src=A
 cerror 20EA 20F8 bss=31EC:2 exp=cerror@20EA,_errno@31EC src=A
 csv 20F8 2114 exp=csv@20F8,cret@2106 src=A
-common __sibuf 26DE 200 data
-common __sobuf 28DE 200 data
-extern _environ 2ADE 2
+common __sibuf 26D4 200 data
+common __sobuf 28D4 200 data
+extern _environ 2AD4 2
 extern _end 31EE 0
