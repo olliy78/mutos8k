@@ -256,6 +256,10 @@ def quellen_lesen(name, a):
     return v, koepfe
 
 
+# R33/R39 are exceptions to R5 that c2x's r5pass() has built in (no letter, W10t): not a gap
+XCC_EINGEBAUT = ('R33', 'R39')
+
+
 def xcc_einstellung(name, v):
     """W10s: the `xcc` argument of gast_bauen: the two binaries and the -X letters of the program (c2gegen.c2x_flags = the groups c2x
     implements minus C2_AUS, the same function as `c2gegen lauf --auto`; one letter set for all modules of the program)."""
@@ -284,9 +288,46 @@ def xcc_luecken(name, ar):
     for t in texte:
         _s, cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
         for k, n in cnt.items():
-            if n and k not in c2gegen.FLAGBUCHSTABE:
+            if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
                 tot[k] = tot.get(k, 0) + n
     return tot
+
+
+def xcc_luecken_texte(name, texte):
+    """W10u: like xcc_luecken, but on already-read `cc -O -S` texts (one per module); returns {rule: sites} for rules without a c2x letter."""
+    import c2gegen
+    tot = {}
+    for t in texte:
+        _s, cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
+        for k, n in cnt.items():
+            if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
+                tot[k] = tot.get(k, 0) + n
+    return tot
+
+
+def cmd_xccgap(a):
+    """W10u: `pipeline.py xccgap [NAME]`: host-only survey of the model rules each program uses that c2x has no letter for (what
+    `bau --xcc` would print as the gap), from userspace/NAME/work/bau (neu.s | neu_s/*.s | v7fix_s/*.s).  Prints a table, `ready` = no gap."""
+    namen = [a.name] if a.name != "init" else sorted(os.listdir(os.path.join(U.REPO, "userspace")))
+    for n in namen:
+        bd = pfad(n, "work", "bau")
+        texte, art = [], "single"
+        for cand in ("neu.s", "neu_s", "v7fix_s"):
+            q = os.path.join(bd, cand)
+            if os.path.isfile(q):
+                texte = [open(q, encoding="latin-1").read()]
+            elif os.path.isdir(q):
+                texte = [open(os.path.join(q, f), encoding="latin-1").read() for f in sorted(os.listdir(q)) if f.endswith(".s")]
+                art = "multi(%d)" % len(texte)
+            if texte:
+                break
+        if not texte:
+            continue
+        lk = pfad(n, "link.txt")
+        if os.path.isfile(lk) and "noopt" in open(lk).read():
+            art += ",noopt"
+        g = xcc_luecken_texte(n, texte)
+        print("%-10s %-14s %s" % (n, art, " ".join("%s(%d)" % (k, g[k]) for k in sorted(g, key=lambda x: int(x[1:]) if x[1:].isdigit() else 0)) or "ready"))
 
 
 def cmd_bau(name, a):
@@ -420,7 +461,7 @@ ERWARTET = {"init": ("signal", "setjmp", "open", "close", "kill", "wait", "alarm
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", nargs="?", choices=["holen", "karte", "bau", "vergleich", "alles"])
+    ap.add_argument("cmd", nargs="?", choices=["holen", "karte", "bau", "vergleich", "alles", "xccgap"])
     ap.add_argument("name", nargs="?", default="init")
     ap.add_argument("--check", nargs="?", const="init", metavar="NAME", help="host-side self test (default init); exit 77 without the emulator")
     ap.add_argument("--arbeit")
@@ -453,6 +494,8 @@ def main(argv=None):
             cmd_holen(a.name, a)
         elif a.cmd == "karte":
             cmd_karte(a.name, a)
+        elif a.cmd == "xccgap":
+            cmd_xccgap(a)
         elif a.cmd == "bau":
             cmd_bau(a.name, a)
         elif a.cmd == "vergleich":
