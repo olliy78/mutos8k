@@ -284,13 +284,7 @@ def xcc_luecken(name, ar):
         texte = [open(os.path.join(bd, "neu.s"), encoding="latin-1").read()]
     elif os.path.isdir(os.path.join(bd, "neu_s")):
         texte = [open(os.path.join(bd, "neu_s", f), encoding="latin-1").read() for f in sorted(os.listdir(os.path.join(bd, "neu_s")))]
-    tot = {}
-    for t in texte:
-        _s, cnt = U.c2_emu_s(t, c2_aus(name), name == "mkfs", name == "ed", name == "tar", name == "cc", name == "c0")
-        for k, n in cnt.items():
-            if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
-                tot[k] = tot.get(k, 0) + n
-    return tot
+    return xcc_luecken_texte(name, texte)
 
 
 def xcc_luecken_texte(name, texte):
@@ -302,6 +296,11 @@ def xcc_luecken_texte(name, texte):
         for k, n in cnt.items():
             if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
                 tot[k] = tot.get(k, 0) + n
+        if name == "ld":        # W10v: R97-R100 (c2_ld_s, measured on ld only) have no c2x letter either
+            _s, cnt = U.c2_ld_s(_s)
+            for k, n in cnt.items():
+                if n:
+                    tot[k] = tot.get(k, 0) + n
     return tot
 
 

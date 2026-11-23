@@ -86,11 +86,11 @@ char *argv[];
 			break;
 #ifdef XCC
 		case 'X':
-			/* -X or -X<letters>: letters (at most 15) become the c2x argument -x<letters> */
+			/* -X or -X<letters>: letters (at most 17; W10v: 16 are needed) become the c2x argument -x<letters> */
 			xflag++;
 			xopt[0] = '-';
 			xopt[1] = 'x';
-			for (j = 0; j < 15 && argv[i][j+2]; j++)
+			for (j = 0; j < 17 && argv[i][j+2]; j++)
 				xopt[j+2] = argv[i][j+2];
 			xopt[j+2] = 0;
 			break;
