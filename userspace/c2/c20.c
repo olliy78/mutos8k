@@ -123,6 +123,26 @@ char	xtb[XTBSZ + 8] = {0};
 char	*xih[XIHS] = {0};
 int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
 
+/* c2x (W10ad): insert a word MOV node with code s behind node p (R70) */
+xins(p, s)
+register struct node *p;
+char *s;
+{
+	register struct node *np;
+
+	np = (struct node *)alloc(sizeof first);
+	np->op = MOV;
+	np->subop = 0;
+	np->labno = 0;
+	np->ref = 0;
+	np->refc = 0;
+	np->code = s;
+	np->forw = p->forw;
+	np->back = p;
+	p->forw->back = np;
+	p->forw = np;
+}
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
 register char *s;
@@ -165,8 +185,10 @@ register char *s;
 		case 'n': xfl2 |= XR34; break;
 		case 'd': xfl2 |= XR6; break;
 		case 'g': xfl2 |= XR65; break;
+		case 'o': xfl2 |= XR60; break;
+		case 'q': xfl2 |= XR70; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65; break;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70; break;
 		}
 }
 #endif
