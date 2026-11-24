@@ -99,7 +99,7 @@ def c2x_flags(name, regeln, extra=()):
 
 
 # W10z: modules that get c2x's flag S (shared strings in copy() above a heap use of XTHR): the one function that does not fit with c2x otherwise
-SHARE_MODS = ("as_code",)
+SHARE_MODS = () if os.environ.get("C2GEGEN_NOS") else ("as_code",)   # W10aa: C2GEGEN_NOS=1 measures without flag S
 
 
 def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=False):
