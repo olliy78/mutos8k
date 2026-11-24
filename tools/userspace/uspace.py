@@ -332,7 +332,10 @@ def xcc_usr(usr_hfe, xcc):
         subprocess.run([dt, "get", usr_hfe, "lib/libc.a", "--to", g], check=True, capture_output=True)
         lc = [os.path.join(r, f) for r, _d, fs in os.walk(g) for f in fs if f == "libc.a"][0]
         a = objformat.Archiv.lesen(open(lc, "rb").read())
-        a.mitglieder = [min(a.mitglieder, key=lambda m: len(m.daten))]      # ld accepts an archive with one real member
+        # ld accepts an archive with one real member; W10ab: plus printf.o (232 B): as_y.c (yacc output) calls printf in its
+        # `if (yydebug)` trace, libc_alt has no printf member, and without it the link says `Undefined: _printf, _end`
+        # (`_end` is only the follow-up hint of ld next to open symbols, doc/userspace/wk_w6.md)
+        a.mitglieder = [min(a.mitglieder, key=lambda m: len(m.daten))] + [m for m in a.mitglieder if m.name == b"printf.o"]
         with open(os.path.join(d, "lib", "libc.a"), "wb") as f:
             f.write(a.schreiben())
         shutil.rmtree(g)
