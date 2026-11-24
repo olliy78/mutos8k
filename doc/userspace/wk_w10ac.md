@@ -17,5 +17,5 @@ Stand 2026-11-24.  Plan 52, W10.  Vorgaenger: `wk_w10ab.md`.
   hat es in dieser Schalterkette nicht); c2x liegt richtig.  Modell nicht geaendert (kein Gastlauf, c2/c2x unveraendert).
 
 ## Budget / offen
-1 `bau as --xcc`, 2 `vergleich` (Host), kein c2-Bau.  Ein `bau as --libc alt` (ohne xcc) zur Regressionspruefung (Soll >= 4137) war beim Abschluss
-des Auftrags gestartet, Ergebnis nicht abgewartet.  `pytest -m "not gast"`: 211 ok, 1 Fehler (`test_bau_alle_kennt_genau_die_fertigen_disketten`, braucht disks/gebaut).
+1 `bau as --xcc`, 2 `vergleich` (Host), kein c2-Bau.  Ein `bau as --libc alt` (ohne xcc) zur Regressionspruefung (Soll >= 4137) (Binary 35322 B, 411 s):
+`vergleich as --ist neu` 4155/5891 gleich (ohne c2-Modell 4181), 724 Bloecke -- keine Regression (vorher 4137).  `pytest -m "not gast"`: 211 ok, 1 Fehler (`test_bau_alle_kennt_genau_die_fertigen_disketten`, braucht disks/gebaut).
