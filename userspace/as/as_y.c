@@ -1,6 +1,6 @@
 /* as.c: GENERATED from as.y (V7 text, unchanged) by the MUTOS V7-yacc (userspace/ergaenzung/yacc, size class SMALL)
    in the emulator guest: cd /tmp; yacc as.y; y.tab.c -> as.c.  Regenerate: tools/userspace/erg_yacc.py userspace/as/as.
-   Not V7 source text, not edited by hand. */
+   Not V7 source text. Hand patch after generation: the 4 yydebug printf( calls are fprintf(stdout, (as in the original MUTOS as, W10ac). */
 
 # line 5 "as.y"
 #define IN_AS_Y 1
@@ -333,7 +333,7 @@ yyparse() {
 
  yystack:    /* put a state and value onto the stack */
 
-	if( yydebug  ) printf( "state %d, char 0%o\n", yystate, yychar );
+	if( yydebug  ) fprintf(stdout, "state %d, char 0%o\n", yystate, yychar );
 		if( ++yyps> &yys[YYMAXDEPTH] ) { yyerror( "yacc stack overflow" ); return(1); }
 		*yyps = yystate;
 		++yypv;
@@ -399,7 +399,7 @@ yyparse() {
 
 			   /* the current yyps has no shift onn "error", pop stack */
 
-			   if( yydebug ) printf( "error recovery pops state %d, uncovers %d\n", *yyps, yyps[-1] );
+			   if( yydebug ) fprintf(stdout, "error recovery pops state %d, uncovers %d\n", *yyps, yyps[-1] );
 			   --yyps;
 			   --yypv;
 			   }
@@ -412,7 +412,7 @@ yyparse() {
 
 		case 3:  /* no shift yet; clobber input char */
 
-			if( yydebug ) printf( "error recovery discards char %d\n", yychar );
+			if( yydebug ) fprintf(stdout, "error recovery discards char %d\n", yychar );
 
 			if( yychar == 0 ) goto yyabort; /* don't discard EOF, quit */
 			yychar = -1;
@@ -424,7 +424,7 @@ yyparse() {
 
 	/* reduction by production yyn */
 
-		if( yydebug ) printf("reduce %d\n",yyn);
+		if( yydebug ) fprintf(stdout, "reduce %d\n",yyn);
 		yyps -= yyr2[yyn];
 		yypvt = yypv;
 		yypv -= yyr2[yyn];
