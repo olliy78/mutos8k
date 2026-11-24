@@ -162,6 +162,27 @@ struct	node *insertl();
 struct	node *codemove();
 
 #ifdef C2X
+/* W10aa: c2x does not link stdio (_filbuf/_flsbuf/freopen/_endopen, malloc, isatty) nor the printf family (_doprnt, strout,
+ * ffltpr): together ~4 KB of text in an image that is one 64 KB segment (F5).  c20.c has a tiny replacement: two 256-byte
+ * buffers on fds 0/1, unbuffered stderr, formats %d %s %x only, ONE argument.  stdin/stdout/stderr become the fd numbers. */
+#undef putchar
+#undef getchar
+#undef stdin
+#undef stdout
+#undef stderr
+#define	putchar	xputc
+#define	getchar	xgetc
+#define	printf	xpo
+#define	fprintf	xpf
+#define	sprintf	xsp
+#define	freopen	xfro
+#define	exit	xexit
+#define	stdin	0
+#define	stdout	1
+#define	stderr	2
+#endif
+
+#ifdef C2X
 /* c2x run-time switches (W10o): one flag word `xfl`, one bit per rule of the older c2 (doc/userspace/wk_w10o.md).  Set by `-x<letters>` in main(). */
 extern int xfl;
 extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */

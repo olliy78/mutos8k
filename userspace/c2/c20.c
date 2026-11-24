@@ -263,6 +263,9 @@ char **argv;
 #endif
 	} while (isend);
 	if (nflag) {
+#ifdef C2X
+		/* W10aa: only the heap figure (the statistics strings cost ~400 bytes of the 64 KB image) */
+#else
 		fprintf(stderr, "%d iterations\n", maxiter);
 		fprintf(stderr, "%d jumps to jumps\n", nbrbr);
 		fprintf(stderr, "%d inst. after jumps\n", iaftbr);
@@ -280,6 +283,7 @@ char **argv;
 		fprintf(stderr, "%d sob's added\n", nsob);
 		fprintf(stderr, "%d redundant tst's\n", nrtst);
 		fprintf(stderr, "%d literals eliminated\n", nlit);
+#endif
 		fprintf(stderr, "%dK core\n", (((int)lastr+01777)>>10)&077);
 	}
 	exit(0);
@@ -983,3 +987,132 @@ retopt()
 	}
 	return(0);
 }
+
+#ifdef C2X
+/* W10aa: minimal formatted output, replaces printf/fprintf/sprintf (see c2.h; lives in c20.c: c21.o is near the symbol table limit of `as`).  Conversions: %d %s %x %%; ONE argument at most.
+ * to = FILE * (fp != 0) or a buffer (fp == 0, NUL terminated). */
+xfm(fp, to, f, a)
+register char *f;
+char *to;
+{
+	register int c, n, k;
+	register char *s;
+	char t[8];
+
+	while (c = *f++) {
+		s = 0;
+		if (c == '%' && *f) {
+			c = *f++;
+			if (c == 's')
+				s = (char *)a;
+			else if (c == 'd' || c == 'x') {
+				n = a;
+				k = c == 'd' ? 10 : 16;
+				if (c == 'd' && n < 0) {
+					xout(fp, &to, '-');
+					n = -n;
+				}
+				s = t + 7;
+				*s = 0;
+				do {
+					*--s = "0123456789ABCDEF"[n % k];
+					n = n / k;
+				} while (n);
+			}
+		}
+		if (s == 0)
+			xout(fp, &to, c);
+		else while (*s)
+			xout(fp, &to, *s++);
+	}
+	if (fp == 0)
+		*to = 0;
+}
+
+xout(fp, top, c)
+register char **top;
+{
+	char ch;
+
+	if (fp == 0)
+		*(*top)++ = c;
+	else if (fp == 1)
+		xputc(c);
+	else {
+		ch = c;
+		write(fp, &ch, 1);
+	}
+}
+
+xpf(fp, f, a)
+{
+	xfm(fp, 0, f, a);
+}
+
+xpo(f, a)
+{
+	xfm(1, 0, f, a);
+}
+
+xsp(b, f, a)
+{
+	xfm(0, b, f, a);
+}
+
+/* buffered stdin/stdout.  Initialised data, not BSS (F1). */
+#define	XBS	256
+char	xib[XBS] = {0};
+char	xob[XBS] = {0};
+int	xin = 0, xip = 0, xon = 0, xifd = 0, xofd = 1;
+
+xputc(c)
+{
+	if (xon >= XBS)
+		xflush();
+	xob[xon++] = c;
+	return(c);
+}
+
+xgetc()
+{
+	if (xip >= xin) {
+		xip = 0;
+		if ((xin = read(xifd, xib, XBS)) <= 0) {
+			xin = 0;
+			return(-1);
+		}
+	}
+	return(xib[xip++] & 0377);
+}
+
+xflush()
+{
+	if (xon > 0)
+		write(xofd, xob, xon);
+	xon = 0;
+}
+
+/* freopen(name, mode, stdin|stdout): returns 0 on failure */
+xfro(name, mode, fp)
+char *name;
+{
+	register fd;
+
+	if (fp == 0)
+		fd = xifd = open(name, 0);
+	else
+		fd = xofd = creat(name, 0666);
+	return(fd >= 0);
+}
+
+xexit(s)
+{
+	xflush();
+	_exit(s);
+}
+
+/* libc's _exit calls _cleanup (fflush of all streams); defining it here keeps _flsbuf out of the image */
+_cleanup()
+{
+}
+#endif
