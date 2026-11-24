@@ -1346,6 +1346,7 @@ cmppass()
 {
 	register struct node *p, *q, *b, *m;
 	register char *c1, *c2;
+	char *xcomma(), *xhead();
 
 	for (p = first.forw; p != 0; p = p->forw) {
 		if (p->op != MOV || p->labno != X4MARK || (q = p->forw) == 0 || q->op != CMP || (b = q->forw) == 0 || b->op != CBRS)
@@ -1368,6 +1369,15 @@ cmppass()
 		c1[3] = 0;
 		m->code = copy(1, rt0buf);
 	}
+	/* R60 (W10ad): `and rN,#%FF ; ld MEM,rN ; ld r0,MEM [X4MARK]` -> `ld r0,rN` (the older c2 loads R0 from the register just stored; od) */
+	if (xfl2 & XR60)
+		for (p = first.forw; p != 0; p = p->forw) {
+			if (p->op != MOV || p->labno != X4MARK || (m = p->back) == 0 || !xnd(m, MOV, 0, 0) || (c1 = xcomma(m->code)) == 0
+			 || !xisrw(c1) || !equstr(p->code + 3, xhead(m->code, 0)) || (b = m->back) == 0 || b->op != BIC || b->subop != 0
+			 || (c2 = xcomma(b->code)) == 0 || !equstr(c2, "#%FF") || !equstr(xhead(b->code, 0), c1))
+				continue;
+			p->code = copy(2, "r0,", c1);
+		}
 }
 #endif
 
@@ -1663,6 +1673,15 @@ r5pass()
 		 && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ',' && q->code[4] == '#') {
 			p->op = SXT;
 			p->code = copy(1, "rr2");
+			continue;
+		}
+		/* R70 (W10ad): `div rr2,MEM ; ld MEM2,r3` (not before a jump) -> `ld r2,r3 ; ld MEM2,r2` (pr colw = width / ncol) */
+		if ((xfl2 & XR70) && xnd(p, MOV, 0, 0) && p->code[0] != 'r' && p->code[0] != '@' && (b = xcomma(p->code)) && equstr(b, "r3")
+		 && p->back && xnd(p->back, DIV, 0, 0) && xeq2(p->back->code, "rr2,", p->back->code + 4) && p->back->code[4] != '#'
+		 && q->op != JBR && q->op != CBRS && q->op != CBR) {
+			xins(p, copy(2, xhead(p->code, 1), "r2"));
+			p->code = copy(1, "r2,r3");
+			p = p->forw;
 			continue;
 		}
 		/* R71 (W10w): `ld rA,%k(FP) ; ld rB,rA ; jr L` -> `ld rA,%k(FP) ; ld rB,%k(FP) ; jr L` (ar trim()) */
