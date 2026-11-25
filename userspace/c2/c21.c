@@ -1668,6 +1668,9 @@ r5pass()
 		q = p->forw;
 		if (q == 0)
 			break;
+		/* R97-R100 (W10af, ld): in c20.c, c21.o is at the symbol table limit of the guest as */
+		if ((xfl2 & (XR97 | XR98 | XR99 | XR100)) && xldrules(p))
+			continue;
 		/* R45 (W10v): `xor r2,r2 ; div rr2,#k` -> `exts rr2 ; div rr2,#k` (the original divides as signed) */
 		if ((xfl2 & XR45) && xnd(p, XOR, 0, "r2,r2") && xnd(q, DIV, 0, 0)
 		 && q->code[0] == 'r' && q->code[1] == 'r' && q->code[2] == '2' && q->code[3] == ',' && q->code[4] == '#') {

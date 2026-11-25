@@ -211,5 +211,9 @@ extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 #define	XR70	0x80	/* q  (xfl2) R70: div rr2,MEM ; ld MEM2,r3 -> ld r2,r3 ; ld MEM2,r2 (pr, W10ad) */
 #define	XR77	0x100	/* u  (xfl2) R77: `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne` becomes jr ne in shortjmp (ps, W10ae) */
 #define	XR92	0x200	/* v  (xfl2) R92: `test _rflag ; jp eq L ; test _cflag ; jr eq ; jp L` -> jr eq in shortjmp (tar, W10ae) */
+#define	XR97	0x400	/* f  (xfl2) R97: sub r2,r12 ; ld MEM,r2 ; jr mi -> test r2 kept before the jr (ld mget, W10af) */
+#define	XR98	0x800	/* h  (xfl2) R98: xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3 -> ld r2,r3 ; ld r3,r2 before the xor, no R45 (ld main, W10af) */
+#define	XR99	0x1000	/* i  (xfl2) R99: mult rr4,#%C ; ld r13,r5 ; add ; ld MEM,r13 ; ld @r2,r13 goes through r3 (ld enter, W10af) */
+#define	XR100	0x2000	/* j  (xfl2) R100: ld LOCAL,r3 behind ld r3,@r2 ; ld r2,r3 -> ld r2,LOCAL (ld ldrand, W10af) */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif
