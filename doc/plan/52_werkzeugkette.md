@@ -90,6 +90,26 @@ Wie Plan 44 §6: Branches einzeln mergen, Host-Tests, Regression aller 45 G-Prog
 3. W10 weiter (Schalter im `c2`), dann gemeinsam fuer die Restbloecke von `c1`, `c2`, `cpp` und `as`.
 4. W9 Selbsthosting mit beiden Ketten; zuletzt W11 (Herkunft ZEUS/WEGA).
 
+### 5b. Stand und Uebergabe 2026-11-25 (neue Sitzung ab W10aj)
+
+Der laufende W10-Stand steht in Punkt 1 oben (Zeile W10b ... W10ai, je Paket ein Bericht `doc/userspace/wk_w10*.md`).
+Mit `xcc` bytegleich: 33 Programme aus W10 plus `od`, `pr`, `ps`, `tar`, `ld`, `cc`; `as` 4140/5891 Befehle.
+Regression `c2gegen.py`: ohne Schalter 65/65, je Programm (`xpush`) 60/65 (offen: c21, convert, cpp, ed, passwd).
+Arbeitsweise: ein Sonnet-Agent zugleich im Worktree, festes Budget an Gastlaeufen je Paket, nach jedem Paket
+merge `--no-ff`, `c2x*.bin` nach `userspace/c2/work/bau/` kopieren, `pytest -m "not gast"`, Status hier eintragen, push.
+
+**W10aj (Vorschlag Projektinhaber 2026-11-25): `c2x`-Varianten je Regelgruppe.**  `as` braucht nur die allgemeinen Schalter;
+die programmeigenen Gruppen `ld` (`fhij`, ~1 KB), `cc` (`y`, ~1,2 KB) und `c0` (`bl`, ~0,7 KB) belasten nur den Speicher
+(as_code liegt an der 64-KB-Grenze, F5).  Umsetzung:
+* eine Quelle; Gruppen hinter Compilerschaltern (`C2X_LD`, `C2X_CC`, `C2X_C0`), der Weg ohne Schalter bleibt tokengleich (tokcheck);
+* gebaut werden eine schlanke Grundvariante und je Gruppe eine Variante (`c2gegen.py var`);
+* `xcc` bleibt unveraendert: die Pipeline (`xcc_usr`, `uspace.py`) installiert je Programmbau die passende Variante unter
+  `/usr/lib/c2x` (die usr-Diskette hat nur 4 KB frei, mehrere c2x passen nicht zugleich);
+* Schutz: verlangt ein Aufruf einen Schalter, den die Variante nicht enthaelt, bricht `c2x` mit Meldung ab;
+* Abnahme: Grundvariante messbar kleiner, `bau as --xcc` mit as_code moeglichst **ohne** Schalter `S`; ld/cc/c0 bytegleich wie bisher;
+  Regression 65/65 und `xpush` 60/65.
+Danach: restliche Abweichungen (convert R72-R76, cpp R101-R112, passwd, c21), sync `libc_alt`, Kernel K1-K6, dann W9, W11.
+
 ## 6a. W10: Original- und angepasste Werkzeugkette (Auftrag des Projektinhabers 2026-11-18)
 
 **Ziel:** Alle Teile des Systems bytegleich **im MUTOS-Gast** bauen, ohne Zwischenergebnisse (`.s`) auf dem Linux-Host zu patchen.
