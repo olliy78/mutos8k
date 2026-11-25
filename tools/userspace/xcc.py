@@ -54,7 +54,7 @@ def var():
 
 
 PROGS = ("df", "rm", "wc", "echo")
-REGELN = ("R1", "R4", "R38", "R2", "R7", "R10", "R30", "R32", "R43", "R63", "R5", "R42", "R64", "R45", "R71", "R34", "R6", "R65", "R60", "R70", "R77", "R92", "R97", "R98", "R99", "R100")   # all c2x groups (W10o), plus --extra R3 as in W10o/q
+REGELN = ("R1", "R4", "R38", "R2", "R7", "R10", "R30", "R32", "R43", "R63", "R5", "R42", "R64", "R45", "R71", "R34", "R6", "R65", "R60", "R70", "R77", "R92", "R97", "R98", "R99", "R100", "R130", "R131", "R132", "R133")   # all c2x groups (W10o), plus --extra R3 as in W10o/q
 
 
 def installieren(usr_hfe, xccbin, c2xbin):

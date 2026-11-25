@@ -149,9 +149,29 @@ register struct node *p;
 {
 	register struct node *q;
 
+	q = p->back;
+	/* R132 (l): `cp r2,#%3 ; jp eq,La ; cp r2,#%7 ; jp eq,Lb ; jp Lc` -> the jp Lc is short, too (c0 tree) */
+	if ((xfl2 & XR131) && p->op == JMP && q && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%7")
+	 && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%3"))
+		return(1);
 	if (p->op != CBR)
 		return(0);
 	q = p->back;
+	/* R131 (l): `cp r9,#%8 ; jp ne,La ; cp @r13,#%5A ; jp eq,Lb`; R132: the `jp eq` behind `cp r2,#%7` (see above);
+	   R133: `cp r2,#%16 ; jp eq,La ; cp r2,#%17 ; jp eq,Lb ; cp r2,#%19` */
+	if ((xfl2 & XR131) && p->subop == JEQ && q && q->op == CMP) {
+		if (equstr(q->code, "@r13,#%5A") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JNE && (q = q->back) && q->op == CMP && equstr(q->code, "r9,#%8"))
+			return(1);
+		q = p->back;
+		if (equstr(q->code, "r2,#%7") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%3")
+		 && p->forw && p->forw->op == JMP)
+			return(1);
+		q = p->back;
+		if (equstr(q->code, "r2,#%17") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%16")
+		 && p->forw && p->forw->op == CMP && equstr(p->forw->code, "r2,#%19"))
+			return(1);
+		q = p->back;
+	}
 	if ((xfl2 & XR77) && p->subop == JNE && q && q->op == CMP && equstr(q->code, "r2,#%1") && (q = q->back) && q->op == XOR
 	 && q->subop == BYTE && equstr(q->code, "rh2,rh2") && (q = q->back) && q->op == MOV && q->subop == BYTE && equstr(q->code, "rl2,@r13"))
 		return(1);
@@ -256,8 +276,10 @@ register char *s;
 		case 'h': xfl2 |= XR98; break;
 		case 'i': xfl2 |= XR99; break;
 		case 'j': xfl2 |= XR100; break;
+		case 'b': xfl2 |= XR130; break;
+		case 'l': xfl2 |= XR131; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100; break;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100 | XR130 | XR131; break;
 		}
 }
 #endif
@@ -1031,7 +1053,7 @@ shortjmp()
 
 	nchange = 0;
 	for (p = first.forw; p!=0; p = p->forw)
-		if ((p->op==JMP || p->op==CBR) && p->labno && (!toofar(p, 0) || ((xfl2 & (XR77 | XR92)) && xsite(p)))) {
+		if ((p->op==JMP || p->op==CBR) && p->labno && (!toofar(p, 0) || ((xfl2 & (XR77 | XR92 | XR131)) && xsite(p)))) {
 			p->op--;
 			nchange++;
 		}
