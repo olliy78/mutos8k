@@ -88,7 +88,7 @@ def verfuegbar(namen):
 
 
 # W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
-FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j"}
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j", "R130": "b", "R131": "l", "R132": "", "R133": ""}   # W10ag: R130 b, R131-R133 share the bit/letter l (R132/R133 no letter of their own)
 
 
 def c2x_flags(name, regeln, extra=()):
@@ -304,7 +304,7 @@ def regelsatz(name, regeln, extra=()):
     return (set(regeln) | set(extra)) - set(P.c2_aus(name))
 
 
-def xpush(namen, regeln=("R1",), extra=(), global_=False):
+def xpush(namen, regeln=("R1",), extra=(), global_=False, spezial=False):
     """W10f: acceptance of c2x -xpush.  For every module under WORK/NAME with MOD.sn (output of c2x built with -DXPUSH, from `lauf --c2x
     c2x_c2.bin --s0`) check  MOD.sn == host rules applied to MOD.s (shipped c2 output); the rules are uspace.c2_emu_s with all others off.
     W10g: `regeln` names the active rules (--regeln R4 for -DXCMPMEM, R1,R4 for both switches).
@@ -323,7 +323,10 @@ def xpush(namen, regeln=("R1",), extra=(), global_=False):
                 continue
             s = open(os.path.join(d, f[:-1]), encoding="latin-1").read()
             sn = open(os.path.join(d, f), encoding="latin-1").read()
-            y, c = U.c2_emu_s(s, (alle - akt) | (set(P.c2_aus(n)) & {"R5T"}), False)   # W10t: the pseudo rule R5T (pr) is not a counter key
+            # W10ag: tar/cc/c0 are modelled by their own rule functions ONLY (as in pipeline.py; c2x has the letter v for R92 and none for the rest), so the
+            # model call needs tar/cc/c0=True, otherwise R92 is missing (tar).  mkfs/ed add letterless rules (R49-R59, ed rules) on top of the general ones:
+            # only with spezial=True (--spezial), they would show as differences that are known gaps (xcc_luecken).
+            y, c = U.c2_emu_s(s, (alle - akt) | (set(P.c2_aus(n)) & {"R5T"}), spezial and n == "mkfs", spezial and n == "ed", n == "tar", n == "cc", n == "c0")   # W10t: R5T (pr) is not a counter key
             if n == "ld":   # W10af: R97-R100 are model rules of ld only (c2_ld_s), applied after c2_emu_s
                 y, _c3 = U.c2_ld_s(y)
             tag = "off:" + ",".join(aus_gr) if aus_gr else "off:-"
@@ -436,6 +439,7 @@ def main():
     ap.add_argument("--c2x", help="lauf: also run this c2 binary on the same input, output MOD.sn (W10b)")
     ap.add_argument("--c2o", help="lauf: also run this binary (the shipped c2, userspace/c2/work/c2.orig) from /mnt as control, MOD.so (W10c)")
     ap.add_argument("--extra", default="", help="xpush: program-bound rules added to every program's set (W10n, e.g. R3), minus its C2_AUS")
+    ap.add_argument("--spezial", action="store_true", help="xpush: also the letterless program rules of mkfs (R49-R59) and ed (W10ag)")
     ap.add_argument("--global", dest="glob", action="store_true", help="xpush: old behaviour, one list for all programs")
     ap.add_argument("--regeln", default="R1", help="xpush: host rules the c2x output must equal (comma list, W10g)")
     ap.add_argument("--auto", action="store_true", help="lauf with --c2x: pass each module the -x flags of its program (c2x_flags from --regeln/--extra, W10o)")
@@ -455,7 +459,7 @@ def main():
     elif a.cmd == "bauen":
         bauen(a.namen)
     elif a.cmd == "xpush":
-        sys.exit(1 if xpush(a.namen, tuple(a.regeln.split(",")), tuple(x for x in a.extra.split(",") if x), a.glob) else 0)
+        sys.exit(1 if xpush(a.namen, tuple(a.regeln.split(",")), tuple(x for x in a.extra.split(",") if x), a.glob, a.spezial) else 0)
     else:
         auswerten(a.namen)
 

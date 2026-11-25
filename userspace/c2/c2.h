@@ -215,5 +215,7 @@ extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 #define	XR98	0x800	/* h  (xfl2) R98: xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3 -> ld r2,r3 ; ld r3,r2 before the xor, no R45 (ld main, W10af) */
 #define	XR99	0x1000	/* i  (xfl2) R99: mult rr4,#%C ; ld r13,r5 ; add ; ld MEM,r13 ; ld @r2,r13 goes through r3 (ld enter, W10af) */
 #define	XR100	0x2000	/* j  (xfl2) R100: ld LOCAL,r3 behind ld r3,@r2 ; ld r2,r3 -> ld r2,LOCAL (ld ldrand, W10af) */
+#define	XR130	0x4000	/* b  (xfl2) R130: `inc SP,#%A ; push @SP,x` is merged to `inc SP,#%8 ; ld @SP,x` (atoh knows no capital hex digit; c0, W10ag) */
+#define	XR131	0x8000	/* l  (xfl2) R131-R133: three single `jp eq` that the older c2 shortens to `jr eq` (c0 tree/treeout, shortjmp xsite, W10ag) */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif
