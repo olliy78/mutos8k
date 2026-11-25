@@ -143,6 +143,25 @@ char *s;
 	p->forw = np;
 }
 
+/* c2x (W10ae): the two single sites where the older c2 keeps a jp cc short that toofar() calls far (R77 ps, R92 tar) */
+xsite(p)
+register struct node *p;
+{
+	register struct node *q;
+
+	if (p->op != CBR)
+		return(0);
+	q = p->back;
+	if ((xfl2 & XR77) && p->subop == JNE && q && q->op == CMP && equstr(q->code, "r2,#%1") && (q = q->back) && q->op == XOR
+	 && q->subop == BYTE && equstr(q->code, "rh2,rh2") && (q = q->back) && q->op == MOV && q->subop == BYTE && equstr(q->code, "rl2,@r13"))
+		return(1);
+	if ((xfl2 & XR92) && p->subop == JEQ && q && q->op == TST && equstr(q->code, "_rflag") && (q = p->forw) && q->op == TST
+	 && equstr(q->code, "_cflag") && (q = q->forw) && q->op == CBRS && q->subop == JEQ && (q = q->forw) && (q->op == JMP || q->op == JBR)
+	 && q->labno == p->labno)
+		return(1);
+	return(0);
+}
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
 register char *s;
@@ -187,8 +206,10 @@ register char *s;
 		case 'g': xfl2 |= XR65; break;
 		case 'o': xfl2 |= XR60; break;
 		case 'q': xfl2 |= XR70; break;
+		case 'u': xfl2 |= XR77; break;
+		case 'v': xfl2 |= XR92; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70; break;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92; break;
 		}
 }
 #endif
@@ -955,6 +976,19 @@ comjump()
 }
 
 /* Not V7: 'jp' becomes 'jr' when the target is near enough (toofar) */
+#ifdef C2X
+shortjmp()
+{
+	register struct node *p;
+
+	nchange = 0;
+	for (p = first.forw; p!=0; p = p->forw)
+		if ((p->op==JMP || p->op==CBR) && p->labno && (!toofar(p, 0) || ((xfl2 & (XR77 | XR92)) && xsite(p)))) {
+			p->op--;
+			nchange++;
+		}
+}
+#else
 shortjmp()
 {
 	register struct node *p;
@@ -966,6 +1000,7 @@ shortjmp()
 			nchange++;
 		}
 }
+#endif
 
 backjmp(ap1, ap2)
 struct node *ap1, *ap2;
