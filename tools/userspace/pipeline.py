@@ -126,11 +126,13 @@ C2_AUS = {"ld": {"R32", "R43"},
 # ... and the reverse: R11-R14 were measured on sh only.  Applied to the other programs they break byte identity
 # (measured after the us-sh merge: cat 4060/4072, login 9902/9904 B), so they are off for every program except sh.
 C2_NUR_SH = {"R11", "R12", "R13", "R14"}
+# W10af: R97-R100 were measured on ld only (c2_ld_s); off for every other program so that the c2x flags f h i j go to ld alone
+C2_NUR_LD = {"R97", "R98", "R99", "R100"}
 
 
 def c2_aus(name):
     """Set of c2 rules switched off for program NAME."""
-    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH)
+    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH) | (set() if name == "ld" else C2_NUR_LD)
 
 
 def pfad(name, *teile):
@@ -323,10 +325,10 @@ def xcc_luecken_texte(name, texte):
         for k, n in cnt.items():
             if n and k not in c2gegen.FLAGBUCHSTABE and k not in XCC_EINGEBAUT:
                 tot[k] = tot.get(k, 0) + n
-        if name == "ld":        # W10v: R97-R100 (c2_ld_s, measured on ld only) have no c2x letter either
+        if name == "ld":        # W10v: R97-R100 (c2_ld_s, measured on ld only) now have c2x letters (W10af)
             _s, cnt = U.c2_ld_s(_s)
             for k, n in cnt.items():
-                if n:
+                if n and k not in c2gegen.FLAGBUCHSTABE:     # W10af: R97-R100 have letters now
                     tot[k] = tot.get(k, 0) + n
     return tot
 

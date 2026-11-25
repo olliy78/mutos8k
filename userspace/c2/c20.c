@@ -162,6 +162,50 @@ register struct node *p;
 	return(0);
 }
 
+/* c2x (W10af): R97-R100, the four single-site forms of ld (c2gegen FLAGBUCHSTABE f h i j).  Returns 1 when it rewrote at p (the caller goes on with p->forw). */
+char	*xhead(), *xcomma();
+
+xldrules(p)
+register struct node *p;
+{
+	register struct node *q, *w;
+	register char *b;
+
+	q = p->forw;
+	/* R97 `sub r2,r12 ; ld MEM,r2 ; jr mi L` -> `test r2` kept before the jr (mget) */
+	if ((xfl2 & XR97) && xnd(p, MOV, 0, 0) && q->op == CBRS && q->subop == JMI && xnd(p->back, SUB, 0, "r2,r12") && (b = xcomma(p->code)) && equstr(b, "r2")) {
+		xins(p, "r2");
+		p->forw->op = TST;
+		return(1);
+	}
+	/* R98 `xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3` -> `ld r2,r3 ; ld r3,r2` before the xor, R45 does not apply (main hash switch) */
+	if ((xfl2 & XR98) && xnd(p, XOR, 0, "r2,r2") && xnd(q, DIV, 0, "rr2,#%3") && xnd(p->back, XOR, BYTE, "rh3,rh3")) {
+		w = p->back;
+		xins(w, "r2,r3");
+		xins(w->forw, "r3,r2");
+		return(1);
+	}
+	/* R99 `mult rr4,#%C ; ld r13,r5 ; add r13,#X ; ld MEM,r13 ; ld @r2,r13` goes through r3 (enter) */
+	if ((xfl2 & XR99) && xnd(p, MUL, 0, "rr4,#%C") && xnd(q, MOV, 0, "r13,r5") && (w = q->forw) && xnd(w, ADD, 0, 0)
+	 && w->code[0] == 'r' && w->code[1] == '1' && w->code[2] == '3' && w->code[3] == ',' && w->code[4] == '#'
+	 && w->forw && xnd(w->forw, MOV, 0, 0) && (b = xcomma(w->forw->code)) && equstr(b, "r13") && w->forw->code[0] != 'r' && w->forw->code[0] != '@'
+	 && w->forw->forw && xnd(w->forw->forw, MOV, 0, "@r2,r13")) {
+		xins(p, "r3,r5");
+		q->code = copy(1, "r13,r3");
+		xins(w, "r3,r13");
+		w = w->forw->forw;
+		w->code = copy(2, xhead(w->code, 1), "r3");
+		w->forw->code = copy(1, "@r2,r3");
+		return(1);
+	}
+	/* R100 `ld r3,@r2 ; ld -%X(FP),r3 ; ld r2,r3` -> `ld r2,-%X(FP)` (ldrand: the local is reloaded) */
+	if ((xfl2 & XR100) && xnd(p, MOV, 0, 0) && p->code[0] == '-' && (b = xcomma(p->code)) && equstr(b, "r3") && xnd(q, MOV, 0, "r2,r3") && xnd(p->back, MOV, 0, "r3,@r2")) {
+		q->code = copy(2, "r2,", xhead(p->code, 0));
+		return(1);
+	}
+	return(0);
+}
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
 register char *s;
@@ -208,8 +252,12 @@ register char *s;
 		case 'q': xfl2 |= XR70; break;
 		case 'u': xfl2 |= XR77; break;
 		case 'v': xfl2 |= XR92; break;
+		case 'f': xfl2 |= XR97; break;
+		case 'h': xfl2 |= XR98; break;
+		case 'i': xfl2 |= XR99; break;
+		case 'j': xfl2 |= XR100; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92; break;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100; break;
 		}
 }
 #endif
