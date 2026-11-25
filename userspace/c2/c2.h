@@ -209,5 +209,7 @@ extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 #define	XR_SH	0x20	/* S  (xfl2) shared strings in copy() above a heap use of XTHR (as_code, W10z) */
 #define	XR60	0x40	/* o  (xfl2) R60: and rN,#%FF ; ld MEM,rN ; ld r0,MEM [X4] ; cp r0,#k -> ld r0,rN (od, W10ad) */
 #define	XR70	0x80	/* q  (xfl2) R70: div rr2,MEM ; ld MEM2,r3 -> ld r2,r3 ; ld MEM2,r2 (pr, W10ad) */
+#define	XR77	0x100	/* u  (xfl2) R77: `ldb rl2,@r13 ; xorb rh2,rh2 ; cp r2,#%1 ; jp ne` becomes jr ne in shortjmp (ps, W10ae) */
+#define	XR92	0x200	/* v  (xfl2) R92: `test _rflag ; jp eq L ; test _cflag ; jr eq ; jp L` -> jr eq in shortjmp (tar, W10ae) */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif
