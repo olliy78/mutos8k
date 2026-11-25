@@ -219,5 +219,13 @@ extern int xfl3;	/* third flag word (xfl2 is full, W10ah) */
 #define	XR100	0x2000	/* j  (xfl2) R100: ld LOCAL,r3 behind ld r3,@r2 ; ld r2,r3 -> ld r2,LOCAL (ld ldrand, W10af) */
 #define	XR130	0x4000	/* b  (xfl2) R130: `inc SP,#%A ; push @SP,x` is merged to `inc SP,#%8 ; ld @SP,x` (atoh knows no capital hex digit; c0, W10ag) */
 #define	XR131	0x8000	/* l  (xfl2) R131-R133: three single `jp eq` that the older c2 shortens to `jr eq` (c0 tree/treeout, shortjmp xsite, W10ag) */
+/* W10ai: pattern engine of c20.c (xm/xmt): op word = op | sub << 8, special ops and "any sub-opcode" */
+extern struct node *xw[];
+#define	XP(o, s)	((o) | (s) << 8)
+#define	XN(n, o, s)	((n)->op == (o) && (n)->subop == (s))
+#define	XCB	60	/* CBR or CBRS */
+#define	XBR	61	/* JMP or JBR */
+#define	XNL	62	/* neither LABEL nor DLABEL */
+#define	XSA	0x7F	/* any sub-opcode */
 #define	XR45	0x1	/* e  (in xfl2) R45: xor r2,r2 ; div rr2,#k -> exts rr2 ; div rr2,#k (ld, ncheck, nm; W10v) */
 #endif

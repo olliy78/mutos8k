@@ -144,84 +144,154 @@ char *s;
 	p->forw = np;
 }
 
-/* c2x (W10ae): the two single sites where the older c2 keeps a jp cc short that toofar() calls far (R77 ps, R92 tar) */
-xsite(p)
-register struct node *p;
+/* c2x pattern engine (W10ai).  The fixed instruction patterns of the rules R77, R92, R97-R100, R131-R133, R45, R64 and R93 are tables, not written-out
+ * comparisons (about 60 % smaller).  A pattern is: flag mask, anchor index k, then pairs (op word, code text) up to an op word 0.  The window is the k nodes
+ * in front of the anchor node p and the nodes behind it; node i of the window is stored in xw[i].  Op word = XP(op, sub): XSA = any sub-opcode, XCB = CBR or
+ * CBRS, XBR = JMP or JBR, XNL = any node but a label.  Code text: 0 = any; `*` stands for the text up to the next comma (or the end),
+ * a final `~` for any rest; otherwise it must be equal (none of the texts starts with `#`, so equstr() is plain equality).  No allocation happens here. */
+struct node *xw[10] = {0};
+
+xg(s, c)
+register char *s, *c;
+{
+	for (;;) {
+		if (*c == '~')
+			return(1);
+		if (*c == '*') {
+			c++;
+			while (*s && *s != ',')
+				s++;
+		} else if (*c != *s)
+			return(0);
+		else if (*c == 0)
+			return(1);
+		else {
+			c++;
+			s++;
+		}
+	}
+}
+
+xmn(q, w, c)
+register struct node *q;
+char *c;
+{
+	register o;
+
+	o = w & 255;
+	if (o == XCB ? q->op != CBR && q->op != CBRS : o == XBR ? q->op != JMP && q->op != JBR
+	    : o == XNL ? q->op == LABEL || q->op == DLABEL : q->op != o)
+		return(0);
+	o = (w >> 8) & 255;
+	return((o == XSA || q->subop == o) && (c == 0 || xg(q->code, c)));
+}
+
+xm(p, t)
+struct node *p;
+register int *t;
 {
 	register struct node *q;
+	register i;
 
-	q = p->back;
-	/* R132 (l): `cp r2,#%3 ; jp eq,La ; cp r2,#%7 ; jp eq,Lb ; jp Lc` -> the jp Lc is short, too (c0 tree) */
-	if ((xfl2 & XR131) && p->op == JMP && q && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%7")
-	 && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%3"))
-		return(1);
-	if (p->op != CBR)
-		return(0);
-	q = p->back;
-	/* R131 (l): `cp r9,#%8 ; jp ne,La ; cp @r13,#%5A ; jp eq,Lb`; R132: the `jp eq` behind `cp r2,#%7` (see above);
-	   R133: `cp r2,#%16 ; jp eq,La ; cp r2,#%17 ; jp eq,Lb ; cp r2,#%19` */
-	if ((xfl2 & XR131) && p->subop == JEQ && q && q->op == CMP) {
-		if (equstr(q->code, "@r13,#%5A") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JNE && (q = q->back) && q->op == CMP && equstr(q->code, "r9,#%8"))
-			return(1);
-		q = p->back;
-		if (equstr(q->code, "r2,#%7") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%3")
-		 && p->forw && p->forw->op == JMP)
-			return(1);
-		q = p->back;
-		if (equstr(q->code, "r2,#%17") && (q = q->back) && (q->op == CBR || q->op == CBRS) && q->subop == JEQ && (q = q->back) && q->op == CMP && equstr(q->code, "r2,#%16")
-		 && p->forw && p->forw->op == CMP && equstr(p->forw->code, "r2,#%19"))
-			return(1);
-		q = p->back;
+	q = p;
+	for (i = *t++; i > 0; i--)
+		if ((q = q->back) == 0)
+			return(0);
+	for (i = 0; *t; t += 2, i++) {
+		if (q == 0 || !xmn(q, t[0], t[1]))
+			return(0);
+		xw[i] = q;
+		q = q->forw;
 	}
-	if ((xfl2 & XR77) && p->subop == JNE && q && q->op == CMP && equstr(q->code, "r2,#%1") && (q = q->back) && q->op == XOR
-	 && q->subop == BYTE && equstr(q->code, "rh2,rh2") && (q = q->back) && q->op == MOV && q->subop == BYTE && equstr(q->code, "rl2,@r13"))
-		return(1);
-	if ((xfl2 & XR92) && p->subop == JEQ && q && q->op == TST && equstr(q->code, "_rflag") && (q = p->forw) && q->op == TST
-	 && equstr(q->code, "_cflag") && (q = q->forw) && q->op == CBRS && q->subop == JEQ && (q = q->forw) && (q->op == JMP || q->op == JBR)
-	 && q->labno == p->labno)
-		return(1);
+	return(1);
+}
+
+/* first pattern of the table at t whose mask is in fl and that matches at p: its number (1 ...), else 0 */
+xmt(p, t, fl)
+struct node *p;
+register int *t;
+{
+	register i;
+
+	for (i = 1; *t; i++) {
+		if ((fl & *t) && xm(p, t + 1))
+			return(i);
+		for (t += 2; *t; t += 2)
+			;
+		t++;
+	}
 	return(0);
 }
 
-/* c2x (W10af): R97-R100, the four single-site forms of ld (c2gegen FLAGBUCHSTABE f h i j).  Returns 1 when it rewrote at p (the caller goes on with p->forw). */
+/* c2x (W10ae/W10ag): the single sites where the older c2 keeps a jp cc short that toofar() calls far.  p is the last node of each pattern.
+   R132 (l): `cp r2,#%3 ; jp eq ; cp r2,#%7 ; jp eq ; jp Lc` -> the jp Lc is short, too (c0 tree);  R131 (l): `cp r9,#%8 ; jp ne ; cp @r13,#%5A ; jp eq`;
+   the `jp eq` behind `cp r2,#%7` (see R132) followed by a jp;  R133: `cp r2,#%16 ; jp eq ; cp r2,#%17 ; jp eq ; cp r2,#%19`;  R77 (ps);  R92 (tar) */
+int	xst[] = {
+	XR131, 4, XP(CMP, XSA), "r2,#%3", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%7", XP(XCB, JEQ), 0, XP(JMP, XSA), 0, 0,
+	XR131, 3, XP(CMP, XSA), "r9,#%8", XP(XCB, JNE), 0, XP(CMP, XSA), "@r13,#%5A", XP(CBR, JEQ), 0, 0,
+	XR131, 3, XP(CMP, XSA), "r2,#%3", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%7", XP(CBR, JEQ), 0, XP(JMP, XSA), 0, 0,
+	XR131, 3, XP(CMP, XSA), "r2,#%16", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%17", XP(CBR, JEQ), 0, XP(CMP, XSA), "r2,#%19", 0,
+	XR77, 3, XP(MOV, BYTE), "rl2,@r13", XP(XOR, BYTE), "rh2,rh2", XP(CMP, XSA), "r2,#%1", XP(CBR, JNE), 0, 0,
+	XR92, 1, XP(TST, XSA), "_rflag", XP(CBR, JEQ), 0, XP(TST, XSA), "_cflag", XP(CBRS, JEQ), 0, XP(XBR, XSA), 0, 0,
+	0};
+
+xsite(p)
+struct node *p;
+{
+	register i;
+
+	i = xmt(p, xst, xfl2);
+	return(i && (i != 6 || xw[4]->labno == p->labno));	/* R92: the final jump goes to the same label */
+}
+
+/* c2x (W10af): R97-R100, the four single-site forms of ld (c2gegen FLAGBUCHSTABE f h i j), and R45 (e).  Returns 1 when it rewrote at p (the caller goes on with p->forw). */
 char	*xhead(), *xcomma();
+
+int	xlt[] = {
+	/* R97 `sub r2,r12 ; ld MEM,r2 ; jr mi L` -> `test r2` kept before the jr (mget) */
+	XR97, 1, XP(SUB, 0), "r2,r12", XP(MOV, 0), "*,r2", XP(CBRS, JMI), 0, 0,
+	/* R98 `xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3` -> `ld r2,r3 ; ld r3,r2` before the xor, R45 does not apply (main hash switch) */
+	XR98, 1, XP(XOR, BYTE), "rh3,rh3", XP(XOR, 0), "r2,r2", XP(DIV, 0), "rr2,#%3", 0,
+	/* R99 `mult rr4,#%C ; ld r13,r5 ; add r13,#X ; ld MEM,r13 ; ld @r2,r13` goes through r3 (enter) */
+	XR99, 0, XP(MUL, 0), "rr4,#%C", XP(MOV, 0), "r13,r5", XP(ADD, 0), "r13,#~", XP(MOV, 0), "*,r13", XP(MOV, 0), "@r2,r13", 0,
+	/* R100 `ld r3,@r2 ; ld -%X(FP),r3 ; ld r2,r3` -> `ld r2,-%X(FP)` (ldrand: the local is reloaded) */
+	XR100, 1, XP(MOV, 0), "r3,@r2", XP(MOV, 0), "-*,r3", XP(MOV, 0), "r2,r3", 0,
+	/* R45 (W10v): `xor r2,r2 ; div rr2,#k` -> `exts rr2 ; div rr2,#k` (the original divides as signed) */
+	XR45, 0, XP(XOR, 0), "r2,r2", XP(DIV, 0), "rr2,#~", 0,
+	0};
 
 xldrules(p)
 register struct node *p;
 {
-	register struct node *q, *w;
-	register char *b;
+	register struct node *w;
 
-	q = p->forw;
-	/* R97 `sub r2,r12 ; ld MEM,r2 ; jr mi L` -> `test r2` kept before the jr (mget) */
-	if ((xfl2 & XR97) && xnd(p, MOV, 0, 0) && q->op == CBRS && q->subop == JMI && xnd(p->back, SUB, 0, "r2,r12") && (b = xcomma(p->code)) && equstr(b, "r2")) {
+	switch (xmt(p, xlt, xfl2)) {
+	case 1:
 		xins(p, "r2");
 		p->forw->op = TST;
 		return(1);
-	}
-	/* R98 `xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3` -> `ld r2,r3 ; ld r3,r2` before the xor, R45 does not apply (main hash switch) */
-	if ((xfl2 & XR98) && xnd(p, XOR, 0, "r2,r2") && xnd(q, DIV, 0, "rr2,#%3") && xnd(p->back, XOR, BYTE, "rh3,rh3")) {
-		w = p->back;
+	case 2:
+		w = xw[0];
 		xins(w, "r2,r3");
 		xins(w->forw, "r3,r2");
 		return(1);
-	}
-	/* R99 `mult rr4,#%C ; ld r13,r5 ; add r13,#X ; ld MEM,r13 ; ld @r2,r13` goes through r3 (enter) */
-	if ((xfl2 & XR99) && xnd(p, MUL, 0, "rr4,#%C") && xnd(q, MOV, 0, "r13,r5") && (w = q->forw) && xnd(w, ADD, 0, 0)
-	 && w->code[0] == 'r' && w->code[1] == '1' && w->code[2] == '3' && w->code[3] == ',' && w->code[4] == '#'
-	 && w->forw && xnd(w->forw, MOV, 0, 0) && (b = xcomma(w->forw->code)) && equstr(b, "r13") && w->forw->code[0] != 'r' && w->forw->code[0] != '@'
-	 && w->forw->forw && xnd(w->forw->forw, MOV, 0, "@r2,r13")) {
+	case 3:
+		if (xw[3]->code[0] == 'r' || xw[3]->code[0] == '@')
+			return(0);
+		w = xw[2];
 		xins(p, "r3,r5");
-		q->code = copy(1, "r13,r3");
+		xw[1]->code = copy(1, "r13,r3");
 		xins(w, "r3,r13");
 		w = w->forw->forw;
 		w->code = copy(2, xhead(w->code, 1), "r3");
 		w->forw->code = copy(1, "@r2,r3");
 		return(1);
-	}
-	/* R100 `ld r3,@r2 ; ld -%X(FP),r3 ; ld r2,r3` -> `ld r2,-%X(FP)` (ldrand: the local is reloaded) */
-	if ((xfl2 & XR100) && xnd(p, MOV, 0, 0) && p->code[0] == '-' && (b = xcomma(p->code)) && equstr(b, "r3") && xnd(q, MOV, 0, "r2,r3") && xnd(p->back, MOV, 0, "r3,@r2")) {
-		q->code = copy(2, "r2,", xhead(p->code, 0));
+	case 4:
+		xw[2]->code = copy(2, "r2,", xhead(xw[1]->code, 0));
+		return(1);
+	case 5:
+		p->op = SXT;
+		p->code = copy(1, "rr2");
 		return(1);
 	}
 	return(0);
@@ -246,8 +316,11 @@ register char *s;
 		s++;
 	if (*s == '%')
 		return(xisfp(s));
-	return(rv && (equstr(s, "r8") || equstr(s, "r9") || equstr(s, "r10") || equstr(s, "r11") || equstr(s, "r12") || equstr(s, "r13")));
+	return(rv && s[0] == 'r' && (s[1] == '8' || s[1] == '9' ? s[2] == 0 : s[1] == '1' && s[2] >= '0' && s[2] <= '3' && s[3] == 0));
 }
+
+/* R93 window: `ld r3,@r2 ; ld MEM,r3 ; push @SP,r3` (anchor = the middle node) */
+int	xr93[] = {1, XP(MOV, 0), "r3,@r2", XP(MOV, 0), "*,r3", XP(PUSH, 0), "@SP,r3", 0};
 
 /* node n is a word `ld M,r2` with M a memory operand (not a register, not @) */
 xld2m(n)
@@ -255,8 +328,7 @@ register struct node *n;
 {
 	register char *c;
 
-	return(n->op == MOV && n->subop == 0 && (c = xcomma(n->code)) && equstr(c, "r2") && n->code[0] != '@' && n->code[0] != ','
-	 && !(n->code[0] == 'r' && n->code[1] >= '0' && n->code[1] <= '9'));
+	return(XN(n, MOV, 0) && xg(c = n->code, "*,r2") && c[0] != '@' && c[0] != ',' && !(c[0] == 'r' && c[1] >= '0' && c[1] <= '9'));
 }
 
 /* c2x (W10ah) flag y: R93-R96, node-level form of uspace.c2_cc_s (same conditions, same order): last pass before output.  r2 "mirrors" the memory
@@ -270,10 +342,9 @@ xccpass()
 	mir = stale = 0;
 	for (p = first.forw; p != 0; p = p->forw) {
 		/* R93 `ld r3,@r2 ; ld MEM,r3 ; push @SP,r3` -> `push @SP,MEM` */
-		if (p->op == MOV && p->subop == 0 && p->forw && xnd(p->back, MOV, 0, "r3,@r2") && (c = xcomma(p->code)) && equstr(c, "r3")
-		 && xnd(p->forw, PUSH, 0, "@SP,r3") && (b = xhead(p->code, 0)) && (b[0] == '_' ? b[1] != 0 : xccvar(b, 0)))
+		if (xm(p, xr93) && (b = xhead(p->code, 0)) && (b[0] == '_' ? b[1] != 0 : xccvar(b, 0)))
 			p->forw->code = copy(2, "@SP,", b);
-		if (p->op == CMP && p->subop == 0 && (c = xcomma(p->code)) && c[0] == '#' && c[1] && !equstr(c + 1, "-%1") && xccvar(b = xhead(p->code, 0), 1)) {
+		if (XN(p, CMP, 0) && (c = xcomma(p->code)) && c[0] == '#' && c[1] && !equstr(c + 1, "-%1") && xccvar(b = xhead(p->code, 0), 1)) {
 			if (mir && xhdeq(mir, b))
 				p->code = copy(2, "r2,", c);		/* R95 */
 			else {						/* R94 */
@@ -285,7 +356,7 @@ xccpass()
 			}
 			continue;
 		}
-		if (p->op == TST && p->subop == 0 && equstr(p->code, "r2")) {
+		if (XN(p, TST, 0) && equstr(p->code, "r2")) {
 			if (stale) {					/* R96 (b) */
 				p->code = xhead(stale, 0);
 				continue;
@@ -298,11 +369,11 @@ xccpass()
 		if (xld2m(p)) {
 			mir = p->code;
 			stale = 0;
-		} else if ((p->op == CMP || p->op == TST) && p->subop == 0)
+		} else if (XN(p, CMP, 0) || XN(p, TST, 0))
 			;
 		else if (p->op == CBRS || p->op == CBR || p->op == JBR || p->op == JMP)
 			;
-		else if (p->op == MOV && p->subop == 0 && xeq2(p->code, "r2,", p->code + 3) && xccvar(p->code + 3, 1)) {
+		else if (XN(p, MOV, 0) && xeq2(p->code, "r2,", p->code + 3) && xccvar(p->code + 3, 1)) {
 			mir = p->code + 3;
 			stale = 0;
 		} else
@@ -311,10 +382,14 @@ xccpass()
 }
 
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
+/* the letters of the flag bits: bit i of xfl / xfl2 is letter i of the string (c2.h order); `y` is bit 0 of xfl3 */
+char	xl1[] = "pcmzkws73tr5T46W";
+char	xl2[] = "eandgSoquvfhijbl";
+
 xparse(s)
 register char *s;
 {
-	register c;
+	register c, i;
 
 	if (equstr(s, "push")) {
 		xfl |= XR1;
@@ -328,44 +403,21 @@ register char *s;
 		xfl |= XR2 | XR30 | XR63 | XR43 | XR7 | XR3 | XR10 | XR32;
 		return;
 	}
-	while (c = *s++)
-		switch (c) {
-		case 'p': xfl |= XR1; break;
-		case 'c': xfl |= XR4; break;
-		case 'm': xfl |= XR38; break;
-		case 'z': xfl |= XR2; break;
-		case 'k': xfl |= XR30; break;
-		case 'w': xfl |= XR63; break;
-		case 's': xfl |= XR43; break;
-		case '7': xfl |= XR7; break;
-		case '3': xfl |= XR3; break;
-		case 't': xfl |= XR10; break;
-		case 'r': xfl |= XR32; break;
-		case '5': xfl |= XR5; break;
-		case 'T': xfl |= XR5T; break;
-		case '4': xfl |= XR42; break;
-		case '6': xfl |= XR64; break;
-		case 'W': xfl |= XR63C; break;
-		case 'S': xfl2 |= XR_SH; break;
-		case 'e': xfl2 |= XR45; break;
-		case 'a': xfl2 |= XR71; break;
-		case 'n': xfl2 |= XR34; break;
-		case 'd': xfl2 |= XR6; break;
-		case 'g': xfl2 |= XR65; break;
-		case 'o': xfl2 |= XR60; break;
-		case 'q': xfl2 |= XR70; break;
-		case 'u': xfl2 |= XR77; break;
-		case 'v': xfl2 |= XR92; break;
-		case 'f': xfl2 |= XR97; break;
-		case 'h': xfl2 |= XR98; break;
-		case 'i': xfl2 |= XR99; break;
-		case 'j': xfl2 |= XR100; break;
-		case 'b': xfl2 |= XR130; break;
-		case 'l': xfl2 |= XR131; break;
-		case 'y': xfl3 |= XR93; break;
-		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100 | XR130 | XR131; break;
+	while (c = *s++) {
+		if (c == 'A') {
+			xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100 | XR130 | XR131;
+			continue;
 		}
+		for (i = 0; i < 16; i++) {
+			if (xl1[i] == c)
+				xfl |= 1 << i;
+			if (xl2[i] == c)
+				xfl2 |= 1 << i;
+		}
+		if (c == 'y')
+			xfl3 |= XR93;
+	}
 }
 #endif
 int	isn	= 9000;
@@ -1277,7 +1329,7 @@ xsp(b, f, a)
 }
 
 /* buffered stdin/stdout.  Initialised data, not BSS (F1). */
-#define	XBS	256
+#define	XBS	32	/* W10ai: was 256 (initialised data, 2 buffers) */
 char	xib[XBS] = {0};
 char	xob[XBS] = {0};
 int	xin = 0, xip = 0, xon = 0, xifd = 0, xofd = 1;
