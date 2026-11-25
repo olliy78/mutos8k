@@ -122,6 +122,7 @@ int	xfl = 0;
 char	xtb[XTBSZ + 8] = {0};
 char	*xih[XIHS] = {0};
 int	xfl2 = 0;	/* initialized data, not BSS (W10q: BSS neighbours of ophash get overwritten) */
+int	xfl3 = 0;	/* W10ah: third flag word, initialized data likewise */
 
 /* c2x (W10ad): insert a word MOV node with code s behind node p (R70) */
 xins(p, s)
@@ -226,6 +227,89 @@ register struct node *p;
 	return(0);
 }
 
+/* strings a and b agree up to the first comma (or the end) */
+xhdeq(a, b)
+register char *a, *b;
+{
+	while (*a && *a != ',' && *a == *b) {
+		a++;
+		b++;
+	}
+	return((*a == 0 || *a == ',') && (*b == 0 || *b == ','));
+}
+
+/* s is a frame variable `[-]%HEX(FP)` or (rv) a register variable r8..r13; the text must end there (no comma) */
+xccvar(s, rv)
+register char *s;
+{
+	if (*s == '-')
+		s++;
+	if (*s == '%')
+		return(xisfp(s));
+	return(rv && (equstr(s, "r8") || equstr(s, "r9") || equstr(s, "r10") || equstr(s, "r11") || equstr(s, "r12") || equstr(s, "r13")));
+}
+
+/* node n is a word `ld M,r2` with M a memory operand (not a register, not @) */
+xld2m(n)
+register struct node *n;
+{
+	register char *c;
+
+	return(n->op == MOV && n->subop == 0 && (c = xcomma(n->code)) && equstr(c, "r2") && n->code[0] != '@' && n->code[0] != ','
+	 && !(n->code[0] == 'r' && n->code[1] >= '0' && n->code[1] <= '9'));
+}
+
+/* c2x (W10ah) flag y: R93-R96, node-level form of uspace.c2_cc_s (same conditions, same order): last pass before output.  r2 "mirrors" the memory
+ * operand `mir` after `ld MEM,r2` / `ld r2,VAR`; a word cp/test and every jump keep it, anything else (and every label) drops it. */
+xccpass()
+{
+	register struct node *p;
+	register char *b, *c;
+	char *mir, *stale;
+
+	mir = stale = 0;
+	for (p = first.forw; p != 0; p = p->forw) {
+		/* R93 `ld r3,@r2 ; ld MEM,r3 ; push @SP,r3` -> `push @SP,MEM` */
+		if (p->op == MOV && p->subop == 0 && p->forw && xnd(p->back, MOV, 0, "r3,@r2") && (c = xcomma(p->code)) && equstr(c, "r3")
+		 && xnd(p->forw, PUSH, 0, "@SP,r3") && (b = xhead(p->code, 0)) && (b[0] == '_' ? b[1] != 0 : xccvar(b, 0)))
+			p->forw->code = copy(2, "@SP,", b);
+		if (p->op == CMP && p->subop == 0 && (c = xcomma(p->code)) && c[0] == '#' && c[1] && !equstr(c + 1, "-%1") && xccvar(b = xhead(p->code, 0), 1)) {
+			if (mir && xhdeq(mir, b))
+				p->code = copy(2, "r2,", c);		/* R95 */
+			else {						/* R94 */
+				if (stale == 0 && mir)
+					stale = mir;
+				xins(p->back, copy(2, "r2,", b));
+				p->code = copy(2, "r2,", c);
+				mir = b;
+			}
+			continue;
+		}
+		if (p->op == TST && p->subop == 0 && equstr(p->code, "r2")) {
+			if (stale) {					/* R96 (b) */
+				p->code = xhead(stale, 0);
+				continue;
+			}
+			if (p->back && p->back->back && xld2m(p->back) && xld2m(p->back->back)) {	/* R96 (a) */
+				p->code = xhead(p->back->code, 0);
+				continue;
+			}
+		}
+		if (xld2m(p)) {
+			mir = p->code;
+			stale = 0;
+		} else if ((p->op == CMP || p->op == TST) && p->subop == 0)
+			;
+		else if (p->op == CBRS || p->op == CBR || p->op == JBR || p->op == JMP)
+			;
+		else if (p->op == MOV && p->subop == 0 && xeq2(p->code, "r2,", p->code + 3) && xccvar(p->code + 3, 1)) {
+			mir = p->code + 3;
+			stale = 0;
+		} else
+			mir = stale = 0;
+	}
+}
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 xparse(s)
 register char *s;
@@ -278,6 +362,7 @@ register char *s;
 		case 'j': xfl2 |= XR100; break;
 		case 'b': xfl2 |= XR130; break;
 		case 'l': xfl2 |= XR131; break;
+		case 'y': xfl3 |= XR93; break;
 		case 'A': xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
 			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100 | XR130 | XR131; break;
 		}
@@ -299,6 +384,7 @@ char **argv;
 	}
 #ifdef C2X
 	xfl2 = 0;
+	xfl3 = 0;
 	xfl = 0;	/* explicit: flag-less guest runs showed stray bits in the BSS word (W10o) */
 	while (argc>1 && argv[1][0]=='-' && argv[1][1]=='x') {
 		xparse(argv[1]+2);	/* -x<letters>, -xpush, -xcmpmem, -xhzero, -xA (all) */
@@ -365,6 +451,10 @@ char **argv;
 #ifdef C2X
 		if ((xfl & (XR5 | XR42 | XR64 | XR63C)) || (xfl2 & ~XR_SH))
 			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
+#endif
+#ifdef C2X
+		if (xfl3 & XR93)
+			xccpass();	/* c2x -xy: R93-R96 (cc, W10ah) */
 #endif
 		output();
 		if (niter > maxiter)

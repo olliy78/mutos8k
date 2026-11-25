@@ -117,7 +117,9 @@ C2_AUS = {"ld": {"R32", "R43"},
          "tar": {"R%d" % k for k in range(1, 92)},
          # W10ag: c0 and cc are modelled by c2_c0_s (R130-R133) / c2_cc_s (R93-R96) ONLY (c2_emu_s c0=True / cc=True ignore the general rules), so c2x gets
          # no general letter for them (xpush/--auto gave c0 all letters and c2x applied R4 etc. where the model does not)
-         "c0": {"R%d" % k for k in range(1, 101)}, "cc": {"R%d" % k for k in range(1, 101)},
+         "c0": {"R%d" % k for k in range(1, 101)},
+         # W10ah: for cc R93-R96 stay ON (c2x letter y, c2_cc_s); everything else is off
+         "cc": {"R%d" % k for k in range(1, 101)} - {"R93", "R94", "R95", "R96"},
          "ed": {"R42", "R45"},
          # c2: the shipped c2 itself is built with the older stand.  R5 (`test`/`ld` forms), R7 (an `xorb` between `ldb` and `cp`), R32 (a repeated `xorb` in char range tests)
          # and R45 (`exts` before the output() hash switch) would each differ from the original (doc/userspace/wk_w5.md)
@@ -133,11 +135,13 @@ C2_NUR_SH = {"R11", "R12", "R13", "R14"}
 C2_NUR_LD = {"R97", "R98", "R99", "R100"}
 # W10ag: R130-R133 were measured on c0 only (c2_c0_s): off for every other program (c2x letters b l)
 C2_NUR_C0 = {"R130", "R131", "R132", "R133"}
+# W10ah: R93-R96 were measured on cc only (c2_cc_s): off for every other program (c2x letter y)
+C2_NUR_CC = {"R93", "R94", "R95", "R96"}
 
 
 def c2_aus(name):
     """Set of c2 rules switched off for program NAME."""
-    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH) | (set() if name == "ld" else C2_NUR_LD) | (set() if name == "c0" else C2_NUR_C0)
+    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH) | (set() if name == "ld" else C2_NUR_LD) | (set() if name == "c0" else C2_NUR_C0) | (set() if name == "cc" else C2_NUR_CC)
 
 
 def pfad(name, *teile):
