@@ -88,7 +88,7 @@ def verfuegbar(namen):
 
 
 # W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
-FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j", "R130": "b", "R131": "l", "R132": "", "R133": ""}   # W10ag: R130 b, R131-R133 share the bit/letter l (R132/R133 no letter of their own)
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j", "R130": "b", "R131": "l", "R132": "", "R133": "", "R93": "y", "R94": "", "R95": "", "R96": ""}   # W10ag: R130 b, R131-R133 share the bit/letter l (R132/R133 no letter of their own); W10ah: R93-R96 (cc) share the letter y
 
 
 def c2x_flags(name, regeln, extra=()):
