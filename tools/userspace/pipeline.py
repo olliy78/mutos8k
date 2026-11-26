@@ -279,8 +279,14 @@ def xcc_einstellung(name, v):
     import c2gegen
     import xcc
     fl = c2gegen.c2x_flags(name, xcc.REGELN, ("R3",))
+    # W10aj: the c2x variant that holds the program's own rule group (ld -> c2xld, cc -> c2xcc, c0 -> c2xc0, else the base c2x);
+    # only ONE c2x goes onto the usr disk (4 KB free).  A letter the variant lacks would make c2x abort, so refuse it here already.
+    var = c2gegen.c2x_variante(name)
+    fremd = set(fl) & set("".join(c2gegen.GRUPPENBUCHSTABEN.values())) - set(c2gegen.variante_erlaubt(var))
+    if fremd:
+        raise SystemExit("%s: flags %s need another c2x variant than %s" % (name, "".join(sorted(fremd)), var))
     bins = {"xcc": os.path.join(U.REPO, "userspace", "cc", "work", "bau", "xcc_c2_s.bin"),
-            "c2x": os.path.join(U.REPO, "userspace", "c2", "work", "bau", "c2x_c2.bin")}
+            "c2x": c2gegen.c2x_bin(var)}
     for b in bins.values():
         if not os.path.isfile(b):
             raise U.Fehlt(b)
