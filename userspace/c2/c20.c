@@ -227,13 +227,22 @@ register int *t;
    R132 (l): `cp r2,#%3 ; jp eq ; cp r2,#%7 ; jp eq ; jp Lc` -> the jp Lc is short, too (c0 tree);  R131 (l): `cp r9,#%8 ; jp ne ; cp @r13,#%5A ; jp eq`;
    the `jp eq` behind `cp r2,#%7` (see R132) followed by a jp;  R133: `cp r2,#%16 ; jp eq ; cp r2,#%17 ; jp eq ; cp r2,#%19`;  R77 (ps);  R92 (tar) */
 int	xst[] = {
+#ifdef C2X_C0
 	XR131, 4, XP(CMP, XSA), "r2,#%3", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%7", XP(XCB, JEQ), 0, XP(JMP, XSA), 0, 0,
 	XR131, 3, XP(CMP, XSA), "r9,#%8", XP(XCB, JNE), 0, XP(CMP, XSA), "@r13,#%5A", XP(CBR, JEQ), 0, 0,
 	XR131, 3, XP(CMP, XSA), "r2,#%3", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%7", XP(CBR, JEQ), 0, XP(JMP, XSA), 0, 0,
 	XR131, 3, XP(CMP, XSA), "r2,#%16", XP(XCB, JEQ), 0, XP(CMP, XSA), "r2,#%17", XP(CBR, JEQ), 0, XP(CMP, XSA), "r2,#%19", 0,
+#endif
 	XR77, 3, XP(MOV, BYTE), "rl2,@r13", XP(XOR, BYTE), "rh2,rh2", XP(CMP, XSA), "r2,#%1", XP(CBR, JNE), 0, 0,
 	XR92, 1, XP(TST, XSA), "_rflag", XP(CBR, JEQ), 0, XP(TST, XSA), "_cflag", XP(CBRS, JEQ), 0, XP(XBR, XSA), 0, 0,
 	0};
+
+/* table entry number of R92 in xst (the four R131 entries exist only in the C0 variant) */
+#ifdef C2X_C0
+#define	XSI92	6
+#else
+#define	XSI92	2
+#endif
 
 xsite(p)
 struct node *p;
@@ -241,13 +250,14 @@ struct node *p;
 	register i;
 
 	i = xmt(p, xst, xfl2);
-	return(i && (i != 6 || xw[4]->labno == p->labno));	/* R92: the final jump goes to the same label */
+	return(i && (i != XSI92 || xw[4]->labno == p->labno));	/* R92: the final jump goes to the same label */
 }
 
 /* c2x (W10af): R97-R100, the four single-site forms of ld (c2gegen FLAGBUCHSTABE f h i j), and R45 (e).  Returns 1 when it rewrote at p (the caller goes on with p->forw). */
 char	*xhead(), *xcomma();
 
 int	xlt[] = {
+#ifdef C2X_LD
 	/* R97 `sub r2,r12 ; ld MEM,r2 ; jr mi L` -> `test r2` kept before the jr (mget) */
 	XR97, 1, XP(SUB, 0), "r2,r12", XP(MOV, 0), "*,r2", XP(CBRS, JMI), 0, 0,
 	/* R98 `xorb rh3,rh3 ; xor r2,r2 ; div rr2,#%3` -> `ld r2,r3 ; ld r3,r2` before the xor, R45 does not apply (main hash switch) */
@@ -256,9 +266,17 @@ int	xlt[] = {
 	XR99, 0, XP(MUL, 0), "rr4,#%C", XP(MOV, 0), "r13,r5", XP(ADD, 0), "r13,#~", XP(MOV, 0), "*,r13", XP(MOV, 0), "@r2,r13", 0,
 	/* R100 `ld r3,@r2 ; ld -%X(FP),r3 ; ld r2,r3` -> `ld r2,-%X(FP)` (ldrand: the local is reloaded) */
 	XR100, 1, XP(MOV, 0), "r3,@r2", XP(MOV, 0), "-*,r3", XP(MOV, 0), "r2,r3", 0,
+#endif
 	/* R45 (W10v): `xor r2,r2 ; div rr2,#k` -> `exts rr2 ; div rr2,#k` (the original divides as signed) */
 	XR45, 0, XP(XOR, 0), "r2,r2", XP(DIV, 0), "rr2,#~", 0,
 	0};
+
+/* case number of R45 in xlt (R97-R100 come first, in the LD variant only) */
+#ifdef C2X_LD
+#define	XCASE45	5
+#else
+#define	XCASE45	1
+#endif
 
 xldrules(p)
 register struct node *p;
@@ -266,6 +284,7 @@ register struct node *p;
 	register struct node *w;
 
 	switch (xmt(p, xlt, xfl2)) {
+#ifdef C2X_LD
 	case 1:
 		xins(p, "r2");
 		p->forw->op = TST;
@@ -289,7 +308,8 @@ register struct node *p;
 	case 4:
 		xw[2]->code = copy(2, "r2,", xhead(xw[1]->code, 0));
 		return(1);
-	case 5:
+#endif
+	case XCASE45:
 		p->op = SXT;
 		p->code = copy(1, "rr2");
 		return(1);
@@ -319,6 +339,7 @@ register char *s;
 	return(rv && s[0] == 'r' && (s[1] == '8' || s[1] == '9' ? s[2] == 0 : s[1] == '1' && s[2] >= '0' && s[2] <= '3' && s[3] == 0));
 }
 
+#ifdef C2X_CC
 /* R93 window: `ld r3,@r2 ; ld MEM,r3 ; push @SP,r3` (anchor = the middle node) */
 int	xr93[] = {1, XP(MOV, 0), "r3,@r2", XP(MOV, 0), "*,r3", XP(PUSH, 0), "@SP,r3", 0};
 
@@ -381,10 +402,25 @@ xccpass()
 	}
 }
 
+#endif
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 /* the letters of the flag bits: bit i of xfl / xfl2 is letter i of the string (c2.h order); `y` is bit 0 of xfl3 */
 char	xl1[] = "pcmzkws73tr5T46W";
 char	xl2[] = "eandgSoquvfhijbl";
+
+#if !defined(C2X_LD) || !defined(C2X_CC) || !defined(C2X_C0)
+/* W10aj: refuse a switch whose rule group is not built into this c2x variant (exit 1) */
+xdeny(c)
+{
+	char t[2];
+
+	t[0] = c;	/* xfm has no %c */
+	t[1] = 0;
+	fprintf(stderr, "c2x: switch -x%s needs a c2x variant with its rule group\n", t);
+	exit(1);
+}
+#endif
 
 xparse(s)
 register char *s;
@@ -406,17 +442,38 @@ register char *s;
 	while (c = *s++) {
 		if (c == 'A') {
 			xfl = 0x7FF | XR5 | XR42 | XR64 | XR63C;
-			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92 | XR97 | XR98 | XR99 | XR100 | XR130 | XR131;
+			xfl2 |= XR45 | XR71 | XR34 | XR6 | XR65 | XR60 | XR70 | XR77 | XR92;
+#ifdef C2X_LD
+			xfl2 |= XR97 | XR98 | XR99 | XR100;
+#endif
+#ifdef C2X_C0
+			xfl2 |= XR130 | XR131;
+#endif
 			continue;
 		}
+		/* W10aj: a letter of a rule group that this variant does not contain must not be accepted silently (wrong build) */
+#ifndef C2X_LD
+		if (c == 'f' || c == 'h' || c == 'i' || c == 'j')
+			xdeny(c);
+#endif
+#ifndef C2X_CC
+		if (c == 'y')
+			xdeny(c);
+#endif
+#ifndef C2X_C0
+		if (c == 'b' || c == 'l')
+			xdeny(c);
+#endif
 		for (i = 0; i < 16; i++) {
 			if (xl1[i] == c)
 				xfl |= 1 << i;
 			if (xl2[i] == c)
 				xfl2 |= 1 << i;
 		}
+#ifdef C2X_CC
 		if (c == 'y')
 			xfl3 |= XR93;
+#endif
 	}
 }
 #endif
@@ -505,8 +562,10 @@ char **argv;
 			r5pass();	/* c2x -x5/-x4/-x6: R5, R42, R64 (W10t) */
 #endif
 #ifdef C2X
+#ifdef C2X_CC
 		if (xfl3 & XR93)
 			xccpass();	/* c2x -xy: R93-R96 (cc, W10ah) */
+#endif
 #endif
 		output();
 		if (niter > maxiter)

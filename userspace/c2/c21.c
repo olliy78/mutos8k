@@ -155,7 +155,7 @@ rmove()
 			dualop(p->forw);
 			if (regs[RT2][0] == 'r' || regs[RT2][0] == '#') {
 				dualop(p);
-#ifdef C2X
+#ifdef C2X_C0
 				/* c2x -xb (R130): the older c2 merges `inc SP,#%A ; push` too (the shipped atoh reads no capital hex digit) */
 				if ((xfl2 & XR130) && equstr(regs[RT2], "#%A"))
 					r1 = 10;

@@ -10,7 +10,7 @@ the original program".  This tool measures what the shipped c2 does:
   auswerten NAME... host: model on MOD.s (rule counts, with the program's real C2_AUS and with every rule on), line
                   differences, opcode histograms s0 / s / model.  Writes userspace/c2/gegenprobe.tsv.
 
-  var NAME DEF...  host (W10l): write the variant directory userspace/c2/work/var/NAME/ (c20.c, c21.c, c2.h) with `#define DEF 1`
+  var NAME DEF...  host (W10l; W10aj: NAME alone, e.g. `var c2xld`, takes the defines of that c2x variant, see VARIANTEN): write the variant directory userspace/c2/work/var/NAME/ (c20.c, c21.c, c2.h) with `#define DEF 1`
                   lines in front of both c20.c and c21.c (e.g. `var cm9 XCMPMEM`, `var all9 XPUSH XCMPMEM XHZERO`); the build uses
                   `pipeline.py bau c2 --c2emu --libc alt --quelle NAME=userspace/c2/work/var/NAME`.
   lauf --c2x BIN --auto --regeln R.. --extra R3 [--null]  (W10o) each module runs c2x with `-x<letters>` derived from its program's rule set
@@ -100,6 +100,32 @@ def c2x_flags(name, regeln, extra=()):
 
 # W10z: modules that get c2x's flag S (shared strings in copy() above a heap use of XTHR): the one function that does not fit with c2x otherwise
 SHARE_MODS = () if os.environ.get("C2GEGEN_NOS") else ("as_code",)   # W10aa: C2GEGEN_NOS=1 measures without flag S
+
+
+# W10aj: c2x variants.  One source, the program-bound rule groups behind compiler switches (userspace/c2/c20.c, c21.c):
+#   C2X_LD (letters f h i j, ld only), C2X_CC (y, cc only), C2X_C0 (b l, c0 only); the general letters are in every variant.
+# A program is built with the variant that holds ITS group; c2x refuses (exit 1) a letter whose group the variant lacks.
+VARIANTEN = {"c2x": ("C2X",),                                   # base variant: general rules only (smallest image)
+             "c2xld": ("C2X", "C2X_LD"),
+             "c2xcc": ("C2X", "C2X_CC"),
+             "c2xc0": ("C2X", "C2X_C0"),
+             "c2xall": ("C2X", "C2X_LD", "C2X_CC", "C2X_C0")}   # regression variant: every group (the W10ai c2x)
+GRUPPENBUCHSTABEN = {"C2X_LD": "fhij", "C2X_CC": "y", "C2X_C0": "bl"}
+PROGRAMM_VARIANTE = {"ld": "c2xld", "cc": "c2xcc", "c0": "c2xc0"}
+
+
+def c2x_variante(name):
+    """Name of the c2x variant that program NAME is built with (its own rule group, else the base variant)."""
+    return PROGRAMM_VARIANTE.get(name, "c2x")
+
+
+def c2x_bin(variante):
+    return os.path.join(U.REPO, "userspace", "c2", "work", "bau", variante + "_c2.bin")
+
+
+def variante_erlaubt(variante):
+    """Letters (besides the general ones) that VARIANTE accepts."""
+    return "".join(GRUPPENBUCHSTABEN[d] for d in VARIANTEN[variante] if d in GRUPPENBUCHSTABEN)
 
 
 def befehle(mods, c2x=None, c2o=False, s0=False, kurz=False, flags=None, null=False):
@@ -394,6 +420,7 @@ def var(name, defs):
     """Write userspace/c2/work/var/NAME/{c20.c,c21.c,c2.h}; both modules get the #define lines (hzpass lives in c21.c, its call in c20.c)."""
     d = os.path.join(C2DIR, "work", "var", name)
     os.makedirs(d, exist_ok=True)
+    defs = [y for x in defs for y in (VARIANTEN[x] if x in VARIANTEN else (x,))]   # W10aj: a variant name stands for its defines
     kopf = "".join("#define %s 1\n" % x for x in defs)
     for f in C2_FILES:
         open(os.path.join(d, f), "w", encoding="latin-1").write(kopf + open(os.path.join(C2DIR, f), encoding="latin-1").read())
@@ -449,7 +476,7 @@ def main():
     ap.add_argument("--update", action="store_true", help="tokcheck: re-derive userspace/c2/tokens.md5 from C2_BASE_REV")
     a = ap.parse_args()
     if a.cmd == "var":
-        var(a.namen[0], a.namen[1:])
+        var(a.namen[0], a.namen[1:] or list(VARIANTEN[a.namen[0]]))
         return
     if a.cmd == "tokcheck":
         sys.exit(1 if tokcheck(a.update) else 0)
