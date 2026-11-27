@@ -404,12 +404,118 @@ xccpass()
 
 #endif
 
+#ifdef C2X_CV
+/* c2x flag V (W10ak): R72-R76, the five single sites of convert (uspace.c2_convert_s), a last pass before output.  Window tables as above (xmt, xfl3).
+   R72 `call _lseek ; inc SP,#%8 ; test r2 ; jr pl|mi` -> `testl rr2`;  R73 `sra rN,#%1` -> `ld r2,#-%1 ; sda rN,r2`;
+   R75 `inc rK ; ld r2,rK ; inc rK ; ld r3,rM ; ldb @r2,rl3` -> the second inc moves behind the byte store;  R76 `ldb rl2,%1(r13) ; ldb @r13,rl2` -> `xorb rh2,rh2` between */
+int	xcvt[] = {
+	XRCV, 2, XP(CALL, XSA), "_lseek", XP(INC, XSA), "SP,#%8", XP(TST, 0), "r2", XP(CBRS, XSA), 0, 0,
+	XRCV, 0, XP(ASR, 0), "r*,#%1", 0,
+	XRCV, 0, XP(INC, 0), "r*,#%1", XP(MOV, 0), "r2,r*", XP(INC, 0), "r*,#%1", XP(MOV, 0), "r3,r*", XP(MOV, BYTE), "@r2,rl3", 0,
+	XRCV, 0, XP(MOV, BYTE), "rl2,%1(r13)", XP(MOV, BYTE), "@r13,rl2", 0,
+	0};
+
+/* R74: loop inversion of the shipped c2 undone for the free-list loop of main.  p is `jr Lh` followed by the label Lb of the inverted loop (labno >= 9000):
+   `jr Lh ; Lb: BODY ; Lh: HEAD ; jr ne Lb ; jr Lx`  ->  `Lh: HEAD ; jr eq Lx ; BODY ; jr Lh`.  Only the loop whose head has `testl _curr` and `call _blk`.
+   The nodes are relinked (nothing is allocated); the label Lb and the second jump disappear, the `jr ne Lb` node becomes `jr eq Lx`. */
+xcvinv(p)
+register struct node *p;
+{
+	register struct node *b, *h, *k;
+	struct node *bl, *k1, *last;
+	int t1, t2;
+
+	b = p->forw;
+	if (b->op != LABEL || b->labno < 9000)
+		return(0);
+	for (h = b->forw; h != 0 && !(h->op == LABEL && h->labno == p->labno); h = h->forw)
+		;
+	if (h == 0)
+		return(0);
+	t1 = t2 = 0;
+	for (k = h->forw; k != 0 && !(k->op == CBRS && k->subop == JNE && k->labno == b->labno); k = k->forw) {
+		if (XN(k, TST, LONG) && equstr(k->code, "_curr"))
+			t1 = 1;
+		if (k->op == CALL && equstr(k->code, "_blk"))
+			t2 = 1;
+	}
+	if (k == 0 || !t1 || !t2 || (k1 = k->forw) == 0 || k1->op != JBR || k1->forw == 0)
+		return(0);
+	k->subop = JEQ;
+	k->labno = k1->labno;
+	k->ref = k1->ref;
+	k->code = k1->code;
+	bl = h->back;
+	last = k;
+	p->back->forw = h;
+	h->back = p->back;
+	if (b->forw != h) {
+		k->forw = b->forw;
+		b->forw->back = k;
+		last = bl;
+	}
+	last->forw = p;
+	p->back = last;
+	p->forw = k1->forw;
+	k1->forw->back = p;
+	return(1);
+}
+
+xcvpass()
+{
+	register struct node *p;
+	register char *c;
+
+	for (p = first.forw; p != 0; p = p->forw)
+		if (p->op == JBR && p->forw != 0)
+			xcvinv(p);
+	for (p = first.forw; p != 0; p = p->forw)
+		switch (xmt(p, xcvt, xfl3)) {
+		case 1:
+			if (xw[3]->subop == JPL || xw[3]->subop == JMI) {
+				p->subop = LONG;
+				p->code = "rr2";
+			}
+			break;
+		case 2:
+			if (p->code[1] >= '0' && p->code[1] <= '9') {
+				c = xcomma(p->code);
+				c[0] = 'r';
+				c[1] = '2';
+				c[2] = 0;
+				xins(p, p->code);
+				p->forw->op = ASH;
+				p->op = MOV;
+				p->code = "r2,#-%1";
+			}
+			break;
+		case 3:
+			if (xw[0]->code[1] >= '0' && xw[0]->code[1] <= '9' && equstr(xw[0]->code, xw[2]->code) && xhdeq(xw[0]->code, xw[1]->code + 3)
+			    && xw[3]->code[4] >= '0' && xw[3]->code[4] <= '9') {
+				/* unlink the second inc, put it behind the byte store */
+				xw[2]->back->forw = xw[2]->forw;
+				xw[2]->forw->back = xw[2]->back;
+				xw[2]->forw = xw[4]->forw;
+				xw[2]->back = xw[4];
+				xw[4]->forw->back = xw[2];
+				xw[4]->forw = xw[2];
+			}
+			break;
+		case 4:
+			xins(p, "rh2,rh2");
+			p->forw->op = XOR;
+			p->forw->subop = BYTE;
+			break;
+		}
+}
+#endif
+
 /* c2x: parse the letters of one `-x<letters>` argument (or a group name) into xfl */
 /* the letters of the flag bits: bit i of xfl / xfl2 is letter i of the string (c2.h order); `y` is bit 0 of xfl3 */
 char	xl1[] = "pcmzkws73tr5T46W";
 char	xl2[] = "eandgSoquvfhijbl";
 
-#if !defined(C2X_LD) || !defined(C2X_CC) || !defined(C2X_C0)
+#if !defined(C2X_LD) || !defined(C2X_CC) || !defined(C2X_C0) || !defined(C2X_CV)
 /* W10aj: refuse a switch whose rule group is not built into this c2x variant (exit 1) */
 xdeny(c)
 {
@@ -464,6 +570,10 @@ register char *s;
 		if (c == 'b' || c == 'l')
 			xdeny(c);
 #endif
+#ifndef C2X_CV
+		if (c == 'V')
+			xdeny(c);
+#endif
 		for (i = 0; i < 16; i++) {
 			if (xl1[i] == c)
 				xfl |= 1 << i;
@@ -473,6 +583,10 @@ register char *s;
 #ifdef C2X_CC
 		if (c == 'y')
 			xfl3 |= XR93;
+#endif
+#ifdef C2X_CV
+		if (c == 'V')
+			xfl3 |= XRCV;
 #endif
 	}
 }
@@ -565,6 +679,10 @@ char **argv;
 #ifdef C2X_CC
 		if (xfl3 & XR93)
 			xccpass();	/* c2x -xy: R93-R96 (cc, W10ah) */
+#endif
+#ifdef C2X_CV
+		if (xfl3 & XRCV)
+			xcvpass();	/* c2x -xV: R72-R76 (convert, W10ak) */
 #endif
 #endif
 		output();

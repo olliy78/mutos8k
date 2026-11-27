@@ -137,11 +137,13 @@ C2_NUR_LD = {"R97", "R98", "R99", "R100"}
 C2_NUR_C0 = {"R130", "R131", "R132", "R133"}
 # W10ah: R93-R96 were measured on cc only (c2_cc_s): off for every other program (c2x letter y)
 C2_NUR_CC = {"R93", "R94", "R95", "R96"}
+# W10ak: R72-R76 were measured on convert only (c2_convert_s): off for every other program (c2x letter V)
+C2_NUR_CV = {"R72", "R73", "R74", "R75", "R76"}
 
 
 def c2_aus(name):
     """Set of c2 rules switched off for program NAME."""
-    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH) | (set() if name == "ld" else C2_NUR_LD) | (set() if name == "c0" else C2_NUR_C0) | (set() if name == "cc" else C2_NUR_CC)
+    return C2_AUS.get(name, set()) | (set() if name == "sh" else C2_NUR_SH) | (set() if name == "ld" else C2_NUR_LD) | (set() if name == "c0" else C2_NUR_C0) | (set() if name == "cc" else C2_NUR_CC) | (set() if name == "convert" else C2_NUR_CV)
 
 
 def pfad(name, *teile):

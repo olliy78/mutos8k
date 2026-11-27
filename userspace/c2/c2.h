@@ -187,6 +187,7 @@ struct	node *codemove();
 extern int xfl;
 extern int xfl2;	/* second flag word (xfl is full): bits XR45.. */
 extern int xfl3;	/* third flag word (xfl2 is full, W10ah) */
+#define	XRCV	0x2	/* V  (xfl3) R72-R76: the five single sites of convert (c20.c xcvpass, W10ak) */
 #define	XR93	0x1	/* y  (xfl3) R93-R96: the mirror-of-r2 forms of the old c2 for cc (c20.c xccpass, W10ah) */
 #define	XR1	0x1	/* p  inc SP,#n+2 ; push stays unmerged */
 #define	XR4	0x2	/* c  cp MEM,#k -> ld r0,MEM ; cp r0,#k */
