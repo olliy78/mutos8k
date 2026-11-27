@@ -110,7 +110,7 @@ VARIANTEN = {"c2x": ("C2X",),                                   # base variant: 
              "c2xcc": ("C2X", "C2X_CC"),
              "c2xc0": ("C2X", "C2X_C0"),
              "c2xcv": ("C2X", "C2X_CV"),                        # W10ak: convert (V)
-             "c2xall": ("C2X", "C2X_LD", "C2X_CC", "C2X_C0", "C2X_CV")}   # regression variant: every group (the W10ai c2x)
+             "c2xall": ("C2X", "C2X_LD", "C2X_CC", "C2X_C0")}   # regression variant: the groups of ld, cc, c0 (the W10ai c2x).  NOT C2X_CV: c20.c with all four groups overflows the symbol table of `as` (measured W10ak, "symbol table overflow"); convert is run with c2xcv
 GRUPPENBUCHSTABEN = {"C2X_LD": "fhij", "C2X_CC": "y", "C2X_C0": "bl", "C2X_CV": "V"}
 PROGRAMM_VARIANTE = {"ld": "c2xld", "cc": "c2xcc", "c0": "c2xc0", "convert": "c2xcv"}
 
