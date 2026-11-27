@@ -598,13 +598,6 @@ struct node *ap;
 		p = p->forw;
 		if (p == 0 || p == p1)
 			return(len >= 254);
-#ifdef C2X
-		/* W10ak: the older c2 measured the span with the plain `cp MEM,#k` (6 bytes), not with R4's `ld r0,MEM ; cp r0,#k` (8): the inserted
-		   `ld r0,MEM` counts 2, so the pair counts 6 (passwd: `jr eq` in the original, `jp eq` with the full 4 bytes) */
-		if (p->op == MOV && p->labno == X4MARK && (xfl & XR4))
-			len += 2;
-		else
-#endif
 		len += ilen(p);
 	}
 }
