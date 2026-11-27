@@ -40,16 +40,18 @@ def test_program_gets_variant_with_its_letters():
         fremd = set(fl) & set(alle) - set(g.variante_erlaubt(v))
         assert not fremd, (n, v, fremd)
     # the three group programs get their own variants, everything else the base variant
-    assert (g.c2x_variante("ld"), g.c2x_variante("cc"), g.c2x_variante("c0"), g.c2x_variante("as")) == ("c2xld", "c2xcc", "c2xc0", "c2x")
+    assert (g.c2x_variante("ld"), g.c2x_variante("cc"), g.c2x_variante("c0"), g.c2x_variante("as"), g.c2x_variante("convert")) == ("c2xld", "c2xcc", "c2xc0", "c2x", "c2xcv")
     # ... and each of them really uses its group letters (otherwise the variant would be pointless)
     assert set("fhij") <= set(g.c2x_flags("ld", xcc.REGELN, ("R3",)))
     assert "y" in g.c2x_flags("cc", xcc.REGELN, ("R3",))
     assert set("bl") <= set(g.c2x_flags("c0", xcc.REGELN, ("R3",)))
+    assert "V" in g.c2x_flags("convert", xcc.REGELN, ("R3",))      # W10ak: R72-R76 only for convert
+    assert not any("V" in g.c2x_flags(n, xcc.REGELN, ("R3",)) for n in pipeline.PROGRAMME if n != "convert")
 
 
 def test_variant_source_has_group_code_only_when_selected():
     g = _g()
-    marken = {"C2X_LD": '"rh3,rh3"', "C2X_CC": "xccpass()", "C2X_C0": '"r2,#%16"'}   # a text only the group's code contains
+    marken = {"C2X_LD": '"rh3,rh3"', "C2X_CC": "xccpass()", "C2X_C0": '"r2,#%16"', "C2X_CV": "xcvpass()"}   # a text only the group's code contains
     for v, defs in g.VARIANTEN.items():
         t = _cpp(defs)
         for grp, m in marken.items():

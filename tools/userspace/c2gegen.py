@@ -88,7 +88,7 @@ def verfuegbar(namen):
 
 
 # W10o: c2x run-time flag letters (userspace/c2/c2.h) per rule of the older c2
-FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j", "R130": "b", "R131": "l", "R132": "", "R133": "", "R93": "y", "R94": "", "R95": "", "R96": ""}   # W10ag: R130 b, R131-R133 share the bit/letter l (R132/R133 no letter of their own); W10ah: R93-R96 (cc) share the letter y
+FLAGBUCHSTABE = {"R1": "p", "R4": "c", "R38": "m", "R2": "z", "R30": "k", "R63": "wW", "R43": "s", "R7": "7", "R3": "3", "R10": "t", "R32": "r", "R5": "5", "R42": "4", "R64": "6", "R45": "e", "R71": "a", "R34": "n", "R6": "d", "R65": "g", "R60": "o", "R70": "q", "R77": "u", "R92": "v", "R97": "f", "R98": "h", "R99": "i", "R100": "j", "R130": "b", "R131": "l", "R132": "", "R133": "", "R93": "y", "R94": "", "R95": "", "R96": "", "R72": "V", "R73": "", "R74": "", "R75": "", "R76": ""}   # W10ak: R72-R76 (convert) share the letter V; W10ag: R130 b, R131-R133 share the bit/letter l (R132/R133 no letter of their own); W10ah: R93-R96 (cc) share the letter y
 
 
 def c2x_flags(name, regeln, extra=()):
@@ -103,15 +103,16 @@ SHARE_MODS = () if os.environ.get("C2GEGEN_NOS") else ("as_code",)   # W10aa: C2
 
 
 # W10aj: c2x variants.  One source, the program-bound rule groups behind compiler switches (userspace/c2/c20.c, c21.c):
-#   C2X_LD (letters f h i j, ld only), C2X_CC (y, cc only), C2X_C0 (b l, c0 only); the general letters are in every variant.
+#   C2X_LD (letters f h i j, ld only), C2X_CC (y, cc only), C2X_C0 (b l, c0 only), C2X_CV (V, convert only, W10ak); the general letters are in every variant.
 # A program is built with the variant that holds ITS group; c2x refuses (exit 1) a letter whose group the variant lacks.
 VARIANTEN = {"c2x": ("C2X",),                                   # base variant: general rules only (smallest image)
              "c2xld": ("C2X", "C2X_LD"),
              "c2xcc": ("C2X", "C2X_CC"),
              "c2xc0": ("C2X", "C2X_C0"),
-             "c2xall": ("C2X", "C2X_LD", "C2X_CC", "C2X_C0")}   # regression variant: every group (the W10ai c2x)
-GRUPPENBUCHSTABEN = {"C2X_LD": "fhij", "C2X_CC": "y", "C2X_C0": "bl"}
-PROGRAMM_VARIANTE = {"ld": "c2xld", "cc": "c2xcc", "c0": "c2xc0"}
+             "c2xcv": ("C2X", "C2X_CV"),                        # W10ak: convert (V)
+             "c2xall": ("C2X", "C2X_LD", "C2X_CC", "C2X_C0", "C2X_CV")}   # regression variant: every group (the W10ai c2x)
+GRUPPENBUCHSTABEN = {"C2X_LD": "fhij", "C2X_CC": "y", "C2X_C0": "bl", "C2X_CV": "V"}
+PROGRAMM_VARIANTE = {"ld": "c2xld", "cc": "c2xcc", "c0": "c2xc0", "convert": "c2xcv"}
 
 
 def c2x_variante(name):
